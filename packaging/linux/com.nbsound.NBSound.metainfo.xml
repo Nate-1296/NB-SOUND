@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metainfo para distros Linux (Flathub, AppImage, .deb).
+     Cuando se distribuya por una tienda se debe validar con:
+       appstreamcli validate com.nbsound.NBSound.metainfo.xml
+-->
+<component type="desktop-application">
+  <id>com.nbsound.NBSound</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <name>NB Sound</name>
+  <summary>Catalogador inteligente de bibliotecas de audio</summary>
+
+  <description>
+    <p>
+      NB Sound es una aplicación de escritorio local-first para catalogar,
+      etiquetar, organizar y reproducir bibliotecas de audio. Identifica
+      pistas por fingerprint acústico (AcoustID) y Shazam, consulta
+      MusicBrainz, descarga portadas y letras, y construye una biblioteca
+      coherente sin depender de servicios en la nube.
+    </p>
+    <p>Características destacadas:</p>
+    <ul>
+      <li>Reproductor completo con cola, lyrics, fullscreen y mini player</li>
+      <li>Importación con progreso en tiempo real y cancelación segura</li>
+      <li>Biblioteca por álbumes, artistas y pistas con filtros y orden</li>
+      <li>Playlists locales: manuales, automáticas, "This is...", tops y mixes</li>
+      <li>Búsqueda clásica y búsqueda natural por estado de ánimo</li>
+      <li>Karaoke: separación voz/instrumental con Demucs</li>
+      <li>DJ Privado: sesiones continuas con mezcla real</li>
+      <li>Explorador Ciego: juego de redescubrimiento sobre tu biblioteca</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">nb-sound.desktop</launchable>
+
+  <url type="homepage">https://github.com/Nate-1296/NB-SOUND</url>
+  <url type="bugtracker">https://github.com/Nate-1296/NB-SOUND/issues</url>
+  <url type="help">https://github.com/Nate-1296/NB-SOUND/tree/main/docs</url>
+
+  <developer id="com.nbsound">
+    <name>Nathan</name>
+  </developer>
+
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+    <category>Music</category>
+    <category>Player</category>
+  </categories>
+
+  <content_rating type="oars-1.1" />
+
+  <releases>
+    <release version="1.0.0" date="2026-05-20">
+      <description>
+        <p>Primera release estable v1: pipeline CLI + UI completa.</p>
+      </description>
+    </release>
+  </releases>
+</component>

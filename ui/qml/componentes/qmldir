@@ -1,0 +1,15 @@
+module componentes
+
+AppText 1.0 AppText.qml
+NavLateral 1.0 NavLateral.qml
+BarraReproduccion 1.0 BarraReproduccion.qml
+AppCard 1.0 AppCard.qml
+StatusBadge 1.0 StatusBadge.qml
+EmptyState 1.0 EmptyState.qml
+ProgressPanel 1.0 ProgressPanel.qml
+DecisionPanel 1.0 DecisionPanel.qml
+QueuePanel 1.0 QueuePanel.qml
+ToastMessage 1.0 ToastMessage.qml
+SliderLine 1.0 SliderLine.qml
+AnimatedPlaybackBackground 1.0 AnimatedPlaybackBackground.qml
+singleton UiTokens 1.0 UiTokens.qml

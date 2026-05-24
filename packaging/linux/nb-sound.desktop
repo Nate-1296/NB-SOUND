@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=NB SOUND
+GenericName=Music library manager
+Comment=Catalogador inteligente de bibliotecas de audio
+Exec=/usr/local/bin/nb-sound
+Icon=nb-sound
+Terminal=false
+Categories=AudioVideo;Audio;Music;Player;
+Keywords=music;audio;library;tagger;
+StartupNotify=true

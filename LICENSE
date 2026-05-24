@@ -1,0 +1,77 @@
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (C) 2026 Nathan
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+The complete and authoritative text of this license is available at:
+<https://www.gnu.org/licenses/gpl-3.0.txt>
+
+---
+
+RESUMEN EN ESPAÑOL
+
+Este es un resumen informativo de los términos principales. El texto oficial
+y vinculante es el de la GNU General Public License versión 3 en inglés,
+disponible en el enlace anterior.
+
+0. Definiciones
+
+"Esta Licencia" se refiere a la versión 3 de la Licencia Pública General GNU.
+"El Programa" se refiere a NB SOUND y cualquier obra derivada distribuida
+bajo esta Licencia. "Usted" se refiere a cada licenciatario.
+
+1. Código fuente
+
+El "código fuente" es la forma preferida de la obra para realizar
+modificaciones. NB SOUND se distribuye con su código fuente completo.
+
+2. Permisos básicos
+
+Esta Licencia le otorga permisos ilimitados y sin royalties para:
+
+- Ejecutar el Programa sin restricción de propósito.
+- Hacer copias del código fuente en cualquier medio.
+- Modificar su copia o copias del Programa.
+- Distribuir versiones modificadas bajo los términos de esta Licencia.
+
+Todos los derechos son irrevocables mientras se cumplan las condiciones.
+
+3. Distribución de versiones modificadas
+
+Si distribuye copias del Programa o versiones modificadas:
+
+a) El trabajo debe llevar avisos evidentes indicando que fue modificado.
+b) El trabajo debe indicar que está cubierto por esta Licencia.
+c) Debe proporcionar a los receptores el código fuente completo.
+d) Cualquier versión modificada debe distribuirse bajo GPL-3.0-or-later.
+
+No puede imponer restricciones adicionales sobre los derechos aquí otorgados.
+
+4. Compensación voluntaria
+
+Nada en esta Licencia prohíbe recibir compensación por copias del Programa.
+Las donaciones y la distribución comercial son compatibles con la GPL,
+siempre que se cumplan las condiciones de distribución de código fuente.
+
+5. Sin garantía
+
+ESTE PROGRAMA SE DISTRIBUYE "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO,
+EXPRESA O IMPLÍCITA, INCLUYENDO PERO NO LIMITADO A GARANTÍAS DE
+COMERCIABILIDAD E IDONEIDAD PARA UN PROPÓSITO PARTICULAR.
+
+EN NINGÚN CASO EL TITULAR DEL COPYRIGHT SERÁ RESPONSABLE DE DAÑOS DE
+NINGÚN TIPO QUE SURJAN DEL USO O LA IMPOSIBILIDAD DE USAR EL PROGRAMA,
+INCLUSO SI HA SIDO ADVERTIDO DE LA POSIBILIDAD DE TALES DAÑOS.
