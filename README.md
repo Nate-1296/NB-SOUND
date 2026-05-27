@@ -27,9 +27,9 @@ Todo local. Sin nube. Sin suscripciones. Sin vender tus datos.
 <img src="https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS">
 <br><br>
 
-[🌐 Página Web](https://nbsound.up.railway.app/) •
+[🌐 Página Web](https://nbsound.up.railway.app/)
 
-[📖 Documentación](docs/installation.md) •
+[📖 Documentación](docs/installation.md)
 
 [🐞 Reportar un Bug](https://github.com/Nate-1296/NB-SOUND/issues)
 
@@ -46,8 +46,6 @@ Todo local. Sin nube. Sin suscripciones. Sin vender tus datos.
 <div align="center">
 
 <img src="assets/screens/inicio-completo.png" width="100%" alt="Pantalla principal completa de NB SOUND">
-
-`<br><br>`
 
 <img src="assets/screens/inicio.png" width="100%" alt="Pantalla de inicio de NB SOUND">
 
