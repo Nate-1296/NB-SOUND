@@ -18,7 +18,7 @@ Todo local. Sin nube. Sin suscripciones. Sin vender tus datos.
   <img src="https://img.shields.io/github/v/release/Nate-1296/NB-SOUND?style=for-the-badge&color=8A2BE2" alt="Última versión">
 </a>
 <a href="https://github.com/Nate-1296/NB-SOUND/blob/main/LICENSE">
-  <img src="https://img.shields.io/github/license/Nate-1296/NB-SOUND?style=for-the-badge&color=008080" alt="Licencia">
+  <img src="https://img.shields.io/github/license/Nate-1296/NB-SOUND?style=for-the-badge&color=008080&cacheSeconds=60" alt="Licencia">
 </a>
 <img src="https://img.shields.io/badge/Python-3.12-F6D046?style=for-the-badge&logo=python&logoColor=black" alt="Python 3.12">
 <br>
