@@ -1,6 +1,8 @@
 """Tests que validan la presencia de artefactos para empaquetado v1."""
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -63,6 +65,7 @@ def test_macos_spec_declara_identifier_correcto():
 def test_hiddenimports_incluye_modulos_de_sync():
     """El bundle debe declarar los módulos del ecosistema móvil como hidden
     imports (se importan lazy desde QML/modelo y PyInstaller no los detecta)."""
+    pytest.importorskip("PyInstaller")  # CI mínimo no instala PyInstaller
     import sys
     sys.path.insert(0, str(ROOT / "packaging"))
     import _common  # noqa: PLC0415
@@ -73,6 +76,7 @@ def test_hiddenimports_incluye_modulos_de_sync():
 
 
 def test_dynamic_submodules_incluye_libs_de_red():
+    pytest.importorskip("PyInstaller")  # CI mínimo no instala PyInstaller
     import sys
     sys.path.insert(0, str(ROOT / "packaging"))
     import _common  # noqa: PLC0415
@@ -98,6 +102,7 @@ def test_runtime_requirements_incluye_deps_de_sync():
 def test_collect_external_tools_detecta_binarios(tmp_path):
     """collect_external_tools debe mapear los ejecutables de external_bin/ a bin/
     (validación de bundle: ffmpeg/fpcalc por SO). Sin la carpeta, lista vacía."""
+    pytest.importorskip("PyInstaller")  # CI mínimo no instala PyInstaller
     import sys
     sys.path.insert(0, str(ROOT / "packaging"))
     import _common  # noqa: PLC0415
