@@ -376,7 +376,9 @@ class ServidorSync:
         if not self._token_vigente() or token != self._pairing_token:
             return web.json_response({"error": "token_invalido_o_expirado"}, status=401)
 
-        nombre = str(datos.get("nombre") or "Dispositivo móvil")
+        # El cliente Flutter envia `nombre_dispositivo` (ver
+        # nb_sound_mobile/docs/sync-protocol.md); aceptamos `nombre` como alias.
+        nombre = str(datos.get("nombre_dispositivo") or datos.get("nombre") or "Dispositivo móvil")
         plataforma = datos.get("plataforma")
         dispositivo = sync_repositorio.registrar_dispositivo(nombre, plataforma)
 
@@ -405,10 +407,12 @@ class ServidorSync:
             since = int(request.query.get("since", "0") or "0")
         except ValueError:
             since = 0
-        manifest = sync_repositorio.construir_manifest(since)
+        dispositivo = request.get("dispositivo") or {}
+        seleccion = dispositivo.get("seleccion") or None
+        manifest = sync_repositorio.construir_manifest(since, seleccion=seleccion)
         try:
             sync_repositorio.guardar_ultima_sync_version(
-                request["dispositivo"]["id"], manifest["sync_version"]
+                dispositivo["id"], manifest["sync_version_actual"]
             )
         except Exception:
             pass
@@ -448,10 +452,20 @@ class ServidorSync:
         from aiohttp import web
 
         pista_id = self._id_int(request)
-        texto = self._resolver_lyrics(pista_id) if pista_id else None
-        if not texto:
+        if not pista_id:
+            return web.json_response({"error": "id_invalido"}, status=400)
+        try:
+            from servicios import biblioteca as bib
+
+            lyrics = bib.obtener_lyrics_pista(pista_id)
+        except Exception as exc:
+            _log.debug("No se pudieron resolver lyrics de la pista %s: %s", pista_id, exc)
+            lyrics = {}
+        synced = (lyrics or {}).get("synced_lyrics") or ""
+        plain = (lyrics or {}).get("plain_lyrics") or ""
+        if not synced and not plain:
             return web.json_response({"error": "sin_lyrics"}, status=404)
-        return web.Response(text=texto, content_type="text/plain", charset="utf-8")
+        return web.json_response({"synced_lyrics": synced, "plain_lyrics": plain})
 
     async def _h_asset(self, request):
         from aiohttp import web
@@ -487,11 +501,11 @@ class ServidorSync:
         await ws.prepare(request)
         self._ws_clientes.add(ws)
         try:
-            # Frame inicial de estado para que el cliente pinte de inmediato.
+            # Frame inicial de estado (plano) para que el cliente pinte ya.
             if self._estado_provider:
                 try:
-                    estado = self._estado_provider()
-                    await ws.send_json({"tipo": "estado", "payload": estado})
+                    estado = self._estado_provider() or {}
+                    await ws.send_json({"tipo": "estado", **estado})
                 except Exception as exc:
                     _log.debug("Estado inicial WS falló: %s", exc)
             async for msg in ws:
@@ -511,6 +525,9 @@ class ServidorSync:
         except (ValueError, TypeError):
             await ws.send_json({"tipo": "error", "detalle": "json_invalido"})
             return
+        # El cliente Flutter usa {tipo:"comando", accion:"...", ...}; aceptamos
+        # `accion` (canónico) y `comando` (alias) como identificador.
+        accion = mensaje.get("accion") or mensaje.get("comando")
         ack = None
         if self._comando_control:
             try:
@@ -518,29 +535,36 @@ class ServidorSync:
             except Exception as exc:
                 _log.debug("Handler de comando de control falló: %s", exc)
                 ack = {"ok": False, "error": str(exc)}
-        await ws.send_json({"tipo": "ack", "comando": mensaje.get("comando"), "resultado": ack})
+        await ws.send_json({"tipo": "ack", "accion": accion, "resultado": ack})
 
-    # ── Difusion de estado a clientes WS (thread-safe) ───────────────────────
+    # ── Difusion a clientes WS (thread-safe) ─────────────────────────────────
 
     def difundir_estado(self, estado: dict) -> None:
-        """Empuja un frame de estado del reproductor a todos los clientes WS.
+        """Empuja un frame de estado (plano) del reproductor a los clientes WS.
 
         Llamable desde CUALQUIER hilo (lo invoca el modelo Qt al recibir
-        señales del reproductor). Marshala al event loop del servidor con
+        señales del reproductor). `estado` son los campos del estado SIN el
+        envoltorio: aquí se les antepone `tipo: "estado"`.
+        """
+        self.difundir_frame({"tipo": "estado", **(estado or {})})
+
+    def difundir_frame(self, frame: dict) -> None:
+        """Empuja un frame JSON arbitrario (p. ej. cola) a todos los clientes WS.
+
+        Thread-safe: marshala al event loop del servidor con
         call_soon_threadsafe; no toca objetos Qt.
         """
         loop = self._loop
         if loop is None or not self._activo:
             return
         try:
-            loop.call_soon_threadsafe(self._programar_difusion, estado)
+            loop.call_soon_threadsafe(self._programar_difusion, frame)
         except RuntimeError:
             pass
 
-    def _programar_difusion(self, estado: dict) -> None:
+    def _programar_difusion(self, frame: dict) -> None:
         if not self._ws_clientes:
             return
-        frame = {"tipo": "estado", "payload": estado}
         for ws in list(self._ws_clientes):
             asyncio.ensure_future(self._enviar_seguro(ws, frame))
 
@@ -560,43 +584,18 @@ class ServidorSync:
         except (ValueError, TypeError):
             return None
 
-    def _resolver_lyrics(self, pista_id: int) -> Optional[str]:
-        """Resuelve el LRC/letra de una pista vía el servicio de biblioteca.
-
-        Best-effort: la resolucion de letras vive en la capa de reproductor/
-        enrichment; aqui solo intentamos leerla sin acoplar Qt.
-        """
-        try:
-            from servicios import biblioteca as bib
-
-            pista = bib.obtener_pista(pista_id)
-            if not pista:
-                return None
-            resolver = getattr(bib, "obtener_lyrics_por_ruta", None)
-            if resolver:
-                datos = resolver(pista.get("ruta_archivo"))
-                if isinstance(datos, dict):
-                    return datos.get("lrc") or datos.get("texto") or None
-                if isinstance(datos, str):
-                    return datos or None
-        except Exception as exc:
-            _log.debug("No se pudo resolver lyrics de la pista %s: %s", pista_id, exc)
-        return None
-
     def _resolver_imagen_artista(self, artista_id: int):
         try:
+            from pathlib import Path
+
             from servicios import biblioteca as bib
 
-            resolver = getattr(bib, "ruta_imagen_artista", None)
-            if resolver:
-                ruta = resolver(artista_id)
-                if ruta:
-                    from pathlib import Path
-
-                    p = Path(ruta)
-                    return p if p.is_file() else None
-        except Exception:
-            pass
+            ruta = bib.ruta_imagen_artista(artista_id)
+            if ruta:
+                p = Path(ruta)
+                return p if p.is_file() else None
+        except Exception as exc:
+            _log.debug("No se pudo resolver imagen del artista %s: %s", artista_id, exc)
         return None
 
     # ── mDNS (Zeroconf) ──────────────────────────────────────────────────────

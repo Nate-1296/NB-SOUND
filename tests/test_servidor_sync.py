@@ -305,14 +305,14 @@ def test_control_ws_comando_pausa(servidor):
                 # Frame inicial de estado.
                 primero = await asyncio.wait_for(ws.receive_json(), timeout=3.0)
                 assert primero["tipo"] == "estado"
-                # Enviar comando de pausa.
-                await ws.send_json({"comando": "pause"})
+                # Enviar comando (esquema canónico del móvil: tipo+accion).
+                await ws.send_json({"tipo": "comando", "accion": "play_pause"})
                 ack = await asyncio.wait_for(ws.receive_json(), timeout=3.0)
                 assert ack["tipo"] == "ack"
-                assert ack["comando"] == "pause"
+                assert ack["accion"] == "play_pause"
 
     _run(_t())
-    assert any(c.get("comando") == "pause" for c in rep.comandos)
+    assert any(c.get("accion") == "play_pause" for c in rep.comandos)
 
 
 def test_difundir_estado_llega_a_clientes_ws(servidor):
@@ -323,11 +323,13 @@ def test_difundir_estado_llega_a_clientes_ws(servidor):
         async with aiohttp.ClientSession(headers={"Authorization": f"Bearer {device_token}"}) as s:
             async with s.ws_connect(f"{base}/api/v1/control") as ws:
                 await asyncio.wait_for(ws.receive_json(), timeout=3.0)  # estado inicial
-                # Difundir desde el hilo principal (thread-safe).
-                srv.difundir_estado({"reproduciendo": True, "titulo": "Nueva"})
+                # Difundir desde el hilo principal (thread-safe). El estado va
+                # PLANO; el servidor le antepone tipo:"estado".
+                srv.difundir_estado({"reproduciendo": True, "pista": {"titulo": "Nueva"}})
                 frame = await asyncio.wait_for(ws.receive_json(), timeout=3.0)
                 assert frame["tipo"] == "estado"
-                assert frame["payload"]["titulo"] == "Nueva"
+                assert frame["reproduciendo"] is True
+                assert frame["pista"]["titulo"] == "Nueva"
 
     _run(_t())
 

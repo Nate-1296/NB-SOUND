@@ -198,11 +198,11 @@ def _pistas_desde(since: int) -> list[dict]:
                 "favorita_actualizada_en": d.get("favorita_actualizada_en"),
                 "hash_sha256": d.get("hash_sha256"),
                 "sync_version": d.get("sync_version"),
-                "audio_features": {
-                    "bpm": d.get("bpm"),
-                    "energy": d.get("energy"),
-                    "key": d.get("key_name"),
-                },
+                # Audio features básicas en plano (coincide con el esquema Drift
+                # del móvil: bpm?/energy?/key?). Ver nb_sound_mobile/docs/local-data.md.
+                "bpm": d.get("bpm"),
+                "energy": d.get("energy"),
+                "key": d.get("key_name"),
                 "audio_url": f"/api/v1/track/{pid}/audio",
                 "cover_url": f"/api/v1/asset/cover/{d.get('album_id')}" if d.get("album_id") else None,
                 "lyrics_url": f"/api/v1/track/{pid}/lyrics",
@@ -321,18 +321,77 @@ def _perfil_resumen() -> dict:
     }
 
 
-def construir_manifest(since: int = 0, *, incluir_perfil: bool = True) -> dict:
+def _ids_playlists_a_pistas(playlist_ids: list[int]) -> set[int]:
+    if not playlist_ids:
+        return set()
+    marcadores = ",".join("?" for _ in playlist_ids)
+    filas = obtener_filas(
+        f"SELECT DISTINCT pista_id FROM pistas_playlist WHERE playlist_id IN ({marcadores})",
+        tuple(int(p) for p in playlist_ids),
+    )
+    return {f["pista_id"] for f in filas}
+
+
+def _aplicar_seleccion(manifest: dict, seleccion: Optional[dict]) -> dict:
+    """Filtra el delta segun la seleccion del dispositivo.
+
+    Modos (seleccion["modo"]): 'todo' (default), 'nada', 'artistas', 'playlists'.
+      - todo  : sin filtrar.
+      - nada  : sin entidades (se conservan tombstones y la version).
+      - artistas: solo pistas/albums/artistas de `artista_ids`; sin playlists.
+      - playlists: solo `playlist_ids` y las pistas que contienen (+ sus albums
+        y artistas); el resto de playlists se omite.
+    Los tombstones y la version SIEMPRE viajan (para propagar borrados).
+    """
+    if not seleccion:
+        return manifest
+    modo = str(seleccion.get("modo") or "todo").lower()
+    if modo == "todo":
+        return manifest
+    if modo == "nada":
+        manifest["pistas"] = []
+        manifest["albums"] = []
+        manifest["artistas"] = []
+        manifest["playlists"] = []
+        return manifest
+    if modo == "artistas":
+        permitidos = {int(a) for a in (seleccion.get("artista_ids") or [])}
+        manifest["pistas"] = [p for p in manifest["pistas"] if p.get("artista_id") in permitidos]
+        manifest["albums"] = [a for a in manifest["albums"] if a.get("artista_id") in permitidos]
+        manifest["artistas"] = [a for a in manifest["artistas"] if a.get("id") in permitidos]
+        manifest["playlists"] = []
+        return manifest
+    if modo == "playlists":
+        playlist_ids = {int(p) for p in (seleccion.get("playlist_ids") or [])}
+        pistas_permitidas = _ids_playlists_a_pistas(list(playlist_ids))
+        manifest["pistas"] = [p for p in manifest["pistas"] if p.get("id") in pistas_permitidas]
+        albums_ok = {p.get("album_id") for p in manifest["pistas"] if p.get("album_id")}
+        artistas_ok = {p.get("artista_id") for p in manifest["pistas"] if p.get("artista_id")}
+        manifest["albums"] = [a for a in manifest["albums"] if a.get("id") in albums_ok]
+        manifest["artistas"] = [a for a in manifest["artistas"] if a.get("id") in artistas_ok]
+        manifest["playlists"] = [pl for pl in manifest["playlists"] if pl.get("id") in playlist_ids]
+        return manifest
+    return manifest
+
+
+def construir_manifest(
+    since: int = 0, *, seleccion: Optional[dict] = None, incluir_perfil: bool = True
+) -> dict:
     """Arma el delta de cambios desde `since` (exclusivo).
 
     Devuelve solo entidades con `sync_version > since` y los tombstones del
-    mismo rango. `sync_version` en la raiz es el high-water mark que el cliente
-    debe guardar para pedir el siguiente delta.
+    mismo rango, opcionalmente filtrado por la `seleccion` del dispositivo
+    (todo/nada/artistas/playlists). `sync_version_actual` en la raiz es el
+    high-water mark que el cliente debe guardar para pedir el siguiente delta
+    (`sync_version` se mantiene como alias por compatibilidad).
     """
     since = max(0, int(since or 0))
+    version = sync_version_actual()
     manifest = {
         "protocolo": PROTOCOLO_VERSION,
         "since": since,
-        "sync_version": sync_version_actual(),
+        "sync_version_actual": version,
+        "sync_version": version,  # alias compatible
         "generado_en": _ahora_iso(),
         "pistas": _pistas_desde(since),
         "albums": _albums_desde(since),
@@ -340,6 +399,7 @@ def construir_manifest(since: int = 0, *, incluir_perfil: bool = True) -> dict:
         "playlists": _playlists_desde(since),
         "tombstones": _tombstones_desde(since),
     }
+    manifest = _aplicar_seleccion(manifest, seleccion)
     if incluir_perfil:
         manifest["perfil"] = _perfil_resumen()
     return manifest

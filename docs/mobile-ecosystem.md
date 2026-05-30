@@ -5,6 +5,12 @@ app móvil (Flutter, Android/iOS/tablets). Todo lo que se programa en el PC
 vive aquí; lo que se programa en el teléfono vive en el proyecto
 `nb_sound_mobile/` (ver su `docs/`).
 
+> **Estado: implementado en v1.1.0.** El **contrato exacto (as-built)** del
+> protocolo —endpoints, JSON de cada entidad, WS de control, selección,
+> merge— está documentado para el cliente móvil en
+> `../../nb_sound_mobile/docs/pc-contract.md` (fuente de verdad para integrar
+> Flutter). Este documento conserva el diseño y las decisiones de producto.
+
 ## Decisión de producto (contexto)
 
 - El **PC es la fuente de verdad** para metadata enriquecida (catálogo,

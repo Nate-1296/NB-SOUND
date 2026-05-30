@@ -10100,7 +10100,11 @@ class ModeloSincronizacion(QObject):
         rep = self._reproductor
         if rep is None:
             return
-        for nombre in ("estadoCambiado", "progresoCambiado", "colaCambiada", "volumenCambiado", "modoCambiado"):
+        # Señales del reproductor que disparan un push de estado por WS.
+        for nombre in (
+            "estadoCambiado", "pista_activaCambiada", "progresoCambiado",
+            "colaCambiada", "volumenCambiado", "modoCambiado", "karaokeCambiado",
+        ):
             señal = getattr(rep, nombre, None)
             if señal is not None:
                 try:
@@ -10115,10 +10119,15 @@ class ModeloSincronizacion(QObject):
             self._servidor.difundir_estado(self._estado_snapshot)
 
     def _construir_snapshot(self) -> dict:
+        """Estado del reproductor en el esquema PLANO que espera el móvil
+        (ver nb_sound_mobile/docs/remote-control.md): pista{...} + campos."""
         rep = self._reproductor
         if rep is None:
-            return {"reproduciendo": False, "titulo": "", "artista": "", "album": "",
-                    "posicion_seg": 0.0, "duracion_seg": 0.0, "volumen": 100}
+            return {
+                "reproduciendo": False, "pista": None, "posicion_seg": 0.0,
+                "volumen": 100, "modo_repeticion": "ninguno", "aleatorio": False,
+                "karaoke_activo": False, "indice_cola": -1,
+            }
 
         def _g(attr, default):
             try:
@@ -10126,25 +10135,40 @@ class ModeloSincronizacion(QObject):
             except Exception:
                 return default
 
+        pista_raw = _g("pista_activa", {}) or {}
+        pista = None
+        if isinstance(pista_raw, dict) and (pista_raw.get("id") or pista_raw.get("titulo")):
+            album_id = pista_raw.get("album_id")
+            pista = {
+                "id": pista_raw.get("id"),
+                "titulo": str(pista_raw.get("titulo") or _g("titulo_activo", "") or ""),
+                "artista": str(pista_raw.get("artista_nombre") or _g("artista_activo", "") or ""),
+                "album": str(pista_raw.get("album_titulo") or _g("album_activo", "") or ""),
+                "duracion_seg": float(_g("duracion_seg", 0.0) or 0.0),
+                "cover_url": f"/api/v1/asset/cover/{album_id}" if album_id else None,
+            }
         return {
             "reproduciendo": bool(_g("reproduciendo", False)),
-            "titulo": str(_g("titulo_activo", "") or ""),
-            "artista": str(_g("artista_activo", "") or ""),
-            "album": str(_g("album_activo", "") or ""),
+            "pista": pista,
             "posicion_seg": float(_g("posicion_seg", 0.0) or 0.0),
-            "duracion_seg": float(_g("duracion_seg", 0.0) or 0.0),
             "volumen": int(_g("volumen", 100) or 100),
+            "modo_repeticion": str(_g("modo_repeticion", "ninguno") or "ninguno"),
+            "aleatorio": bool(_g("aleatorio", False)),
+            "karaoke_activo": bool(_g("karaoke_activo", False)),
+            "indice_cola": int(_g("indice_cola", -1) if _g("indice_cola", -1) is not None else -1),
         }
 
     @Slot(object)
     def _aplicar_comando(self, mensaje) -> None:
         """Corre en el hilo de Qt. Traduce un comando WS a una acción del
-        reproductor. Comandos soportados: play/pause/toggle, next, prev, stop,
-        seek (posicion_seg), volume (valor), repeat (modo), shuffle (activo)."""
+        reproductor. Acepta el esquema canónico del móvil ({accion, ...}) y
+        alias legacy. Acciones: play_pause, next, prev, seek (posicion_seg),
+        set_volume (volumen), play_index (indice), repeat (modo),
+        shuffle (activo), queue (consulta)."""
         if not isinstance(mensaje, dict):
             return
-        comando = str(mensaje.get("comando") or "")
-        if comando == "__refrescar_sync__":
+        accion = str(mensaje.get("accion") or mensaje.get("comando") or "")
+        if accion == "__refrescar_sync__":
             self._recargar_dispositivos()
             self._refrescar_qr()
             return
@@ -10152,26 +10176,58 @@ class ModeloSincronizacion(QObject):
         if rep is None:
             return
         try:
-            if comando in ("play", "pause", "toggle", "play_pause"):
+            if accion in ("play_pause", "play", "pause", "toggle"):
                 rep.pausar_reanudar()
-            elif comando in ("next", "siguiente"):
+            elif accion in ("next", "siguiente"):
                 rep.siguiente()
-            elif comando in ("prev", "previous", "anterior"):
+            elif accion in ("prev", "previous", "anterior"):
                 rep.anterior()
-            elif comando in ("stop", "detener"):
+            elif accion in ("stop", "detener"):
                 rep.detener()
-            elif comando == "seek":
+            elif accion == "seek":
                 rep.buscar_posicion(float(mensaje.get("posicion_seg", 0) or 0))
-            elif comando in ("volume", "volumen"):
-                rep.set_volumen(int(mensaje.get("valor", 100) or 100))
-            elif comando in ("repeat", "repeticion"):
+            elif accion in ("set_volume", "volume", "volumen"):
+                valor = mensaje.get("volumen", mensaje.get("valor", 100))
+                rep.set_volumen(int(valor if valor is not None else 100))
+            elif accion in ("play_index", "play_indice"):
+                rep.reproducir_indice_cola(int(mensaje.get("indice", 0) or 0))
+            elif accion in ("repeat", "repeticion"):
                 rep.set_modo_repeticion(str(mensaje.get("modo", "ninguno")))
-            elif comando in ("shuffle", "aleatorio"):
+            elif accion in ("shuffle", "aleatorio"):
                 rep.set_aleatorio(bool(mensaje.get("activo", False)))
+            elif accion in ("queue", "cola"):
+                self._difundir_cola()
             else:
-                _log.debug("Comando WS desconocido: %s", comando)
+                _log.debug("Acción WS desconocida: %s", accion)
         except Exception as exc:
-            _log.debug("No se pudo aplicar comando WS %s: %s", comando, exc)
+            _log.debug("No se pudo aplicar acción WS %s: %s", accion, exc)
+
+    def _difundir_cola(self) -> None:
+        """Publica la cola actual del reproductor como frame WS (consulta queue)."""
+        rep = self._reproductor
+        srv = self._servidor
+        if rep is None or srv is None or not srv.activo:
+            return
+        items = []
+        try:
+            cola = getattr(rep, "cola", None)
+            crudos = cola.snapshot() if cola is not None and hasattr(cola, "snapshot") else []
+            for it in crudos:
+                items.append({
+                    "id": it.get("id"),
+                    "titulo": it.get("titulo"),
+                    "artista": it.get("artista_nombre") or it.get("artista"),
+                    "album": it.get("album_titulo") or it.get("album"),
+                    "duracion_seg": it.get("duracion_seg"),
+                })
+        except Exception as exc:
+            _log.debug("No se pudo construir la cola para WS: %s", exc)
+        indice = -1
+        try:
+            indice = int(getattr(rep, "indice_cola", -1) or -1)
+        except Exception:
+            pass
+        srv.difundir_frame({"tipo": "cola", "items": items, "indice": indice})
 
     # ── Dispositivos y QR ────────────────────────────────────────────────────
 

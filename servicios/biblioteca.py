@@ -4093,3 +4093,118 @@ def pista_karaoke_por_id(pista_id: int) -> dict:
         [pista_id],
     )
     return dict(fila) if fila else {}
+
+
+# =============================================================================
+# RESOLUCION PARA EL ECOSISTEMA MOVIL (lyrics / imagen de artista)
+#
+# Funciones standalone (sin depender del Reproductor Qt) que el servidor de
+# sincronizacion usa para servir letras e imagenes de artista por sus endpoints.
+# =============================================================================
+
+# Cache del indice de letras (manifest de enrichment) por mtime, para no
+# releer el archivo en cada peticion del movil.
+_indice_lyrics_cache: dict[str, dict[str, str]] = {}
+_indice_lyrics_mtime: float = -1.0
+_indice_lyrics_ruta: Optional[Path] = None
+
+
+def _ruta_manifest_letras() -> Optional[Path]:
+    if _settings.DEFAULT_ASSETS_DIR is None:
+        return None
+    return Path(_settings.DEFAULT_ASSETS_DIR) / "enrichment" / "enrichment_manifest.jsonl"
+
+
+def _recargar_indice_lyrics_si_necesario() -> None:
+    """Reconstruye el indice de letras si el manifest cambio (compara mtime)."""
+    global _indice_lyrics_cache, _indice_lyrics_mtime, _indice_lyrics_ruta
+    manifest = _ruta_manifest_letras()
+    if manifest is None or not manifest.exists():
+        _indice_lyrics_cache = {}
+        _indice_lyrics_mtime = -1.0
+        _indice_lyrics_ruta = manifest
+        return
+    try:
+        mtime = manifest.stat().st_mtime
+    except OSError:
+        return
+    if manifest == _indice_lyrics_ruta and mtime == _indice_lyrics_mtime:
+        return
+    indice: dict[str, dict[str, str]] = {}
+    try:
+        with manifest.open("r", encoding="utf-8") as fh:
+            for linea in fh:
+                texto = linea.strip()
+                if not texto:
+                    continue
+                try:
+                    fila = json.loads(texto)
+                except json.JSONDecodeError:
+                    continue
+                ruta = str(fila.get("file") or "").strip()
+                if not ruta:
+                    continue
+                lyrics = fila.get("lyrics") or {}
+                if not isinstance(lyrics, dict):
+                    continue
+                synced = str(lyrics.get("synced_lyrics") or "").strip()
+                plain = str(lyrics.get("plain_lyrics") or "").strip()
+                if not synced and not plain:
+                    continue
+                entry = {"synced_lyrics": synced, "plain_lyrics": plain}
+                indice[ruta] = entry
+                try:
+                    indice[str(Path(ruta).expanduser().resolve())] = entry
+                except Exception:
+                    pass
+    except OSError as exc:
+        logger.warning("No se pudo leer manifest de enrichment para lyrics: %s", exc)
+        return
+    _indice_lyrics_cache = indice
+    _indice_lyrics_mtime = mtime
+    _indice_lyrics_ruta = manifest
+
+
+def obtener_lyrics_por_ruta(ruta_archivo: Optional[str]) -> dict[str, str]:
+    """Devuelve {'synced_lyrics','plain_lyrics'} para una pista por su ruta.
+
+    Lee el manifest de enrichment (cacheado por mtime). Si no hay letra,
+    devuelve cadenas vacias. Standalone: no depende del Reproductor.
+    """
+    ruta = str(ruta_archivo or "").strip()
+    if not ruta:
+        return {"synced_lyrics": "", "plain_lyrics": ""}
+    _recargar_indice_lyrics_si_necesario()
+    entry = _indice_lyrics_cache.get(ruta)
+    if entry is None:
+        try:
+            entry = _indice_lyrics_cache.get(str(Path(ruta).expanduser().resolve()))
+        except Exception:
+            entry = None
+    return dict(entry) if entry else {"synced_lyrics": "", "plain_lyrics": ""}
+
+
+def obtener_lyrics_pista(pista_id: int) -> dict[str, str]:
+    """Resuelve las letras de una pista por id (vía su ruta de archivo)."""
+    fila = obtener_una_fila("SELECT ruta_archivo FROM pistas WHERE id = ?", (int(pista_id),))
+    if not fila or not fila["ruta_archivo"]:
+        return {"synced_lyrics": "", "plain_lyrics": ""}
+    return obtener_lyrics_por_ruta(fila["ruta_archivo"])
+
+
+def ruta_imagen_artista(artista_id: int) -> Optional[str]:
+    """Ruta local del avatar/imagen de un artista por id, o None si no hay.
+
+    Resuelve primero por el mapa de assets (avatar enriquecido); el servidor de
+    sincronizacion la usa para servir `/api/v1/asset/artist/{id}`.
+    """
+    fila = obtener_una_fila("SELECT nombre FROM artistas WHERE id = ?", (int(artista_id),))
+    if not fila:
+        return None
+    avatar = _resolver_avatar_artista(None, fila["nombre"])
+    if not avatar:
+        return None
+    ruta = _ruta_local_portada(avatar)
+    if ruta is None:
+        return None
+    return str(ruta) if ruta.is_file() else None

@@ -133,12 +133,14 @@ def test_flujo_completo_cliente_movil(entorno):
                 assert res["favoritos_aplicados"] == 1
                 assert res["historial_insertado"] == 1
 
-            # 7) control por WS: pause
+            # 7) control por WS: play_pause (esquema canónico tipo+accion)
             async with s.ws_connect(f"{base}/api/v1/control", headers=auth) as ws:
-                await asyncio.wait_for(ws.receive_json(), timeout=3.0)  # estado inicial
-                await ws.send_json({"comando": "pause"})
+                primero = await asyncio.wait_for(ws.receive_json(), timeout=3.0)  # estado inicial
+                assert primero["tipo"] == "estado"
+                await ws.send_json({"tipo": "comando", "accion": "play_pause"})
                 ack = await asyncio.wait_for(ws.receive_json(), timeout=3.0)
                 assert ack["tipo"] == "ack"
+                assert ack["accion"] == "play_pause"
 
             # 8) delta incremental: el favorito recien aplicado aparece tras hwm
             async with s.get(f"{base}/api/v1/manifest?since={hwm}", headers=auth) as r:
@@ -157,7 +159,7 @@ def test_flujo_completo_cliente_movil(entorno):
     assert fav["favorita"] == 1
     hist = get_conexion().execute("SELECT COUNT(*) c FROM historial WHERE pista_id = ?", (pista_id,)).fetchone()
     assert hist["c"] == 1
-    assert any(c.get("comando") == "pause" for c in rep.comandos)
+    assert any(c.get("accion") == "play_pause" for c in rep.comandos)
 
     # 9) revocar: el token deja de autenticar.
     disp = sync_repositorio.obtener_dispositivo_por_token(device_token)

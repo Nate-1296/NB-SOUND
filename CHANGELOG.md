@@ -11,6 +11,17 @@ cambios son **aditivos**: las bibliotecas existentes siguen funcionando sin
 migración manual (las columnas/tablas nuevas se crean al abrir la BD). La app
 nunca requiere reinicio para aplicar estos cambios.
 
+El protocolo quedó **alineado con el cliente Flutter** y documentado como
+contrato "as-built" en `nb_sound_mobile/docs/pc-contract.md` (endpoints, JSON
+de cada entidad, WebSocket de control y selección, tal como se implementan):
+manifest con `sync_version_actual` y audio features planas (`bpm`/`energy`/
+`key`); `/pair` acepta `nombre_dispositivo`; resolución real de letras
+(`/track/{id}/lyrics`) e imagen de artista (`/asset/artist/{id}`); filtrado del
+manifest por selección (`todo`/`nada`/`artistas`/`playlists`); y WebSocket con
+estado plano (`pista{...}`, `modo_repeticion`, `aleatorio`, `karaoke_activo`,
+`indice_cola`), comandos `{tipo:"comando", accion}` (incluye `play_index`,
+`set_volume`, `queue`) y frame de cola.
+
 ### Sincronización con dispositivos móviles
 
 - **Servidor local bajo demanda** (`servicios/servidor_sync.py`): HTTP REST +

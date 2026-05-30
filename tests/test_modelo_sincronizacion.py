@@ -109,8 +109,8 @@ def test_puente_comando_ws_aplica_en_reproductor(app, db_sync):
     rep = _ReproductorFake()
     modelo = ModeloSincronizacion(rep, parent=None)
     try:
-        # Simula el callback que el servidor invoca desde su hilo.
-        ack = modelo._comando_control_thread_safe({"comando": "pause"})
+        # Simula el callback que el servidor invoca desde su hilo (esquema móvil).
+        ack = modelo._comando_control_thread_safe({"tipo": "comando", "accion": "play_pause"})
         assert ack["ok"] is True
         # El comando se entrega en cola: procesar eventos para aplicarlo.
         assert _esperar(app, lambda: "pausar_reanudar" in rep.acciones, timeout=3.0)
