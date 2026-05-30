@@ -194,6 +194,9 @@ Para mayor detalle sobre subsistemas específicos:
 | [Arquitectura QML](qml-architecture.md) | Puente Python↔QML, modelos reactivos, componentes |
 | [Observabilidad](observability.md) | Logging estructurado, ControlEjecucion, reports |
 | [Recovery y resiliencia](recovery-and-resilience.md) | Mecanismos de recuperación ante fallos e interrupciones |
+| [Compatibilidad cross-platform](cross-platform.md) | Asunciones por SO (Linux/Windows/macOS), tabla por componente, gaps de packaging |
+| [Ecosistema móvil (lado PC)](mobile-ecosystem.md) | Servidor local, QR, protocolo de sync, schema BD, vista de sync y backup |
+| [Plan de implementación móvil (lado PC)](mobile-rollout-plan.md) | Plan por bloques para preparar el escritorio para el ecosistema móvil |
 
 ---
 
