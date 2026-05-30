@@ -6,18 +6,35 @@
 # Capas implementadas:
 #   1) Duplicado exacto por hash SHA256 (archivo binariamente equivalente).
 #   2) Duplicado semantico por identidad musical (ISRC o recording_id de MB).
+#   3) Duplicado observable por metadatos visibles (titulo/artista/album
+#      normalizados + duracion +-tolerancia + hash del archivo de portada).
+#      Captura el "duplicado obvio" que no comparte hash ni ISRC/MBID: la misma
+#      grabacion reimportada con otra codificacion/tag pero misma portada y
+#      metadatos. El barrido periodico de servicios/dedupe_observable.py aplica
+#      esta misma regla sobre la biblioteca ya catalogada.
 #
 # Este modulo no elimina archivos por si solo; solo toma decisiones de si un
 # archivo debe considerarse duplicado frente a otro ya aceptado en la corrida.
+#
+# La normalizacion de texto del eje observable usa el MISMO algoritmo que el
+# resto del sistema (utils.text.normalizar_para_comparar, re-exportado por
+# servicios.explorador_ciego.hints). El hash de portada se calcula sobre el
+# CONTENIDO del archivo, no sobre su ruta.
 # =============================================================================
 
-from dataclasses import dataclass
+import hashlib
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from config.settings import DUPLICATE_POLICY, DUPLICATE_BETTER_MIN_DELTA
+from config.settings import (
+    DUPLICATE_POLICY,
+    DUPLICATE_BETTER_MIN_DELTA,
+    DUPLICATE_OBSERVABLE_TOLERANCIA_SEG,
+)
 from domain.models import ArchivoAudio, DecisionArchivo
 from infra.logger import obtener_logger
+from utils.text import normalizar_para_comparar
 
 _log = obtener_logger("core.dedupe")
 
@@ -26,6 +43,73 @@ _log = obtener_logger("core.dedupe")
 class DuplicadoDetectado:
     tipo: str
     referencia: str
+
+
+# -----------------------------------------------------------------------------
+# Eje observable: utilidades puras reutilizables (importacion y barrido periodico)
+# -----------------------------------------------------------------------------
+
+# Clave observable de texto+portada (la duracion se compara aparte, con
+# tolerancia): (titulo_norm, artista_norm, album_norm, portada_hash).
+ClaveObservable = tuple[str, str, str, str]
+
+
+def hash_portada(ruta) -> Optional[str]:
+    """SHA256 del *contenido* del archivo de portada (no de su ruta).
+
+    Devuelve ``None`` si la ruta es falsy o el archivo no puede leerse, de modo
+    que la ausencia de portada nunca produzca una coincidencia observable. Lee
+    por bloques para no cargar imagenes grandes en memoria.
+    """
+    if not ruta:
+        return None
+    try:
+        h = hashlib.sha256()
+        with open(ruta, "rb") as f:
+            for bloque in iter(lambda: f.read(65536), b""):
+                h.update(bloque)
+        return h.hexdigest()
+    except OSError:
+        return None
+
+
+def clave_observable(
+    titulo: Optional[str],
+    artista: Optional[str],
+    album: Optional[str],
+    portada_hash: Optional[str],
+) -> Optional[ClaveObservable]:
+    """Construye la clave observable normalizada o ``None`` si falta señal.
+
+    Conservador por diseño: si cualquiera de los cuatro componentes (titulo,
+    artista, album, portada) queda vacio tras normalizar, NO se forma clave, de
+    modo que la ausencia de datos jamas produzca un falso positivo. La duracion
+    se compara por separado (con tolerancia) porque no admite igualdad exacta.
+    """
+    t = normalizar_para_comparar(titulo or "")
+    a = normalizar_para_comparar(artista or "")
+    al = normalizar_para_comparar(album or "")
+    if not t or not a or not al or not portada_hash:
+        return None
+    return (t, a, al, portada_hash)
+
+
+def duraciones_equivalentes(
+    dur_a,
+    dur_b,
+    tolerancia_seg: float = DUPLICATE_OBSERVABLE_TOLERANCIA_SEG,
+) -> bool:
+    """True si dos duraciones difieren a lo sumo ``tolerancia_seg`` segundos.
+
+    Si alguna duracion es desconocida (None/no numerica) devuelve False: sin
+    duracion comparable no podemos afirmar que sean el mismo material.
+    """
+    try:
+        a = float(dur_a)
+        b = float(dur_b)
+    except (TypeError, ValueError):
+        return False
+    return abs(a - b) <= float(tolerancia_seg)
 
 
 class GestorDuplicados:
@@ -38,28 +122,43 @@ class GestorDuplicados:
     relanzarla suele dejar canciones duplicadas en la biblioteca (la
     primera corrida ya las había copiado, la segunda no las identifica
     porque los índices internos arrancaban vacíos cada vez).
+
+    Tambien mantiene un indice observable (titulo/artista/album normalizados +
+    portada -> duracion) que permite detectar el "duplicado obvio" de la tercera
+    capa durante la importacion.
     """
 
     def __init__(self) -> None:
         self._por_hash: dict[str, Path] = {}
         self._por_identidad: dict[str, Path] = {}
         self._calidad_por_identidad: dict[str, float] = {}
+        # Eje observable: clave (titulo,artista,album,portada_hash) -> lista de
+        # (ruta, duracion_seg). Lista porque dos pistas pueden compartir clave
+        # de texto+portada pero diferir en duracion mas alla de la tolerancia
+        # (no serian el mismo material).
+        self._por_observable: dict[ClaveObservable, list[tuple[Path, float]]] = {}
         self._precargar_desde_biblioteca()
 
     def _precargar_desde_biblioteca(self) -> None:
         """Llena los índices con lo que ya está catalogado en la BD.
 
         Lee de la tabla ``pistas``: las claves de identidad MusicBrainz
-        (``mb_recording_id``) e ISRC viven ahí, no en una tabla aparte.
-        Si la BD aún no se inicializó (primera ejecución), no hay tabla
-        y la consulta lanza excepción; en ese caso arrancamos con
-        índices vacíos, equivalente al comportamiento anterior.
+        (``mb_recording_id``) e ISRC viven ahí, no en una tabla aparte. Para el
+        eje observable se hace LEFT JOIN con ``albums`` para obtener la portada
+        del álbum (``albums.portada_ruta``), cuyo contenido se hashea.
+
+        Si la BD aún no se inicializó (primera ejecución), no hay tabla y la
+        consulta lanza excepción; en ese caso arrancamos con índices vacíos,
+        equivalente al comportamiento anterior.
         """
         try:
             from db.conexion import obtener_filas
             filas = obtener_filas(
-                "SELECT hash_sha256, ruta_archivo, mb_recording_id, isrc "
-                "FROM pistas WHERE estado IN ('biblioteca', 'aceptado')"
+                "SELECT p.hash_sha256, p.ruta_archivo, p.mb_recording_id, p.isrc, "
+                "       p.titulo, p.artista_nombre, p.album_titulo, p.duracion_seg, "
+                "       a.portada_ruta "
+                "FROM pistas p LEFT JOIN albums a ON a.id = p.album_id "
+                "WHERE p.estado = 'biblioteca'"
             )
         except Exception as exc:
             _log.warning(
@@ -72,6 +171,9 @@ class GestorDuplicados:
             "GestorDuplicados: precarga OK, %d filas leídas de la BD",
             len(filas),
         )
+        # Cache de hashes de portada por ruta: varias pistas comparten album,
+        # evitamos rehashear el mismo archivo de portada.
+        cache_portada: dict[str, Optional[str]] = {}
         for fila in filas:
             ruta = Path(str(fila["ruta_archivo"] or ""))
             h = str(fila["hash_sha256"] or "")
@@ -87,6 +189,43 @@ class GestorDuplicados:
                     # "duplicado_mejorable"; en caso contrario, identidad
                     # semántica (descartar).
                     self._calidad_por_identidad[clave] = 0.5
+            # Eje observable de la pista ya catalogada.
+            portada_ruta = fila["portada_ruta"] if "portada_ruta" in fila.keys() else None
+            if portada_ruta:
+                clave_p = str(portada_ruta)
+                if clave_p not in cache_portada:
+                    cache_portada[clave_p] = hash_portada(clave_p)
+                portada_h = cache_portada[clave_p]
+            else:
+                portada_h = None
+            self._registrar_observable(
+                ruta=ruta,
+                titulo=fila["titulo"],
+                artista=fila["artista_nombre"],
+                album=fila["album_titulo"],
+                duracion_seg=fila["duracion_seg"],
+                portada_hash=portada_h,
+            )
+
+    def _registrar_observable(
+        self,
+        *,
+        ruta: Path,
+        titulo,
+        artista,
+        album,
+        duracion_seg,
+        portada_hash,
+    ) -> None:
+        """Indexa una pista en el eje observable si tiene señal suficiente."""
+        clave = clave_observable(titulo, artista, album, portada_hash)
+        if clave is None:
+            return
+        try:
+            dur = float(duracion_seg)
+        except (TypeError, ValueError):
+            return
+        self._por_observable.setdefault(clave, []).append((ruta, dur))
 
     def registrar_hash(self, archivo: ArchivoAudio) -> Optional[DuplicadoDetectado]:
         """
@@ -169,6 +308,62 @@ class GestorDuplicados:
                     referencia=str(existente),
                 )
         return None
+
+    def detectar_duplicado_observable(
+        self,
+        *,
+        titulo,
+        artista,
+        album,
+        duracion_seg,
+        portada_hash,
+    ) -> Optional[DuplicadoDetectado]:
+        """Eje 3: duplicado obvio por metadatos visibles + portada.
+
+        Requiere coincidencia simultánea de título/artista/álbum normalizados y
+        hash de portada, con la duración dentro de la tolerancia configurada.
+        Recibe textos crudos (los normaliza con el algoritmo canónico) y el hash
+        del *contenido* de la portada (ver :func:`hash_portada`). Solo consulta;
+        la indexación se hace vía :meth:`registrar_observable_aceptado`.
+        """
+        clave = clave_observable(titulo, artista, album, portada_hash)
+        if clave is None:
+            return None
+        candidatos = self._por_observable.get(clave)
+        if not candidatos:
+            return None
+        for ruta_existente, dur_existente in candidatos:
+            if duraciones_equivalentes(dur_existente, duracion_seg):
+                return DuplicadoDetectado(
+                    tipo="observable",
+                    referencia=str(ruta_existente),
+                )
+        return None
+
+    def registrar_observable_aceptado(
+        self,
+        *,
+        ruta,
+        titulo,
+        artista,
+        album,
+        duracion_seg,
+        portada_hash,
+    ) -> None:
+        """Indexa en el eje observable una pista aceptada en esta corrida.
+
+        Pensado para usarse tras escribir una pista (cuando ya hay portada
+        resuelta) de modo que pistas posteriores de la misma corrida se
+        detecten contra ella sin esperar al barrido periódico.
+        """
+        self._registrar_observable(
+            ruta=Path(str(ruta)),
+            titulo=titulo,
+            artista=artista,
+            album=album,
+            duracion_seg=duracion_seg,
+            portada_hash=portada_hash,
+        )
 
     @staticmethod
     def _score_calidad(decision: DecisionArchivo) -> float:

@@ -63,65 +63,12 @@ def _alfabeto_codepoint(cp: int) -> str:
     return "otro"
 
 
-_RE_NORMALIZAR_SPACES = re.compile(r"\s+")
-_RE_PUNTUACION = re.compile(r"[^\w\s]", re.UNICODE)
-
-# Caracteres a tratar como equivalentes antes de eliminar puntuacion.
-# Las comillas, apostrofes y guiones tienen muchas variantes Unicode que
-# el usuario no distingue al escribir. Las colapsamos a su forma ASCII
-# basica antes de quitar puntuacion para que la similitud no se vea
-# afectada por "no escribi el apostrofe correcto".
-_REEMPLAZOS_PRENORMAL = {
-    "‘": "'", "’": "'", "‚": "'", "‛": "'",  # comilla simple
-    "ʼ": "'", "`": "'",                                  # modifier letter / backtick
-    "“": '"', "”": '"', "„": '"', "‟": '"',  # comillas dobles
-    "«": '"', "»": '"',                                  # << >>
-    "–": "-", "—": "-", "−": "-", "‐": "-",  # guiones (en-dash, em-dash, etc.)
-    "…": "...",                                                # ellipsis
-}
-
-
-def _prenormalizar(texto: str) -> str:
-    """Normaliza variantes Unicode antes del strip de puntuacion.
-
-    Si el titulo tiene "Don’t" y el usuario escribe "don't", queremos
-    que ambos lados acaben en la misma forma antes de comparar. El strip
-    posterior quita la puntuacion, pero ANTES tenemos que igualar las
-    variantes para que el conteo de caracteres sea parejo.
-    """
-    out = []
-    for ch in str(texto or ""):
-        out.append(_REEMPLAZOS_PRENORMAL.get(ch, ch))
-    return "".join(out)
-
-
-def normalizar_para_comparar(texto: str) -> str:
-    """Normaliza para comparacion tolerante.
-
-    Pipeline:
-      1. Pre-normalizar comillas/guiones curvos a su forma ASCII.
-      2. NFD + strip de diacriticos -> "Canción" == "Cancion".
-      3. Lowercase.
-      4. Colapso de espacios.
-      5. Strip de puntuacion (apostrofes, parentesis, comillas, guiones).
-
-    El resultado es deliberadamente permisivo: el usuario no debe ser
-    exacto con apostrofes, tildes, comillas curvas, paréntesis ni
-    mayusculas. Por ejemplo:
-      "Don't Stop"       -> "dont stop"
-      "Don’t Stop"  -> "dont stop"
-      "DONT STOP"        -> "dont stop"
-      "Cancion del Mar"  -> "cancion del mar"
-      "Canción del Mar"  -> "cancion del mar"
-    """
-    if not texto:
-        return ""
-    pre = _prenormalizar(texto)
-    nfd = unicodedata.normalize("NFD", pre)
-    sin_diacriticos = "".join(c for c in nfd if unicodedata.category(c) != "Mn")
-    sin_puntuacion = _RE_PUNTUACION.sub(" ", sin_diacriticos)
-    colapsado = _RE_NORMALIZAR_SPACES.sub(" ", sin_puntuacion).strip().lower()
-    return colapsado
+# `normalizar_para_comparar` (y sus ayudantes) viven ahora en la capa hoja
+# `utils.text`, para que el pipeline de catalogacion (core, p.ej. dedupe
+# observable) y los servicios compartan EXACTAMENTE el mismo algoritmo sin
+# invertir dependencias (core no debe importar de servicios). Se re-exporta
+# aqui para conservar la API publica historica de este modulo.
+from utils.text import normalizar_para_comparar  # noqa: E402,F401
 
 
 def detectar_alfabeto(texto: str) -> str:

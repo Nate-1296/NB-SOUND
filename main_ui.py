@@ -577,10 +577,27 @@ def exponer_modelos(engine: QQmlApplicationEngine, modelos: dict) -> None:
     """
     Expone todos los modelos como propiedades del contexto raiz de QML.
     Cada modelo queda disponible con su nombre en todos los archivos QML.
+
+    Además expone ``deepAnalyticsDisponible`` (bool) como propiedad de
+    contexto global: en Windows, donde ``essentia-tensorflow`` no tiene
+    wheel funcional, toda la UI de análisis profundo (deep) se oculta
+    mediante ``visible: deepAnalyticsDisponible``. Se evalúa una sola vez
+    aquí (al iniciar) y es estable durante la vida del proceso. La lógica
+    Python deep NO se elimina; solo se condiciona su exposición visual.
     """
     ctx = engine.rootContext()
     for nombre, modelo in modelos.items():
         ctx.setContextProperty(nombre, modelo)
+
+    try:
+        from infra.dependencias import deep_analytics_disponible
+        deep_disponible = deep_analytics_disponible()
+    except Exception as exc:
+        # Defensivo: si la detección falla, no ocultamos nada (comportamiento
+        # histórico). El gap real solo existe en Windows.
+        _log.debug("No se pudo resolver deep_analytics_disponible: %s", exc)
+        deep_disponible = True
+    ctx.setContextProperty("deepAnalyticsDisponible", bool(deep_disponible))
 
 
 # =============================================================================

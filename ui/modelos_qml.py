@@ -251,6 +251,11 @@ class ModeloBiblioteca(QObject):
     # (ModeloPlaylists, ModeloBusqueda) deben escuchar esta señal para
     # refrescar sus listas (la playlist "Me gusta" se actualiza así en vivo).
     favoritaCambiada    = Signal(int, bool)  # (pista_id, nueva_es_favorita)
+    # Barrido de duplicados observables (3a capa de dedupe). El refresco de la
+    # biblioteca/estadísticas/inicio se hace en vivo al completar; estas señales
+    # permiten que la UI muestre progreso y el resumen sin reiniciar la app.
+    dedupeObservableProgreso   = Signal(dict)
+    dedupeObservableFinalizado = Signal(dict)
 
     _CLAVE_ESTADO_VISTA = "vista_biblioteca_estado"
 
@@ -9540,6 +9545,18 @@ class ModeloDependencias(QObject):
     def faltanOpcionales(self) -> bool:
         return any((not r.get("requerida")) and r.get("estado") != "ok" for r in self._reportes)
 
+    @Property(bool, constant=True)
+    def deepAnalyticsDisponible(self) -> bool:
+        """True si la plataforma soporta análisis profundo (deep).
+
+        En Windows es False (``essentia-tensorflow`` sin wheel funcional);
+        la UI usa esta propiedad —o la context property global homónima
+        expuesta en ``main_ui.exponer_modelos``— para ocultar los controles
+        deep. Constante durante la vida del proceso.
+        """
+        from infra.dependencias import deep_analytics_disponible
+        return deep_analytics_disponible()
+
     @Property("QVariantMap", notify=estadoCambiado)
     def diagnostico(self) -> dict:
         try:
@@ -9703,9 +9720,22 @@ class ModeloDependencias(QObject):
 
     def _cargar(self, force_refresh: bool) -> None:
         try:
-            from infra.dependencias import detectar
+            from infra.dependencias import (
+                IDS_DEPENDENCIAS_DEEP,
+                deep_analytics_disponible,
+                detectar,
+            )
             reportes = detectar(force_refresh=force_refresh)
-            self._reportes = [r.a_dict() for r in reportes]
+            datos = [r.a_dict() for r in reportes]
+            # En plataformas sin análisis deep (Windows: essentia-tensorflow
+            # no tiene wheel funcional) ocultamos esas dependencias del
+            # catálogo visible. Así sus tarjetas desaparecen de "Estado del
+            # sistema" y, al no quedar opcionales faltantes irresolubles,
+            # `faltanOpcionales` puede ser False y el estado global "todo OK".
+            # El catálogo Python NO se altera (CLI y tests quedan intactos).
+            if not deep_analytics_disponible():
+                datos = [d for d in datos if d.get("id") not in IDS_DEPENDENCIAS_DEEP]
+            self._reportes = datos
         except Exception as exc:
             _log.warning("ModeloDependencias._cargar fallo: %s", exc)
             self._reportes = []

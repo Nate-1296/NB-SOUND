@@ -359,3 +359,50 @@ class WorkerKaraokeCola(QThread):
         except Exception as exc:
             logger.exception("WorkerKaraokeCola error")
             self.error.emit(str(exc))
+
+
+# =============================================================================
+# WORKER DE DEDUPLICACION OBSERVABLE (3a capa de dedupe)
+# =============================================================================
+
+class WorkerDedupeObservable(QThread):
+    """Ejecuta el barrido de duplicados observables en background.
+
+    No bloquea la UI: corre el `ServicioDedupeObservable` en un QThread y emite
+    snapshots de progreso y un snapshot final. La cancelacion es cooperativa
+    (stop_event); el servicio deja la BD consistente porque resuelve cada grupo
+    en su propia transaccion.
+    """
+
+    progreso   = Signal(dict)
+    completado = Signal(dict)
+    error      = Signal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._stop_event = threading.Event()
+        self.setObjectName("WorkerDedupeObservable")
+
+    def requestInterruption(self):
+        self._stop_event.set()
+        super().requestInterruption()
+
+    def run(self):
+        try:
+            self.setPriority(QThread.LowPriority)
+        except Exception:
+            pass
+        try:
+            from servicios.dedupe_observable import ServicioDedupeObservable
+
+            def _progress(snapshot):
+                self.progreso.emit(dict(snapshot or {}))
+
+            resultado = ServicioDedupeObservable().escanear(
+                progress_callback=_progress,
+                stop_event=self._stop_event,
+            )
+            self.completado.emit(resultado.a_dict())
+        except Exception as exc:
+            logger.exception("WorkerDedupeObservable error")
+            self.error.emit(str(exc))

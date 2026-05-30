@@ -1205,6 +1205,10 @@ Rectangle {
         id: deepPanel
         objectName: "importacion_audio_deep_panel"
         tema: raiz.tema
+        // Fase 3: el análisis profundo (Essentia/TF) no existe en Windows.
+        // Ocultamos el panel completo (estado, progreso y controles deep).
+        // En QtQuick.Layouts un item invisible no ocupa espacio.
+        visible: deepAnalyticsDisponible
 
         readonly property string estadoDeep: raiz.audioDeep.audioDeepEstado || "inactivo"
         readonly property bool hayPendientes: raiz.audioDeep.audioDeepPendientes > 0
@@ -1487,7 +1491,8 @@ Rectangle {
             }
             ActionButton {
                 objectName: "recovery_retry_deep_failed_button"
-                visible: Number(recoveryPanel.diag.deep_failed || 0) > 0
+                // Fase 3: oculto siempre en plataformas sin deep (Windows).
+                visible: deepAnalyticsDisponible && Number(recoveryPanel.diag.deep_failed || 0) > 0
                 texto: "Reintentar deep"
                 tono: "neutral"
                 enabled: !raiz.imp.diagnosticoEjecutando

@@ -1501,6 +1501,15 @@ Rectangle {
                                 checkedValue: _avanzadaRev >= 0 && avanzadaDraft["audio_features_fail_silently"] === "1"
                                 onChangedValue: function(v) { setAvanzadaValue("audio_features_fail_silently", v ? "1" : "0") }
                             }
+                            // Fase 3: grupo "Deep Background" — oculto en plataformas sin
+                            // análisis profundo (Windows: essentia-tensorflow sin wheel funcional).
+                            // La lógica Python deep se conserva; solo se condiciona la UI.
+                            ColumnLayout {
+                                id: deepBackgroundGroup
+                                Layout.fillWidth: true
+                                spacing: UiTokens.spacing10
+                                visible: deepAnalyticsDisponible
+
                             Rectangle {
                                 Layout.fillWidth: true; radius: UiTokens.radiusSm; color: Qt.rgba(tema.advertencia.r, tema.advertencia.g, tema.advertencia.b, 0.08); border.color: Qt.rgba(tema.advertencia.r, tema.advertencia.g, tema.advertencia.b, 0.3); border.width: 1
                                 implicitHeight: warnDeep.implicitHeight + 16
@@ -1606,6 +1615,7 @@ Rectangle {
                                 checkedValue: _avanzadaRev >= 0 && avanzadaDraft["audio_intelligence_fail_silently"] === "1"
                                 onChangedValue: function(v) { setAvanzadaValue("audio_intelligence_fail_silently", v ? "1" : "0") }
                             }
+                            } // fin grupo Deep Background (visible: deepAnalyticsDisponible)
 
                             SectionHeading {
                                 titulo: "Music Discovery"

@@ -51,7 +51,7 @@ Construye el parser de argumentos, valida la configuración y crea el `PipelineC
 | `audio_intelligence_background.py` | Cola reanudable de análisis profundo |
 | `audio_intelligence_deep.py` | Analyzer Essentia/TensorFlow (corre en bundle o en subprocess) |
 | `audio_intelligence_deep_subprocess.py` | Adaptador thread-safe que delega `analyze` a un subprocess Python externo (`infra/deep_runner.py`) para aislar TensorFlow del proceso de la UI. Misma API que `EssentiaTensorflowAnalyzer`; se selecciona automáticamente cuando `sys.frozen` o `NB_SOUND_DEEP_SUBPROCESS=1` |
-| `dedupe.py` | Detección de duplicados exactos (hash SHA256) y semánticos (ISRC + `mb_recording_id`) con pre-carga desde la biblioteca para que reimportaciones no creen duplicados |
+| `dedupe.py` | Detección de duplicados en tres ejes: exacto (hash SHA256), semántico (ISRC + `mb_recording_id`) y **observable** (título/artista/álbum normalizados + duración ±tolerancia + hash de la portada). Pre-carga desde la biblioteca para que reimportaciones no creen duplicados. La normalización de texto usa `utils.text.normalizar_para_comparar` (algoritmo único compartido con el explorador ciego) |
 | `import_recovery_service.py` | Recuperación selectiva post-importación: assets faltantes, enrichment fallido, lyrics, sidecars, deep, audio features. Las acciones de retry NO importan archivos nuevos |
 | `music_discovery_service.py` | Búsqueda natural sobre features disponibles |
 | `discovery.py` | Ruteo de consultas externas (AcoustID, Shazam, MusicBrainz) |
@@ -86,6 +86,7 @@ Aíslan lógica que no debe vivir en QML ni en los modelos reactivos:
 | `biblioteca.py` | Consultas de colección, inicio, búsqueda, estadísticas y playlists |
 | `importacion.py` | Ejecución de importaciones, progreso e historial |
 | `indexador.py` | Indexado de música existente hacia SQLite |
+| `dedupe_observable.py` | Barrido periódico en background (tercera capa de dedupe) sobre la biblioteca catalogada: detecta duplicados observables y resuelve según `DUPLICATE_POLICY` marcando la pista perdedora con `estado='duplicado'` (no borra, reversible). Reanudable e idempotente; lo lanza `ModeloBiblioteca.ejecutarDedupeObservable()` vía `WorkerDedupeObservable` y refresca las vistas en vivo |
 | `reproductor.py` | Reproducción, cola, lyrics, karaoke y avisos del backend |
 | `karaoke/` | Separación voz/instrumental (Demucs), cola persistente |
 | `dj_privado/` | Director musical: ontología, intent, scheduler, transiciones (ver [dj_privado.md](dj_privado.md)) |

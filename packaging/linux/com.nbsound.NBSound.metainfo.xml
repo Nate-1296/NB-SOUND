@@ -52,6 +52,11 @@
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="1.0.1" date="2026-05-30">
+      <description>
+        <p>Tercera capa de deduplicación (duplicado observable), interfaz condicional por plataforma y correcciones menores.</p>
+      </description>
+    </release>
     <release version="1.0.0" date="2026-05-20">
       <description>
         <p>Primera release estable v1: pipeline CLI + UI completa.</p>

@@ -2,6 +2,43 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [1.0.1] — 2026-05-30
+
+Actualización: tercera capa de deduplicación, interfaz condicional por
+plataforma y correcciones menores. Compatible con bibliotecas existentes
+(sin cambios de esquema). Para actualizar basta reemplazar la app por esta
+versión; la base de datos se conserva.
+
+### Deduplicación
+
+- Tercera capa de deduplicación: **duplicado observable**. Dos pistas se
+  consideran duplicado obvio si comparten título, artista y álbum
+  normalizados (mismo algoritmo que el explorador ciego), duración dentro
+  de ±`DUPLICATE_OBSERVABLE_TOLERANCIA_SEG` (constante, 3 s) y el hash del
+  contenido de la portada. Se aplica durante la importación (extendiendo
+  `GestorDuplicados`) y como barrido periódico en background sobre la
+  biblioteca catalogada (`servicios/dedupe_observable.py`), reanudable e
+  idempotente, que resuelve según `DUPLICATE_POLICY` marcando la pista
+  perdedora con `estado='duplicado'` (no borra; reversible) y refresca las
+  vistas en vivo vía `ModeloBiblioteca.ejecutarDedupeObservable()`.
+- `normalizar_para_comparar` se centralizó en `utils.text` (capa hoja
+  compartida por core y servicios); `explorador_ciego.hints` lo re-exporta.
+
+### Interfaz por plataforma
+
+- En Windows (donde `essentia-tensorflow` no tiene wheel funcional) toda la
+  UI de análisis profundo (deep) se oculta condicionalmente mediante la
+  propiedad `deepAnalyticsDisponible`, sin eliminar la lógica Python. En
+  Linux y macOS el comportamiento no cambia.
+
+### Correcciones
+
+- Eliminada una rama muerta en el dedupe que filtraba por un estado
+  `'aceptado'` que ningún módulo escribe en la tabla `pistas`.
+- Estabilizado un test de runtime QML (escala de UI en vivo) que era
+  sensible al orden de eventos Qt: ahora espera por condición en vez de un
+  retardo fijo.
+
 ## [1.0.0] — 2026-05-24
 
 Primera versión estable y distribuible de NB Sound.

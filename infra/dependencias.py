@@ -751,3 +751,33 @@ def registrar_apertura() -> None:
     """A llamarse una sola vez al arrancar la app. Incrementa el contador
     que dispara revalidaciones automáticas."""
     _incrementar_aperturas()
+
+
+# -----------------------------------------------------------------------------
+# Disponibilidad de Audio Intelligence profundo (deep) por plataforma
+# -----------------------------------------------------------------------------
+
+# IDs del catálogo que solo tienen sentido cuando el análisis deep está
+# disponible. Se usan para filtrar la pantalla "Estado del sistema" en las
+# plataformas donde deep no puede funcionar (ver `deep_analytics_disponible`).
+IDS_DEPENDENCIAS_DEEP = frozenset({"essentia_tensorflow", "modelos_essentia"})
+
+
+def deep_analytics_disponible() -> bool:
+    """Indica si el análisis profundo (Essentia/TensorFlow) puede operar.
+
+    ``essentia-tensorflow`` no publica un wheel funcional para Windows, por
+    lo que toda la cadena de Audio Intelligence deep (modelos de mood,
+    embeddings, tagging) es inalcanzable en esa plataforma. La lógica Python
+    subyacente se conserva intacta para builds futuras y modo desarrollo;
+    esta función es la única fuente de verdad para decidir si la UI debe
+    exponer o no los controles deep.
+
+    Se evalúa desde ``sys.platform`` y es estable durante toda la vida del
+    proceso, de modo que la UI puede cachear el valor (context property
+    evaluada una vez al iniciar).
+
+    Returns:
+        ``False`` en Windows (``win32``); ``True`` en Linux y macOS.
+    """
+    return not sys.platform.startswith("win")

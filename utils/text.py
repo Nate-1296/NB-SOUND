@@ -208,6 +208,61 @@ def para_comparacion(texto: str) -> str:
     return texto
 
 
+# -----------------------------------------------------------------------------
+# Normalizacion tolerante para comparacion de titulos/artistas/albumes.
+#
+# Vive en esta capa hoja (utils) —y no en servicios— porque tanto el pipeline
+# de catalogacion (core, p.ej. dedupe observable) como los servicios de la UI
+# (explorador ciego, dedupe periodico) necesitan EL MISMO algoritmo. Mantenerlo
+# aqui evita invertir la dependencia core->servicios. `hints.py` lo re-exporta
+# para conservar su API publica historica; su suite de tests valida el contrato.
+# -----------------------------------------------------------------------------
+
+_RE_NORMALIZAR_SPACES = re.compile(r"\s+")
+_RE_PUNTUACION = re.compile(r"[^\w\s]", re.UNICODE)
+
+_REEMPLAZOS_PRENORMAL = {
+    "‘": "'", "’": "'", "‚": "'", "‛": "'",  # comilla simple
+    "ʼ": "'", "`": "'",                      # modifier letter / backtick
+    "“": '"', "”": '"', "„": '"', "‟": '"',  # comillas dobles
+    "«": '"', "»": '"',                      # << >>
+    "–": "-", "—": "-", "−": "-", "‐": "-",  # guiones (en-dash, em-dash, etc.)
+    "…": "...",                              # ellipsis
+}
+
+
+def _prenormalizar(texto: str) -> str:
+    """Normaliza variantes Unicode antes del strip de puntuacion."""
+    out = []
+    for ch in str(texto or ""):
+        out.append(_REEMPLAZOS_PRENORMAL.get(ch, ch))
+    return "".join(out)
+
+
+def normalizar_para_comparar(texto: str) -> str:
+    """Normaliza para comparacion tolerante.
+
+    Pipeline:
+      1. Pre-normalizar comillas/guiones curvos a su forma ASCII.
+      2. NFD + strip de diacriticos -> "Cancion" == "Cancion".
+      3. Strip de puntuacion (cada signo -> espacio).
+      4. Colapso de espacios + lowercase.
+
+    Deliberadamente permisivo. Ejemplos (ver tests de explorador ciego):
+      "Cancion"      -> "cancion"
+      "Don't Stop"   -> "don t stop"
+      "   hola  x  " -> "hola x"
+    """
+    if not texto:
+        return ""
+    pre = _prenormalizar(texto)
+    nfd = unicodedata.normalize("NFD", pre)
+    sin_diacriticos = "".join(c for c in nfd if unicodedata.category(c) != "Mn")
+    sin_puntuacion = _RE_PUNTUACION.sub(" ", sin_diacriticos)
+    colapsado = _RE_NORMALIZAR_SPACES.sub(" ", sin_puntuacion).strip().lower()
+    return colapsado
+
+
 def normalizar_titulo(titulo: str) -> str:
     """
     Limpieza completa de un titulo de cancion para prepararlo para matching.

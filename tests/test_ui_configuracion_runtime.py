@@ -474,7 +474,14 @@ def test_qml_personalizacion_tema_fuente_y_escala_en_vivo(qml_factory):
     _ensure_visible(runtime, vista, scale_150)
     _click_item(runtime, scale_150)
     tema.aplicar_tema("titanio")
-    _wait(runtime.app, 220)
+    # La propagación click -> ModeloConfiguracion -> escala_ui pasa por la cola
+    # de eventos Qt; una espera fija es frágil (este test era flaky en
+    # aislamiento por timing del event loop offscreen). Poll hasta que el
+    # binding se aplique en vez de asumir un retardo concreto.
+    _wait_until(
+        runtime.app,
+        lambda: runtime.root.property("escala_ui") == pytest.approx(1.5),
+    )
 
     assert runtime.root.property("fuente_ui") == fuente
     assert runtime.root.property("escala_ui") == pytest.approx(1.5)

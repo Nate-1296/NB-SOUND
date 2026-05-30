@@ -572,6 +572,14 @@ ENABLE_SEMANTIC_DEDUPLICATION = _env_bool("ENABLE_SEMANTIC_DEDUPLICATION", True)
 # DUPLICATE_BETTER_MIN_DELTA. Valores menores son mas agresivos en el reemplazo.
 DUPLICATE_POLICY              = _env_str("DUPLICATE_POLICY", "replace_if_better")
 DUPLICATE_BETTER_MIN_DELTA    = _env_float("DUPLICATE_BETTER_MIN_DELTA", 0.08)
+# Eje observable (3a capa de dedupe): dos pistas son duplicado obvio si
+# comparten titulo/artista/album normalizados + portada (hash de contenido) y
+# su duracion difiere a lo sumo esta tolerancia, en segundos. Es un parametro
+# de afinacion interno del algoritmo (la regla de producto es fija: +-3 s), no
+# una preferencia de usuario expuesta en la pantalla de Configuracion; por eso
+# es una constante literal y no una variable `_env_*` (que ademas exigiria
+# mapearla en el contrato de ModeloConfiguracion).
+DUPLICATE_OBSERVABLE_TOLERANCIA_SEG = 3.0
 
 # --- Pipeline de assets multimedia (caratulas / imagenes de artista) ---
 ENABLE_ASSETS_PIPELINE        = _env_bool("ENABLE_ASSETS_PIPELINE", True)

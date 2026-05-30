@@ -60,6 +60,19 @@ engine.rootContext().setContextProperty("modeloReproductor", modelo_reproductor)
 
 Las context properties son globales a todo el árbol QML. Cualquier componente puede acceder a `modeloBiblioteca` sin necesidad de propagación explícita por la jerarquía.
 
+#### `deepAnalyticsDisponible` — gating de UI por plataforma
+
+Además de los modelos, `exponer_modelos()` registra la context property global **`deepAnalyticsDisponible`** (`bool`). Se evalúa **una sola vez** al iniciar desde `infra.dependencias.deep_analytics_disponible()`, que devuelve `False` en Windows —donde `essentia-tensorflow` no tiene un wheel funcional— y `True` en Linux y macOS.
+
+Los componentes QML relacionados con el análisis profundo (deep) se ocultan con `visible: deepAnalyticsDisponible`:
+
+- `VistaImportacion.qml`: el panel `DeepBackgroundPanel` (estado deep, progreso, pausa/reanudar/cancelar) y el botón "Reintentar deep" del panel de diagnóstico.
+- `VistaConfiguracion.qml` (pestaña Avanzada): el grupo completo "Deep Background".
+
+La misma condición se expone como `ModeloDependencias.deepAnalyticsDisponible`. Ese modelo, en plataformas sin deep, **filtra** las dependencias `essentia_tensorflow` y `modelos_essentia` del catálogo visible en *Estado del sistema* (`VistaEstadoSistema.qml`), de modo que sus tarjetas no aparezcan y `faltanOpcionales` no las cuente como faltantes irresolubles (el estado global puede ser "todo OK"). El catálogo Python de `infra.dependencias.construir_catalogo()` **no se altera**: CLI, instalador y tests siguen viendo todas las dependencias.
+
+La lógica Python de análisis deep no se elimina en ningún caso; solo se condiciona su exposición visual. En Linux y macOS el comportamiento no cambia.
+
 ### Contrato de un modelo QML
 
 ```python
