@@ -247,6 +247,27 @@ def _aplicar_migraciones_ligeras(conexion: sqlite3.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_track_deep_audio_features_run ON track_deep_audio_features(last_run_id)"
     )
 
+    # Ecosistema movil: columnas aditivas para deteccion de delta (sync_version)
+    # y merge last-write-wins de favoritos (favorita_actualizada_en).
+    # Ver docs/mobile-ecosystem.md (seccion C) y mobile-rollout-plan.md (1.1).
+    _agregar_columna_si_falta(conexion, "pistas", "sync_version", "INTEGER NOT NULL DEFAULT 0")
+    _agregar_columna_si_falta(conexion, "pistas", "favorita_actualizada_en", "TEXT")
+    _agregar_columna_si_falta(conexion, "albums", "sync_version", "INTEGER NOT NULL DEFAULT 0")
+    _agregar_columna_si_falta(conexion, "artistas", "sync_version", "INTEGER NOT NULL DEFAULT 0")
+    _agregar_columna_si_falta(conexion, "playlists", "sync_version", "INTEGER NOT NULL DEFAULT 0")
+    conexion.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pistas_sync_version ON pistas(sync_version)"
+    )
+    conexion.execute(
+        "CREATE INDEX IF NOT EXISTS idx_albums_sync_version ON albums(sync_version)"
+    )
+    conexion.execute(
+        "CREATE INDEX IF NOT EXISTS idx_artistas_sync_version ON artistas(sync_version)"
+    )
+    conexion.execute(
+        "CREATE INDEX IF NOT EXISTS idx_playlists_sync_version ON playlists(sync_version)"
+    )
+
 
 def inicializar_db(ruta_db: Path) -> None:
     """
@@ -319,6 +340,11 @@ def get_conexion() -> sqlite3.Connection:
             "Llama a inicializar_db() antes de get_conexion()."
         )
     return _conexion_global
+
+
+def ruta_db_actual() -> Optional[Path]:
+    """Ruta del archivo SQLite activo (o None si no se inicializo)."""
+    return _ruta_db_global
 
 
 def cerrar_db() -> None:
@@ -446,3 +472,93 @@ def guardar_config(clave: str, valor: str) -> None:
             """,
             (clave, valor),
         )
+
+
+# =============================================================================
+# SINCRONIZACION (ecosistema movil) — contador monotonico y tombstones
+#
+# Helper unico para incrementar la version de sync de las entidades
+# sincronizables. Centralizar el incremento aqui (en vez de repetir SQL en
+# cada servicio) garantiza que todas las escrituras usen el mismo contador
+# global y evita inconsistencias en el delta que consume el cliente movil.
+# Ver docs/mobile-ecosystem.md (seccion B/C) y mobile-rollout-plan.md (1.2).
+# =============================================================================
+
+_CLAVE_SYNC_VERSION = "sync_version_actual"
+
+# Tablas cuya columna `sync_version` puede actualizar `marcar_sync_version`.
+# Whitelist explicita porque el nombre de tabla se interpola en el SQL: nunca
+# debe provenir de entrada externa.
+_TABLAS_SINCRONIZABLES = frozenset({"pistas", "albums", "artistas", "playlists"})
+
+# Entidades validas para un tombstone (espejo logico de las tablas).
+_ENTIDADES_SINCRONIZABLES = frozenset({"pista", "album", "artista", "playlist"})
+
+
+def siguiente_sync_version() -> int:
+    """
+    Incrementa el contador global monotonico de sync y devuelve el nuevo valor.
+
+    El contador vive en `sync_estado` como clave/valor (TEXT). Se usa un UPSERT
+    atomico bajo lock para que dos escrituras concurrentes nunca obtengan el
+    mismo numero. El primer incremento parte de 1.
+    """
+    with _conexion_lock:
+        con = get_conexion()
+        con.execute(
+            """
+            INSERT INTO sync_estado(clave, valor) VALUES (?, '1')
+            ON CONFLICT(clave) DO UPDATE SET
+                valor = CAST(sync_estado.valor AS INTEGER) + 1
+            """,
+            (_CLAVE_SYNC_VERSION,),
+        )
+        fila = con.execute(
+            "SELECT valor FROM sync_estado WHERE clave = ?", (_CLAVE_SYNC_VERSION,)
+        ).fetchone()
+    return int(fila["valor"]) if fila else 0
+
+
+def sync_version_actual() -> int:
+    """Devuelve el valor actual del contador global sin incrementarlo."""
+    with _conexion_lock:
+        fila = get_conexion().execute(
+            "SELECT valor FROM sync_estado WHERE clave = ?", (_CLAVE_SYNC_VERSION,)
+        ).fetchone()
+    return int(fila["valor"]) if fila else 0
+
+
+def marcar_sync_version(tabla: str, entidad_id: int) -> int:
+    """
+    Asigna a la fila indicada la proxima `sync_version` global y la devuelve.
+
+    `tabla` debe pertenecer a la whitelist `_TABLAS_SINCRONIZABLES`; cualquier
+    otro valor lanza ValueError (defensa contra inyeccion via nombre de tabla).
+    """
+    if tabla not in _TABLAS_SINCRONIZABLES:
+        raise ValueError(f"Tabla no sincronizable: {tabla!r}")
+    version = siguiente_sync_version()
+    with _conexion_lock:
+        get_conexion().execute(
+            f"UPDATE {tabla} SET sync_version = ? WHERE id = ?",
+            (version, entidad_id),
+        )
+    return version
+
+
+def registrar_tombstone(entidad: str, entidad_id: int) -> int:
+    """
+    Registra el borrado de una entidad sincronizable para propagarlo al cliente.
+
+    Devuelve la `sync_version` asignada al tombstone. `entidad` debe ser una de
+    `_ENTIDADES_SINCRONIZABLES`.
+    """
+    if entidad not in _ENTIDADES_SINCRONIZABLES:
+        raise ValueError(f"Entidad no sincronizable: {entidad!r}")
+    version = siguiente_sync_version()
+    with _conexion_lock:
+        get_conexion().execute(
+            "INSERT INTO sync_tombstones(entidad, entidad_id, sync_version) VALUES (?, ?, ?)",
+            (entidad, entidad_id, version),
+        )
+    return version

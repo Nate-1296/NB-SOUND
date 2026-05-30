@@ -143,6 +143,13 @@ _HIDDEN_IMPORTS_BASE = [
     "servicios.biblioteca",
     "servicios.importacion",
     "servicios.indexador",
+    # Ecosistema movil: servidor de sincronizacion local + repositorio de sync.
+    # Se importan lazy desde el modelo Qt, por lo que PyInstaller no los
+    # detecta por analisis estatico. Sin esto, abrir la Vista de
+    # Sincronizacion en un bundle falla con "No module named ...".
+    "servicios.servidor_sync",
+    "servicios.sync_repositorio",
+    "servicios.backup",
     "servicios.karaoke",
     "servicios.karaoke.backend",
     "servicios.karaoke.modelo",
@@ -193,6 +200,11 @@ _DYNAMIC_SUBMODULES = (
     # falla con "No module named 'logging.config'" o similar.
     "dora",
     "submitit",
+    # Ecosistema movil: aiohttp/zeroconf cargan submodulos dinamicamente
+    # (routers, protocolos, async_) que el analisis estatico pierde.
+    "aiohttp",
+    "zeroconf",
+    "qrcode",
 )
 
 

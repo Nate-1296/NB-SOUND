@@ -9753,3 +9753,570 @@ class ModeloDependencias(QObject):
                 pass
         self._hilos.clear()
         self._workers.clear()
+
+
+# =============================================================================
+# ModeloSincronizacion — bridge Qt del ecosistema movil (servidor local + QR)
+# =============================================================================
+
+class _WorkerSyncAccion(QObject):
+    """Ejecuta una accion bloqueante del servidor (iniciar/detener) en un
+    QThread para no congelar la UI mientras el site arranca (hasta ~10 s).
+    """
+    terminado = Signal(bool, str)  # (ok, mensaje_error)
+
+    def __init__(self, accion, parent=None) -> None:
+        super().__init__(parent)
+        self._accion = accion
+
+    @Slot()
+    def ejecutar(self) -> None:
+        try:
+            self._accion()
+            self.terminado.emit(True, "")
+        except Exception as exc:
+            self.terminado.emit(False, str(exc))
+
+
+class _WorkerBackup(QObject):
+    """Crea o restaura un backup en un QThread (I/O de disco pesado).
+
+    `modo` es "crear" o "restaurar". Emite `terminado(ok, mensaje, ruta)`.
+    """
+    terminado = Signal(bool, str, str)
+
+    def __init__(self, modo: str, ruta: str, parent=None) -> None:
+        super().__init__(parent)
+        self._modo = modo
+        self._ruta = ruta
+
+    @Slot()
+    def ejecutar(self) -> None:
+        try:
+            from servicios import backup as svc_backup
+            from pathlib import Path as _Path
+
+            if self._modo == "crear":
+                from datetime import datetime
+                carpeta = _Path(self._ruta)
+                nombre = "nb_sound_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".nbsound-backup"
+                destino = carpeta / nombre
+                res = svc_backup.crear_backup(destino)
+                if res.get("ok"):
+                    self.terminado.emit(True, "Backup creado correctamente.", res.get("ruta", ""))
+                else:
+                    self.terminado.emit(False, res.get("error", "No se pudo crear el backup."), "")
+            else:
+                from db.conexion import inicializar_db, ruta_db_actual
+
+                destino_db = ruta_db_actual()
+                if destino_db is None:
+                    self.terminado.emit(False, "No hay base de datos activa para restaurar.", "")
+                    return
+                res = svc_backup.restaurar_backup(_Path(self._ruta), _Path(destino_db))
+                if res.get("ok"):
+                    # restaurar_backup cerro la conexion viva: reabrirla para que
+                    # la app siga funcionando sin reiniciar.
+                    inicializar_db(_Path(destino_db))
+                    self.terminado.emit(True, "Backup restaurado. Tu biblioteca se actualizó.", str(destino_db))
+                else:
+                    self.terminado.emit(False, res.get("error", "No se pudo restaurar."), "")
+        except Exception as exc:
+            self.terminado.emit(False, str(exc), "")
+
+
+class ModeloSincronizacion(QObject):
+    """Bridge QML <-> servicios.servidor_sync (ecosistema movil).
+
+    Gobierna el arranque/parada BAJO DEMANDA del servidor de sincronizacion,
+    expone la lista de dispositivos emparejados, el QR de emparejamiento y el
+    diagnostico de dependencias. Tambien actua de puente entre el reproductor
+    (señales Qt) y el canal WS de control: empuja estado a los clientes y
+    marshala los comandos entrantes al hilo de Qt.
+
+    El servidor corre en su propio hilo/event loop; este modelo nunca comparte
+    objetos Qt con ese hilo: solo intercambia dicts planos y callbacks.
+    """
+
+    activoCambiado        = Signal()
+    dispositivosCambiado  = Signal()
+    qrCambiado            = Signal()
+    estadoCambiado        = Signal()
+    mensajeCambiado       = Signal()
+    dispositivoEmparejado = Signal("QVariant")
+    backupProgreso        = Signal(str)
+    backupTerminado       = Signal(bool, str, str)  # (ok, mensaje, ruta)
+    # Señal interna: marshala un comando recibido por WS (hilo servidor) al
+    # hilo de Qt mediante conexion en cola.
+    _comandoRecibido      = Signal(object)
+
+    def __init__(self, modelo_reproductor=None, parent=None) -> None:
+        super().__init__(parent)
+        self._reproductor = modelo_reproductor
+        self._servidor = None
+        self._worker = None
+        self._hilo = None
+        self._ocupado = False
+        self._mensaje = ""
+        self._dispositivos: list[dict] = []
+        self._qr_ruta = ""
+        self._qr_contador = 0
+        self._estado_snapshot: dict = self._construir_snapshot()
+        self._backup_worker = None
+        self._backup_hilo = None
+
+        disp_ok, faltantes = self._dependencias()
+        self._dep_disponibles = disp_ok
+        self._dep_faltantes = faltantes
+
+        # Puente de comandos: la señal se emite desde el hilo del servidor y se
+        # entrega (en cola) a _aplicar_comando en el hilo de Qt.
+        self._comandoRecibido.connect(self._aplicar_comando)
+        self._cablear_reproductor()
+        self._recargar_dispositivos(emitir=False)
+
+    # ── Dependencias ─────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _dependencias() -> tuple[bool, list[str]]:
+        try:
+            from servicios.servidor_sync import dependencias_disponibles
+            return dependencias_disponibles()
+        except Exception:
+            return False, ["aiohttp", "zeroconf", "qrcode"]
+
+    @Property(bool, notify=estadoCambiado)
+    def dependenciasDisponibles(self) -> bool:
+        return self._dep_disponibles
+
+    @Property("QVariantList", notify=estadoCambiado)
+    def dependenciasFaltantes(self) -> list:
+        return list(self._dep_faltantes)
+
+    # ── Propiedades de estado ────────────────────────────────────────────────
+
+    @Property(bool, notify=activoCambiado)
+    def activo(self) -> bool:
+        return bool(self._servidor and self._servidor.activo)
+
+    @Property(bool, notify=estadoCambiado)
+    def ocupado(self) -> bool:
+        return self._ocupado
+
+    @Property(str, notify=activoCambiado)
+    def host(self) -> str:
+        return (self._servidor.host if self._servidor and self._servidor.activo else "") or ""
+
+    @Property(int, notify=activoCambiado)
+    def puerto(self) -> int:
+        return int(self._servidor.puerto) if self._servidor and self._servidor.activo and self._servidor.puerto else 0
+
+    @Property(str, notify=activoCambiado)
+    def direccion(self) -> str:
+        if self._servidor and self._servidor.activo and self._servidor.puerto:
+            return f"{self._servidor.host}:{self._servidor.puerto}"
+        return ""
+
+    @Property(int, notify=estadoCambiado)
+    def clientesConectados(self) -> int:
+        return self._servidor.numero_clientes_ws() if self._servidor and self._servidor.activo else 0
+
+    @Property(str, notify=mensajeCambiado)
+    def mensaje(self) -> str:
+        return self._mensaje
+
+    @Property("QVariantList", notify=dispositivosCambiado)
+    def dispositivos(self) -> list:
+        return list(self._dispositivos)
+
+    @Property(str, notify=qrCambiado)
+    def qrImagen(self) -> str:
+        return self._qr_ruta
+
+    @Property(str, notify=qrCambiado)
+    def pairingToken(self) -> str:
+        if self._servidor and self._servidor.activo:
+            payload = self._servidor.payload_qr()
+            return (payload or {}).get("token", "") if payload else ""
+        return ""
+
+    # ── Slots de control del servidor ────────────────────────────────────────
+
+    @Slot()
+    def encender(self) -> None:
+        if self._ocupado or (self._servidor and self._servidor.activo):
+            return
+        disp_ok, faltantes = self._dependencias()
+        self._dep_disponibles = disp_ok
+        self._dep_faltantes = faltantes
+        if not disp_ok:
+            self._set_mensaje("Falta instalar aiohttp para activar la sincronización.")
+            self.estadoCambiado.emit()
+            return
+        if self._servidor is None:
+            self._servidor = self._crear_servidor()
+        self._set_ocupado(True)
+        self._set_mensaje("Encendiendo servidor…")
+        self._lanzar_worker(self._servidor.iniciar, self._on_encendido)
+
+    @Slot()
+    def apagar(self) -> None:
+        if self._ocupado or not (self._servidor and self._servidor.activo):
+            return
+        self._set_ocupado(True)
+        self._set_mensaje("Apagando servidor…")
+        self._lanzar_worker(self._servidor.detener, self._on_apagado)
+
+    @Slot()
+    def alternar(self) -> None:
+        if self._servidor and self._servidor.activo:
+            self.apagar()
+        else:
+            self.encender()
+
+    @Slot()
+    def regenerarQr(self) -> None:
+        if not (self._servidor and self._servidor.activo):
+            return
+        self._servidor.regenerar_token()
+        self._refrescar_qr()
+        self._set_mensaje("Código QR regenerado.")
+
+    @Slot(int)
+    def revocar(self, dispositivo_id: int) -> None:
+        try:
+            from servicios import sync_repositorio
+            sync_repositorio.revocar_dispositivo(int(dispositivo_id))
+        except Exception as exc:
+            _log.warning("revocar(%s) falló: %s", dispositivo_id, exc)
+        self._recargar_dispositivos()
+
+    @Slot()
+    def recargarDispositivos(self) -> None:
+        self._recargar_dispositivos()
+
+    @Slot(int, str)
+    def guardarSeleccion(self, dispositivo_id: int, seleccion_json: str) -> None:
+        try:
+            from servicios import sync_repositorio
+            seleccion = json.loads(seleccion_json or "{}")
+            sync_repositorio.guardar_seleccion(int(dispositivo_id), seleccion)
+        except Exception as exc:
+            _log.warning("guardarSeleccion(%s) falló: %s", dispositivo_id, exc)
+        self._recargar_dispositivos()
+
+    # ── Worker QThread para iniciar/detener ──────────────────────────────────
+
+    def _lanzar_worker(self, accion, on_done) -> None:
+        from PySide6.QtCore import QThread
+
+        hilo = QThread(self)
+        worker = _WorkerSyncAccion(accion)
+        worker.moveToThread(hilo)
+
+        def _terminado(ok: bool, error: str) -> None:
+            try:
+                on_done(ok, error)
+            finally:
+                hilo.quit()
+
+        worker.terminado.connect(_terminado)
+        hilo.started.connect(worker.ejecutar)
+        hilo.finished.connect(self._limpiar_worker)
+        self._worker = worker
+        self._hilo = hilo
+        hilo.start()
+
+    def _limpiar_worker(self) -> None:
+        hilo = self._hilo
+        worker = self._worker
+        self._hilo = None
+        self._worker = None
+        if hilo is not None:
+            try:
+                hilo.wait(2000)
+                hilo.deleteLater()
+            except Exception:
+                pass
+        if worker is not None:
+            try:
+                worker.deleteLater()
+            except Exception:
+                pass
+
+    def _on_encendido(self, ok: bool, error: str) -> None:
+        self._set_ocupado(False)
+        if not ok:
+            self._set_mensaje(f"No se pudo encender: {error}")
+        else:
+            self._set_mensaje(f"Servidor activo en {self.direccion}")
+            self._refrescar_qr()
+            self._recargar_dispositivos()
+        self.activoCambiado.emit()
+        self.estadoCambiado.emit()
+
+    def _on_apagado(self, ok: bool, error: str) -> None:
+        self._set_ocupado(False)
+        self._set_mensaje("Servidor apagado." if ok else f"Error al apagar: {error}")
+        self._qr_ruta = ""
+        self.qrCambiado.emit()
+        self.activoCambiado.emit()
+        self.estadoCambiado.emit()
+
+    # ── Construccion del servidor + callbacks ────────────────────────────────
+
+    def _crear_servidor(self):
+        from servicios.servidor_sync import ServidorSync
+
+        return ServidorSync(
+            comando_control=self._comando_control_thread_safe,
+            estado_provider=lambda: self._estado_snapshot,
+            on_dispositivo_emparejado=self._on_dispositivo_emparejado,
+            nombre_servicio="NB Sound",
+        )
+
+    def _comando_control_thread_safe(self, mensaje: dict) -> dict:
+        """Llamado desde el hilo del servidor. Marshala al hilo de Qt vía señal
+        en cola y devuelve un ack inmediato (fire-and-forget)."""
+        try:
+            self._comandoRecibido.emit(mensaje)
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+        return {"ok": True, "encolado": True}
+
+    def _on_dispositivo_emparejado(self, dispositivo: dict) -> None:
+        """Callback del hilo del servidor: refresca lista + QR en el hilo de Qt."""
+        # Emitir señales es thread-safe; los slots conectados corren en Qt.
+        try:
+            self.dispositivoEmparejado.emit(dispositivo)
+        except Exception:
+            pass
+        # Reusar la señal de comando (cola) para ejecutar el refresco en Qt.
+        self._comandoRecibido.emit({"comando": "__refrescar_sync__"})
+
+    # ── Puente reproductor -> WS ─────────────────────────────────────────────
+
+    def _cablear_reproductor(self) -> None:
+        rep = self._reproductor
+        if rep is None:
+            return
+        for nombre in ("estadoCambiado", "progresoCambiado", "colaCambiada", "volumenCambiado", "modoCambiado"):
+            señal = getattr(rep, nombre, None)
+            if señal is not None:
+                try:
+                    señal.connect(self._on_reproductor_cambio)
+                except Exception:
+                    pass
+
+    @Slot()
+    def _on_reproductor_cambio(self) -> None:
+        self._estado_snapshot = self._construir_snapshot()
+        if self._servidor and self._servidor.activo:
+            self._servidor.difundir_estado(self._estado_snapshot)
+
+    def _construir_snapshot(self) -> dict:
+        rep = self._reproductor
+        if rep is None:
+            return {"reproduciendo": False, "titulo": "", "artista": "", "album": "",
+                    "posicion_seg": 0.0, "duracion_seg": 0.0, "volumen": 100}
+
+        def _g(attr, default):
+            try:
+                return getattr(rep, attr)
+            except Exception:
+                return default
+
+        return {
+            "reproduciendo": bool(_g("reproduciendo", False)),
+            "titulo": str(_g("titulo_activo", "") or ""),
+            "artista": str(_g("artista_activo", "") or ""),
+            "album": str(_g("album_activo", "") or ""),
+            "posicion_seg": float(_g("posicion_seg", 0.0) or 0.0),
+            "duracion_seg": float(_g("duracion_seg", 0.0) or 0.0),
+            "volumen": int(_g("volumen", 100) or 100),
+        }
+
+    @Slot(object)
+    def _aplicar_comando(self, mensaje) -> None:
+        """Corre en el hilo de Qt. Traduce un comando WS a una acción del
+        reproductor. Comandos soportados: play/pause/toggle, next, prev, stop,
+        seek (posicion_seg), volume (valor), repeat (modo), shuffle (activo)."""
+        if not isinstance(mensaje, dict):
+            return
+        comando = str(mensaje.get("comando") or "")
+        if comando == "__refrescar_sync__":
+            self._recargar_dispositivos()
+            self._refrescar_qr()
+            return
+        rep = self._reproductor
+        if rep is None:
+            return
+        try:
+            if comando in ("play", "pause", "toggle", "play_pause"):
+                rep.pausar_reanudar()
+            elif comando in ("next", "siguiente"):
+                rep.siguiente()
+            elif comando in ("prev", "previous", "anterior"):
+                rep.anterior()
+            elif comando in ("stop", "detener"):
+                rep.detener()
+            elif comando == "seek":
+                rep.buscar_posicion(float(mensaje.get("posicion_seg", 0) or 0))
+            elif comando in ("volume", "volumen"):
+                rep.set_volumen(int(mensaje.get("valor", 100) or 100))
+            elif comando in ("repeat", "repeticion"):
+                rep.set_modo_repeticion(str(mensaje.get("modo", "ninguno")))
+            elif comando in ("shuffle", "aleatorio"):
+                rep.set_aleatorio(bool(mensaje.get("activo", False)))
+            else:
+                _log.debug("Comando WS desconocido: %s", comando)
+        except Exception as exc:
+            _log.debug("No se pudo aplicar comando WS %s: %s", comando, exc)
+
+    # ── Dispositivos y QR ────────────────────────────────────────────────────
+
+    def _recargar_dispositivos(self, emitir: bool = True) -> None:
+        try:
+            from servicios import sync_repositorio
+            self._dispositivos = sync_repositorio.listar_dispositivos(incluir_revocados=False)
+        except Exception as exc:
+            _log.debug("No se pudieron listar dispositivos: %s", exc)
+            self._dispositivos = []
+        if emitir:
+            self.dispositivosCambiado.emit()
+            self.estadoCambiado.emit()
+
+    def _refrescar_qr(self) -> None:
+        self._qr_ruta = ""
+        if not (self._servidor and self._servidor.activo):
+            self.qrCambiado.emit()
+            return
+        try:
+            from servicios.servidor_sync import generar_qr_png
+
+            payload = self._servidor.payload_qr()
+            if payload:
+                png = generar_qr_png(json.dumps(payload, ensure_ascii=False))
+                if png:
+                    ruta = self._escribir_qr_temporal(png)
+                    if ruta:
+                        self._qr_ruta = QUrl.fromLocalFile(str(ruta)).toString()
+        except Exception as exc:
+            _log.debug("No se pudo generar el QR: %s", exc)
+        self.qrCambiado.emit()
+
+    def _escribir_qr_temporal(self, png: bytes):
+        try:
+            base = None
+            try:
+                from config import settings as _s
+                if getattr(_s, "DEFAULT_TEMP_DIR", None):
+                    base = Path(_s.DEFAULT_TEMP_DIR)
+            except Exception:
+                base = None
+            if base is None:
+                base = Path(tempfile.gettempdir())
+            base.mkdir(parents=True, exist_ok=True)
+            self._qr_contador += 1
+            ruta = base / f"nb_sound_qr_{self._qr_contador}.png"
+            ruta.write_bytes(png)
+            # Limpiar el anterior para no acumular archivos temporales.
+            previo = base / f"nb_sound_qr_{self._qr_contador - 1}.png"
+            if previo.exists():
+                try:
+                    previo.unlink()
+                except OSError:
+                    pass
+            return ruta
+        except Exception as exc:
+            _log.debug("No se pudo escribir QR temporal: %s", exc)
+            return None
+
+    # ── Helpers de estado ────────────────────────────────────────────────────
+
+    def _set_ocupado(self, valor: bool) -> None:
+        if self._ocupado != valor:
+            self._ocupado = valor
+            self.estadoCambiado.emit()
+
+    def _set_mensaje(self, texto: str) -> None:
+        self._mensaje = texto
+        self.mensajeCambiado.emit()
+
+    # ── Backup / restauracion (worker QThread) ───────────────────────────────
+
+    @Slot(str)
+    def crearBackup(self, carpeta_destino: str) -> None:
+        self._lanzar_backup("crear", self._desde_url(carpeta_destino))
+
+    @Slot(str)
+    def restaurarBackup(self, ruta: str) -> None:
+        self._lanzar_backup("restaurar", self._desde_url(ruta))
+
+    @staticmethod
+    def _desde_url(valor: str) -> str:
+        v = str(valor or "")
+        if v.startswith("file://"):
+            try:
+                return QUrl(v).toLocalFile()
+            except Exception:
+                return v[7:]
+        return v
+
+    def _lanzar_backup(self, modo: str, ruta: str) -> None:
+        if self._backup_hilo is not None:
+            self.backupTerminado.emit(False, "Ya hay una operación de backup en curso.", "")
+            return
+        from PySide6.QtCore import QThread
+
+        hilo = QThread(self)
+        worker = _WorkerBackup(modo, ruta)
+        worker.moveToThread(hilo)
+
+        def _terminado(ok: bool, mensaje: str, ruta_res: str) -> None:
+            self.backupTerminado.emit(ok, mensaje, ruta_res)
+            hilo.quit()
+
+        worker.terminado.connect(_terminado)
+        hilo.started.connect(worker.ejecutar)
+        hilo.finished.connect(self._limpiar_backup)
+        self._backup_worker = worker
+        self._backup_hilo = hilo
+        hilo.start()
+
+    def _limpiar_backup(self) -> None:
+        hilo = self._backup_hilo
+        worker = self._backup_worker
+        self._backup_hilo = None
+        self._backup_worker = None
+        if hilo is not None:
+            try:
+                hilo.wait(2000)
+                hilo.deleteLater()
+            except Exception:
+                pass
+        if worker is not None:
+            try:
+                worker.deleteLater()
+            except Exception:
+                pass
+
+    # ── Cierre ordenado (lo invoca main_ui._ORDEN_CIERRE) ────────────────────
+
+    def cerrar(self) -> None:
+        try:
+            if self._servidor is not None:
+                self._servidor.detener()
+        except Exception as exc:
+            _log.debug("Cierre del servidor de sync falló: %s", exc)
+        for hilo in (self._hilo, self._backup_hilo):
+            if hilo is not None:
+                try:
+                    hilo.quit()
+                    hilo.wait(3000)
+                except Exception:
+                    pass
+        self._hilo = None
+        self._worker = None
+        self._backup_hilo = None
+        self._backup_worker = None

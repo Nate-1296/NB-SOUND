@@ -17,6 +17,15 @@ openai>=1.0.0
 # Backend de reproducción para UI (si no está, la UI usa modo simulado)
 python-vlc>=3.0.20123
 
+# Ecosistema móvil — servidor local de sincronización WiFi con la app de
+# teléfono/tablet. Si faltan, la app abre y funciona igual; la Vista de
+# Sincronización queda deshabilitada hasta instalarlas (degradación
+# controlada). aiohttp = HTTP+WS en proceso; zeroconf = descubrimiento mDNS;
+# qrcode = emparejamiento por QR (sobre Pillow). Ver docs/mobile-ecosystem.md.
+aiohttp>=3.9.0
+zeroconf>=0.131.0
+qrcode>=7.4.2
+
 librosa>=0.11.0
 
 numpy>=1.26.0

@@ -122,7 +122,8 @@ ApplicationWindow {
         "perfil": false,
         "karaoke": false,
         "dj_privado": false,
-        "explorador_ciego": false
+        "explorador_ciego": false,
+        "sincronizacion": false
     })
 
     color: tema.fondo
@@ -275,6 +276,15 @@ ApplicationWindow {
                             sourceComponent: comp_vista_estado_sistema
                             onStatusChanged: ventana_principal._manejar_estado_loader("estado_sistema", loader_estado_sistema)
                         }
+                        // Vista del ecosistema móvil: servidor local + QR + dispositivos.
+                        // Cargada bajo demanda; el servidor solo arranca al pulsar "Encender".
+                        Loader {
+                            id: loader_sincronizacion
+                            active: ventana_principal._debe_cargar_vista("sincronizacion")
+                            asynchronous: true
+                            sourceComponent: comp_vista_sincronizacion
+                            onStatusChanged: ventana_principal._manejar_estado_loader("sincronizacion", loader_sincronizacion)
+                        }
                     }
                 }
 
@@ -332,6 +342,7 @@ ApplicationWindow {
     }
     Component { id: comp_vista_explorador_ciego; Vistas.VistaExploradorCiego { shell: ventana_principal } }
     Component { id: comp_vista_estado_sistema; Vistas.VistaEstadoSistema { shell: ventana_principal } }
+    Component { id: comp_vista_sincronizacion; Vistas.VistaSincronizacion { shell: ventana_principal } }
 
     // Timer de animación: incrementa la fase en ~24 fps cuando hay reproducción activa.
     // La fase se comparte con NavLateral y BarraReproduccion para sincronizar
@@ -370,7 +381,8 @@ ApplicationWindow {
             "karaoke": 7,
             "dj_privado": 8,
             "explorador_ciego": 9,
-            "estado_sistema": 10
+            "estado_sistema": 10,
+            "sincronizacion": 11
         }
         return mapa[nombre] !== undefined ? mapa[nombre] : 0
     }

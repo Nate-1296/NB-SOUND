@@ -6,7 +6,7 @@
 # =============================================================================
 
 APP_NAME = "NB SOUND"
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.1.0"
 APP_VERSION_DISPLAY = "v1"
 
 CLI_NAME = f"{APP_NAME} CLI"

@@ -139,8 +139,17 @@ Rectangle {
                     etiqueta: "Estado del Sistema"
                     activo: vista_activa === "estado_sistema"
                     focoAnterior: nav_configuracion
-                    focoSiguiente: toggle_modo
+                    focoSiguiente: nav_sincronizacion
                     onClicked: navegar("estado_sistema")
+                }
+                ElementoNav {
+                    id: nav_sincronizacion
+                    icono: "../assets/icons/sync.svg"
+                    etiqueta: "Sincronización"
+                    activo: vista_activa === "sincronizacion"
+                    focoAnterior: nav_estado_sistema
+                    focoSiguiente: toggle_modo
+                    onClicked: navegar("sincronizacion")
                 }
             }
 
@@ -178,7 +187,7 @@ Rectangle {
                         }
                         Rectangle {
                             id: toggle_modo
-                            property var focoAnterior: nav_configuracion
+                            property var focoAnterior: nav_sincronizacion
                             property var focoSiguiente: nav_perfil
                             property bool focoTecladoVisible: false
                             width: raiz.minimo_vertical ? 54 : (raiz.compacto_vertical ? 62 : 76); height: raiz.minimo_vertical ? 22 : (raiz.compacto_vertical ? 24 : UiTokens.controlHeightSm); radius: height / 2

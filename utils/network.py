@@ -1,4 +1,5 @@
 import json
+import socket
 import time
 from typing import Optional, Any
 from urllib.request import Request, build_opener, HTTPRedirectHandler
@@ -7,6 +8,57 @@ from urllib.error import HTTPError, URLError
 from infra.logger import obtener_logger
 
 _log = obtener_logger("network_utils")
+
+
+# -----------------------------------------------------------------------------
+# Descubrimiento de interfaz LAN y seleccion de puerto (ecosistema movil)
+# -----------------------------------------------------------------------------
+
+def ip_lan_probable() -> str:
+    """Devuelve la IP de la interfaz por la que sale el trafico a la LAN.
+
+    Truco estandar: abrir un socket UDP "conectado" a una IP externa no
+    enruta ni envia paquetes, pero el SO asigna la IP de origen de la
+    interfaz adecuada (la del WiFi/ethernet activo), que es justo la que el
+    celular debe usar. Fallback a 127.0.0.1 si no hay red.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # 10.255.255.255 es no-enrutable globalmente; solo fuerza la
+        # resolucion de la interfaz de salida. No se envia nada.
+        sock.connect(("10.255.255.255", 1))
+        ip = sock.getsockname()[0]
+        if ip and not ip.startswith("127."):
+            return ip
+    except OSError:
+        pass
+    finally:
+        sock.close()
+    # Segundo intento: resolver el hostname local.
+    try:
+        ip = socket.gethostbyname(socket.gethostname())
+        if ip and not ip.startswith("127."):
+            return ip
+    except OSError:
+        pass
+    return "127.0.0.1"
+
+
+def puerto_libre(host: str, inicio: int = 8731, fin: int = 8799) -> Optional[int]:
+    """Devuelve el primer puerto TCP libre de [inicio, fin] en `host`, o None.
+
+    Se enlaza y se cierra para comprobar disponibilidad. El puerto efectivo
+    debe usarse inmediatamente para minimizar la ventana de carrera.
+    """
+    for puerto in range(int(inicio), int(fin) + 1):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                sock.bind((host, puerto))
+                return puerto
+            except OSError:
+                continue
+    return None
 
 class _SafeRedirectHandler(HTTPRedirectHandler):
     def __init__(self, max_redirects: int = 3):

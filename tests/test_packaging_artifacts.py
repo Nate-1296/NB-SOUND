@@ -60,6 +60,59 @@ def test_macos_spec_declara_identifier_correcto():
     )
 
 
+def test_hiddenimports_incluye_modulos_de_sync():
+    """El bundle debe declarar los módulos del ecosistema móvil como hidden
+    imports (se importan lazy desde QML/modelo y PyInstaller no los detecta)."""
+    import sys
+    sys.path.insert(0, str(ROOT / "packaging"))
+    import _common  # noqa: PLC0415
+
+    hidden = _common.hidden_imports()
+    for modulo in ("servicios.servidor_sync", "servicios.sync_repositorio", "servicios.backup"):
+        assert modulo in hidden, f"hiddenimports no incluye {modulo}"
+
+
+def test_dynamic_submodules_incluye_libs_de_red():
+    import sys
+    sys.path.insert(0, str(ROOT / "packaging"))
+    import _common  # noqa: PLC0415
+
+    for lib in ("aiohttp", "zeroconf", "qrcode"):
+        assert lib in _common._DYNAMIC_SUBMODULES, f"_DYNAMIC_SUBMODULES no incluye {lib}"
+
+
+def test_release_requirements_incluye_deps_de_sync():
+    """Los wheels del servidor de sync deben ir en el build de release para que
+    la Vista de Sincronización funcione out-of-the-box en el bundle oficial."""
+    req = (ROOT / "requirements-release.txt").read_text(encoding="utf-8")
+    for paquete in ("aiohttp", "zeroconf", "qrcode"):
+        assert paquete in req, f"requirements-release.txt no incluye {paquete}"
+
+
+def test_runtime_requirements_incluye_deps_de_sync():
+    req = (ROOT / "requirements.txt").read_text(encoding="utf-8")
+    for paquete in ("aiohttp", "zeroconf", "qrcode"):
+        assert paquete in req, f"requirements.txt no incluye {paquete}"
+
+
+def test_collect_external_tools_detecta_binarios(tmp_path):
+    """collect_external_tools debe mapear los ejecutables de external_bin/ a bin/
+    (validación de bundle: ffmpeg/fpcalc por SO). Sin la carpeta, lista vacía."""
+    import sys
+    sys.path.insert(0, str(ROOT / "packaging"))
+    import _common  # noqa: PLC0415
+
+    assert _common.collect_external_tools(tmp_path) == []
+    ext = tmp_path / "external_bin"
+    ext.mkdir()
+    (ext / "ffmpeg").write_bytes(b"\x7fELF-fake")
+    (ext / "fpcalc").write_bytes(b"\x7fELF-fake")
+    destinos = _common.collect_external_tools(tmp_path)
+    nombres = sorted(Path(src).name for src, _dst in destinos)
+    assert nombres == ["ffmpeg", "fpcalc"]
+    assert all(dst == "bin" for _src, dst in destinos)
+
+
 def test_specs_referencian_iconos_existentes():
     """Cada spec debe referenciar un icono que sí exista."""
     base = ROOT / "ui" / "qml" / "assets" / "logo"

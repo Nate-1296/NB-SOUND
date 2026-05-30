@@ -2,6 +2,58 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [1.1.0] — 2026-05-30
+
+Ecosistema móvil (lado escritorio): la app de PC ahora puede actuar como
+servidor local de sincronización WiFi con la futura app móvil
+(Android/iOS/tablets), además de soporte de copia de seguridad. Todos los
+cambios son **aditivos**: las bibliotecas existentes siguen funcionando sin
+migración manual (las columnas/tablas nuevas se crean al abrir la BD). La app
+nunca requiere reinicio para aplicar estos cambios.
+
+### Sincronización con dispositivos móviles
+
+- **Servidor local bajo demanda** (`servicios/servidor_sync.py`): HTTP REST +
+  WebSocket sobre `aiohttp`, en su propio hilo y event loop (aislado de Qt).
+  Selección de puerto libre (8731–8799), bind a la IP de la subred LAN y
+  anuncio por mDNS/DNS-SD (`zeroconf`) para reconexión. Arranque/parada
+  idempotentes con teardown determinista (no deja hilos ni puertos colgados).
+- **Emparejamiento por QR** (`qrcode` sobre Pillow): token efímero de un solo
+  uso; tras el handshake se emite un `device_token` persistente por
+  dispositivo. Todo el tráfico (salvo `/ping` y `/pair`) va autenticado.
+- **Protocolo de sincronización** (`servicios/sync_repositorio.py`): manifest
+  delta por `sync_version`, descarga de audio/portadas con `Range` (HTTP 206)
+  validada por `hash_sha256`, merge de historial y favoritos
+  (last-write-wins por timestamp), stems de karaoke opt-in y control remoto
+  bidireccional del reproductor por WebSocket (estilo Spotify Connect).
+- **Vista de Sincronización** (`ui/qml/vistas/VistaSincronizacion.qml`): nueva
+  entrada en la navegación con estado del servidor, QR de emparejamiento,
+  dispositivos vinculados (revocables) y copia de seguridad. Continuidad
+  visual con el resto de la app (mismos botones, acentos y diseño responsive).
+- Seguridad v1: LAN + token, **sin TLS** (trade-off documentado en
+  `docs/cross-platform.md`); el QR reserva `tls_fingerprint` para el futuro.
+
+### Esquema de base de datos (aditivo)
+
+- Nuevas tablas `sync_dispositivos`, `sync_tombstones`, `sync_stem_transfers`
+  y `sync_estado`; columnas `sync_version` en pistas/álbumes/artistas/
+  playlists y `favorita_actualizada_en` en pistas. Helper único de incremento
+  monotónico (`db.conexion.marcar_sync_version` / `registrar_tombstone`).
+
+### Copia de seguridad
+
+- `servicios/backup.py`: exporta un `.nbsound-backup` (ZIP con la BD vía
+  `VACUUM INTO`, assets y `manifest.json` con checksums) y restaura validando
+  integridad antes de reemplazar la BD viva atómicamente (reutiliza la
+  recuperación de `db/conexion.py`). Expuesto en la UI con worker Qt.
+
+### Empaquetado
+
+- `aiohttp`, `zeroconf` y `qrcode` añadidos a `requirements.txt`,
+  `requirements-release.txt`, al catálogo de `infra/dependencias.py` y a los
+  `hiddenimports` de los tres specs de PyInstaller (vía `packaging/_common.py`).
+  Validación de bundle cubierta por `tests/test_packaging_artifacts.py`.
+
 ## [1.0.1] — 2026-05-30
 
 Actualización: tercera capa de deduplicación, interfaz condicional por

@@ -403,6 +403,7 @@ def construir_modelos(app: QGuiApplication):
         ModeloDjPrivado,
         ModeloExploradorCiego,
         ModeloDependencias,
+        ModeloSincronizacion,
     )
 
     reproductor_backend = Reproductor()
@@ -431,6 +432,11 @@ def construir_modelos(app: QGuiApplication):
     modelos["exploradorCiego"] = ModeloExploradorCiego(
         modelos["reproductor"], modelos["biblioteca"], parent=app,
     )
+
+    # Ecosistema movil: el servidor de sincronizacion arranca BAJO DEMANDA
+    # (desde la Vista de Sincronizacion), no aqui. Solo construimos el modelo
+    # y le pasamos el reproductor para el puente de control remoto (WS).
+    modelos["sincronizacion"] = ModeloSincronizacion(modelos["reproductor"], parent=app)
 
     modelos["temaUi"] = ModeloTema(modelos["configuracion"], parent=app)
 
@@ -475,6 +481,10 @@ def construir_modelos(app: QGuiApplication):
     # de el durante su propio teardown.
     _ORDEN_CIERRE = (
         "dependencias",
+        # El servidor de sincronizacion se detiene antes que el reproductor:
+        # su hilo/event loop propio debe pararse de forma determinista y deja
+        # de escuchar señales del reproductor antes de que este se destruya.
+        "sincronizacion",
         "exploradorCiego",
         "karaoke",
         "djPrivado",

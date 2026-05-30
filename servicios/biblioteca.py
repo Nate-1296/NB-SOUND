@@ -1170,15 +1170,26 @@ def obtener_pista_por_ruta(ruta: str) -> Optional[dict]:
 
 
 def toggle_favorita(pista_id: int) -> bool:
-    """Alterna el estado de favorita de una pista. Retorna el nuevo valor."""
+    """Alterna el estado de favorita de una pista. Retorna el nuevo valor.
+
+    Sella `favorita_actualizada_en` (UTC) e incrementa `sync_version` para que
+    el ecosistema movil resuelva el favorito por last-write-wins y detecte el
+    cambio en el siguiente delta. Ver docs/mobile-ecosystem.md (seccion B).
+    """
     fila = obtener_una_fila("SELECT favorita FROM pistas WHERE id = ?", (pista_id,))
     if not fila:
         return False
     nuevo_valor = 0 if fila["favorita"] else 1
     ejecutar(
-        "UPDATE pistas SET favorita = ?, actualizado_en = datetime('now') WHERE id = ?",
+        "UPDATE pistas SET favorita = ?, favorita_actualizada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), "
+        "actualizado_en = datetime('now') WHERE id = ?",
         (nuevo_valor, pista_id),
     )
+    try:
+        from db.conexion import marcar_sync_version
+        marcar_sync_version("pistas", pista_id)
+    except Exception as exc:
+        logger.warning("No se pudo incrementar sync_version de la pista %s: %s", pista_id, exc)
     try:
         _sincronizar_playlist_favoritos()
     except Exception as exc:
@@ -3705,6 +3716,11 @@ def eliminar_playlist(playlist_id: int) -> dict:
     if _es_playlist_favoritos(playlist):
         return {"ok": False, "mensaje": "Me gusta no se puede eliminar."}
     if str(playlist.get("tipo") or "manual") == "manual" and not playlist.get("auto_key"):
+        try:
+            from db.conexion import registrar_tombstone
+            registrar_tombstone("playlist", int(playlist_id))
+        except Exception as exc:
+            logger.debug("No se pudo registrar tombstone de playlist %s: %s", playlist_id, exc)
         ejecutar("DELETE FROM playlists WHERE id = ?", (int(playlist_id),))
         return {"ok": True, "mensaje": "Playlist eliminada.", "eliminada": True}
     ejecutar(

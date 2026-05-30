@@ -42,11 +42,11 @@ Los gaps abiertos son los listados en la tabla como **Acción requerida**.
 | **Subprocess deep** (`infra/deep_runner.py`) | OK | `CREATE_NO_WINDOW` aplicado | OK | Manejado: flag anti-ventana en Windows | Ninguna |
 | **PATH en lanzadores sin shell** (`main_ui.py`) | COSMIC/Wayland/SDDM | — | — | Se antepone `_MEIPASS/bin` + `/usr/bin` para subprocess (ffprobe) | Ninguna (Linux-específico, ya resuelto) |
 | **SQLite WAL** (`db/conexion.py`) | OK | OK | OK | `journal_mode=WAL` con fallback a `DELETE` si el FS no lo soporta (NFS) | Ninguna |
-| **Separadores de PATH / rutas** | `/` `:` | `\` `;` | `/` `:` | Uso de `pathlib` y `os.pathsep` (verificado en `main_ui.py`) | Auditar usos de `/` literal en construcción de rutas (bajo riesgo) |
+| **Separadores de PATH / rutas** | `/` `:` | `\` `;` | `/` `:` | Uso de `pathlib` y `os.pathsep` (verificado en `main_ui.py`) | Resuelto: auditoría completada (sin separadores literales en construcción de rutas) |
 | **TORCH_HOME / cache Demucs** | XDG cache | `%LOCALAPPDATA%` | `~/Library/Caches` | Promoción de pesos entre caches (`_promover_pesos_demucs_si_corresponde`) | Ninguna |
 | **Iconos / bundle de app** | `.png`/`.desktop` | `.ico`/NSIS | `.icns`/`.dmg` | Specs por SO en `packaging/{linux,windows,macos}` | Ninguna |
 | **pkexec (reparación Python)** | sí | no aplica | no aplica | `repararPython` solo en Linux; Win/macOS muestran instrucciones | Ninguna |
-| **Servidor local (ecosistema móvil)** | — | — | — | **No existe aún**: sin lib de servidor HTTP/WS, mDNS ni QR | Ver [mobile-ecosystem.md](mobile-ecosystem.md) y plan |
+| **Servidor local (ecosistema móvil)** | `aiohttp`+`zeroconf`+`qrcode` | igual | igual | **Resuelto**: servidor HTTP/WS en hilo propio (`servicios/servidor_sync.py`), mDNS y QR. Bind a la IP de la subred LAN; selección de puerto libre (8731–8799); arranque bajo demanda. Sin TLS en v1 (LAN + token, ver nota abajo) | Ninguna (deps en los 3 specs y en `requirements*.txt`; verificado por `tests/test_packaging_artifacts.py`) |
 
 ---
 
@@ -63,15 +63,33 @@ Verificado en `packaging/`:
   runner (gap a validar, no defecto confirmado).
 - **essentia/tensorflow** no se empaquetan en ningún spec (coherente: deep es
   instalación on-demand vía plug & play, no parte del bundle base).
+- **Servidor de sincronización**: `aiohttp`, `zeroconf` y `qrcode` se incluyen
+  vía `_DYNAMIC_SUBMODULES` (sus submódulos dinámicos) y los módulos
+  `servicios.servidor_sync` / `servicios.sync_repositorio` / `servicios.backup`
+  vía `_HIDDEN_IMPORTS_BASE` en `packaging/_common.py` — compartido por los tres
+  specs. También están en `requirements.txt` y `requirements-release.txt`.
 - **Runtime hooks**: `pyi_rth_linux_vlc.py` (Linux) y
   `pyi_rth_windows_stdio.py` (Windows) — hooks específicos ya presentes.
 
 ### Recomendación
 
-Antes de publicar binarios del ecosistema móvil, añadir al plan una tarea de
-**validación de bundle por SO** que verifique: (1) ffmpeg/fpcalc presentes y
-ejecutables, (2) libVLC resoluble, (3) la nueva dependencia de servidor
-(HTTP/WS) incluida en `hiddenimports` de los tres specs.
+La **validación de bundle por SO** está cubierta por
+`tests/test_packaging_artifacts.py`: verifica que (1) los módulos de sync están
+en `hiddenimports`, (2) `aiohttp`/`zeroconf`/`qrcode` están en
+`_DYNAMIC_SUBMODULES` y en `requirements*.txt`, (3) `collect_external_tools`
+mapea `external_bin/{ffmpeg,fpcalc}` a `bin/`. El workflow de release ya
+descarga ffmpeg/fpcalc por SO y falla si no aparecen en el bundle.
+
+### Nota de seguridad — TLS en v1
+
+El servidor de sincronización opera **sin TLS en v1** (alternativa mínima
+contemplada en [mobile-ecosystem.md](mobile-ecosystem.md#seguridad-en-red-local)):
+se ciñe a la **LAN** (bind a la IP de la subred del WiFi, nunca `0.0.0.0`
+público) y exige **token por petición** (`device_token` tras emparejar por QR
+con token efímero de un solo uso). El campo `tls_fingerprint` del QR viaja
+vacío para forward-compat del cliente. Trade-off aceptado: el tráfico va en
+claro dentro de la red local de confianza; introducir TLS autofirmado + TOFU
+(requiere `cryptography`) queda como mejora futura sin romper el protocolo.
 
 ---
 

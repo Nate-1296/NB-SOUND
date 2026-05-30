@@ -535,4 +535,57 @@ CREATE TABLE IF NOT EXISTS dj_preferencias (
     valor_json   TEXT NOT NULL,
     actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- -------------------------------------------------------------------------
+-- ECOSISTEMA MOVIL — Sincronizacion local con la app de telefono/tablet.
+--
+-- El PC actua como servidor local (HTTP/WS sobre LAN) y fuente de verdad de
+-- la metadata enriquecida. Estas tablas modelan: dispositivos emparejados,
+-- borrados a propagar (tombstones), transferencias de stems reanudables y un
+-- contador global monotonico de version de sync. Todo es aditivo: no rompe
+-- nada del esquema existente (ver docs/mobile-ecosystem.md, seccion C).
+-- -------------------------------------------------------------------------
+
+-- Dispositivos moviles emparejados.
+-- device_token: credencial persistente emitida tras el handshake /pair.
+-- seleccion_json: que sincroniza este device (todo/nada/por playlist/artista).
+CREATE TABLE IF NOT EXISTS sync_dispositivos (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    device_token        TEXT    NOT NULL UNIQUE,
+    nombre              TEXT    NOT NULL,
+    plataforma          TEXT,                       -- android | ios | desconocida
+    ultima_conexion     TEXT,
+    ultima_sync_version INTEGER NOT NULL DEFAULT 0,
+    seleccion_json      TEXT,
+    creado_en           TEXT    NOT NULL DEFAULT (datetime('now')),
+    revocado            INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_sync_dispositivos_token ON sync_dispositivos(device_token);
+CREATE INDEX IF NOT EXISTS idx_sync_dispositivos_revocado ON sync_dispositivos(revocado);
+
+-- Borrados a propagar (un DELETE no se detecta por sync_version).
+CREATE TABLE IF NOT EXISTS sync_tombstones (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    entidad       TEXT    NOT NULL,   -- pista | album | artista | playlist
+    entidad_id    INTEGER NOT NULL,
+    sync_version  INTEGER NOT NULL,
+    creado_en     TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_sync_tombstones_version ON sync_tombstones(sync_version);
+
+-- Estado de transferencia de stems por dispositivo (reanudable).
+CREATE TABLE IF NOT EXISTS sync_stem_transfers (
+    dispositivo_id INTEGER NOT NULL REFERENCES sync_dispositivos(id) ON DELETE CASCADE,
+    pista_id       INTEGER NOT NULL REFERENCES pistas(id) ON DELETE CASCADE,
+    estado         TEXT    NOT NULL DEFAULT 'pending', -- pending|in_progress|done|failed
+    bytes_enviados INTEGER NOT NULL DEFAULT 0,
+    actualizado_en TEXT    NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (dispositivo_id, pista_id)
+);
+
+-- Contador global monotonico de version de sync (clave/valor).
+CREATE TABLE IF NOT EXISTS sync_estado (
+    clave TEXT PRIMARY KEY,   -- p.ej. 'sync_version_actual'
+    valor TEXT NOT NULL
+);
 """

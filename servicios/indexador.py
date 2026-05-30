@@ -348,6 +348,19 @@ class IndexadorBiblioteca:
                 ),
             )
 
+        # Ecosistema movil: marca la pista con la proxima sync_version para
+        # que el cliente detecte el alta/cambio en el delta. Best-effort: un
+        # fallo aqui no debe abortar la indexacion.
+        try:
+            from db.conexion import marcar_sync_version
+            fila_id = obtener_una_fila(
+                "SELECT id FROM pistas WHERE ruta_archivo = ?", (ruta_str,)
+            )
+            if fila_id:
+                marcar_sync_version("pistas", fila_id["id"])
+        except Exception as exc:
+            logger.debug("No se pudo marcar sync_version de la pista %s: %s", ruta_str, exc)
+
         return accion
 
     def _obtener_o_crear_artista(self, nombre: str) -> int:
@@ -357,10 +370,16 @@ class IndexadorBiblioteca:
         )
         if fila:
             return fila["id"]
-        return ejecutar_y_obtener_id(
+        artista_id = ejecutar_y_obtener_id(
             "INSERT INTO artistas(nombre, nombre_slug) VALUES (?, ?)",
             (nombre, slug),
         )
+        try:
+            from db.conexion import marcar_sync_version
+            marcar_sync_version("artistas", artista_id)
+        except Exception as exc:
+            logger.debug("No se pudo marcar sync_version del artista %s: %s", artista_id, exc)
+        return artista_id
 
     def _obtener_o_crear_album(
         self,
@@ -378,13 +397,19 @@ class IndexadorBiblioteca:
         )
         if fila:
             return fila["id"]
-        return ejecutar_y_obtener_id(
+        album_id = ejecutar_y_obtener_id(
             """
             INSERT INTO albums(artista_id, titulo, titulo_slug, tipo, anio, mb_release_id, ruta_carpeta)
             VALUES (?,?,?,?,?,?,?)
             """,
             (artista_id, titulo, slug, tipo, anio, mb_release_id, ruta_carpeta),
         )
+        try:
+            from db.conexion import marcar_sync_version
+            marcar_sync_version("albums", album_id)
+        except Exception as exc:
+            logger.debug("No se pudo marcar sync_version del album %s: %s", album_id, exc)
+        return album_id
 
     def _limpiar_inexistentes(self) -> int:
         """
@@ -400,15 +425,16 @@ class IndexadorBiblioteca:
         timeout_seg = 10  # máximo tiempo permitido
         
         try:
-            # Cargar rutas de BD
-            rutas_en_bd = [
-                fila["ruta_archivo"]
-                for fila in obtener_filas("SELECT ruta_archivo FROM pistas")
+            # Cargar rutas de BD (con id para registrar tombstones de sync)
+            filas_en_bd = [
+                (fila["id"], fila["ruta_archivo"])
+                for fila in obtener_filas("SELECT id, ruta_archivo FROM pistas")
             ]
-            
+
             # Identificar cuáles NO existen, respetando timeout
             a_eliminar = []
-            for ruta in rutas_en_bd:
+            ids_eliminados = []
+            for pista_id, ruta in filas_en_bd:
                 if time.time() - inicio > timeout_seg:
                     logger.warning(
                         f"_limpiar_inexistentes: timeout alcanzado ({timeout_seg}s) "
@@ -418,7 +444,18 @@ class IndexadorBiblioteca:
                     break
                 if not Path(ruta).exists():
                     a_eliminar.append((ruta,))
-            
+                    ids_eliminados.append(pista_id)
+
+            # Registrar tombstones ANTES del DELETE para propagar el borrado al
+            # ecosistema movil (un DELETE no se detecta por sync_version).
+            if ids_eliminados:
+                try:
+                    from db.conexion import registrar_tombstone
+                    for pista_id in ids_eliminados:
+                        registrar_tombstone("pista", pista_id)
+                except Exception as exc:
+                    logger.debug("No se pudieron registrar tombstones de pistas: %s", exc)
+
             # Batch delete con executemany (más eficiente que loop individual)
             if a_eliminar:
                 ejecutar_muchos(

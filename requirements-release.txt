@@ -20,3 +20,10 @@ python-vlc>=3.0.20123
 numpy>=1.26.0
 soundfile>=0.12.0
 librosa>=0.11.0
+
+# Ecosistema móvil — servidor de sincronización WiFi. Ligeras (~4 MB en total),
+# muy por debajo del límite de 2 GB del bundle; van en el release para que la
+# Vista de Sincronización funcione out-of-the-box. Ver docs/mobile-ecosystem.md.
+aiohttp>=3.9.0
+zeroconf>=0.131.0
+qrcode>=7.4.2
