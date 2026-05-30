@@ -150,6 +150,7 @@ _HIDDEN_IMPORTS_BASE = [
     "servicios.servidor_sync",
     "servicios.sync_repositorio",
     "servicios.backup",
+    "infra.tls_local",
     "servicios.karaoke",
     "servicios.karaoke.backend",
     "servicios.karaoke.modelo",
@@ -205,6 +206,7 @@ _DYNAMIC_SUBMODULES = (
     "aiohttp",
     "zeroconf",
     "qrcode",
+    "cryptography",
 )
 
 

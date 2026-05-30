@@ -523,6 +523,17 @@ def construir_catalogo() -> list[Dependencia]:
             pip_modulo_test="qrcode",
         ),
         Dependencia(
+            id="cryptography",
+            nombre="cryptography",
+            descripcion="TLS del servidor de sincronización (certificado autofirmado + huella TOFU). Sin ella, la sync usa HTTP plano en la LAN.",
+            tipo=TipoDependencia.PIP,
+            requerida=False,
+            funciones_que_habilita=["Sincronización móvil"],
+            verificador=lambda: _verificar_modulo_python("cryptography"),
+            pip_specifier="cryptography>=42.0.0",
+            pip_modulo_test="cryptography",
+        ),
+        Dependencia(
             id="torch",
             nombre="PyTorch",
             descripcion="Backend de separación voz/instrumental para Karaoke. ~250MB en CPU.",

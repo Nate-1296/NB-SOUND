@@ -183,6 +183,7 @@ def _patch_loopback(modelo):
             nombre_servicio="NB Sound",
             host="127.0.0.1",
             anunciar_mdns=False,
+            tls=False,
         )
 
     return _crear

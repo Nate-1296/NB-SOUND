@@ -55,6 +55,12 @@ def _run(coro):
     return asyncio.run(coro)
 
 
+def _cliente(headers=None):
+    """ClientSession que NO verifica el cert (autofirmado en tests). En
+    producción el cliente fija la huella del QR (TOFU)."""
+    return aiohttp.ClientSession(headers=headers, connector=aiohttp.TCPConnector(ssl=False))
+
+
 # ── Fixture del servidor ─────────────────────────────────────────────────────
 
 class _Reproductor:
@@ -78,16 +84,40 @@ def servidor(tmp_path):
     srv = ServidorSync(
         host="127.0.0.1",
         anunciar_mdns=False,
+        dir_certificados=tmp_path / "certs",
         comando_control=rep.manejar,
         estado_provider=rep.estado,
     )
     info = srv.iniciar()
-    base = f"http://{info['host']}:{info['puerto']}"
+    esquema = "https" if info["tls"] else "http"
+    base = f"{esquema}://{info['host']}:{info['puerto']}"
     try:
         yield srv, base, rep, tmp_path
     finally:
         srv.detener()
         cerrar_db()
+
+
+# ── TLS ──────────────────────────────────────────────────────────────────────
+
+def test_tls_activo_con_fingerprint_en_qr(servidor):
+    srv, base, _rep, _tmp = servidor
+    pytest.importorskip("cryptography")
+    assert srv.tls_activo is True
+    assert base.startswith("https://")
+    fp = srv.fingerprint
+    assert isinstance(fp, str) and len(fp) == 64  # sha256 hex
+    payload = srv.payload_qr()
+    assert payload["tls"] is True
+    assert payload["tls_fingerprint"] == fp
+
+    async def _t():
+        # Cliente que omite verificación (en prod fija la huella): /ping va por HTTPS.
+        async with _cliente() as s:
+            async with s.get(f"{base}/api/v1/ping") as r:
+                assert r.status == 200
+
+    _run(_t())
 
 
 # ── /ping y /pair ────────────────────────────────────────────────────────────
@@ -96,7 +126,7 @@ def test_ping_sin_auth(servidor):
     srv, base, _rep, _tmp = servidor
 
     async def _t():
-        async with aiohttp.ClientSession() as s:
+        async with _cliente() as s:
             async with s.get(f"{base}/api/v1/ping") as r:
                 assert r.status == 200
                 data = await r.json()
@@ -111,7 +141,7 @@ def test_pair_token_valido_e_invalido(servidor):
     token = srv.payload_qr()["token"]
 
     async def _t():
-        async with aiohttp.ClientSession() as s:
+        async with _cliente() as s:
             # Token invalido -> 401
             async with s.post(f"{base}/api/v1/pair", json={"token": "malo", "nombre": "X"}) as r:
                 assert r.status == 401
@@ -137,7 +167,7 @@ def test_endpoints_requieren_auth(servidor):
     srv, base, _rep, _tmp = servidor
 
     async def _t():
-        async with aiohttp.ClientSession() as s:
+        async with _cliente() as s:
             async with s.get(f"{base}/api/v1/manifest") as r:
                 assert r.status == 401
 
@@ -150,7 +180,7 @@ def _emparejar(base, srv) -> str:
     token = srv.payload_qr()["token"]
 
     async def _t():
-        async with aiohttp.ClientSession() as s:
+        async with _cliente() as s:
             async with s.post(f"{base}/api/v1/pair", json={"token": token, "nombre": "Test"}) as r:
                 data = await r.json()
                 return data["device_token"]
@@ -167,7 +197,7 @@ def test_manifest_delta_por_sync_version(servidor):
     headers = {"Authorization": f"Bearer {device_token}"}
 
     async def _t():
-        async with aiohttp.ClientSession(headers=headers) as s:
+        async with _cliente(headers=headers) as s:
             async with s.get(f"{base}/api/v1/manifest?since=0") as r:
                 assert r.status == 200
                 m = await r.json()
@@ -182,6 +212,88 @@ def test_manifest_delta_por_sync_version(servidor):
     _run(_t())
 
 
+# ── /seleccion (negociación desde el móvil) + paginación por endpoint ─────────
+
+def test_seleccion_endpoint_negocia_y_filtra_manifest(servidor):
+    srv, base, _rep, tmp = servidor
+    a1 = get_conexion().execute(
+        "INSERT INTO artistas(nombre, nombre_slug) VALUES ('Uno', 'uno')"
+    ).lastrowid
+    a2 = get_conexion().execute(
+        "INSERT INTO artistas(nombre, nombre_slug) VALUES ('Dos', 'dos')"
+    ).lastrowid
+    alb1 = get_conexion().execute(
+        "INSERT INTO albums(artista_id, titulo, titulo_slug) VALUES (?, 'A1', 'a1')", (a1,)
+    ).lastrowid
+    alb2 = get_conexion().execute(
+        "INSERT INTO albums(artista_id, titulo, titulo_slug) VALUES (?, 'A2', 'a2')", (a2,)
+    ).lastrowid
+    p1 = get_conexion().execute(
+        "INSERT INTO pistas(album_id, artista_id, titulo, artista_nombre, album_titulo, ruta_archivo, nombre_archivo) "
+        "VALUES (?, ?, 'T1', 'Uno', 'A1', '/m/1.mp3', '1.mp3')", (alb1, a1)
+    ).lastrowid
+    p2 = get_conexion().execute(
+        "INSERT INTO pistas(album_id, artista_id, titulo, artista_nombre, album_titulo, ruta_archivo, nombre_archivo) "
+        "VALUES (?, ?, 'T2', 'Dos', 'A2', '/m/2.mp3', '2.mp3')", (alb2, a2)
+    ).lastrowid
+    for tabla, eid in (("pistas", p1), ("pistas", p2), ("artistas", a1), ("artistas", a2)):
+        marcar_sync_version(tabla, eid)
+
+    device_token = _emparejar(base, srv)
+    headers = {"Authorization": f"Bearer {device_token}"}
+
+    async def _t():
+        async with _cliente(headers=headers) as s:
+            # Por defecto: modo todo.
+            async with s.get(f"{base}/api/v1/seleccion") as r:
+                assert r.status == 200
+                assert (await r.json())["seleccion"]["modo"] == "todo"
+            # El móvil negocia: solo el artista a1.
+            async with s.post(f"{base}/api/v1/seleccion",
+                              json={"seleccion": {"modo": "artistas", "artista_ids": [a1]}}) as r:
+                assert r.status == 200
+                assert (await r.json())["ok"] is True
+            # El manifest ahora viene filtrado por esa selección.
+            async with s.get(f"{base}/api/v1/manifest?since=0") as r:
+                m = await r.json()
+                ids = {p["id"] for p in m["pistas"]}
+                assert p1 in ids and p2 not in ids
+            # Modo inválido -> 400.
+            async with s.post(f"{base}/api/v1/seleccion", json={"seleccion": {"modo": "x"}}) as r:
+                assert r.status == 400
+
+    _run(_t())
+
+
+def test_manifest_paginacion_por_endpoint(servidor):
+    srv, base, _rep, tmp = servidor
+    art = get_conexion().execute(
+        "INSERT INTO artistas(nombre, nombre_slug) VALUES ('Pag', 'pag')"
+    ).lastrowid
+    alb = get_conexion().execute(
+        "INSERT INTO albums(artista_id, titulo, titulo_slug) VALUES (?, 'PagAlb', 'pagalb')", (art,)
+    ).lastrowid
+    for i in range(4):
+        pid = get_conexion().execute(
+            "INSERT INTO pistas(album_id, artista_id, titulo, artista_nombre, album_titulo, ruta_archivo, nombre_archivo) "
+            "VALUES (?, ?, ?, 'Pag', 'PagAlb', ?, ?)",
+            (alb, art, f"P{i}", f"/m/p{i}.mp3", f"p{i}.mp3"),
+        ).lastrowid
+        marcar_sync_version("pistas", pid)
+    device_token = _emparejar(base, srv)
+    headers = {"Authorization": f"Bearer {device_token}"}
+
+    async def _t():
+        async with _cliente(headers=headers) as s:
+            async with s.get(f"{base}/api/v1/manifest?since=0&limit=2") as r:
+                m = await r.json()
+                assert m["has_more"] is True
+                assert m["next_since"] > 0
+                assert len(m["pistas"]) + len(m["albums"]) + len(m["artistas"]) <= 2
+
+    _run(_t())
+
+
 # ── /track/{id}/audio con Range ──────────────────────────────────────────────
 
 def test_audio_range_reensamblado_coincide_hash(servidor):
@@ -192,7 +304,7 @@ def test_audio_range_reensamblado_coincide_hash(servidor):
     pid = info["pista_id"]
 
     async def _t():
-        async with aiohttp.ClientSession(headers=headers) as s:
+        async with _cliente(headers=headers) as s:
             async with s.get(f"{base}/api/v1/track/{pid}/audio", headers={"Range": "bytes=0-9"}) as r:
                 assert r.status == 206
                 parte1 = await r.read()
@@ -221,7 +333,7 @@ def test_history_merge_favorito_last_write_wins(servidor):
     headers = {"Authorization": f"Bearer {device_token}"}
 
     async def _t():
-        async with aiohttp.ClientSession(headers=headers) as s:
+        async with _cliente(headers=headers) as s:
             payload = {
                 "historial": [{"pista_id": pid, "reproducido_en": "2024-06-01T10:00:00.000Z"}],
                 "favoritos": [{"pista_id": pid, "favorita": True, "actualizada_en": "2024-06-01T10:00:00.000Z"}],
@@ -243,7 +355,7 @@ def test_history_merge_favorito_last_write_wins(servidor):
     device_token2 = device_token
 
     async def _t2():
-        async with aiohttp.ClientSession(headers={"Authorization": f"Bearer {device_token2}"}) as s:
+        async with _cliente(headers={"Authorization": f"Bearer {device_token2}"}) as s:
             payload = {"favoritos": [{"pista_id": pid, "favorita": False, "actualizada_en": "2021-01-01T00:00:00.000Z"}]}
             async with s.post(f"{base}/api/v1/history", json=payload) as r:
                 res = await r.json()
@@ -264,7 +376,7 @@ def test_stems_opt_in_404_sin_instrumental(servidor):
     pid = info["pista_id"]
 
     async def _t():
-        async with aiohttp.ClientSession(headers=headers) as s:
+        async with _cliente(headers=headers) as s:
             async with s.get(f"{base}/api/v1/track/{pid}/stems") as r:
                 assert r.status == 404
 
@@ -279,7 +391,7 @@ def test_stems_opt_in_404_sin_instrumental(servidor):
     )
 
     async def _t2():
-        async with aiohttp.ClientSession(headers=headers) as s:
+        async with _cliente(headers=headers) as s:
             async with s.get(f"{base}/api/v1/track/{pid}/stems") as r:
                 assert r.status == 200
                 data = await r.read()
@@ -300,7 +412,7 @@ def test_control_ws_comando_pausa(servidor):
     device_token = _emparejar(base, srv)
 
     async def _t():
-        async with aiohttp.ClientSession(headers={"Authorization": f"Bearer {device_token}"}) as s:
+        async with _cliente(headers={"Authorization": f"Bearer {device_token}"}) as s:
             async with s.ws_connect(f"{base}/api/v1/control") as ws:
                 # Frame inicial de estado.
                 primero = await asyncio.wait_for(ws.receive_json(), timeout=3.0)
@@ -320,7 +432,7 @@ def test_difundir_estado_llega_a_clientes_ws(servidor):
     device_token = _emparejar(base, srv)
 
     async def _t():
-        async with aiohttp.ClientSession(headers={"Authorization": f"Bearer {device_token}"}) as s:
+        async with _cliente(headers={"Authorization": f"Bearer {device_token}"}) as s:
             async with s.ws_connect(f"{base}/api/v1/control") as ws:
                 await asyncio.wait_for(ws.receive_json(), timeout=3.0)  # estado inicial
                 # Difundir desde el hilo principal (thread-safe). El estado va

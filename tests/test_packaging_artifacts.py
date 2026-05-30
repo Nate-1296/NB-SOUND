@@ -89,13 +89,13 @@ def test_release_requirements_incluye_deps_de_sync():
     """Los wheels del servidor de sync deben ir en el build de release para que
     la Vista de Sincronización funcione out-of-the-box en el bundle oficial."""
     req = (ROOT / "requirements-release.txt").read_text(encoding="utf-8")
-    for paquete in ("aiohttp", "zeroconf", "qrcode"):
+    for paquete in ("aiohttp", "zeroconf", "qrcode", "cryptography"):
         assert paquete in req, f"requirements-release.txt no incluye {paquete}"
 
 
 def test_runtime_requirements_incluye_deps_de_sync():
     req = (ROOT / "requirements.txt").read_text(encoding="utf-8")
-    for paquete in ("aiohttp", "zeroconf", "qrcode"):
+    for paquete in ("aiohttp", "zeroconf", "qrcode", "cryptography"):
         assert paquete in req, f"requirements.txt no incluye {paquete}"
 
 

@@ -27,6 +27,7 @@ import asyncio
 import importlib.util
 import threading
 import time
+from pathlib import Path
 from typing import Any, Callable, Optional
 
 from infra.logger import obtener_logger
@@ -81,6 +82,8 @@ class ServidorSync:
         rango_puertos: tuple[int, int] = RANGO_PUERTOS,
         host: Optional[str] = None,
         anunciar_mdns: bool = True,
+        tls: bool = True,
+        dir_certificados: Optional[Path] = None,
     ) -> None:
         self._comando_control = comando_control
         self._estado_provider = estado_provider
@@ -90,6 +93,13 @@ class ServidorSync:
         # host fijo opcional (tests/loopback). Si es None se autodetecta la LAN.
         self._host_forzado = host
         self._mdns_habilitado = anunciar_mdns
+        # TLS solicitado (se activa si `cryptography` está disponible). El
+        # directorio de certificados persiste el cert para huella estable (TOFU).
+        self._tls_solicitado = tls
+        self._dir_certificados = dir_certificados
+        self._tls_activo = False
+        self._fingerprint = ""
+        self._ssl_context = None
 
         self._lock = threading.RLock()
         self._activo = False
@@ -128,12 +138,30 @@ class ServidorSync:
     def numero_clientes_ws(self) -> int:
         return len(self._ws_clientes)
 
+    @property
+    def tls_activo(self) -> bool:
+        return self._tls_activo
+
+    @property
+    def fingerprint(self) -> str:
+        return self._fingerprint
+
+    @property
+    def esquema(self) -> str:
+        return "https" if self._tls_activo else "http"
+
+    @property
+    def esquema_ws(self) -> str:
+        return "wss" if self._tls_activo else "ws"
+
     def info(self) -> dict:
         """Snapshot serializable del estado (para el modelo Qt / UI)."""
         return {
             "activo": self._activo,
             "host": self._host,
             "puerto": self._puerto,
+            "tls": self._tls_activo,
+            "fingerprint": self._fingerprint,
             "version_protocolo": sync_repositorio.PROTOCOLO_VERSION,
             "pairing_token": self._pairing_token if self._token_vigente() else None,
             "clientes_ws": self.numero_clientes_ws(),
@@ -143,8 +171,10 @@ class ServidorSync:
     def payload_qr(self) -> Optional[dict]:
         """Contenido a codificar en el QR de emparejamiento.
 
-        El cliente lee host+puerto+token y llama /pair. `tls_fingerprint` vacio
-        en v1 (sin TLS); el campo se mantiene para forward-compat del cliente.
+        El cliente lee host+puerto+token y llama /pair. Con TLS activo,
+        `tls_fingerprint` lleva la huella SHA-256 del certificado para que el
+        cliente la fije (TOFU) y use `https`/`wss`. Si está vacío, el cliente
+        habla HTTP/WS plano (degradación cuando falta `cryptography`).
         """
         if not self._activo or not self._token_vigente():
             return None
@@ -153,7 +183,8 @@ class ServidorSync:
             "puerto": self._puerto,
             "token": self._pairing_token,
             "version": sync_repositorio.PROTOCOLO_VERSION,
-            "tls_fingerprint": "",
+            "tls": self._tls_activo,
+            "tls_fingerprint": self._fingerprint,
             "servicio": self._nombre_servicio,
         }
 
@@ -197,6 +228,7 @@ class ServidorSync:
             self._error_arranque = None
             self._listo.clear()
             self.regenerar_token()
+            self._preparar_tls(host)
 
             self._hilo = threading.Thread(
                 target=self._run_loop, name="nb-sound-sync-server", daemon=True
@@ -293,6 +325,59 @@ class ServidorSync:
                 pass
             loop.close()
 
+    def _preparar_tls(self, host: str) -> None:
+        """Crea (si procede) el contexto SSL antes de arrancar el hilo.
+
+        Si TLS está solicitado y `cryptography` disponible, genera/persiste el
+        certificado y construye el SSLContext. Si no, degrada a HTTP plano y lo
+        registra (la app sigue funcionando con LAN + token).
+        """
+        self._tls_activo = False
+        self._fingerprint = ""
+        self._ssl_context = None
+        if not self._tls_solicitado:
+            _log.info("TLS deshabilitado por configuración; servidor de sync en HTTP plano.")
+            return
+        try:
+            from infra import tls_local
+
+            if not tls_local.cryptography_disponible():
+                _log.warning(
+                    "`cryptography` no disponible: el servidor de sync usará HTTP plano "
+                    "(LAN + token). Instálala para activar TLS/HTTPS."
+                )
+                return
+            dir_cert = self._dir_certificados or self._dir_certificados_por_defecto()
+            cert = tls_local.obtener_o_crear_certificado(dir_cert, ips_lan=[host])
+            if cert is None:
+                _log.warning("No se pudo preparar el certificado TLS; usando HTTP plano.")
+                return
+            import ssl
+
+            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            ctx.load_cert_chain(certfile=str(cert.cert_path), keyfile=str(cert.key_path))
+            self._ssl_context = ctx
+            self._fingerprint = cert.fingerprint_sha256
+            self._tls_activo = True
+            _log.info("TLS activo (huella SHA-256 %s…)", self._fingerprint[:16])
+        except Exception as exc:
+            _log.warning("Fallo al preparar TLS (%s); usando HTTP plano.", exc)
+            self._ssl_context = None
+            self._tls_activo = False
+            self._fingerprint = ""
+
+    @staticmethod
+    def _dir_certificados_por_defecto() -> Path:
+        """Directorio de configuración del usuario donde persistir el cert."""
+        try:
+            from infra.bootstrap import resolver_rutas_estandar
+
+            return resolver_rutas_estandar().config / "sync"
+        except Exception:
+            import tempfile
+
+            return Path(tempfile.gettempdir()) / "nb_sound" / "sync"
+
     async def _arrancar_site(self) -> None:
         from aiohttp import web
 
@@ -301,7 +386,7 @@ class ServidorSync:
         self._app = app
         runner = web.AppRunner(app, access_log=None)
         await runner.setup()
-        site = web.TCPSite(runner, self._host, self._puerto)
+        site = web.TCPSite(runner, self._host, self._puerto, ssl_context=self._ssl_context)
         await site.start()
         self._runner = runner
         self._site = site
@@ -313,6 +398,8 @@ class ServidorSync:
             web.get("/api/v1/ping", self._h_ping),
             web.post("/api/v1/pair", self._h_pair),
             web.get("/api/v1/manifest", self._h_manifest),
+            web.get("/api/v1/seleccion", self._h_seleccion_get),
+            web.post("/api/v1/seleccion", self._h_seleccion_post),
             web.get("/api/v1/track/{id}/audio", self._h_audio),
             web.get("/api/v1/track/{id}/stems", self._h_stems),
             web.get("/api/v1/track/{id}/lyrics", self._h_lyrics),
@@ -407,16 +494,52 @@ class ServidorSync:
             since = int(request.query.get("since", "0") or "0")
         except ValueError:
             since = 0
+        limite = None
+        if "limit" in request.query:
+            try:
+                limite = int(request.query.get("limit") or "0")
+            except ValueError:
+                limite = None
         dispositivo = request.get("dispositivo") or {}
         seleccion = dispositivo.get("seleccion") or None
-        manifest = sync_repositorio.construir_manifest(since, seleccion=seleccion)
+        manifest = sync_repositorio.construir_manifest(since, seleccion=seleccion, limite=limite)
+        # Guardar el avance solo cuando el cliente terminó de paginar (no hay
+        # más páginas), para no marcar como sincronizado un delta incompleto.
         try:
-            sync_repositorio.guardar_ultima_sync_version(
-                dispositivo["id"], manifest["sync_version_actual"]
-            )
+            if not manifest.get("has_more"):
+                sync_repositorio.guardar_ultima_sync_version(
+                    dispositivo["id"], manifest["sync_version_actual"]
+                )
         except Exception:
             pass
         return web.json_response(manifest)
+
+    async def _h_seleccion_get(self, request):
+        from aiohttp import web
+
+        dispositivo = request.get("dispositivo") or {}
+        return web.json_response({"seleccion": dispositivo.get("seleccion") or {"modo": "todo"}})
+
+    async def _h_seleccion_post(self, request):
+        from aiohttp import web
+
+        try:
+            payload = await request.json()
+        except Exception:
+            return web.json_response({"error": "json_invalido"}, status=400)
+        seleccion = payload.get("seleccion") if isinstance(payload, dict) and "seleccion" in payload else payload
+        if not isinstance(seleccion, dict):
+            return web.json_response({"error": "seleccion_invalida"}, status=400)
+        modo = str(seleccion.get("modo") or "todo").lower()
+        if modo not in ("todo", "nada", "artistas", "playlists"):
+            return web.json_response({"error": "modo_invalido"}, status=400)
+        dispositivo = request.get("dispositivo") or {}
+        try:
+            sync_repositorio.guardar_seleccion(dispositivo["id"], seleccion)
+        except Exception as exc:
+            _log.debug("No se pudo guardar selección: %s", exc)
+            return web.json_response({"error": "no_persistida"}, status=500)
+        return web.json_response({"ok": True, "seleccion": seleccion})
 
     async def _h_audio(self, request):
         from aiohttp import web

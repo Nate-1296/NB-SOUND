@@ -22,6 +22,18 @@ estado plano (`pista{...}`, `modo_repeticion`, `aleatorio`, `karaoke_activo`,
 `indice_cola`), comandos `{tipo:"comando", accion}` (incluye `play_index`,
 `set_volume`, `queue`) y frame de cola.
 
+Con esto el lado PC queda **cerrado** (sin faltantes propios), incluyendo:
+
+- **TLS (HTTPS + WSS)**: certificado autofirmado generado y persistido por el
+  PC (`infra/tls_local.py`, vía `cryptography`); el QR lleva la huella SHA-256
+  para emparejamiento **TOFU** (confidencialidad y mitigación de MitM en la LAN
+  sin CA). Degrada a HTTP plano si faltara `cryptography`.
+- **Negociación de selección desde el móvil**: `GET`/`POST /api/v1/seleccion`
+  para que el dispositivo defina y consulte qué sincroniza (persistido por
+  device); el manifest se filtra en consecuencia.
+- **Paginación del manifest**: `GET /api/v1/manifest?since=&limit=` con cursor
+  `next_since` y `has_more`, para bibliotecas grandes.
+
 ### Sincronización con dispositivos móviles
 
 - **Servidor local bajo demanda** (`servicios/servidor_sync.py`): HTTP REST +

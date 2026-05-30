@@ -374,16 +374,59 @@ def _aplicar_seleccion(manifest: dict, seleccion: Optional[dict]) -> dict:
     return manifest
 
 
+def _paginar_manifest(manifest: dict, limite: int) -> dict:
+    """Recorta el delta a las primeras `limite` entidades por `sync_version`.
+
+    Como el contador de sync es global y único por entidad, se puede ordenar el
+    conjunto combinado (pistas/álbumes/artistas/playlists/tombstones) por
+    `sync_version` y cortar limpiamente. Añade `next_since` (cursor para la
+    siguiente página) y `has_more`. El cliente repite con `since=next_since`
+    hasta `has_more == false`.
+    """
+    tipos = ("pistas", "albums", "artistas", "playlists", "tombstones")
+    combinado = []
+    for tipo in tipos:
+        for item in manifest.get(tipo, []):
+            sv = item.get("sync_version")
+            if sv is None:
+                continue
+            combinado.append((int(sv), tipo, item))
+    combinado.sort(key=lambda t: t[0])
+
+    total = len(combinado)
+    has_more = total > limite
+    pagina = combinado[:limite]
+
+    nuevos = {tipo: [] for tipo in tipos}
+    for _sv, tipo, item in pagina:
+        nuevos[tipo].append(item)
+    for tipo in tipos:
+        manifest[tipo] = nuevos[tipo]
+
+    if has_more and pagina:
+        manifest["next_since"] = pagina[-1][0]
+    else:
+        # Página final: el cliente queda al día en el high-water mark global.
+        manifest["next_since"] = manifest["sync_version_actual"]
+    manifest["has_more"] = has_more
+    return manifest
+
+
 def construir_manifest(
-    since: int = 0, *, seleccion: Optional[dict] = None, incluir_perfil: bool = True
+    since: int = 0,
+    *,
+    seleccion: Optional[dict] = None,
+    limite: Optional[int] = None,
+    incluir_perfil: bool = True,
 ) -> dict:
     """Arma el delta de cambios desde `since` (exclusivo).
 
     Devuelve solo entidades con `sync_version > since` y los tombstones del
     mismo rango, opcionalmente filtrado por la `seleccion` del dispositivo
-    (todo/nada/artistas/playlists). `sync_version_actual` en la raiz es el
-    high-water mark que el cliente debe guardar para pedir el siguiente delta
-    (`sync_version` se mantiene como alias por compatibilidad).
+    (todo/nada/artistas/playlists) y paginado por `limite` (máximo de entidades
+    combinadas por página). `sync_version_actual` en la raíz es el high-water
+    mark global; `next_since`/`has_more` gobiernan la paginación. `sync_version`
+    se mantiene como alias compatible de `sync_version_actual`.
     """
     since = max(0, int(since or 0))
     version = sync_version_actual()
@@ -400,6 +443,11 @@ def construir_manifest(
         "tombstones": _tombstones_desde(since),
     }
     manifest = _aplicar_seleccion(manifest, seleccion)
+    if limite is not None and limite > 0:
+        manifest = _paginar_manifest(manifest, limite)
+    else:
+        manifest["next_since"] = version
+        manifest["has_more"] = False
     if incluir_perfil:
         manifest["perfil"] = _perfil_resumen()
     return manifest

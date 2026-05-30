@@ -20,6 +20,12 @@ aiohttp = pytest.importorskip("aiohttp")
 from servicios.servidor_sync import ServidorSync  # noqa: E402
 
 
+def _cliente(headers=None):
+    """ClientSession que NO verifica el cert autofirmado (en producción el
+    cliente fija la huella del QR — TOFU)."""
+    return aiohttp.ClientSession(headers=headers, connector=aiohttp.TCPConnector(ssl=False))
+
+
 class _Reproductor:
     def __init__(self):
         self.comandos = []
@@ -67,9 +73,11 @@ def entorno(tmp_path):
     datos = _sembrar(tmp_path)
     rep = _Reproductor()
     srv = ServidorSync(host="127.0.0.1", anunciar_mdns=False,
+                       dir_certificados=tmp_path / "certs",
                        comando_control=rep.manejar, estado_provider=rep.estado)
     info = srv.iniciar()
-    base = f"http://{info['host']}:{info['puerto']}"
+    esquema = "https" if info["tls"] else "http"
+    base = f"{esquema}://{info['host']}:{info['puerto']}"
     try:
         yield srv, base, rep, datos
     finally:
@@ -83,7 +91,7 @@ def test_flujo_completo_cliente_movil(entorno):
     album_id = datos["album_id"]
 
     async def _flujo():
-        async with aiohttp.ClientSession() as s:
+        async with _cliente() as s:
             # 1) ping
             async with s.get(f"{base}/api/v1/ping") as r:
                 assert r.status == 200
@@ -166,7 +174,7 @@ def test_flujo_completo_cliente_movil(entorno):
     assert sync_repositorio.revocar_dispositivo(disp["id"]) is True
 
     async def _post_revoke():
-        async with aiohttp.ClientSession() as s:
+        async with _cliente() as s:
             async with s.get(f"{base}/api/v1/manifest", headers={"Authorization": f"Bearer {device_token}"}) as r:
                 assert r.status == 401
 

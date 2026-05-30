@@ -27,3 +27,4 @@ librosa>=0.11.0
 aiohttp>=3.9.0
 zeroconf>=0.131.0
 qrcode>=7.4.2
+cryptography>=42.0.0

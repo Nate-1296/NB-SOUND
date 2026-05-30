@@ -25,6 +25,8 @@ python-vlc>=3.0.20123
 aiohttp>=3.9.0
 zeroconf>=0.131.0
 qrcode>=7.4.2
+# TLS del servidor de sync: certificado autofirmado + huella para TOFU.
+cryptography>=42.0.0
 
 librosa>=0.11.0
 

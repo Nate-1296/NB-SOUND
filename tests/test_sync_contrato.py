@@ -128,6 +128,44 @@ def test_manifest_seleccion_playlists(db):
     assert [pl_["id"] for pl_ in m["playlists"]] == [pl]
 
 
+# ── Paginación del manifest ──────────────────────────────────────────────────
+
+def test_manifest_paginacion_limit_next_since_has_more(db):
+    a = _artista("Uno")
+    alb = _album(a, "Alb")
+    # 5 pistas → varias entidades con sync_version únicos.
+    ids = [_pista(alb, a, f"T{i}", f"/m/{i}.mp3") for i in range(5)]
+
+    vistos = set()
+    since = 0
+    paginas = 0
+    while True:
+        m = sync_repositorio.construir_manifest(since, limite=2)
+        assert len(m["pistas"]) + len(m["albums"]) + len(m["artistas"]) + len(m["playlists"]) <= 2
+        for p in m["pistas"]:
+            vistos.add(p["id"])
+        paginas += 1
+        if not m["has_more"]:
+            assert m["next_since"] == m["sync_version_actual"]
+            break
+        assert m["next_since"] > since
+        since = m["next_since"]
+        assert paginas < 50  # guard anti-bucle
+
+    # Tras paginar, vimos todas las pistas y tomó más de una página.
+    assert set(ids) == vistos
+    assert paginas > 1
+
+
+def test_manifest_sin_limit_devuelve_todo_y_has_more_false(db):
+    a = _artista("Uno")
+    alb = _album(a, "Alb")
+    _pista(alb, a, "T1")
+    m = sync_repositorio.construir_manifest(0)
+    assert m["has_more"] is False
+    assert m["next_since"] == m["sync_version_actual"]
+
+
 # ── Lyrics (gap 1) ───────────────────────────────────────────────────────────
 
 def test_obtener_lyrics_por_ruta_lee_enrichment(db, tmp_path, monkeypatch):

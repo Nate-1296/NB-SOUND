@@ -46,7 +46,7 @@ Los gaps abiertos son los listados en la tabla como **Acción requerida**.
 | **TORCH_HOME / cache Demucs** | XDG cache | `%LOCALAPPDATA%` | `~/Library/Caches` | Promoción de pesos entre caches (`_promover_pesos_demucs_si_corresponde`) | Ninguna |
 | **Iconos / bundle de app** | `.png`/`.desktop` | `.ico`/NSIS | `.icns`/`.dmg` | Specs por SO en `packaging/{linux,windows,macos}` | Ninguna |
 | **pkexec (reparación Python)** | sí | no aplica | no aplica | `repararPython` solo en Linux; Win/macOS muestran instrucciones | Ninguna |
-| **Servidor local (ecosistema móvil)** | `aiohttp`+`zeroconf`+`qrcode` | igual | igual | **Resuelto**: servidor HTTP/WS en hilo propio (`servicios/servidor_sync.py`), mDNS y QR. Bind a la IP de la subred LAN; selección de puerto libre (8731–8799); arranque bajo demanda. Sin TLS en v1 (LAN + token, ver nota abajo) | Ninguna (deps en los 3 specs y en `requirements*.txt`; verificado por `tests/test_packaging_artifacts.py`) |
+| **Servidor local (ecosistema móvil)** | `aiohttp`+`zeroconf`+`qrcode`+`cryptography` | igual | igual | **Resuelto**: servidor HTTPS/WSS en hilo propio (`servicios/servidor_sync.py`), mDNS y QR. **TLS** autofirmado con huella TOFU; bind a la IP de la subred LAN; puerto libre (8731–8799); arranque bajo demanda; selección negociable y manifest paginable | Ninguna (deps en los 3 specs y en `requirements*.txt`; verificado por `tests/test_packaging_artifacts.py`) |
 
 ---
 
@@ -80,16 +80,20 @@ en `hiddenimports`, (2) `aiohttp`/`zeroconf`/`qrcode` están en
 mapea `external_bin/{ffmpeg,fpcalc}` a `bin/`. El workflow de release ya
 descarga ffmpeg/fpcalc por SO y falla si no aparecen en el bundle.
 
-### Nota de seguridad — TLS en v1
+### Nota de seguridad — TLS (TOFU)
 
-El servidor de sincronización opera **sin TLS en v1** (alternativa mínima
-contemplada en [mobile-ecosystem.md](mobile-ecosystem.md#seguridad-en-red-local)):
-se ciñe a la **LAN** (bind a la IP de la subred del WiFi, nunca `0.0.0.0`
-público) y exige **token por petición** (`device_token` tras emparejar por QR
-con token efímero de un solo uso). El campo `tls_fingerprint` del QR viaja
-vacío para forward-compat del cliente. Trade-off aceptado: el tráfico va en
-claro dentro de la red local de confianza; introducir TLS autofirmado + TOFU
-(requiere `cryptography`) queda como mejora futura sin romper el protocolo.
+El servidor de sincronización opera con **TLS (HTTPS + WSS)** mediante un
+certificado **autofirmado** generado y persistido por el PC
+(`infra/tls_local.py`, requiere `cryptography`). La confianza es **TOFU**: el
+QR lleva la huella SHA-256 del certificado y el cliente la fija; en cada
+conexión valida el cert por huella (no por CA ni hostname), logrando
+confidencialidad y mitigación de MitM en la LAN sin depender de una autoridad
+certificadora. Defensa en capas: además del TLS, se exige **token por
+petición** (`device_token` tras emparejar por QR con token efímero de un solo
+uso) y bind a la IP de la subred del WiFi (nunca `0.0.0.0` público). La huella
+es estable entre reinicios (cert persistido) para no romper el emparejamiento.
+Degradación: si faltara `cryptography`, el servidor cae a HTTP plano (LAN +
+token) y lo registra; el release oficial incluye `cryptography`.
 
 ---
 
