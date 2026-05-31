@@ -40,8 +40,14 @@ Rectangle {
     property int badge_pendientes: revision ? revision.total_revision + revision.total_cuarentena : 0
 
     function cambiarModo() {
-        modo_ui = es_pro ? "simple" : "pro"
+        var nuevoPro = !es_pro
+        modo_ui = nuevoPro ? "pro" : "simple"
         configuracion.guardar("ui_mode", modo_ui)
+        if (shell && shell.mostrar_toast_global)
+            shell.mostrar_toast_global(
+                nuevoPro ? "Configuración Avanzada e Importación Avanzada activadas"
+                         : "Interfaz simplificada para Importación y Configuración",
+                "info")
     }
 
     Connections {

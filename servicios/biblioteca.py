@@ -215,10 +215,16 @@ def _score_pista_busqueda(fila: dict, termino: str) -> float:
         if combinado.startswith(consulta_sin_stop) or inverso.startswith(consulta_sin_stop):
             score = max(score, 8800.0)
 
-    try:
-        score += min(250.0, float(fila.get("veces_reproducida") or 0) * 10.0)
-    except (TypeError, ValueError):
-        pass
+    # Las reproducciones solo desempatan entre pistas que YA coinciden con el
+    # término. Aplicarlas como bonus incondicional hacía que cualquier pista muy
+    # reproducida (típicamente las favoritas) superara el filtro `score > 0` sin
+    # coincidir realmente, devolviendo "toda la biblioteca" en vez de los
+    # resultados pertinentes. Sin match textual no hay inclusión.
+    if score > 0:
+        try:
+            score += min(250.0, float(fila.get("veces_reproducida") or 0) * 10.0)
+        except (TypeError, ValueError):
+            pass
     return score
 
 
@@ -803,15 +809,15 @@ def listar_artistas(filtro_texto: str = "", orden: str = "nombre") -> list[dict]
         filtro_texto = ""
 
     columna_orden = {
-        "nombre":         "a.nombre COLLATE NOCASE",
-        "nombre_desc":    "a.nombre COLLATE NOCASE DESC",
-        "num_pistas":     "num_pistas DESC, a.nombre COLLATE NOCASE",
-        "num_pistas_asc": "num_pistas ASC, a.nombre COLLATE NOCASE",
-        "num_albums":     "num_albums DESC, a.nombre COLLATE NOCASE",
-        "num_albums_asc": "num_albums ASC, a.nombre COLLATE NOCASE",
-        "duracion":       "duracion_total_seg DESC, a.nombre COLLATE NOCASE",
-        "duracion_asc":   "duracion_total_seg ASC, a.nombre COLLATE NOCASE",
-    }.get(orden, "a.nombre COLLATE NOCASE")
+        "nombre":         "nb_sortkey(a.nombre)",
+        "nombre_desc":    "nb_sortkey(a.nombre) DESC",
+        "num_pistas":     "num_pistas DESC, nb_sortkey(a.nombre)",
+        "num_pistas_asc": "num_pistas ASC, nb_sortkey(a.nombre)",
+        "num_albums":     "num_albums DESC, nb_sortkey(a.nombre)",
+        "num_albums_asc": "num_albums ASC, nb_sortkey(a.nombre)",
+        "duracion":       "duracion_total_seg DESC, nb_sortkey(a.nombre)",
+        "duracion_asc":   "duracion_total_seg ASC, nb_sortkey(a.nombre)",
+    }.get(orden, "nb_sortkey(a.nombre)")
 
     condiciones = [
         """
@@ -960,17 +966,17 @@ def listar_albums(
     where = "WHERE " + " AND ".join(condiciones)
 
     columna_orden = {
-        "artista":      "art.nombre COLLATE NOCASE, COALESCE(al.anio, 0), al.titulo COLLATE NOCASE",
-        "artista_desc": "art.nombre COLLATE NOCASE DESC, COALESCE(al.anio, 0) DESC, al.titulo COLLATE NOCASE",
-        "titulo":       "al.titulo COLLATE NOCASE",
-        "titulo_desc":  "al.titulo COLLATE NOCASE DESC",
-        "anio":         "COALESCE(al.anio, 0) DESC, al.titulo COLLATE NOCASE",
-        "anio_asc":     "COALESCE(al.anio, 0) ASC, al.titulo COLLATE NOCASE",
-        "duracion":     "duracion_total_seg DESC, al.titulo COLLATE NOCASE",
-        "duracion_asc": "duracion_total_seg ASC, al.titulo COLLATE NOCASE",
-        "pistas":       "num_pistas DESC, al.titulo COLLATE NOCASE",
-        "pistas_asc":   "num_pistas ASC, al.titulo COLLATE NOCASE",
-    }.get(orden, "art.nombre COLLATE NOCASE, al.anio")
+        "artista":      "nb_sortkey(art.nombre), COALESCE(al.anio, 0), nb_sortkey(al.titulo)",
+        "artista_desc": "nb_sortkey(art.nombre) DESC, COALESCE(al.anio, 0) DESC, nb_sortkey(al.titulo)",
+        "titulo":       "nb_sortkey(al.titulo)",
+        "titulo_desc":  "nb_sortkey(al.titulo) DESC",
+        "anio":         "COALESCE(al.anio, 0) DESC, nb_sortkey(al.titulo)",
+        "anio_asc":     "COALESCE(al.anio, 0) ASC, nb_sortkey(al.titulo)",
+        "duracion":     "duracion_total_seg DESC, nb_sortkey(al.titulo)",
+        "duracion_asc": "duracion_total_seg ASC, nb_sortkey(al.titulo)",
+        "pistas":       "num_pistas DESC, nb_sortkey(al.titulo)",
+        "pistas_asc":   "num_pistas ASC, nb_sortkey(al.titulo)",
+    }.get(orden, "nb_sortkey(art.nombre), al.anio")
 
     filas = obtener_filas(
         f"""
@@ -1109,21 +1115,21 @@ def listar_pistas(
     where = "WHERE " + " AND ".join(condiciones)
 
     columna_orden = {
-        "titulo":          "p.titulo COLLATE NOCASE, p.artista_nombre COLLATE NOCASE",
-        "titulo_desc":     "p.titulo COLLATE NOCASE DESC, p.artista_nombre COLLATE NOCASE",
-        "artista":         "p.artista_nombre COLLATE NOCASE, p.album_titulo COLLATE NOCASE, COALESCE(p.track_number, 9999)",
-        "artista_desc":    "p.artista_nombre COLLATE NOCASE DESC, p.album_titulo COLLATE NOCASE, COALESCE(p.track_number, 9999)",
-        "album":           "p.album_titulo COLLATE NOCASE, COALESCE(p.track_number, 9999), p.titulo COLLATE NOCASE",
-        "album_desc":      "p.album_titulo COLLATE NOCASE DESC, COALESCE(p.track_number, 9999), p.titulo COLLATE NOCASE",
-        "anio":            "COALESCE(p.anio, 0) DESC, p.titulo COLLATE NOCASE",
-        "anio_asc":        "COALESCE(p.anio, 0) ASC, p.titulo COLLATE NOCASE",
-        "duracion":        "COALESCE(p.duracion_seg, 0) DESC, p.titulo COLLATE NOCASE",
-        "duracion_asc":    "COALESCE(p.duracion_seg, 0) ASC, p.titulo COLLATE NOCASE",
-        "reproducida":     "p.veces_reproducida DESC, p.titulo COLLATE NOCASE",
-        "reproducida_asc": "p.veces_reproducida ASC, p.titulo COLLATE NOCASE",
+        "titulo":          "nb_sortkey(p.titulo), nb_sortkey(p.artista_nombre)",
+        "titulo_desc":     "nb_sortkey(p.titulo) DESC, nb_sortkey(p.artista_nombre)",
+        "artista":         "nb_sortkey(p.artista_nombre), nb_sortkey(p.album_titulo), COALESCE(p.track_number, 9999)",
+        "artista_desc":    "nb_sortkey(p.artista_nombre) DESC, nb_sortkey(p.album_titulo), COALESCE(p.track_number, 9999)",
+        "album":           "nb_sortkey(p.album_titulo), COALESCE(p.track_number, 9999), nb_sortkey(p.titulo)",
+        "album_desc":      "nb_sortkey(p.album_titulo) DESC, COALESCE(p.track_number, 9999), nb_sortkey(p.titulo)",
+        "anio":            "COALESCE(p.anio, 0) DESC, nb_sortkey(p.titulo)",
+        "anio_asc":        "COALESCE(p.anio, 0) ASC, nb_sortkey(p.titulo)",
+        "duracion":        "COALESCE(p.duracion_seg, 0) DESC, nb_sortkey(p.titulo)",
+        "duracion_asc":    "COALESCE(p.duracion_seg, 0) ASC, nb_sortkey(p.titulo)",
+        "reproducida":     "p.veces_reproducida DESC, nb_sortkey(p.titulo)",
+        "reproducida_asc": "p.veces_reproducida ASC, nb_sortkey(p.titulo)",
         "reciente":        "p.ultimo_acceso DESC NULLS LAST, p.actualizado_en DESC",
         "reciente_asc":    "p.ultimo_acceso ASC NULLS FIRST, p.actualizado_en ASC",
-    }.get(orden, "p.titulo COLLATE NOCASE")
+    }.get(orden, "nb_sortkey(p.titulo)")
 
     limite_sql = ""
     if limite is not None:

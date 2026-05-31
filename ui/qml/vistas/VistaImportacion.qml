@@ -608,7 +608,7 @@ Rectangle {
                                         spacing: 3
                                         AppText { text: "Dry-run"; color: raiz.tema.texto; font.weight: Font.DemiBold; font.pixelSize: UiTokens.fontSizeBase }
                                         AppText {
-                                            text: "Dry-run simula la corrida sin mover/copiar archivos. Útil para validar reglas antes de ejecutar en producción."
+                                            text: "Dry-run prueba la importación sin aplicarla: no verás los cambios en la app, pero sí se guarda el caché y el análisis. Al desactivarla e iniciar la importación, se aplicará rápido porque el trabajo pesado ya estará hecho. Útil si no estás seguro de poder dejar el equipo encendido mucho tiempo."
                                             color: raiz.tema.textoMuted
                                             font.pixelSize: UiTokens.fontSizeSm
                                             wrapMode: Text.WordWrap

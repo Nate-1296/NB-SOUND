@@ -389,17 +389,6 @@ Rectangle {
                         Layout.preferredHeight: raiz.esMovil ? 38 : 44
                         modoFooter: true
                     }
-
-                    AppText {
-                        visible: raiz.hayBiblioteca
-                        text: (estadisticas.resumen.total_pistas || 0).toLocaleString()
-                              + " pistas · "
-                              + estadisticas.formatear_duracion_detallada(estadisticas.resumen.duracion_total_seg || 0)
-                        font.pixelSize: UiTokens.fontSizeSm
-                        color: tema.textoMuted
-                        horizontalAlignment: Text.AlignHCenter
-                        Layout.fillWidth: true
-                    }
                 }
 
                 Item {
@@ -1249,28 +1238,6 @@ Rectangle {
                                        ? heroRight.panelW : 0
                 Layout.fillHeight: !raiz.esCompacta
                 spacing: UiTokens.spacing16
-
-                // Eyebrow
-                Row {
-                    spacing: UiTokens.spacing10
-                    Rectangle {
-                        id: eyebrowDot
-                        width: 8; height: 8; radius: 4
-                        color: tema.acento
-                        anchors.verticalCenter: parent.verticalCenter
-                        SequentialAnimation on opacity {
-                            loops: Animation.Infinite; running: raiz.animacionesInicio
-                            NumberAnimation { to: 0.3; duration: 900; easing.type: Easing.InOutSine }
-                            NumberAnimation { to: 1.0; duration: 900; easing.type: Easing.InOutSine }
-                        }
-                    }
-                    AppText {
-                        text: "Biblioteca local · sincronizada"
-                        font.pixelSize: UiTokens.fontSizeSm; color: tema.textoSec
-                        anchors.verticalCenter: parent.verticalCenter
-                        font.family: "JetBrains Mono"
-                    }
-                }
 
                 // Greeting
                 ColumnLayout {

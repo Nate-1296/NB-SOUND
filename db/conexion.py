@@ -10,12 +10,60 @@
 
 import sqlite3
 import threading
+import unicodedata
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 from db.esquema import CREAR_TABLAS_SQL
+
+
+def _nb_sortkey(texto: Optional[str]) -> str:
+    """Clave de ordenamiento alfabético consciente de alfabetos mixtos.
+
+    `COLLATE NOCASE` ordena por punto de código: deja los diacríticos latinos
+    (á, ñ, ü) y los alfabetos no latinos (cirílico, griego, CJK, árabe…) en
+    posiciones incoherentes. Esta función produce una clave que:
+
+      - Pliega los diacríticos latinos (á→a, ñ→n) para intercalarlos con su
+        letra base, como espera un hispanohablante.
+      - Agrupa en tres tramos por el primer carácter significativo:
+        dígitos (0) → letras latinas (1) → otros alfabetos (2). Así los
+        títulos en cirílico/CJK quedan **después de la Z** en orden ascendente
+        (y antes de la A en descendente, que es justo el orden inverso).
+
+    Es determinista (mismo input → mismo output), requisito para registrarla
+    con `deterministic=True` y permitir que SQLite la use en índices/ORDER BY.
+    """
+    if texto is None:
+        return "3"  # nulos al final
+    s = str(texto).strip()
+    if not s:
+        return "3"
+    descompuesto = unicodedata.normalize("NFKD", s)
+    plegado = "".join(c for c in descompuesto if not unicodedata.combining(c)).casefold()
+    if not plegado:
+        return "3"
+    primero = ""
+    for c in plegado:
+        if c.isalnum():
+            primero = c
+            break
+    if not primero:
+        grupo = "2"  # solo símbolos/espacios → junto a "otros"
+    elif primero.isdigit():
+        grupo = "0"
+    elif primero.isascii() and primero.isalpha():
+        grupo = "1"
+    else:
+        grupo = "2"
+    return grupo + plegado
+
+
+def _registrar_funciones_sql(conexion: sqlite3.Connection) -> None:
+    """Registra funciones escalares propias en la conexión SQLite."""
+    conexion.create_function("nb_sortkey", 1, _nb_sortkey, deterministic=True)
 
 # RLock porque _aplicar_esquema puede llamar a funciones que adquieren el mismo lock.
 # Las llamadas externas (ejecutar, transaccion, etc.) tambien lo usan.
@@ -40,6 +88,7 @@ def _crear_conexion(ruta_db: Path) -> sqlite3.Connection:
         isolation_level=None,  # autocommit — los BEGIN/COMMIT son explicitost
     )
     conexion.row_factory = sqlite3.Row
+    _registrar_funciones_sql(conexion)
     return conexion
 
 

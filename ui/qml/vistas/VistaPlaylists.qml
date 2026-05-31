@@ -1212,6 +1212,17 @@ Rectangle {
                         Layout.fillWidth: true
                         spacing: UiTokens.spacing8
                         ActionButton {
+                            text: "Abrir"
+                            iconSource: "../assets/icons/chevron-right.svg"
+                            onClicked: abrirDetallePlaylist(preview.activa.playlist_id || playlist_seleccionada_id)
+                        }
+                        ActionButton {
+                            text: preview.activa.es_anclada ? "Desanclar" : "Anclar"
+                            iconSource: "../assets/icons/pin.svg"
+                            enabled: preview.activa.puede_anclar === true
+                            onClicked: raiz.ejecutar(playlists.anclar_playlist(preview.activa.playlist_id, !preview.activa.es_anclada), "info")
+                        }
+                        ActionButton {
                             text: "Reproducir"
                             iconSource: "../assets/icons/play.svg"
                             primary: true
@@ -1223,12 +1234,6 @@ Rectangle {
                             iconSource: "../assets/icons/queue-play.svg"
                             enabled: preview.tienePistas
                             onClicked: agregarPlaylistActivaACola()
-                        }
-                        ActionButton {
-                            text: preview.activa.es_anclada ? "Desanclar" : "Anclar"
-                            iconSource: "../assets/icons/pin.svg"
-                            enabled: preview.activa.puede_anclar === true
-                            onClicked: raiz.ejecutar(playlists.anclar_playlist(preview.activa.playlist_id, !preview.activa.es_anclada), "info")
                         }
                     }
 
@@ -1298,14 +1303,6 @@ Rectangle {
                         description: preview.activa.tipo_playlist === "favoritos"
                                      ? "Marca canciones como favoritas y aparecerán aquí."
                                      : "Abre la playlist para agregar canciones."
-                    }
-
-                    ActionButton {
-                        Layout.fillWidth: true
-                        text: "Abrir playlist"
-                        iconSource: "../assets/icons/chevron-right.svg"
-                        primary: true
-                        onClicked: abrirDetallePlaylist(preview.activa.playlist_id || playlist_seleccionada_id)
                     }
                 }
             }

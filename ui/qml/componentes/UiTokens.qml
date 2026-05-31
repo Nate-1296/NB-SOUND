@@ -8,14 +8,20 @@ QtObject {
     readonly property int iconLg: 22
     readonly property int iconXl: 28
 
-    readonly property int fontSizeXs: 10
-    readonly property int fontSizeSm: 11
-    readonly property int fontSizeMd: 12
-    readonly property int fontSizeBase: 13   // texto de cuerpo predominante
-    readonly property int fontSizeLg: 14
-    readonly property int fontSizeXl: 16
-    readonly property int fontSize2xl: 18    // subtítulos de sección
-    readonly property int fontSizeDisplay: 27
+    // Reducción global plana de 2 px sobre cada tamaño base: textos más
+    // compactos (sobre todo en tablas/tarjetas con fuentes monoespaciadas que
+    // se estiraban y cortaban el contenido) sin tocar la familia tipográfica ni
+    // ajustar caso por caso. Un único punto de control: cambiar fontSizeDelta
+    // afecta a toda la UI que consume el sistema de tokens.
+    readonly property int fontSizeDelta: -2
+    readonly property int fontSizeXs: 10 + fontSizeDelta
+    readonly property int fontSizeSm: 11 + fontSizeDelta
+    readonly property int fontSizeMd: 12 + fontSizeDelta
+    readonly property int fontSizeBase: 13 + fontSizeDelta   // texto de cuerpo predominante
+    readonly property int fontSizeLg: 14 + fontSizeDelta
+    readonly property int fontSizeXl: 16 + fontSizeDelta
+    readonly property int fontSize2xl: 18 + fontSizeDelta    // subtítulos de sección
+    readonly property int fontSizeDisplay: 27 + fontSizeDelta
 
     readonly property int spacing2: 2
     readonly property int spacing4: 4

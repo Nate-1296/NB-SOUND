@@ -493,6 +493,13 @@ Rectangle {
                     delegate: Loader {
                         required property var modelData
                         Layout.fillWidth: true
+                        // Los márgenes laterales viven aquí (no en los componentes
+                        // internos): al estar envueltos en este Loader, su padre no
+                        // es un Layout y sus Layout.leftMargin/rightMargin se ignoran.
+                        // El modo natural inserta los componentes directos en un
+                        // ColumnLayout, por eso allí sí se respetaba la separación.
+                        Layout.leftMargin: UiTokens.spacing24
+                        Layout.rightMargin: UiTokens.spacing24
                         sourceComponent: {
                             if (modelData.tipo === "header")    return _compHeader
                             if (modelData.tipo === "favoritos") return _compFilaPistaFav

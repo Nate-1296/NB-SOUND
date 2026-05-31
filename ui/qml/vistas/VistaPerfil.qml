@@ -664,7 +664,7 @@ Rectangle {
                                     if (raiz.generosHoyFiltrados.length > 0)
                                         return "Calculado desde las reproducciones del día."
                                     if (raiz.totalEscuchasHoy > 0)
-                                        return raiz.totalEscuchasHoy + " pista" + (raiz.totalEscuchasHoy !== 1 ? "s" : "") + " reproducida" + (raiz.totalEscuchasHoy !== 1 ? "s" : "") + " hoy. Sin datos de género en la biblioteca."
+                                        return raiz.totalEscuchasHoy + " pista" + (raiz.totalEscuchasHoy !== 1 ? "s" : "") + " reproducida" + (raiz.totalEscuchasHoy !== 1 ? "s" : "") + " hoy."
                                     return "Reproduce algo hoy para ver tu mood del día."
                                 }
                                 font.pixelSize: UiTokens.fontSizeBase; color: tema.textoSec; wrapMode: Text.Wrap; Layout.fillWidth: true
@@ -924,8 +924,6 @@ Rectangle {
                 Layout.topMargin: UiTokens.spacing12; Layout.bottomMargin: UiTokens.spacing8
                 implicitHeight: footerC.implicitHeight
                 ColumnLayout { id: footerC; width: parent.width; spacing: UiTokens.spacing4
-                    AppText { text: "TODO CALCULADO EN LOCAL · NB SOUND NO ENVÍA DATOS A NINGÚN SERVIDOR"; font.pixelSize: UiTokens.fontSizeXs; font.letterSpacing: 0.8; color: tema.textoMuted; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true; wrapMode: Text.Wrap }
-                    AppText { visible: raiz.hayBiblioteca; text: (estadisticas.resumen.total_pistas || 0).toLocaleString() + " pistas en biblioteca · " + estadisticas.formatear_duracion_detallada(estadisticas.resumen.duracion_total_seg || 0); font.pixelSize: UiTokens.fontSizeSm; color: tema.textoMuted; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
                 }
             }
 
