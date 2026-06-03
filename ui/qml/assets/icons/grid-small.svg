@@ -1,0 +1,11 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='#D8DEE9' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'>
+  <path d='M4 4h4v4H4z'/>
+  <path d='M10 4h4v4h-4z'/>
+  <path d='M16 4h4v4h-4z'/>
+  <path d='M4 10h4v4H4z'/>
+  <path d='M10 10h4v4h-4z'/>
+  <path d='M16 10h4v4h-4z'/>
+  <path d='M4 16h4v4H4z'/>
+  <path d='M10 16h4v4h-4z'/>
+  <path d='M16 16h4v4h-4z'/>
+</svg>

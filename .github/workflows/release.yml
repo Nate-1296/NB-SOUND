@@ -1,0 +1,566 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versión para el build manual (ej. 1.0.0-test). Sólo afecta nombres de artefactos."
+        required: false
+        default: "manual"
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  # BtbN publica builds "latest" en GitHub CDN — sin bloqueos, siempre disponible.
+  # evermeet.cx usa "getrelease" que apunta siempre a la última versión estable.
+  FFMPEG_LINUX_URL: "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"
+  FFMPEG_WINDOWS_URL: "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+  FFMPEG_MACOS_URL: "https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip"
+  FFPROBE_MACOS_URL: "https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip"
+  CHROMAPRINT_VERSION: "1.5.1"
+
+jobs:
+
+  # -----------------------------------------------------------------
+  #  LINUX:  .tar.gz  +  .AppImage  +  .deb  +  .rpm
+  # -----------------------------------------------------------------
+  linux:
+    name: Linux bundle + .AppImage + .deb + .rpm
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-release.txt
+
+      - name: Resolver versión del producto
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ github.event.inputs.version || 'manual' }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instalar deps del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ffmpeg libchromaprint-tools vlc \
+            libgl1 libegl1 libxkbcommon0 libdbus-1-3 \
+            libwayland-client0 libwayland-egl1 libwayland-cursor0 \
+            libfuse2 ruby ruby-dev rpm
+          sudo gem install --no-document fpm
+
+      - name: Instalar PyInstaller y deps Python
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements-release.txt
+          python -m pip install pyinstaller>=6.0
+
+      - name: Descargar binarios externos a external_bin/
+        run: |
+          set -euo pipefail
+          mkdir -p external_bin
+          # ffmpeg + ffprobe estáticos (build GPL — compatible con GPL-3.0+).
+          # BtbN: estructura ffmpeg-master-latest-linux64-gpl/bin/{ffmpeg,ffprobe}.
+          # ffprobe es REQUERIDO por `demucs.audio.AudioFile` (lo invoca
+          # por nombre vía subprocess al leer cualquier MP3). Sin él,
+          # Karaoke falla con "audio_corrupto" aunque ffmpeg esté en PATH.
+          curl --fail -sSL "${{ env.FFMPEG_LINUX_URL }}" -o /tmp/ffmpeg.tar.xz
+          tar -xJf /tmp/ffmpeg.tar.xz -C /tmp
+          cp /tmp/ffmpeg-master-latest-linux64-gpl/bin/ffmpeg external_bin/ffmpeg
+          cp /tmp/ffmpeg-master-latest-linux64-gpl/bin/ffprobe external_bin/ffprobe
+          chmod +x external_bin/ffmpeg external_bin/ffprobe
+          # fpcalc oficial de Chromaprint (ruta explícita — no depende de find)
+          CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-linux-x86_64"
+          CP_URL="https://github.com/acoustid/chromaprint/releases/download/v${{ env.CHROMAPRINT_VERSION }}/${CP_DIR}.tar.gz"
+          curl --fail -sSL "$CP_URL" -o /tmp/fpcalc.tar.gz
+          tar -xzf /tmp/fpcalc.tar.gz -C /tmp
+          cp "/tmp/${CP_DIR}/fpcalc" external_bin/fpcalc
+          chmod +x external_bin/fpcalc
+          ls -la external_bin/
+          ./external_bin/ffmpeg -version | head -1
+          ./external_bin/fpcalc -version
+
+      - name: Construir bundle con PyInstaller
+        run: |
+          pyinstaller packaging/linux/nb_sound.spec --noconfirm
+          # Buscar los binarios donde sea que PyInstaller los haya colocado.
+          echo "=== Contenido de dist/nb_sound/ (primer nivel) ==="
+          ls -la dist/nb_sound/
+          echo "=== Buscando ffmpeg y fpcalc en el bundle ==="
+          FFMPEG=$(find dist/nb_sound -name "ffmpeg" -type f 2>/dev/null | head -1)
+          FPCALC=$(find dist/nb_sound -name "fpcalc" -type f 2>/dev/null | head -1)
+          if [ -z "$FFMPEG" ]; then
+            echo "ERROR: ffmpeg no encontrado en el bundle"
+            find dist/nb_sound -maxdepth 4 | head -30
+            exit 1
+          fi
+          if [ -z "$FPCALC" ]; then
+            echo "ERROR: fpcalc no encontrado en el bundle"
+            exit 1
+          fi
+          echo "ffmpeg -> $FFMPEG"
+          echo "fpcalc -> $FPCALC"
+
+      - name: Empaquetar .tar.gz
+        run: |
+          cd dist
+          VER="${{ steps.ver.outputs.value }}"
+          tar -czf "nb_sound-${VER}-linux-x64.tar.gz" nb_sound
+          sha256sum "nb_sound-${VER}-linux-x64.tar.gz" > "nb_sound-${VER}-linux-x64.tar.gz.sha256"
+
+      - name: Construir AppImage
+        run: |
+          set -euo pipefail
+          VER="${{ steps.ver.outputs.value }}"
+          curl -sSL "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" \
+            -o /tmp/appimagetool
+          chmod +x /tmp/appimagetool
+
+          APPDIR="dist/NBSound.AppDir"
+          rm -rf "$APPDIR"
+          mkdir -p "$APPDIR/usr/bin" \
+                   "$APPDIR/usr/share/applications" \
+                   "$APPDIR/usr/share/icons/hicolor/512x512/apps" \
+                   "$APPDIR/usr/share/metainfo"
+          cp -r dist/nb_sound/* "$APPDIR/usr/bin/"
+          # El .desktop instalado en el sistema puede tener Exec con ruta absoluta.
+          # El .desktop en la raiz del AppDir debe usar Exec=nb_sound (relativo)
+          # e Icon=nb-sound (nombre de icono sin extension ni ruta) porque
+          # appimagetool resuelve el icono desde la raiz del AppDir por nombre.
+          cp packaging/linux/nb-sound.desktop "$APPDIR/usr/share/applications/"
+          sed -e 's|^Exec=.*|Exec=nb_sound|' \
+              -e 's|^Icon=.*|Icon=nb-sound|' \
+              packaging/linux/nb-sound.desktop > "$APPDIR/nb-sound.desktop"
+          cp ui/qml/assets/logo/logo_512.png \
+             "$APPDIR/usr/share/icons/hicolor/512x512/apps/nb-sound.png"
+          cp ui/qml/assets/logo/logo_512.png "$APPDIR/nb-sound.png"
+          cp packaging/linux/com.nbsound.NBSound.metainfo.xml \
+             "$APPDIR/usr/share/metainfo/"
+
+          # AppRun: idéntico en filosofía a packaging/linux/nb-sound-launcher pero
+          # adaptado a la jerarquía del AppDir. NO forzamos QT_QUICK_BACKEND=software
+          # porque el software renderer no soporta MultiEffect/ColorOverlay y los
+          # SVGs del UI quedan invisibles. Confiamos en Mesa GL del sistema, que
+          # el pyi_rth_linux_vlc hook pre-carga con RTLD_GLOBAL.
+          cat > "$APPDIR/AppRun" <<'EOF'
+          #!/bin/sh
+          set -u
+          HERE="$(dirname "$(readlink -f "$0")")"
+
+          if [ -z "${PYTHON_VLC_LIB_PATH:-}" ]; then
+              for _candidate in \
+                  /usr/lib/x86_64-linux-gnu/libvlc.so.5 \
+                  /usr/lib64/libvlc.so.5 \
+                  /lib/x86_64-linux-gnu/libvlc.so.5; do
+                  if [ -f "$_candidate" ]; then
+                      PYTHON_VLC_LIB_PATH="$_candidate"
+                      export PYTHON_VLC_LIB_PATH
+                      break
+                  fi
+              done
+          fi
+
+          if [ -z "${QT_QPA_PLATFORM:-}" ]; then
+              if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+                  QT_QPA_PLATFORM="wayland;xcb"
+              else
+                  QT_QPA_PLATFORM="xcb"
+              fi
+              export QT_QPA_PLATFORM
+          fi
+
+          exec "$HERE/usr/bin/nb_sound" "$@"
+          EOF
+          chmod +x "$APPDIR/AppRun"
+
+          # appimagetool detecta la arquitectura del binario embebido.
+          ARCH=x86_64 /tmp/appimagetool --no-appstream "$APPDIR" \
+            "dist/NB_Sound-${VER}-x86_64.AppImage"
+          sha256sum "dist/NB_Sound-${VER}-x86_64.AppImage" \
+            > "dist/NB_Sound-${VER}-x86_64.AppImage.sha256"
+
+      - name: Construir .deb
+        run: |
+          set -euo pipefail
+          VER="${{ steps.ver.outputs.value }}"
+          mkdir -p dist/deb-staging
+          # Defensa explicita: fpm respeta los permisos del archivo origen.
+          # Si packaging/linux/nb-sound-launcher se commitea sin bit +x (puede
+          # pasar al reescribirse), el launcher quedaria no ejecutable en /usr/local/bin
+          # y el .desktop no abriria la app al hacer doble clic.
+          chmod +x packaging/linux/nb-sound-launcher
+          fpm -s dir -t deb \
+            --name nb-sound \
+            --version "${VER}" \
+            --license GPL-3.0-or-later \
+            --maintainer "Nathan <digitalworldideascenter@gmail.com>" \
+            --vendor "Nathan" \
+            --description "Catalogador y reproductor de musica local con karaoke, DJ automatico y juego de redescubrimiento." \
+            --url "https://github.com/Nate-1296/NB-SOUND" \
+            --architecture amd64 \
+            --depends "vlc" \
+            --deb-no-default-config-files \
+            --deb-priority optional \
+            --category sound \
+            --package "dist/nb-sound_${VER}_amd64.deb" \
+            dist/nb_sound/=/opt/nb-sound/ \
+            packaging/linux/nb-sound-launcher=/usr/local/bin/nb-sound \
+            packaging/linux/nb-sound.desktop=/usr/share/applications/nb-sound.desktop \
+            ui/qml/assets/logo/logo_256.png=/usr/share/icons/hicolor/256x256/apps/nb-sound.png \
+            packaging/linux/com.nbsound.NBSound.metainfo.xml=/usr/share/metainfo/com.nbsound.NBSound.metainfo.xml
+          sha256sum "dist/nb-sound_${VER}_amd64.deb" \
+            > "dist/nb-sound_${VER}_amd64.deb.sha256"
+
+      - name: Construir .rpm
+        run: |
+          set -euo pipefail
+          VER="${{ steps.ver.outputs.value }}"
+          # rpm no admite dashes en la versión; saneamos.
+          VER_RPM="${VER//-/.}"
+          # Defensa explicita igual que en el .deb: garantizar +x en el launcher.
+          chmod +x packaging/linux/nb-sound-launcher
+          fpm -s dir -t rpm \
+            --name nb-sound \
+            --version "${VER_RPM}" \
+            --license GPL-3.0-or-later \
+            --maintainer "Nathan <digitalworldideascenter@gmail.com>" \
+            --vendor "Nathan" \
+            --description "Catalogador y reproductor de musica local con karaoke, DJ automatico y juego de redescubrimiento." \
+            --url "https://github.com/Nate-1296/NB-SOUND" \
+            --architecture x86_64 \
+            --depends "vlc" \
+            --rpm-summary "Catalogador y reproductor de musica local" \
+            --rpm-tag "Group: Applications/Multimedia" \
+            --package "dist/nb-sound-${VER_RPM}-1.x86_64.rpm" \
+            dist/nb_sound/=/opt/nb-sound/ \
+            packaging/linux/nb-sound-launcher=/usr/local/bin/nb-sound \
+            packaging/linux/nb-sound.desktop=/usr/share/applications/nb-sound.desktop \
+            ui/qml/assets/logo/logo_256.png=/usr/share/icons/hicolor/256x256/apps/nb-sound.png \
+            packaging/linux/com.nbsound.NBSound.metainfo.xml=/usr/share/metainfo/com.nbsound.NBSound.metainfo.xml
+          sha256sum "dist/nb-sound-${VER_RPM}-1.x86_64.rpm" \
+            > "dist/nb-sound-${VER_RPM}-1.x86_64.rpm.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: |
+            dist/nb_sound-*-linux-x64.tar.gz
+            dist/nb_sound-*-linux-x64.tar.gz.sha256
+            dist/NB_Sound-*-x86_64.AppImage
+            dist/NB_Sound-*-x86_64.AppImage.sha256
+            dist/nb-sound_*_amd64.deb
+            dist/nb-sound_*_amd64.deb.sha256
+            dist/nb-sound-*-1.x86_64.rpm
+            dist/nb-sound-*-1.x86_64.rpm.sha256
+          retention-days: 14
+          if-no-files-found: error
+
+  # -----------------------------------------------------------------
+  #  WINDOWS:  .zip  +  installer .exe (NSIS)
+  # -----------------------------------------------------------------
+  windows:
+    name: Windows bundle + installer .exe
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-release.txt
+
+      - name: Resolver versión del producto
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ github.event.inputs.version || 'manual' }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instalar NSIS (Chocolatey)
+        shell: pwsh
+        run: |
+          choco install -y --no-progress nsis | Out-Null
+          # Confirmar disponibilidad
+          & "C:\Program Files (x86)\NSIS\makensis.exe" /VERSION
+
+      - name: Instalar deps Python
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements-release.txt
+          python -m pip install pyinstaller>=6.0
+
+      - name: Descargar binarios externos a external_bin/
+        run: |
+          set -euo pipefail
+          mkdir -p external_bin
+          # ffmpeg + ffprobe — BtbN GPL win64 (URL estable "latest").
+          # Estructura del zip: ffmpeg-master-latest-win64-gpl/bin/{ffmpeg,ffprobe}.exe.
+          # ffprobe es requerido por demucs.audio (lo invoca por nombre).
+          curl --fail -sSL "${{ env.FFMPEG_WINDOWS_URL }}" -o /tmp/ffmpeg.zip
+          unzip -q /tmp/ffmpeg.zip -d /tmp/ffmpeg-extracted
+          find /tmp/ffmpeg-extracted -name "ffmpeg.exe" -type f \
+            -exec cp {} external_bin/ffmpeg.exe \;
+          find /tmp/ffmpeg-extracted -name "ffprobe.exe" -type f \
+            -exec cp {} external_bin/ffprobe.exe \;
+          test -f external_bin/ffmpeg.exe || { echo "ERROR: ffmpeg.exe no encontrado en el zip"; exit 1; }
+          test -f external_bin/ffprobe.exe || { echo "ERROR: ffprobe.exe no encontrado en el zip"; exit 1; }
+          # fpcalc oficial de Chromaprint (ruta explícita)
+          CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-windows-x86_64"
+          CP_URL="https://github.com/acoustid/chromaprint/releases/download/v${{ env.CHROMAPRINT_VERSION }}/${CP_DIR}.zip"
+          curl --fail -sSL "$CP_URL" -o /tmp/fpcalc.zip
+          unzip -q /tmp/fpcalc.zip -d /tmp/fpcalc-extracted
+          cp "/tmp/fpcalc-extracted/${CP_DIR}/fpcalc.exe" external_bin/fpcalc.exe
+          ls -la external_bin/
+          ./external_bin/ffmpeg.exe -version | head -1 || true
+          ./external_bin/fpcalc.exe -version || true
+
+      - name: Construir bundle con PyInstaller
+        run: |
+          pyinstaller packaging/windows/nb_sound.spec --noconfirm
+          echo "=== Buscando ffmpeg.exe y fpcalc.exe en el bundle ==="
+          FFMPEG=$(find dist/nb_sound -name "ffmpeg.exe" -type f 2>/dev/null | head -1)
+          FPCALC=$(find dist/nb_sound -name "fpcalc.exe" -type f 2>/dev/null | head -1)
+          if [ -z "$FFMPEG" ]; then
+            echo "ERROR: ffmpeg.exe no encontrado en el bundle"
+            find dist/nb_sound -maxdepth 4 | head -30
+            exit 1
+          fi
+          if [ -z "$FPCALC" ]; then
+            echo "ERROR: fpcalc.exe no encontrado en el bundle"
+            exit 1
+          fi
+          echo "ffmpeg -> $FFMPEG"
+          echo "fpcalc -> $FPCALC"
+
+      - name: Empaquetar .zip portable
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.value }}"
+          $zip = "dist/nb_sound-$ver-windows-x64.zip"
+          Compress-Archive -Path "dist\nb_sound\*" -DestinationPath "$zip" -Force
+          (Get-FileHash $zip -Algorithm SHA256).Hash | Out-File -Encoding ASCII "$zip.sha256"
+
+      - name: Construir instalador NSIS
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.value }}"
+          $src = (Resolve-Path "dist\nb_sound").Path
+          # Sanitizar version a X.X.X.X para VIProductVersion (NSIS exige ese formato).
+          # Strips todo caracter no numerico ni punto, luego rellena con .0 hasta 4 partes.
+          $viRaw = $ver -replace '[^0-9\.]', ''
+          $parts  = ($viRaw.Split('.') + @('0','0','0','0'))[0..3]
+          $viVer  = $parts -join '.'
+          Set-Location packaging\windows
+          & "C:\Program Files (x86)\NSIS\makensis.exe" `
+            /DVERSION="$ver" `
+            /DVIVERSION="$viVer" `
+            /DSRC_DIR="$src" `
+            installer.nsi
+          Set-Location ..\..
+          # NSIS escribe el .exe en dist\ segun OutFile
+          Get-ChildItem dist\nb-sound-windows-x64-setup.exe
+          $exe = "dist\nb-sound-windows-x64-setup.exe"
+          $exe_versioned = "dist\nb-sound-$ver-windows-x64-setup.exe"
+          Move-Item $exe $exe_versioned -Force
+          (Get-FileHash $exe_versioned -Algorithm SHA256).Hash | Out-File -Encoding ASCII "$exe_versioned.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: |
+            dist/nb_sound-*-windows-x64.zip
+            dist/nb_sound-*-windows-x64.zip.sha256
+            dist/nb-sound-*-windows-x64-setup.exe
+            dist/nb-sound-*-windows-x64-setup.exe.sha256
+          retention-days: 14
+          if-no-files-found: error
+
+  # -----------------------------------------------------------------
+  #  MACOS:  .zip  +  .dmg
+  # -----------------------------------------------------------------
+  macos:
+    name: macOS .app + .zip + .dmg
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-release.txt
+
+      - name: Resolver versión del producto
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ github.event.inputs.version || 'manual' }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instalar deps del sistema (brew)
+        run: |
+          brew install create-dmg || true
+
+      - name: Instalar deps Python
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements-release.txt
+          python -m pip install pyinstaller>=6.0
+
+      - name: Descargar binarios externos a external_bin/
+        run: |
+          set -euo pipefail
+          mkdir -p external_bin
+          # ffmpeg + ffprobe desde evermeet.cx (zip contiene solo el binario en la raíz).
+          # ffprobe es requerido por demucs.audio (lo invoca por nombre).
+          curl --fail -sSL "${{ env.FFMPEG_MACOS_URL }}" -o /tmp/ffmpeg.zip
+          unzip -q /tmp/ffmpeg.zip -d /tmp/ffmpeg-extracted
+          cp /tmp/ffmpeg-extracted/ffmpeg external_bin/ffmpeg
+          chmod +x external_bin/ffmpeg
+          curl --fail -sSL "${{ env.FFPROBE_MACOS_URL }}" -o /tmp/ffprobe.zip
+          unzip -q /tmp/ffprobe.zip -d /tmp/ffprobe-extracted
+          cp /tmp/ffprobe-extracted/ffprobe external_bin/ffprobe
+          chmod +x external_bin/ffprobe
+          # fpcalc oficial de Chromaprint (ruta explícita — no depende de find)
+          CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-macos-x86_64"
+          CP_URL="https://github.com/acoustid/chromaprint/releases/download/v${{ env.CHROMAPRINT_VERSION }}/${CP_DIR}.tar.gz"
+          curl --fail -sSL "$CP_URL" -o /tmp/fpcalc.tar.gz
+          tar -xzf /tmp/fpcalc.tar.gz -C /tmp
+          cp "/tmp/${CP_DIR}/fpcalc" external_bin/fpcalc
+          chmod +x external_bin/fpcalc
+          ls -la external_bin/
+          ./external_bin/ffmpeg -version | head -1
+          ./external_bin/fpcalc -version
+
+      - name: Construir .app con PyInstaller
+        run: |
+          pyinstaller packaging/macos/nb_sound.spec --noconfirm
+          echo "=== Buscando ffmpeg y fpcalc en el bundle .app ==="
+          FFMPEG=$(find "dist/NB Sound.app" -name "ffmpeg" -type f 2>/dev/null | head -1)
+          FPCALC=$(find "dist/NB Sound.app" -name "fpcalc" -type f 2>/dev/null | head -1)
+          if [ -z "$FFMPEG" ]; then
+            echo "ERROR: ffmpeg no encontrado en el bundle"
+            find "dist/NB Sound.app" -maxdepth 5 | head -30
+            exit 1
+          fi
+          if [ -z "$FPCALC" ]; then
+            echo "ERROR: fpcalc no encontrado en el bundle"
+            exit 1
+          fi
+          echo "ffmpeg -> $FFMPEG"
+          echo "fpcalc -> $FPCALC"
+
+      - name: Empaquetar .zip
+        run: |
+          set -euo pipefail
+          VER="${{ steps.ver.outputs.value }}"
+          cd dist
+          ditto -c -k --sequesterRsrc --keepParent "NB Sound.app" "nb_sound-${VER}-macos-arm64.zip"
+          shasum -a 256 "nb_sound-${VER}-macos-arm64.zip" > "nb_sound-${VER}-macos-arm64.zip.sha256"
+
+      - name: Construir .dmg
+        run: |
+          set -euo pipefail
+          VER="${{ steps.ver.outputs.value }}"
+          if command -v create-dmg >/dev/null 2>&1; then
+            create-dmg \
+              --volname "NB Sound" \
+              --window-size 600 400 \
+              --icon-size 100 \
+              --app-drop-link 400 200 \
+              "dist/NB_Sound-${VER}-macos.dmg" \
+              "dist/NB Sound.app"
+            shasum -a 256 "dist/NB_Sound-${VER}-macos.dmg" > "dist/NB_Sound-${VER}-macos.dmg.sha256"
+          else
+            echo "create-dmg no disponible; salto generacion .dmg"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: |
+            dist/nb_sound-*-macos-arm64.zip
+            dist/nb_sound-*-macos-arm64.zip.sha256
+            dist/NB_Sound-*-macos.dmg
+            dist/NB_Sound-*-macos.dmg.sha256
+          retention-days: 14
+          if-no-files-found: warn
+
+  # -----------------------------------------------------------------
+  #  RELEASE:  publica una GitHub Release con todos los artefactos
+  # -----------------------------------------------------------------
+  release:
+    name: Publicar Release de GitHub
+    needs: [linux, windows, macos]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Listar artefactos
+        run: find artifacts -type f -print
+
+      - name: Publicar release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+          draft: false
+          body: |
+            Builds oficiales de NB Sound para Linux, Windows y macOS.
+
+            **Linux**
+            - `nb_sound-VER-linux-x64.tar.gz` — bundle portable
+            - `NB_Sound-VER-x86_64.AppImage` — un solo archivo, `chmod +x` y ejecutar
+            - `nb-sound_VER_amd64.deb` — Debian / Ubuntu / Pop!_OS
+            - `nb-sound-VER-1.x86_64.rpm` — Fedora / RHEL / openSUSE
+
+            **Windows**
+            - `nb_sound-VER-windows-x64.zip` — bundle portable
+            - `nb-sound-VER-windows-x64-setup.exe` — instalador con accesos directos y desinstalador
+
+            **macOS** (Apple Silicon)
+            - `nb_sound-VER-macos-arm64.zip` — `.app` empaquetado
+            - `NB_Sound-VER-macos.dmg` — instalador draggable
+
+            Todos los archivos vienen con su `.sha256` adjunto.
+
+            **Dependencias externas que el usuario debe tener:**
+            - VLC (libVLC) — no embebido por licencia y tamaño. Instalar:
+              - Linux: `apt install vlc` / `dnf install vlc` / `pacman -S vlc`
+              - macOS: `brew install --cask vlc`
+              - Windows: `winget install VideoLAN.VLC` (el instalador `.exe` lo detecta y avisa)
+
+            ffmpeg y Chromaprint vienen embebidos en todas las builds.

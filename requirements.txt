@@ -1,0 +1,42 @@
+# Dependencias de runtime para CLI + UI (NB SOUND v1)
+# Nota: algunos módulos son opcionales en ejecución (AcoustID/Shazam/IA),
+# pero se incluyen para un entorno completo y reproducible out-of-the-box.
+
+musicbrainzngs==0.7.1
+mutagen==1.47.0
+python-dotenv>=1.0.0
+PySide6>=6.6.0
+Pillow>=10.0.0
+
+# Integraciones opcionales del pipeline
+pyacoustid>=1.3.0
+shazamio>=0.4.0
+anthropic>=0.25.0
+openai>=1.0.0
+
+# Backend de reproducción para UI (si no está, la UI usa modo simulado)
+python-vlc>=3.0.20123
+
+# Ecosistema móvil — servidor local de sincronización WiFi con la app de
+# teléfono/tablet. Si faltan, la app abre y funciona igual; la Vista de
+# Sincronización queda deshabilitada hasta instalarlas (degradación
+# controlada). aiohttp = HTTP+WS en proceso; zeroconf = descubrimiento mDNS;
+# qrcode = emparejamiento por QR (sobre Pillow). Ver docs/mobile-ecosystem.md.
+aiohttp>=3.9.0
+zeroconf>=0.131.0
+qrcode>=7.4.2
+# TLS del servidor de sync: certificado autofirmado + huella para TOFU.
+cryptography>=42.0.0
+
+librosa>=0.11.0
+
+numpy>=1.26.0
+
+# Separacion voz/instrumental (Karaoke). Torch CPU es universal; si el
+# sistema tiene CUDA o MPS, el codigo lo detecta y lo usa automaticamente
+# sin cambiar este wheel. Para acelerar con NVIDIA reinstala torch desde
+# https://download.pytorch.org/whl/cu121 (u otra version CUDA).
+torch>=2.0.0
+torchaudio>=2.0.0
+demucs>=4.0.1
+soundfile>=0.12.0

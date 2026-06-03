@@ -1,0 +1,70 @@
+#!/bin/sh
+# Launcher wrapper for NB Sound installed via .deb or .rpm.
+#
+# Goals:
+#   1. Choose a sensible Qt platform plugin for the session (Wayland vs X11).
+#   2. Provide a defensive fallback to xcb if Wayland fails at startup,
+#      because some compositors (Pop!_OS COSMIC alpha, kwin nested,
+#      ChromeOS Crostini) advertise WAYLAND_DISPLAY but don't expose EGL.
+#   3. Point python-vlc at the system libvlc explicitly (belt-and-suspenders
+#      with the pyi_rth_linux_vlc runtime hook).
+#   4. Honour user overrides: any QT_QPA_PLATFORM / PYTHON_VLC_LIB_PATH
+#      already set in the environment wins over auto-detection.
+
+set -u
+
+BIN="/opt/nb-sound/nb_sound"
+if [ ! -x "$BIN" ]; then
+    echo "[nb-sound] No se encontró el ejecutable en $BIN" >&2
+    exit 127
+fi
+
+# ---------------------------------------------------------------------------
+# python-vlc -> libvlc del sistema (defensa en profundidad; el runtime hook
+# de PyInstaller hace lo mismo, pero el launcher lo deja explícito por si
+# alguien ejecuta el binario sin nuestro hook por accidente).
+# ---------------------------------------------------------------------------
+if [ -z "${PYTHON_VLC_LIB_PATH:-}" ]; then
+    for _candidate in \
+        /usr/lib/x86_64-linux-gnu/libvlc.so.5 \
+        /usr/lib64/libvlc.so.5 \
+        /lib/x86_64-linux-gnu/libvlc.so.5 \
+        /usr/lib/aarch64-linux-gnu/libvlc.so.5 \
+        /lib/aarch64-linux-gnu/libvlc.so.5; do
+        if [ -f "$_candidate" ]; then
+            PYTHON_VLC_LIB_PATH="$_candidate"
+            export PYTHON_VLC_LIB_PATH
+            break
+        fi
+    done
+fi
+
+# ---------------------------------------------------------------------------
+# Selección de plataforma Qt.
+#
+# Si el usuario fijó QT_QPA_PLATFORM no la sobreescribimos. En caso contrario:
+#
+#   * Sesión Wayland ($WAYLAND_DISPLAY definido):
+#       Probamos primero "wayland;xcb" para que Qt elija Wayland y, si la
+#       inicialización EGL falla, caiga automáticamente a XCB en lugar de
+#       abortar. Esto cubre Pop!_OS COSMIC, GNOME on Wayland, KDE Plasma 6
+#       y entornos donde Wayland funciona pero EGL no se inicializa por
+#       drivers/limitaciones del compositor.
+#
+#   * Sesión X11 (DISPLAY definido):
+#       Forzamos xcb directamente.
+#
+# QT_QUICK_BACKEND no se establece a "software" porque rompe los efectos
+# QML (MultiEffect / ColorOverlay) usados para colorear los SVG del UI:
+# resultaría en iconos invisibles aunque la app abra.
+# ---------------------------------------------------------------------------
+if [ -z "${QT_QPA_PLATFORM:-}" ]; then
+    if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+        QT_QPA_PLATFORM="wayland;xcb"
+    else
+        QT_QPA_PLATFORM="xcb"
+    fi
+    export QT_QPA_PLATFORM
+fi
+
+exec "$BIN" "$@"

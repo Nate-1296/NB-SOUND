@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Resolución de problemas
+    url: https://github.com/Nate-1296/NB-SOUND/blob/main/docs/troubleshooting.md
+    about: Antes de abrir un issue, revisa los errores comunes y sus soluciones documentadas.
+  - name: Documentación del proyecto
+    url: https://github.com/Nate-1296/NB-SOUND/tree/main/docs
+    about: Guías de instalación, configuración, arquitectura y cada subsistema (karaoke, DJ, etc.).
+  - name: Reporte de seguridad (privado)
+    url: https://github.com/Nate-1296/NB-SOUND/security/advisories/new
+    about: Para vulnerabilidades, usa el canal privado de GitHub Security Advisories. No las publiques aquí.

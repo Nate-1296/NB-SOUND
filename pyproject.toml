@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nb_sound"
+version = "1.0.0"
+description = "Catalogador inteligente de bibliotecas de audio (CLI + UI desktop)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Nathan" },
+]
+keywords = ["audio", "music", "library", "tagger", "metadata", "pyside6", "qml", "demucs"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: MacOS X",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Multimedia :: Sound/Audio :: Players",
+]
+dynamic = ["dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/Nate-1296/NB-SOUND"
+Documentation = "https://github.com/Nate-1296/NB-SOUND/tree/main/docs"
+Issues = "https://github.com/Nate-1296/NB-SOUND/issues"
+
+[project.scripts]
+nb_sound = "main:main"
+nb_sound_ui = "main_ui:main"
+
+[tool.setuptools]
+packages = ["core", "infra", "domain", "db", "servicios", "ui", "config", "workers", "external", "utils"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.package-data]
+ui = [
+    "qml/**/*.qml",
+    "qml/**/*.js",
+    "qml/assets/**/*.svg",
+    "qml/assets/**/*.png",
+    "qml/assets/**/*.ico",
+    "qml/assets/**/*.icns",
+]

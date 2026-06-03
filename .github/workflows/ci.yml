@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (${{ matrix.os }} / Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    # Git Bash viene preinstalado en los runners de Windows; forzarlo aquí
+    # evita que PowerShell rompa los `\` de continuación bash.
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest, macos-latest]
+        python-version: ["3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      # System dependencies are needed for VLC/ffmpeg/chromaprint detection
+      # and headless Qt rendering. They are best-effort — tests degrade
+      # gracefully when a tool is missing.
+      - name: Install system deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ffmpeg libchromaprint-tools vlc \
+            libgl1 libegl1 libxkbcommon0 libdbus-1-3 libxcb-cursor0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-sync1 libxcb-xfixes0 \
+            libxcb-xinerama0 libxcb-xkb1 libxkbcommon-x11-0
+
+      - name: Install system deps (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install ffmpeg chromaprint || true
+          brew install --cask vlc || true
+
+      - name: Install system deps (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Best-effort install. choco is preinstalled on GitHub runners.
+          choco install -y --no-progress ffmpeg chromaprint vlc | Out-Null
+          $env:Path += ";C:\Program Files\VideoLAN\VLC"
+          echo "C:\Program Files\VideoLAN\VLC" >> $env:GITHUB_PATH
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install minimal Python deps (no torch/demucs/librosa)
+        # Heavy ML deps are excluded from CI to keep wheels small and runs
+        # fast. The codebase degrades gracefully when they are missing.
+        run: |
+          python -m pip install \
+            "musicbrainzngs==0.7.1" \
+            "mutagen==1.47.0" \
+            "python-dotenv>=1.0.0" \
+            "PySide6>=6.6.0" \
+            "Pillow>=10.0.0" \
+            "pyacoustid>=1.3.0" \
+            "python-vlc>=3.0.20123" \
+            "anthropic>=0.25.0" \
+            "openai>=1.0.0" \
+            "numpy>=1.26.0" \
+            "pytest>=8.0"
+
+      - name: Show Python and platform info
+        run: |
+          python --version
+          python -c "import platform; print(platform.platform())"
+          python -c "import PySide6; print('PySide6', PySide6.__version__)"
+
+      - name: Run bootstrap/config/portability tests
+        # These tests do not require torch/demucs and are the core
+        # cross-platform contract the CI guards.
+        run: |
+          python -m pytest tests/test_bootstrap.py tests/test_config_validation.py \
+            tests/test_main_config_validation.py tests/test_version_and_build.py \
+            tests/test_packaging_artifacts.py tests/test_text_slug_unicode.py \
+            tests/test_writer_paths.py tests/test_processed_manager.py \
+            tests/test_db_recovery.py tests/test_logging_lifecycle.py \
+            tests/test_cierre_ordenado.py tests/test_settings_cross_platform.py \
+            -q --tb=short
+
+      - name: Smoke-import main modules
+        # Ensures the package tree imports cleanly under each OS.
+        run: |
+          python -c "import config.settings; print('settings OK')"
+          python -c "from infra import bootstrap, version, logger; print('infra OK')"
+          python -c "from db import conexion, esquema; print('db OK')"
+          python -c "import main_ui; print('main_ui import OK')"
+
+  lint:
+    name: Lint (pyflakes)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pyflakes
+        run: python -m pip install pyflakes
+      - name: Run pyflakes
+        # Treat unused imports/undefined names as warnings only — the codebase
+        # has known intentional ignores in optional-dependency branches.
+        run: pyflakes config core db domain external infra servicios ui utils workers main.py main_ui.py || true

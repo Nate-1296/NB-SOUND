@@ -1,0 +1,20 @@
+module vistas
+
+VistaInicio 1.0 VistaInicio.qml
+VistaBusqueda 1.0 VistaBusqueda.qml
+VistaBiblioteca 1.0 VistaBiblioteca.qml
+VistaDetalleAlbum 1.0 VistaDetalleAlbum.qml
+VistaPlaylists 1.0 VistaPlaylists.qml
+VistaImportacion 1.0 VistaImportacion.qml
+VistaConfiguracion 1.0 VistaConfiguracion.qml
+VistaLyrics 1.0 VistaLyrics.qml
+VistaPerfil 1.0 VistaPerfil.qml
+VistaKaraoke 1.0 VistaKaraoke.qml
+VistaDJPrivado 1.0 VistaDJPrivado.qml
+DjSesionActiva 1.0 DjSesionActiva.qml
+DjHistorial 1.0 DjHistorial.qml
+DjHistorialAccion 1.0 DjHistorialAccion.qml
+VistaExploradorCiego 1.0 VistaExploradorCiego.qml
+VistaEstadoSistema 1.0 VistaEstadoSistema.qml
+
+VistaReproduccionExpandida 1.0 VistaReproduccionExpandida.qml

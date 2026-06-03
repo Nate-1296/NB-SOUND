@@ -1,0 +1,84 @@
+name: Propuesta de mejora
+description: Sugiere una nueva funcionalidad o un cambio sustancial
+title: "[Feature] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Para cambios grandes (refactors profundos, features nuevas con muchos
+        archivos, modificaciones de arquitectura) recomendamos abrir este
+        issue **antes** de empezar a programar, para validar el enfoque y
+        evitar trabajo perdido.
+
+        Para mejoras pequeñas, un PR directo también está bien — basta con
+        que el commit explique el motivo.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema o necesidad
+      description: ¿Qué situación te llevó a pedir esta mejora?
+      placeholder: Cuando importo música remasterizada, todas las versiones del mismo álbum quedan como duplicados...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solución propuesta
+      description: Describe la funcionalidad o cambio que tienes en mente. Si tienes un esbozo de cómo implementarlo, agrégalo.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: ¿Probaste otras formas de resolver el problema? ¿Por qué no funcionan?
+
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: Subsistema afectado
+      options:
+        - Importación / catalogación
+        - Reproductor / cola
+        - Biblioteca (álbumes / artistas / pistas)
+        - Búsqueda
+        - Playlists
+        - Karaoke
+        - DJ Privado
+        - Explorador Ciego
+        - Audio Intelligence
+        - Configuración / UI general
+        - CLI
+        - Empaquetado
+        - Documentación
+        - Otro
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Alcance esperado
+      description: ¿Es opcional o cambia el comportamiento por defecto? ¿Requiere migración de datos o nuevas dependencias?
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Capturas, ejemplos, referencias a cómo lo resuelven otros proyectos.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Confirmaciones
+      options:
+        - label: Revisé que esta propuesta no esté planteada ya en issues abiertos o cerrados.
+          required: true
+        - label: La propuesta respeta la filosofía local-first del proyecto (sin nube obligatoria, sin telemetría).
+          required: true
+        - label: La propuesta es compatible con GPL-3.0-or-later (no introduce dependencias con licencias incompatibles).
+          required: true
