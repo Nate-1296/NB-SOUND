@@ -1,7 +1,6 @@
 <div align="center">
 <img src="assets/logo/logo_lg.png" width="150" alt="NB SOUND Logo">
 
-
 # 🎵 NB SOUND
 
 ### Un catalogador inteligente de música local
@@ -35,11 +34,13 @@ Todo local. Sin nube. Sin suscripciones. Sin vender tus datos.
 
 </div>
 
-
 ---
 
-
 # 📸 Vista previa
+
+> ℹ️ Las capturas se tomaron en **Pop!_OS (Linux)**. La interfaz en otro sistema
+> operativo o distribución puede verse ligeramente distinta: eso es normal y
+> depende del entorno gráfico del sistema, no de la app.
 
 ## 🏠 Inicio
 
@@ -179,6 +180,14 @@ Todo local. Sin nube. Sin suscripciones. Sin vender tus datos.
 
 ---
 
+## 🔄 Sincronización
+
+<div align="center">
+<img src="assets/screens/sincronizacion.png" width="100%" alt="Sincronización con dispositivos móviles">
+</div>
+
+---
+
 # ✨ ¿Qué es NB SOUND?
 
 NB SOUND convierte carpetas caóticas llenas de archivos de audio en una biblioteca organizada, enriquecida y reproducible.
@@ -280,7 +289,6 @@ Y ejecuta el programa.
 <br>
 Monta:
 
-
 <pre class="overflow-visible! px-0!" data-start="3478" data-end="3514"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"></div><div class="relative"><div class="pe-11 pt-3"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>NB_Sound-1.0.0-macos.dmg</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class=""></div></div></div></div></div></pre>
 
 Y arrastra la app a `Applications`.
@@ -291,9 +299,7 @@ Y arrastra la app a `Applications`.
 <br>
 Descomprime:
 
-
 <pre class="overflow-visible! px-0!" data-start="3631" data-end="3673"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"></div><div class="relative"><div class="pe-11 pt-3"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>nb_sound-1.0.0-macos-arm64.zip</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class=""></div></div></div></div></div></pre>
-
 
 </details>
 
@@ -439,6 +445,27 @@ Incluye desafíos como:
 * explorar tracks nunca reproducidos
 
 Tu disco duro escondiendo joyas desde 2017.
+
+---
+
+# 📱 NB SOUND para móvil
+
+NB SOUND tiene una app complementaria para **Android e iOS** que se conecta con
+el escritorio por WiFi local mediante un código QR.
+
+Permite:
+
+* Sincronizar tu catálogo, playlists, portadas, lyrics y perfil desde el PC.
+* Llevar audio al teléfono para escucharlo **offline**.
+* Controlar el reproductor del PC a distancia cuando
+  ambos están conectados.
+
+El PC es la fuente de verdad de la metadata enriquecida; el teléfono lo es de
+su historial y favoritos locales. Todo viaja por tu red local, sin servidores
+externos.
+
+> 📲 Para conocer más del desarrollo de NB Sound para móvil (Android e iOS)
+> visita: [https://github.com/Nate-1296/NB-SOUND-MOBILE](https://github.com/Nate-1296/NB-SOUND-MOBILE)
 
 ---
 

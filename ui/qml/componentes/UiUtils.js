@@ -64,3 +64,41 @@ function veloClaro(alpha) {
 function veloOscuro(alpha) {
     return Qt.rgba(0, 0, 0, alpha)
 }
+
+// Normaliza una marca de tiempo almacenada en UTC (cualquiera de los formatos
+// canónicos de NB Sound) a una cadena ISO-8601 que `new Date()` interpreta
+// como UTC. Devuelve "" si la entrada está vacía o no es reparable.
+// Formatos contemplados:
+//   "2026-06-03T20:43:18Z"             ISO UTC con sufijo Z
+//   "2026-06-04T19:19:25.820341+00:00" ISO con offset explícito
+//   "2026-06-03 21:27:44"              UTC naive (datetime('now') de SQLite)
+//   "2026-06-04T18:01:739743Z"         legacy: microsegundos sin segundos
+function normalizarMarcaUtc(valor) {
+    if (valor === null || valor === undefined)
+        return ""
+    var s = String(valor).trim()
+    if (s === "")
+        return ""
+    // Separador fecha/hora canónico.
+    s = s.replace(" ", "T")
+    // Repara el formato legacy "T<hh>:<mm>:<microsegundos>" (sin segundos).
+    s = s.replace(/T(\d{2}):(\d{2}):(\d{6})(Z|[+-]\d{2}:?\d{2})?$/,
+                  function(m, hh, mm, us, tz) { return "T" + hh + ":" + mm + ":00" + (tz ? tz : "Z") })
+    // Sin indicador de zona => los datos canónicos están en UTC: añadimos Z.
+    if (!/[Zz]$/.test(s) && !/[+-]\d{2}:?\d{2}$/.test(s))
+        s += "Z"
+    return s
+}
+
+// Marca de tiempo UTC almacenada -> texto local legible (formato corto del
+// locale del sistema). `placeholder` se devuelve cuando no hay valor.
+function formatearFechaLocal(valor, placeholder) {
+    var ph = (placeholder === undefined) ? "—" : placeholder
+    var norm = normalizarMarcaUtc(valor)
+    if (norm === "")
+        return ph
+    var d = new Date(norm)
+    if (isNaN(d.getTime()))
+        return String(valor).replace("T", " ").replace("Z", "")
+    return d.toLocaleString(Qt.locale(), Locale.ShortFormat)
+}

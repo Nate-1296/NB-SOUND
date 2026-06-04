@@ -6,6 +6,18 @@ El CLI es el motor principal del proyecto. Procesa archivos de audio desde una c
 python main.py [opciones]
 ```
 
+## Cómo invocarlo
+
+| Contexto | Comando | Notas |
+|---|---|---|
+| **Desarrollo** (repo clonado) | `python main.py [opciones]` | Requiere el entorno con dependencias instaladas. |
+| **App instalada** (.deb/.rpm/.AppImage, etc.) | `nb-sound cli [opciones]` | El mismo binario sirve la GUI y la CLI: `nb-sound` abre la interfaz gráfica y `nb-sound cli ...` ejecuta el catalogador. La salida aparece en la terminal en Linux/macOS. |
+
+> En la app instalada, `nb-sound` es el comando registrado en el `PATH` por el
+> instalador (`/usr/local/bin/nb-sound` en Linux). Todas las opciones de este
+> documento se pasan igual tras `cli`, p. ej. `nb-sound cli --version` o
+> `nb-sound cli --input /ruta/entrada --library /ruta/biblioteca`.
+
 ---
 
 ## Ejecución básica

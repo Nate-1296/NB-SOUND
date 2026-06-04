@@ -56,13 +56,30 @@ class ImportRecoveryService:
                 if not has_lyrics:
                     missing_lyrics += 1
 
+        # Conteos alineados con lo que el reintento puede procesar realmente:
+        # SOLO pistas de la biblioteca actual. Las filas huérfanas en
+        # track_audio_features (de pistas movidas/re-importadas, que quedan con
+        # status 'failed'/file_not_found) no corresponden a ninguna pista viva,
+        # así que el reintento nunca podría tocarlas. Contarlas globalmente
+        # inflaba el indicador y hacía parecer que «Reintentar features» no hacía
+        # nada (el número no bajaba). El reintento filtra por estado='biblioteca'
+        # y (track_id NULL OR status='failed'); replicamos ese criterio aquí.
         features_failed = obtener_una_fila(
-            "SELECT COUNT(*) c FROM track_audio_features WHERE analysis_status='failed'"
+            """
+            SELECT COUNT(*) c
+            FROM track_audio_features taf
+            JOIN pistas p ON CAST(p.id AS TEXT) = taf.track_id
+            WHERE p.estado = 'biblioteca' AND taf.analysis_status = 'failed'
+            """
         )["c"]
-        features_ready = obtener_una_fila(
-            "SELECT COUNT(*) c FROM track_audio_features WHERE analysis_status='ready'"
+        features_missing = obtener_una_fila(
+            """
+            SELECT COUNT(*) c
+            FROM pistas p
+            LEFT JOIN track_audio_features taf ON CAST(p.id AS TEXT) = taf.track_id
+            WHERE p.estado = 'biblioteca' AND taf.track_id IS NULL
+            """
         )["c"]
-        features_missing = max(0, total - int(features_ready or 0))
         deep_failed = obtener_una_fila(
             "SELECT COUNT(*) c FROM audio_analysis_jobs WHERE job_type='deep' AND status='failed'"
         )["c"]
@@ -85,7 +102,7 @@ class ImportRecoveryService:
             ),
             "missing_enrichment": missing_enrichment,
             "missing_lyrics": missing_lyrics,
-            "audio_features_missing": features_missing,
+            "audio_features_missing": int(features_missing or 0),
             "audio_features_failed": int(features_failed or 0),
             "deep_failed": int(deep_failed or 0),
             "deep_pending": int(deep_pending or 0),

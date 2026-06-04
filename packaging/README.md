@@ -86,12 +86,22 @@ bash packaging/linux/build.sh             # tar.gz
 bash packaging/linux/build.sh --appimage  # tar.gz + AppImage (requiere appimagetool)
 ```
 
-Para integrar con el escritorio sin instalador:
+Para integrar con el escritorio sin instalador (mismo layout que el `.deb`/`.rpm`
+oficial: el bundle vive en `/opt/nb-sound/` y el launcher se registra en el
+`PATH` como `nb-sound`):
 
 ```bash
-install -Dm755 dist/nb_sound/nb_sound /usr/local/bin/nb_sound
-install -Dm644 packaging/linux/nb-sound.desktop /usr/share/applications/nb-sound.desktop
-install -Dm644 ui/qml/assets/logo/logo_512.png /usr/share/icons/hicolor/512x512/apps/nb-sound.png
+sudo cp -r dist/nb_sound /opt/nb-sound
+sudo install -Dm755 packaging/linux/nb-sound-launcher /usr/local/bin/nb-sound
+sudo install -Dm644 packaging/linux/nb-sound.desktop /usr/share/applications/nb-sound.desktop
+sudo install -Dm644 ui/qml/assets/logo/logo_512.png /usr/share/icons/hicolor/512x512/apps/nb-sound.png
+```
+
+Tras instalar, el comando `nb-sound` queda disponible en la terminal:
+
+```bash
+nb-sound            # abre la interfaz gráfica
+nb-sound cli --help # CLI del catalogador (mismo binario; ver docs/cli.md)
 ```
 
 ### Windows

@@ -666,6 +666,22 @@ def exponer_modelos(engine: QQmlApplicationEngine, modelos: dict) -> None:
 # =============================================================================
 
 def main() -> int:
+    # El binario empaquetado (bundle PyInstaller) es el MISMO para la GUI y la
+    # CLI: en el PC del usuario no existe `python main.py` ni el repo clonado,
+    # así que la única forma de exponer la CLI del catalogador en la terminal es
+    # a través de este ejecutable (que el instalador registra como `nb-sound`).
+    #   * `nb-sound`            → abre la interfaz gráfica.
+    #   * `nb-sound cli ...`    → ejecuta la CLI del catalogador (main.main()).
+    #   * `nb-sound cli --help` → ayuda de la CLI.
+    argv = sys.argv[1:]
+    if argv and argv[0] == "cli":
+        from main import main as cli_main
+
+        # Reconstruye argv sin el subcomando `cli` para que el parser de la CLI
+        # vea exactamente los argumentos que el usuario escribió tras `cli`.
+        sys.argv = [f"{sys.argv[0]} cli", *argv[1:]]
+        return cli_main()
+
     parser = argparse.ArgumentParser(
         prog="nb_sound_ui",
         description=f"{UI_BANNER} — Capa visual para el pipeline",

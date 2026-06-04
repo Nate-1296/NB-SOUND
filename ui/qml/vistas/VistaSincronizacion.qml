@@ -19,6 +19,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Dialogs
 import "../componentes"
+import "../componentes/UiUtils.js" as UiUtils
 
 Rectangle {
     id: raiz
@@ -44,18 +45,14 @@ Rectangle {
     function _ultimaConexion(valor) {
         if (!valor || String(valor).length === 0)
             return "Nunca conectado"
-        return "Última conexión: " + String(valor).replace("T", " ").substring(0, 19)
+        return "Última conexión: " + UiUtils.formatearFechaLocal(valor)
     }
 
     // Formatea una marca ISO UTC (formato canónico de los backups) a hora local
-    // legible. Si no es parseable, cae a una limpieza textual simple.
+    // legible. Delega en el normalizador compartido para cubrir todos los
+    // formatos de marca de tiempo del proyecto.
     function _formatoFecha(iso) {
-        if (!iso || String(iso).length === 0)
-            return "—"
-        var d = new Date(String(iso))
-        if (isNaN(d.getTime()))
-            return String(iso).replace("T", " ").replace("Z", "")
-        return d.toLocaleString(Qt.locale(), Locale.ShortFormat)
+        return UiUtils.formatearFechaLocal(iso)
     }
 
     function _etiquetaFrecuencia(dias) {
@@ -387,6 +384,7 @@ Rectangle {
                                             texto: "Revocar"
                                             width: 120
                                             height: 36
+                                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                                             onClicked: sincronizacion.revocar(modelData.id)
                                         }
                                     }

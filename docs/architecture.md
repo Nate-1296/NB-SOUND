@@ -197,7 +197,6 @@ Para mayor detalle sobre subsistemas específicos:
 | [Recovery y resiliencia](recovery-and-resilience.md) | Mecanismos de recuperación ante fallos e interrupciones |
 | [Compatibilidad cross-platform](cross-platform.md) | Asunciones por SO (Linux/Windows/macOS), tabla por componente, gaps de packaging |
 | [Ecosistema móvil (lado PC)](mobile-ecosystem.md) | Servidor local, QR, protocolo de sync, schema BD, vista de sync y backup |
-| [Implementación móvil (lado PC)](mobile-rollout-plan.md) | Bloques, criterios de aceptación y decisiones de la preparación del escritorio para el ecosistema móvil |
 
 ---
 

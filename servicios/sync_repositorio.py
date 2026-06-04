@@ -49,8 +49,8 @@ _PLATAFORMAS_VALIDAS = {"android", "ios", "ipados", "tablet", "desconocida"}
 # -----------------------------------------------------------------------------
 
 def _ahora_iso() -> str:
-    """Timestamp UTC ISO-8601 con milisegundos y sufijo Z (orden lexicografico)."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%fZ")
+    """Timestamp UTC ISO-8601 con segundos y microsegundos y sufijo Z (orden lexicografico)."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def generar_token() -> str:

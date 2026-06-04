@@ -11,11 +11,6 @@ from core.audio_analysis_runs import AudioRunTracker
 from core.audio_analytics import AudioAnalyticsExtractor
 from core.audio_feature_store import persist_basic_analysis
 from core.audio_features import ANALYZER_VERSION as BASIC_ANALYZER_VERSION, AudioFeatureAnalyzer
-from core.audio_intelligence_deep import (
-    ANALYZER_VERSION as DEEP_ANALYZER_VERSION,
-    EssentiaTensorflowAnalyzer,
-    persist_deep_analysis,
-)
 from db.conexion import obtener_una_fila
 from domain.models import DecisionArchivo
 from external.lyrics_client import LyricsClient
@@ -28,14 +23,12 @@ class EnrichmentPipeline:
     def __init__(self, base_dir: Optional[Path] = None) -> None:
         self._external_enabled = ENABLE_EXTERNAL_ENRICHMENT
         self._local_basic_enabled = settings.ENABLE_AUDIO_FEATURES and settings.AUDIO_FEATURES_ANALYZE_ON_IMPORT
-        self._local_deep_enabled = settings.ENABLE_AUDIO_INTELLIGENCE_DEEP and settings.AUDIO_INTELLIGENCE_ANALYZE_ON_IMPORT
-        self._enabled = self._external_enabled or self._local_basic_enabled or self._local_deep_enabled
+        self._enabled = self._external_enabled or self._local_basic_enabled
         self._base = (base_dir or settings.DEFAULT_ASSETS_DIR) / "enrichment"
         self._base.mkdir(parents=True, exist_ok=True)
         self._lyrics = LyricsClient()
         self._analytics = AudioAnalyticsExtractor()
         self._audio_features = AudioFeatureAnalyzer()
-        self._deep = EssentiaTensorflowAnalyzer()
         self._manifest = self._base / "enrichment_manifest.jsonl"
 
     @property
@@ -164,8 +157,6 @@ class EnrichmentPipeline:
         file_path = decision.ruta_destino
         if self._local_basic_enabled:
             self._procesar_audio_features_post_import(track_id, file_path)
-        if self._local_deep_enabled:
-            self._procesar_deep_post_import(track_id, file_path)
 
     def _resolver_track_id(self, decision: DecisionArchivo) -> str:
         ruta = str(decision.ruta_destino or "")
@@ -198,18 +189,6 @@ class EnrichmentPipeline:
             and row["analyzer_version"] != BASIC_ANALYZER_VERSION
         )
 
-    def _debe_analizar_deep(self, track_id: str) -> bool:
-        row = obtener_una_fila(
-            "SELECT analysis_status, analyzer_version FROM track_deep_audio_features WHERE track_id=?",
-            (track_id,),
-        )
-        if not row or row["analysis_status"] != "ready":
-            return True
-        return bool(
-            settings.AUDIO_INTELLIGENCE_REANALYZE_ON_MODEL_CHANGE
-            and row["analyzer_version"] != DEEP_ANALYZER_VERSION
-        )
-
     def _procesar_audio_features_post_import(self, track_id: str, file_path: Path) -> None:
         try:
             if not self._debe_analizar_basic(track_id):
@@ -233,33 +212,4 @@ class EnrichmentPipeline:
         except Exception as exc:
             _log.warning("No se pudo completar audio features post-import: %s", exc)
             if not settings.AUDIO_FEATURES_FAIL_SILENTLY:
-                raise
-
-    def _procesar_deep_post_import(self, track_id: str, file_path: Path) -> None:
-        try:
-            if not self._debe_analizar_deep(track_id):
-                return
-            file_hash = ""
-            if track_id.isdigit():
-                row = obtener_una_fila("SELECT hash_sha256 FROM pistas WHERE id=?", (int(track_id),))
-                if row:
-                    file_hash = row["hash_sha256"] or ""
-            run = AudioRunTracker("audio_intelligence_deep", {"trigger": "post_import", "track_id": track_id})
-            run.set_total(1)
-            job_id = run.register_job(track_id, "deep", current_file_path=str(file_path), current_stage="audio_intelligence_deep")
-            result = self._deep.analyze(track_id, str(file_path))
-            persist_deep_analysis(None, settings.DEFAULT_ASSETS_DIR, result, file_hash=file_hash)
-            run.finish_job(
-                job_id,
-                result["analysis_status"],
-                result.get("error_code", ""),
-                result.get("error_message", ""),
-                current_track_id=track_id,
-                current_file_path=str(file_path),
-                current_stage="audio_intelligence_deep",
-            )
-            run.finish()
-        except Exception as exc:
-            _log.warning("No se pudo completar Audio Intelligence deep post-import: %s", exc)
-            if not settings.AUDIO_INTELLIGENCE_FAIL_SILENTLY:
                 raise

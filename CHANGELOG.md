@@ -2,6 +2,68 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [1.0.1] — 2026-06-04
+
+Versión de parche centrada en consistencia de zona horaria, correcciones de
+interfaz, diagnóstico de importación y disponibilidad de la CLI en la app
+instalada.
+
+### Corregido
+
+- **Zona horaria en la interfaz**: todas las marcas de tiempo se muestran ahora
+  en la hora local del sistema. Antes se veían en UTC (p. ej. +5 h en Colombia)
+  en las ejecuciones/resultados de importación, la última conexión de los
+  dispositivos vinculados, la última copia de seguridad y la hora pico del
+  perfil. Los datos se siguen guardando en UTC; solo cambió la presentación.
+- **Hora pico del perfil**: se calculaba sobre la hora UTC; ahora usa la hora
+  local, consistente con el resto de las estadísticas.
+- **Análisis musical en segundo plano**: al quedar "Completado" no aparecía el
+  botón para buscar pistas pendientes e iniciar el análisis de las demás; ahora
+  se muestra (también en los estados "Sin tareas", "Cancelado" y "Error
+  parcial").
+- **Diagnóstico y reintentos**: si se salía de Importación con un reintento en
+  curso, el estado quedaba congelado hasta cerrar la app. El botón "Refrescar"
+  ya no se desactiva y, además de refrescar, detecta y reconcilia el estado real
+  del reintento; al volver a la vista la reconciliación también es automática.
+- **Reintento de features**: el indicador incluía filas huérfanas en
+  `track_audio_features` (de pistas movidas o re-importadas) que el reintento
+  nunca podía procesar, por lo que el número no bajaba y parecía que "no hacía
+  nada". El conteo se limita ahora a las pistas de la biblioteca actual,
+  coherente con lo que el reintento procesa realmente.
+- **Reproducir playlist con un clic**: en las tarjetas de playlist, el botón de
+  reproducir requería doble clic (la carga de pistas era asíncrona); ahora suena
+  con un solo clic. El doble clic sobre la tarjeta sigue abriendo la playlist.
+- **Modo de visualización de playlists**: la elección de lista / cuadrícula
+  (pequeña, mediana, grande) no se conservaba entre sesiones; ahora persiste.
+- **Botón "Revocar"** (Sincronización): se alinea a la derecha y se centra
+  verticalmente en la tarjeta del dispositivo vinculado.
+- **Marca de tiempo de sincronización**: corregido un formato ISO que omitía los
+  segundos.
+
+### Cambiado
+
+- **Rutas en Configuración** (básica y avanzada): los campos de carpeta
+  (entrada, biblioteca, cuarentena, revisión, logs, procesados, assets, caché,
+  temporales, manifiestos y modelos de Essentia) incorporan un botón "Examinar"
+  que abre el explorador del sistema para elegir la carpeta, igual que el destino
+  de la copia de seguridad. Se mantiene la edición manual del texto.
+- **CLI en la app instalada**: el binario empaquetado sirve también la CLI.
+  `nb-sound` abre la interfaz gráfica y `nb-sound cli ...` ejecuta el catalogador
+  (la salida aparece en la terminal en Linux/macOS). Antes la CLI solo estaba
+  disponible con el repositorio clonado.
+- **Documentación**: se eliminaron las referencias a trabajo "a futuro" y el
+  roadmap de construcción del ecosistema móvil, reescribiendo lo relativo a la
+  app móvil como ya construido. El README incorpora un apartado de la app móvil
+  (Android/iOS) con enlace al repositorio, la captura de la vista de
+  Sincronización y una nota sobre las capturas tomadas en Pop!_OS.
+
+### Eliminado
+
+- **Opción "Deep al importar (legacy bloqueante)"** de Configuración avanzada y
+  toda su lógica asociada (análisis profundo síncrono y bloqueante durante la
+  importación). El análisis profundo se ejecuta en segundo plano mediante la
+  cola reanudable.
+
 ## [1.0.0] — 2026-06-03
 
 Primera versión pública de NB SOUND: catalogador inteligente de bibliotecas de

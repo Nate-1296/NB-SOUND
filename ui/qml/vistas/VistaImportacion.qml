@@ -162,7 +162,7 @@ Rectangle {
 
     function _textoFinEjecucion(ejecucion) {
         if (!ejecucion) return ""
-        if (ejecucion.finalizado_en && ejecucion.finalizado_en !== "") return "finalizada: " + ejecucion.finalizado_en
+        if (ejecucion.finalizado_en && ejecucion.finalizado_en !== "") return "finalizada: " + UiUtils.formatearFechaLocal(ejecucion.finalizado_en)
         if (ejecucion.estado === "en_progreso") return "en progreso"
         return "sin cierre registrado"
     }
@@ -254,7 +254,6 @@ Rectangle {
             "enable_audio_mood_models": _cfgValor("enable_audio_mood_models", "0"),
             "enable_audio_embeddings": _cfgValor("enable_audio_embeddings", "0"),
             "enable_audio_tagging_models": _cfgValor("enable_audio_tagging_models", "0"),
-            "audio_intelligence_analyze_on_import": _cfgValor("audio_intelligence_analyze_on_import", "0"),
             "audio_intelligence_analyze_after_import_background": _cfgValor("audio_intelligence_analyze_after_import_background", "1"),
             "audio_intelligence_resume_pending_on_startup": _cfgValor("audio_intelligence_resume_pending_on_startup", "1"),
             "audio_intelligence_background_autostart": _cfgValor("audio_intelligence_background_autostart", "1"),
@@ -700,8 +699,8 @@ Rectangle {
                             columnSpacing: 12
                             rowSpacing: 8
                             DetailLine { etiqueta: "Estado"; valor: detalle_ejecucion_card.ejecucionActiva ? (detalle_ejecucion_card.ejecucionActiva.estado || "desconocido") : "" }
-                            DetailLine { etiqueta: "Inicio"; valor: detalle_ejecucion_card.ejecucionActiva ? (detalle_ejecucion_card.ejecucionActiva.iniciado_en || "-") : "" }
-                            DetailLine { etiqueta: "Finalización"; valor: detalle_ejecucion_card.ejecucionActiva ? (detalle_ejecucion_card.ejecucionActiva.finalizado_en || "en curso") : "" }
+                            DetailLine { etiqueta: "Inicio"; valor: detalle_ejecucion_card.ejecucionActiva ? UiUtils.formatearFechaLocal(detalle_ejecucion_card.ejecucionActiva.iniciado_en, "-") : "" }
+                            DetailLine { etiqueta: "Finalización"; valor: detalle_ejecucion_card.ejecucionActiva ? UiUtils.formatearFechaLocal(detalle_ejecucion_card.ejecucionActiva.finalizado_en, "en curso") : "" }
                             DetailLine { etiqueta: "Carpeta de entrada"; valor: detalle_ejecucion_card.ejecucionActiva ? (detalle_ejecucion_card.ejecucionActiva.directorio_entrada || "-") : "" }
                         }
 
@@ -880,6 +879,11 @@ Rectangle {
 
     onVisibleChanged: {
         if (!visible) return
+        // Reconcilia el estado de "Diagnóstico y reintentos": si un reintento
+        // quedó marcado como en curso pero su worker ya terminó (la señal de fin
+        // puede perderse al cambiar de vista), limpia el estado fantasma para
+        // que el refresco siguiente refleje el estado real.
+        raiz.imp.reconciliarDiagnostico()
         raiz.imp.refrescarDiagnosticoImportacion()
         raiz.audioDeep.refrescarAudioDeepEstado()
     }
@@ -1211,7 +1215,7 @@ Rectangle {
 
         readonly property string estadoDeep: raiz.audioDeep.audioDeepEstado || "inactivo"
         readonly property bool hayPendientes: raiz.audioDeep.audioDeepPendientes > 0
-        readonly property bool puedeEjecutar: !raiz.audioDeep.audioDeepProcesando && raiz.audioDeep.audioDeepWarning === "" && (hayPendientes || estadoDeep === "cancelado" || estadoDeep === "sin_pendientes")
+        readonly property bool puedeEjecutar: !raiz.audioDeep.audioDeepProcesando && raiz.audioDeep.audioDeepWarning === "" && (hayPendientes || estadoDeep === "cancelado" || estadoDeep === "sin_pendientes" || estadoDeep === "completado" || estadoDeep === "error_parcial")
         readonly property bool puedeCancelar: raiz.audioDeep.audioDeepProcesando || raiz.audioDeep.audioDeepPausado || estadoDeep === "pendiente"
 
         GridLayout {
@@ -1437,7 +1441,10 @@ Rectangle {
                 objectName: "recovery_refresh_button"
                 texto: "Refrescar"
                 tono: "neutral"
-                enabled: !raiz.imp.diagnosticoEjecutando
+                // Nunca se desactiva: además de refrescar, sirve para detectar
+                // y reconciliar el estado real de un reintento en curso (si su
+                // señal de fin se perdió al cambiar de vista). El propio modelo
+                // evita lanzar dos reintentos concurrentes.
                 onClicked: raiz.imp.refrescarDiagnosticoImportacion()
             }
             ActionButton {

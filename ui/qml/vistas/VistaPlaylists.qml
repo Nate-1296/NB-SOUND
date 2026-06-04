@@ -335,6 +335,23 @@ Rectangle {
         reproductor.reproducir_cola_desde_pistas(datos, inicio)
     }
 
+    // Reproduce una playlist con UN solo clic desde su tarjeta. Obtiene sus
+    // pistas de forma síncrona (sin depender de la carga asíncrona de la
+    // playlist activa, que obligaba a un segundo clic) y, en paralelo, la
+    // selecciona para que el preview refleje lo que está sonando.
+    function reproducirPlaylistDirecto(pl) {
+        var pid = pl ? (pl.playlist_id || pl.id || -1) : -1
+        if (pid <= 0)
+            return
+        var datos = playlists.pistas_de_playlist(pid)
+        if (!datos || datos.length <= 0) {
+            mostrar_toast("No hay canciones para reproducir", "warning")
+            return
+        }
+        reproductor.reproducir_cola_desde_pistas(datos, 0)
+        seleccionarPlaylist(pl)
+    }
+
     function agregarPlaylistActivaACola() {
         var datos = pistasActivasArray()
         if (datos.length <= 0) {
@@ -1137,10 +1154,7 @@ Rectangle {
                     iconSource: "../assets/icons/play.svg"
                     iconColor: raiz.colorAccionTarjeta
                     enabled: Number(card.plData.num_pistas || 0) > 0
-                    onClicked: {
-                        seleccionarPlaylist(card.plData)
-                        Qt.callLater(function() { reproducirPlaylistDesde(0) })
-                    }
+                    onClicked: reproducirPlaylistDirecto(card.plData)
                 }
             }
 
@@ -1195,10 +1209,7 @@ Rectangle {
                         iconSource: "../assets/icons/play.svg"
                         iconColor: raiz.colorAccionTarjeta
                         enabled: Number(card.plData.num_pistas || 0) > 0
-                        onClicked: {
-                            seleccionarPlaylist(card.plData)
-                            Qt.callLater(function() { reproducirPlaylistDesde(0) })
-                        }
+                        onClicked: reproducirPlaylistDirecto(card.plData)
                     }
                 }
             }

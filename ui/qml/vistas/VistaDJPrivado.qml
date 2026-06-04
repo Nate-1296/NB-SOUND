@@ -141,16 +141,15 @@ Rectangle {
     }
     function _pad(n) { return n < 10 ? "0" + n : "" + n }
     function _fmtFecha(iso) {
-        if (!iso) return "—"
-        // "YYYY-MM-DD HH:MM:SS" → "DD MMM, HH:MM"
-        var partes = iso.split(" ")
-        if (partes.length < 2) return iso
-        var dia = partes[0].split("-")
-        var hh = partes[1].substring(0, 5)
+        // Marca UTC almacenada → "DD MMM, HH:MM" en hora local.
+        var norm = UiUtils.normalizarMarcaUtc(iso)
+        if (norm === "") return "—"
+        var d = new Date(norm)
+        if (isNaN(d.getTime())) return String(iso)
         var meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"]
-        var m = parseInt(dia[1]) - 1
-        if (m < 0 || m > 11) return iso
-        return dia[2] + " " + meses[m] + ", " + hh
+        var hh = ("0" + d.getHours()).slice(-2)
+        var mm = ("0" + d.getMinutes()).slice(-2)
+        return d.getDate() + " " + meses[d.getMonth()] + ", " + hh + ":" + mm
     }
     function _toast(msg, tono) {
         if (shell) shell.mostrar_toast_global(msg, tono || "info")

@@ -22,7 +22,6 @@ def test_falla_si_ia_anthropic_activa_sin_api_key():
 
 
 def test_audio_intelligence_background_defaults_seguros():
-    assert isinstance(settings.AUDIO_INTELLIGENCE_ANALYZE_ON_IMPORT, bool)
     assert isinstance(settings.AUDIO_INTELLIGENCE_ANALYZE_AFTER_IMPORT_BACKGROUND, bool)
     assert isinstance(settings.AUDIO_INTELLIGENCE_RESUME_PENDING_ON_STARTUP, bool)
     assert isinstance(settings.AUDIO_INTELLIGENCE_BACKGROUND_AUTOSTART, bool)

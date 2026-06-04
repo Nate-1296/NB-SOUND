@@ -2073,7 +2073,7 @@ def estadisticas_extras_perfil() -> dict:
     """Estadísticas adicionales para la vista de perfil."""
     hora_pico_fila = obtener_una_fila(
         """
-        SELECT CAST(strftime('%H', reproducido_en) AS INTEGER) AS hora, COUNT(*) AS n
+        SELECT CAST(strftime('%H', reproducido_en, 'localtime') AS INTEGER) AS hora, COUNT(*) AS n
         FROM historial
         GROUP BY hora ORDER BY n DESC LIMIT 1
         """

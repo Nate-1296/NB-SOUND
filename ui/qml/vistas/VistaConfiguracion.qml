@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
 import "../componentes"
@@ -275,7 +276,6 @@ Rectangle {
             "enable_audio_mood_models": configuracion.obtener("enable_audio_mood_models") || "0",
             "enable_audio_embeddings": configuracion.obtener("enable_audio_embeddings") || "0",
             "enable_audio_tagging_models": configuracion.obtener("enable_audio_tagging_models") || "0",
-            "audio_intelligence_analyze_on_import": configuracion.obtener("audio_intelligence_analyze_on_import") || "0",
             "audio_intelligence_analyze_after_import_background": configuracion.obtener("audio_intelligence_analyze_after_import_background") || "1",
             "audio_intelligence_resume_pending_on_startup": configuracion.obtener("audio_intelligence_resume_pending_on_startup") || "1",
             "audio_intelligence_background_autostart": configuracion.obtener("audio_intelligence_background_autostart") || "1",
@@ -1513,7 +1513,7 @@ Rectangle {
                             Rectangle {
                                 Layout.fillWidth: true; radius: UiTokens.radiusSm; color: Qt.rgba(tema.advertencia.r, tema.advertencia.g, tema.advertencia.b, 0.08); border.color: Qt.rgba(tema.advertencia.r, tema.advertencia.g, tema.advertencia.b, 0.3); border.width: 1
                                 implicitHeight: warnDeep.implicitHeight + 16
-                                AppText { id: warnDeep; anchors.fill: parent; anchors.margins: UiTokens.spacing8; wrapMode: Text.WordWrap; color: tema.textoSec; font.pixelSize: UiTokens.fontSizeMd; text: "Audio Intelligence profunda es opcional. Para importaciones masivas usa background; el modo al importar es síncrono/legacy y puede bloquear." }
+                                AppText { id: warnDeep; anchors.fill: parent; anchors.margins: UiTokens.spacing8; wrapMode: Text.WordWrap; color: tema.textoSec; font.pixelSize: UiTokens.fontSizeMd; text: "Audio Intelligence profunda es opcional. El análisis se ejecuta en segundo plano (cola reanudable), sin bloquear la importación." }
                             }
                             SectionHeading {
                                 titulo: "Deep Background"
@@ -1541,7 +1541,7 @@ Rectangle {
                                 Layout.fillWidth: true
                                 columns: mediumWidth ? 3 : 1
                                 columnSpacing: 12; rowSpacing: 10
-                                CampoTexto { etiqueta: "Model dir deep"; clave: "audio_intelligence_model_dir"; draftObj: avanzadaDraft }
+                                CampoTexto { etiqueta: "Model dir deep"; descripcion: "Carpeta de modelos de Essentia."; clave: "audio_intelligence_model_dir"; draftObj: avanzadaDraft; carpeta: true }
                                 CampoTexto { etiqueta: "Workers deep"; clave: "audio_intelligence_max_workers"; draftObj: avanzadaDraft; validador: "entero_positivo" }
                                 CampoTexto { etiqueta: "Batch background"; clave: "audio_intelligence_background_batch_size"; draftObj: avanzadaDraft; validador: "entero_positivo" }
                                 CampoTexto { etiqueta: "Idle delay (seg)"; clave: "audio_intelligence_background_idle_delay_sec"; draftObj: avanzadaDraft }
@@ -1564,11 +1564,6 @@ Rectangle {
                                 label: "Habilitar auto-tagging/genre"
                                 checkedValue: _avanzadaRev >= 0 && avanzadaDraft["enable_audio_tagging_models"] === "1"
                                 onChangedValue: function(v) { setAvanzadaValue("enable_audio_tagging_models", v ? "1" : "0") }
-                            }
-                            ToggleCampo {
-                                label: "Deep al importar (legacy bloqueante)"
-                                checkedValue: _avanzadaRev >= 0 && avanzadaDraft["audio_intelligence_analyze_on_import"] === "1"
-                                onChangedValue: function(v) { setAvanzadaValue("audio_intelligence_analyze_on_import", v ? "1" : "0") }
                             }
                             ToggleCampo {
                                 label: "Encolar deep tras importar"
@@ -2229,39 +2224,93 @@ Rectangle {
                 wrapMode: Text.WordWrap
             }
 
-            TextField {
-                id: campoTextoRuta
-                objectName: rutaCard.objectName === "" ? "" : rutaCard.objectName + "_input"
-                Layout.fillWidth: true; Layout.minimumWidth: 0
-                text: draftObj[clave] || ""
-                onTextChanged: {
-                    if (String(draftObj[clave] || "") !== text) {
-                        rutaCard.changed(clave, text)
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: UiTokens.spacing8
+
+                TextField {
+                    id: campoTextoRuta
+                    objectName: rutaCard.objectName === "" ? "" : rutaCard.objectName + "_input"
+                    Layout.fillWidth: true; Layout.minimumWidth: 0
+                    text: draftObj[clave] || ""
+                    onTextChanged: {
+                        if (String(draftObj[clave] || "") !== text) {
+                            rutaCard.changed(clave, text)
+                        }
+                    }
+                    selectByMouse: true; clip: true
+                    color: tema.texto; font.family: raiz.fuenteUi; font.pixelSize: UiTokens.fontSizeMd
+                    leftPadding: 12; rightPadding: 12; topPadding: 10; bottomPadding: 10
+
+                    background: Rectangle {
+                        id: bgRutaField
+                        color: {
+                            if (campoTextoRuta.activeFocus) return Qt.rgba(tema.acento.r, tema.acento.g, tema.acento.b, 0.08)
+                            if (rutaHover.containsMouse) return Qt.rgba(tema.superficieAlt.r, tema.superficieAlt.g, tema.superficieAlt.b, 0.85)
+                            return tema.superficieAlt
+                        }
+                        radius: UiTokens.radiusSm
+                        border.color: rutaCard.errorTexto !== "" ? tema.peligro : (campoTextoRuta.activeFocus ? tema.acento : Qt.rgba(tema.borde.r, tema.borde.g, tema.borde.b, 0.5))
+                        border.width: campoTextoRuta.activeFocus ? 1.5 : 1
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+                    }
+
+                    MouseArea {
+                        id: rutaHover
+                        anchors.fill: parent
+                        hoverEnabled: true; acceptedButtons: Qt.NoButton
+                        cursorShape: Qt.IBeamCursor
                     }
                 }
-                selectByMouse: true; clip: true
-                color: tema.texto; font.family: raiz.fuenteUi; font.pixelSize: UiTokens.fontSizeMd
-                leftPadding: 12; rightPadding: 12; topPadding: 10; bottomPadding: 10
 
-                background: Rectangle {
-                    id: bgRutaField
-                    color: {
-                        if (campoTextoRuta.activeFocus) return Qt.rgba(tema.acento.r, tema.acento.g, tema.acento.b, 0.08)
-                        if (rutaHover.containsMouse) return Qt.rgba(tema.superficieAlt.r, tema.superficieAlt.g, tema.superficieAlt.b, 0.85)
-                        return tema.superficieAlt
-                    }
+                // Selector de carpeta (explorador del sistema), análogo al de la
+                // carpeta de copia de seguridad en Sincronización: el usuario elige
+                // la carpeta en vez de escribir la ruta a mano.
+                Rectangle {
+                    id: botonExaminarRuta
+                    objectName: rutaCard.objectName === "" ? "" : rutaCard.objectName + "_browse"
+                    Layout.preferredHeight: 40
+                    implicitWidth: filaExaminar.implicitWidth + UiTokens.spacing20
                     radius: UiTokens.radiusSm
-                    border.color: rutaCard.errorTexto !== "" ? tema.peligro : (campoTextoRuta.activeFocus ? tema.acento : Qt.rgba(tema.borde.r, tema.borde.g, tema.borde.b, 0.5))
-                    border.width: campoTextoRuta.activeFocus ? 1.5 : 1
+                    color: examinarMa.containsMouse ? tema.hover : tema.superficieAlt
+                    border.color: examinarMa.containsMouse ? Qt.rgba(tema.acento.r, tema.acento.g, tema.acento.b, 0.35) : Qt.rgba(tema.borde.r, tema.borde.g, tema.borde.b, 0.6)
+                    border.width: 1
                     Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
-                }
 
-                MouseArea {
-                    id: rutaHover
-                    anchors.fill: parent
-                    hoverEnabled: true; acceptedButtons: Qt.NoButton
-                    cursorShape: Qt.IBeamCursor
+                    RowLayout {
+                        id: filaExaminar
+                        anchors.centerIn: parent
+                        spacing: UiTokens.spacing6
+                        Item {
+                            Layout.preferredWidth: 16; Layout.preferredHeight: 16
+                            Image {
+                                id: iconExaminar
+                                anchors.fill: parent
+                                source: "../assets/icons/folder.svg"
+                                fillMode: Image.PreserveAspectFit; smooth: true; visible: false
+                            }
+                            ColorOverlay { anchors.fill: iconExaminar; source: iconExaminar; color: tema.texto; visible: GraphicsInfo.api !== GraphicsInfo.Software }
+                        }
+                        AppText { text: "Examinar"; color: tema.texto; font.pixelSize: UiTokens.fontSizeSm; font.weight: Font.DemiBold }
+                    }
+
+                    MouseArea {
+                        id: examinarMa
+                        anchors.fill: parent
+                        hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: dialogoCarpetaRuta.open()
+                    }
+                }
+            }
+
+            FolderDialog {
+                id: dialogoCarpetaRuta
+                title: "Selecciona la carpeta · " + rutaCard.etiqueta
+                onAccepted: {
+                    var ruta = configuracion.ruta_local_desde_url(selectedFolder.toString())
+                    if (ruta && ruta !== "")
+                        rutaCard.changed(rutaCard.clave, ruta)
                 }
             }
 
@@ -2335,9 +2384,18 @@ Rectangle {
         property string scope: "avanzada"
         // Validadores: "", "score", "positivo", "entero_positivo", "entero_no_negativo"
         property string validador: ""
+        // Si es true, muestra un botón "Examinar" que abre el explorador del
+        // sistema para elegir una carpeta en vez de escribir la ruta a mano.
+        property bool carpeta: false
 
         Layout.fillWidth: true
         spacing: UiTokens.spacing4
+
+        function _aplicarValor(valor) {
+            if (campoTextoRoot.scope === "basica") setBasicaValue(clave, valor)
+            else if (campoTextoRoot.scope === "avanzada") setAvanzadaValue(clave, valor)
+            else setDraftValue(draftObj, clave, valor)
+        }
 
         readonly property bool _tieneError: {
             if (!habilitado || validador === "") return false
@@ -2376,57 +2434,107 @@ Rectangle {
             Layout.fillWidth: true; wrapMode: Text.WordWrap
         }
 
-        TextField {
-            id: tfCampo
-            objectName: campoTextoRoot.objectName === "" ? "" : campoTextoRoot.objectName + "_input"
-            Layout.fillWidth: true; Layout.minimumWidth: 0
-            implicitHeight: 40
-            text: draftObj[clave] || ""
-            enabled: habilitado
-            onTextChanged: {
-                if (String(draftObj[clave] || "") === text) return
-                if (campoTextoRoot.scope === "basica") {
-                    setBasicaValue(clave, text)
-                } else if (campoTextoRoot.scope === "avanzada") {
-                    setAvanzadaValue(clave, text)
-                } else {
-                    setDraftValue(draftObj, clave, text)
-                }
-            }
-            selectByMouse: true; clip: true
-            color: campoTextoRoot._tieneError ? tema.peligro : tema.texto
-            opacity: habilitado ? 1.0 : 0.55
-            font.family: raiz.fuenteUi
-            font.pixelSize: UiTokens.fontSizeBase
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: UiTokens.spacing8
 
-            Behavior on color { ColorAnimation { duration: 150 } }
-            Behavior on opacity { NumberAnimation { duration: 180 } }
+            TextField {
+                id: tfCampo
+                objectName: campoTextoRoot.objectName === "" ? "" : campoTextoRoot.objectName + "_input"
+                Layout.fillWidth: true; Layout.minimumWidth: 0
+                implicitHeight: 40
+                text: draftObj[clave] || ""
+                enabled: habilitado
+                onTextChanged: {
+                    if (String(draftObj[clave] || "") === text) return
+                    campoTextoRoot._aplicarValor(text)
+                }
+                selectByMouse: true; clip: true
+                color: campoTextoRoot._tieneError ? tema.peligro : tema.texto
+                opacity: habilitado ? 1.0 : 0.55
+                font.family: raiz.fuenteUi
+                font.pixelSize: UiTokens.fontSizeBase
 
-            background: Rectangle {
-                id: tfBg
-                radius: UiTokens.radiusSm
-                color: {
-                    if (!habilitado) return tema.superficieAlt
-                    if (tfCampo.activeFocus) return Qt.rgba(tema.acento.r, tema.acento.g, tema.acento.b, 0.08)
-                    if (tfHov.containsMouse) return Qt.rgba(tema.superficieAlt.r, tema.superficieAlt.g, tema.superficieAlt.b, 0.7)
-                    return tema.fondoElevado
-                }
-                border.width: tfCampo.activeFocus ? 1.5 : 1
-                border.color: {
-                    if (campoTextoRoot._tieneError) return tema.peligro
-                    if (!habilitado) return Qt.rgba(tema.borde.r, tema.borde.g, tema.borde.b, 0.45)
-                    if (tfCampo.activeFocus) return tema.acento
-                    return tema.borde
-                }
                 Behavior on color { ColorAnimation { duration: 150 } }
-                Behavior on border.color { ColorAnimation { duration: 150 } }
+                Behavior on opacity { NumberAnimation { duration: 180 } }
+
+                background: Rectangle {
+                    id: tfBg
+                    radius: UiTokens.radiusSm
+                    color: {
+                        if (!habilitado) return tema.superficieAlt
+                        if (tfCampo.activeFocus) return Qt.rgba(tema.acento.r, tema.acento.g, tema.acento.b, 0.08)
+                        if (tfHov.containsMouse) return Qt.rgba(tema.superficieAlt.r, tema.superficieAlt.g, tema.superficieAlt.b, 0.7)
+                        return tema.fondoElevado
+                    }
+                    border.width: tfCampo.activeFocus ? 1.5 : 1
+                    border.color: {
+                        if (campoTextoRoot._tieneError) return tema.peligro
+                        if (!habilitado) return Qt.rgba(tema.borde.r, tema.borde.g, tema.borde.b, 0.45)
+                        if (tfCampo.activeFocus) return tema.acento
+                        return tema.borde
+                    }
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                }
+
+                MouseArea {
+                    id: tfHov
+                    anchors.fill: parent
+                    hoverEnabled: true; acceptedButtons: Qt.NoButton
+                    cursorShape: habilitado ? Qt.IBeamCursor : Qt.ArrowCursor
+                }
             }
 
-            MouseArea {
-                id: tfHov
-                anchors.fill: parent
-                hoverEnabled: true; acceptedButtons: Qt.NoButton
-                cursorShape: habilitado ? Qt.IBeamCursor : Qt.ArrowCursor
+            // Selector de carpeta opcional (explorador del sistema).
+            Rectangle {
+                id: botonExaminarCampo
+                visible: campoTextoRoot.carpeta
+                objectName: campoTextoRoot.objectName === "" ? "" : campoTextoRoot.objectName + "_browse"
+                Layout.preferredHeight: 40
+                implicitWidth: filaExaminarCampo.implicitWidth + UiTokens.spacing20
+                radius: UiTokens.radiusSm
+                opacity: habilitado ? 1.0 : 0.55
+                enabled: habilitado
+                color: examinarCampoMa.containsMouse ? tema.hover : tema.superficieAlt
+                border.color: examinarCampoMa.containsMouse ? Qt.rgba(tema.acento.r, tema.acento.g, tema.acento.b, 0.35) : Qt.rgba(tema.borde.r, tema.borde.g, tema.borde.b, 0.6)
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                RowLayout {
+                    id: filaExaminarCampo
+                    anchors.centerIn: parent
+                    spacing: UiTokens.spacing6
+                    Item {
+                        Layout.preferredWidth: 16; Layout.preferredHeight: 16
+                        Image {
+                            id: iconExaminarCampo
+                            anchors.fill: parent
+                            source: "../assets/icons/folder.svg"
+                            fillMode: Image.PreserveAspectFit; smooth: true; visible: false
+                        }
+                        ColorOverlay { anchors.fill: iconExaminarCampo; source: iconExaminarCampo; color: tema.texto; visible: GraphicsInfo.api !== GraphicsInfo.Software }
+                    }
+                    AppText { text: "Examinar"; color: tema.texto; font.pixelSize: UiTokens.fontSizeSm; font.weight: Font.DemiBold }
+                }
+
+                MouseArea {
+                    id: examinarCampoMa
+                    anchors.fill: parent
+                    enabled: habilitado
+                    hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                    onClicked: dialogoCarpetaCampo.open()
+                }
+            }
+        }
+
+        FolderDialog {
+            id: dialogoCarpetaCampo
+            title: "Selecciona la carpeta · " + campoTextoRoot.etiqueta
+            onAccepted: {
+                var ruta = configuracion.ruta_local_desde_url(selectedFolder.toString())
+                if (ruta && ruta !== "")
+                    campoTextoRoot._aplicarValor(ruta)
             }
         }
 

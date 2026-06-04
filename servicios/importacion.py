@@ -197,7 +197,6 @@ class ServicioImportacion:
             "enable_audio_mood_models": "ENABLE_AUDIO_MOOD_MODELS",
             "enable_audio_embeddings": "ENABLE_AUDIO_EMBEDDINGS",
             "enable_audio_tagging_models": "ENABLE_AUDIO_TAGGING_MODELS",
-            "audio_intelligence_analyze_on_import": "AUDIO_INTELLIGENCE_ANALYZE_ON_IMPORT",
             "audio_intelligence_analyze_after_import_background": "AUDIO_INTELLIGENCE_ANALYZE_AFTER_IMPORT_BACKGROUND",
             "audio_intelligence_resume_pending_on_startup": "AUDIO_INTELLIGENCE_RESUME_PENDING_ON_STARTUP",
             "audio_intelligence_background_autostart": "AUDIO_INTELLIGENCE_BACKGROUND_AUTOSTART",

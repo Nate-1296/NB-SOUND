@@ -631,8 +631,8 @@ adicional sin tocar el motor determinista existente.
 
 1. **Mix points por BPM solo**: para pistas sin BPM en
    `track_audio_features`, se usa el default. El cálculo por RMS
-   (librosa) existe en código pero es opt-in (no se llama
-   automáticamente al cargar; sería pre-fetch agresivo a futuro).
+   (librosa) existe en código pero es opt-in: no se llama
+   automáticamente al cargar para evitar un pre-fetch agresivo.
 2. **`FILTER_SWEEP` no es cutoff real**: es gradiente de ganancias en
    10 bandas ISO. Suficiente para "sensación DJ" pero no para sweeps
    acústicamente continuos.

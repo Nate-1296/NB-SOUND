@@ -268,7 +268,7 @@ Rectangle {
                     AppText { text: "Device";   color: raiz.tema.textoMuted; font.pixelSize: UiTokens.fontSizeSm }
                     AppText { text: (raiz.modal_error_datos.device) || "—"; color: raiz.tema.texto; font.pixelSize: UiTokens.fontSizeSm }
                     AppText { text: "Finalizado"; color: raiz.tema.textoMuted; font.pixelSize: UiTokens.fontSizeSm }
-                    AppText { text: (raiz.modal_error_datos.finalizado_en) || "—"; color: raiz.tema.texto; font.pixelSize: UiTokens.fontSizeSm }
+                    AppText { text: UiUtils.formatearFechaLocal(raiz.modal_error_datos.finalizado_en); color: raiz.tema.texto; font.pixelSize: UiTokens.fontSizeSm }
                 }
                 Rectangle {
                     Layout.fillWidth: true; Layout.preferredHeight: 38; radius: 19

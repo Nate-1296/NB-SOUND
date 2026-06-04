@@ -8,7 +8,7 @@ resuelto ocultando la UI deep condicionalmente
 
 > Alcance: este documento cubre la **app de escritorio**. El análisis de
 > compatibilidad de la app móvil (Android/iOS/tablets) vive en el proyecto
-> `nb_sound_mobile/`.
+> [NB Sound Mobile](https://github.com/Nate-1296/NB-SOUND-MOBILE).
 
 ---
 
@@ -35,9 +35,9 @@ Los gaps abiertos son los listados en la tabla como **Acción requerida**.
 | Componente | Linux | Windows | macOS | Problemas detectados | Acción requerida |
 | --- | --- | --- | --- | --- | --- |
 | **Rutas de datos/config** (`infra/bootstrap.py`) | XDG | `%LOCALAPPDATA%`/`%APPDATA%` | `~/Library` | Manejado: resolución por SO + creación idempotente | Ninguna |
-| **ffmpeg / fpcalc** (`infra/binarios.py`) | bundle→PATH | bundle→PATH, sufijo `.exe` | bundle→PATH | Resolución correcta en los tres; falla blanda si falta (degradación) | Verificar que el CI empaqueta el binario por SO en `external_bin/` (Fase 5 del plan) |
+| **ffmpeg / fpcalc** (`infra/binarios.py`) | bundle→PATH | bundle→PATH, sufijo `.exe` | bundle→PATH | Resolución correcta en los tres; falla blanda si falta (degradación) | El CI empaqueta el binario por SO en `external_bin/` |
 | **libVLC / python-vlc** | `libvlc.so` | `libvlc.dll` | `libvlc.dylib` | `find_lib()` de python-vlc depende del SO; en Windows requiere VLC instalado o DLL en PATH | Documentar dependencia de VLC por SO en el instalador (ya en `dependencias.py` con URLs por SO) |
-| **essentia-tensorflow** | wheel OK | **sin wheel funcional** | wheel parcial | Resuelto: UI deep oculta en Windows vía `deepAnalyticsDisponible` | Ninguna (revisar si aparece wheel Windows en el futuro) |
+| **essentia-tensorflow** | wheel OK | **sin wheel funcional** | wheel parcial | Resuelto: UI deep oculta en Windows vía `deepAnalyticsDisponible` | Ninguna |
 | **torch / demucs (Karaoke)** | CPU/CUDA | CPU/CUDA | CPU/MPS | Verificación en subprocess para evitar SIGSEGV; índice `whl/cpu` por defecto al instalar | Ninguna |
 | **Subprocess deep** (`infra/deep_runner.py`) | OK | `CREATE_NO_WINDOW` aplicado | OK | Manejado: flag anti-ventana en Windows | Ninguna |
 | **PATH en lanzadores sin shell** (`main_ui.py`) | COSMIC/Wayland/SDDM | — | — | Se antepone `_MEIPASS/bin` + `/usr/bin` para subprocess (ffprobe) | Ninguna (Linux-específico, ya resuelto) |

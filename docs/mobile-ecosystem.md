@@ -1,15 +1,18 @@
 # Ecosistema móvil — lado escritorio (PC)
 
-Diseño de **lo que la app de escritorio necesita** para ser compatible con la
-app móvil (Flutter, Android/iOS/tablets). Todo lo que se programa en el PC
-vive aquí; lo que se programa en el teléfono vive en el proyecto
-`nb_sound_mobile/` (ver su `docs/`).
+El lado escritorio del ecosistema móvil. Describe **lo que la app de escritorio
+expone** para integrarse con la app móvil (Flutter, Android/iOS/tablets). El
+código del lado PC vive en este repositorio; el del teléfono vive en el
+proyecto [NB Sound Mobile](https://github.com/Nate-1296/NB-SOUND-MOBILE).
 
-> **Estado: implementado.** El **contrato exacto (as-built)** del
-> protocolo —endpoints, JSON de cada entidad, WS de control, selección,
-> merge— está documentado para el cliente móvil en
-> `../../nb_sound_mobile/docs/pc-contract.md` (fuente de verdad para integrar
-> Flutter). Este documento conserva el diseño y las decisiones de producto.
+> El servidor local, el protocolo de sync, el schema de BD, la vista de
+> sincronización y el backup descritos aquí están **implementados** en el
+> escritorio (`servicios/servidor_sync.py`, `servicios/sync_repositorio.py`,
+> `ui/modelos_qml.py::ModeloSincronizacion`, `ui/qml/vistas/VistaSincronizacion.qml`,
+> `servicios/backup.py`). El **contrato del protocolo** (endpoints, JSON de
+> cada entidad, WS de control, selección, merge) es la fuente de verdad para el
+> cliente móvil. Este documento recoge ese contrato y las decisiones de
+> producto.
 
 ## Decisión de producto (contexto)
 
@@ -95,13 +98,12 @@ Razón: minimizar superficie de red y consumo cuando no se usa.
   `exponer_modelos()`.
 - Añadirlo al `_ORDEN_CIERRE` para teardown ordenado.
 - **No** arrancar el servidor en `inicializar_aplicacion()` (es bajo demanda).
-- Añadir `aiohttp`, `zeroconf`, `qrcode` a `requirements.txt`, al catálogo de
-  `infra/dependencias.py` (como requeridas del módulo de sync) y a los
+- `aiohttp`, `zeroconf` y `qrcode` están en `requirements.txt`, en el catálogo
+  de `infra/dependencias.py` (como requeridas del módulo de sync) y en los
   `hiddenimports` de los tres specs de PyInstaller.
 
-**Complejidad: alta. Riesgo: medio** (hilo + event loop propio aislado del de
-Qt; mitigación: no compartir objetos Qt entre hilos, comunicar por señales).
-**Depende de**: nada previo (es la base del ecosistema).
+El servidor corre en su propio hilo con event loop aislado del de Qt; no se
+comparten objetos Qt entre hilos, la comunicación es por señales.
 
 ---
 
@@ -181,8 +183,6 @@ teléfono), independiente de qué metadata se sincroniza.
 - **Stems**: estado de transferencia por pista/dispositivo en
   `sync_stem_transfers` (pending/in_progress/done/failed), reanudable.
 
-**Complejidad: alta. Riesgo: medio.** **Depende de**: A (servidor) y C (schema).
-
 ---
 
 ## C) Base de datos — cambios de schema
@@ -242,18 +242,14 @@ CREATE TABLE IF NOT EXISTS sync_estado (
 - `artistas.sync_version INTEGER NOT NULL DEFAULT 0`
 - `playlists.sync_version INTEGER NOT NULL DEFAULT 0`
 
-Triggers o lógica de servicio incrementan `sync_version` (desde un contador en
+La lógica de servicio incrementa `sync_version` (desde un contador en
 `sync_estado`) en cada modificación de las entidades sincronizables.
 
 ### Versionado de migraciones
 
-Se añaden en `_aplicar_migraciones_ligeras` (columnas) y en `CREAR_TABLAS_SQL`
-(tablas nuevas), siguiendo el patrón actual. **Recomendación**: introducir
-`PRAGMA user_version` SOLO si las migraciones futuras requieren transformación
-de datos (no es el caso de estas, todas aditivas).
-
-**Complejidad: media. Riesgo: bajo** (solo aditivo, no rompe lo existente).
-**Depende de**: nada. **Debe existir antes de** B (protocolo).
+Las columnas se añaden en `_aplicar_migraciones_ligeras` y las tablas nuevas en
+`CREAR_TABLAS_SQL`, siguiendo el patrón aditivo idempotente del proyecto (sin
+`PRAGMA user_version`, ya que todas las migraciones son aditivas).
 
 ---
 
@@ -289,11 +285,8 @@ offline; cancelar transferencia.
 - `ui/modelos_qml.py::ModeloSincronizacion` — bridge Qt: propiedades
   (servidor activo, lista de dispositivos, QR, progreso) y slots
   (encender/apagar, revocar, transferir). Worker Qt para no bloquear.
-- Nueva vista `ui/qml/vistas/VistaSincronizacion.qml` + entrada en
-  `NavLateral` y `Principal.qml` (lazy loading, igual que las demás vistas).
-
-**Complejidad: media. Riesgo: bajo** (UI nueva, no toca flujos existentes).
-**Depende de**: A, B, C.
+- Vista `ui/qml/vistas/VistaSincronizacion.qml` + entrada en `NavLateral` y
+  `Principal.qml` (lazy loading, igual que las demás vistas).
 
 ---
 
@@ -328,35 +321,7 @@ Desde la Vista de Sincronización (o Configuración): seleccionar un
 temporal, validar integridad, y reemplazar atómicamente. **Reutiliza** la
 lógica de recuperación de BD corrupta ya existente en `db/conexion.py`.
 
-**Complejidad: media. Riesgo: bajo** (independiente del resto; no toca flujos
-existentes). **Depende de**: nada (puede hacerse en paralelo).
-
----
-
-## Mapa de dependencias entre ítems
-
-```
-C (schema BD)  ──►  B (protocolo sync)  ──►  D (vista sync)
-                    ▲
-A (servidor)  ──────┘
-E (backup)  ── independiente ──
-```
-
-Orden recomendado: **C → A → B → D**, con **E** en paralelo.
-
----
-
-## Resumen de complejidad/riesgo
-
-| Ítem | Complejidad | Riesgo de romper lo existente |
-| --- | --- | --- |
-| A — Servidor local | Alta | Medio (hilo/event loop aislado) |
-| B — Protocolo sync | Alta | Medio |
-| C — Schema BD | Media | Bajo (aditivo) |
-| D — Vista sync | Media | Bajo |
-| E — Backup | Media | Bajo |
-
 ---
 
 ← [architecture.md](architecture.md) · [cross-platform.md](cross-platform.md) ·
-Plan: [mobile-rollout-plan.md](mobile-rollout-plan.md) · App móvil: `../../nb_sound_mobile/`
+App móvil: [NB Sound Mobile](https://github.com/Nate-1296/NB-SOUND-MOBILE)

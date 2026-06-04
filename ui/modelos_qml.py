@@ -3262,6 +3262,26 @@ class ModeloImportacion(QObject):
         self._iniciar_recovery("status")
 
     @Slot()
+    def reconciliarDiagnostico(self) -> None:
+        """Reconciliación al (re)entrar a la vista de importación.
+
+        Si quedó marcado "ejecutando" pero el worker ya terminó (la señal de
+        finalización puede perderse al cambiar de vista), limpia el estado
+        fantasma para que el refresco siguiente refleje el estado real. Si el
+        worker sigue vivo no interrumpe nada. Es barato: retorna de inmediato
+        cuando no hay estado que reconciliar, por lo que es seguro invocarlo en
+        cada navegación.
+        """
+        if not self._diagnostico_ejecutando:
+            return
+        if self._recovery_worker and self._recovery_worker.isRunning():
+            return
+        self._recovery_worker = None
+        self._diagnostico_ejecutando = False
+        self._diagnostico_mensaje = ""
+        self.diagnosticoCambiado.emit()
+
+    @Slot()
     def reintentarPortadasFaltantes(self) -> None:
         self._iniciar_recovery("retry_track_covers")
 
@@ -4233,6 +4253,23 @@ class ModeloPlaylists(QObject):
         self._pistas_activas.set_datos(pistas)
         self.pistasPlaylistCambiadas.emit()
         self.playlistActivaCambiada.emit()
+
+    @Slot(int, result="QVariantList")
+    def pistas_de_playlist(self, playlist_id: int) -> list:
+        """Devuelve las pistas de una playlist de forma SÍNCRONA.
+
+        El botón de reproducir de las tarjetas lo usa para sonar al instante
+        con un solo clic: `abrir_playlist` carga las pistas en un worker
+        asíncrono, por lo que reproducir justo después leía una lista vacía y
+        obligaba a un segundo clic. Aquí se consulta directamente la playlist
+        objetivo, sin depender del estado de la playlist activa.
+        """
+        try:
+            pistas = svc_bib.pistas_de_playlist(int(playlist_id or 0))
+        except Exception as exc:
+            _log.warning("pistas_de_playlist falló: %s", exc)
+            return []
+        return self._normalizar_lista(pistas)
 
     @Slot(str, result="QVariantMap")
     @Slot(str, str, result="QVariantMap")
@@ -6097,7 +6134,6 @@ class ModeloConfiguracion(QObject):
         "ENABLE_AUDIO_MOOD_MODELS": "enable_audio_mood_models",
         "ENABLE_AUDIO_EMBEDDINGS": "enable_audio_embeddings",
         "ENABLE_AUDIO_TAGGING_MODELS": "enable_audio_tagging_models",
-        "AUDIO_INTELLIGENCE_ANALYZE_ON_IMPORT": "audio_intelligence_analyze_on_import",
         "AUDIO_INTELLIGENCE_ANALYZE_AFTER_IMPORT_BACKGROUND": "audio_intelligence_analyze_after_import_background",
         "AUDIO_INTELLIGENCE_RESUME_PENDING_ON_STARTUP": "audio_intelligence_resume_pending_on_startup",
         "AUDIO_INTELLIGENCE_BACKGROUND_AUTOSTART": "audio_intelligence_background_autostart",
@@ -6185,7 +6221,7 @@ class ModeloConfiguracion(QObject):
         "nb_sound_progress_interval_sec",
         "sidecar_future_timeout_seg",
         "sidecar_wait_heartbeat_seg",
-        "enable_audio_features","audio_features_mode","audio_features_analyze_on_import","audio_features_background","audio_features_max_workers","audio_features_analyze_full_track","audio_features_sample_strategy","audio_features_segment_seconds","audio_features_reanalyze_on_version_change","audio_features_fail_silently","enable_audio_intelligence_deep","audio_intelligence_backend","enable_audio_mood_models","enable_audio_embeddings","enable_audio_tagging_models","audio_intelligence_analyze_on_import","audio_intelligence_analyze_after_import_background","audio_intelligence_resume_pending_on_startup","audio_intelligence_background_autostart","audio_intelligence_background","audio_intelligence_max_workers","audio_intelligence_background_batch_size","audio_intelligence_background_idle_delay_sec","audio_intelligence_background_max_runtime_min","audio_intelligence_model_dir","audio_intelligence_allow_model_downloads","audio_intelligence_sample_strategy","audio_intelligence_segment_seconds","audio_intelligence_reanalyze_on_model_change","audio_intelligence_retry_failed","audio_intelligence_max_attempts","audio_intelligence_cancel_discard_outputs","audio_intelligence_fail_silently","enable_music_discovery","music_discovery_use_audio_features","music_discovery_use_deep_features","music_discovery_min_confidence","music_discovery_default_limit","music_discovery_explain_results",
+        "enable_audio_features","audio_features_mode","audio_features_analyze_on_import","audio_features_background","audio_features_max_workers","audio_features_analyze_full_track","audio_features_sample_strategy","audio_features_segment_seconds","audio_features_reanalyze_on_version_change","audio_features_fail_silently","enable_audio_intelligence_deep","audio_intelligence_backend","enable_audio_mood_models","enable_audio_embeddings","enable_audio_tagging_models","audio_intelligence_analyze_after_import_background","audio_intelligence_resume_pending_on_startup","audio_intelligence_background_autostart","audio_intelligence_background","audio_intelligence_max_workers","audio_intelligence_background_batch_size","audio_intelligence_background_idle_delay_sec","audio_intelligence_background_max_runtime_min","audio_intelligence_model_dir","audio_intelligence_allow_model_downloads","audio_intelligence_sample_strategy","audio_intelligence_segment_seconds","audio_intelligence_reanalyze_on_model_change","audio_intelligence_retry_failed","audio_intelligence_max_attempts","audio_intelligence_cancel_discard_outputs","audio_intelligence_fail_silently","enable_music_discovery","music_discovery_use_audio_features","music_discovery_use_deep_features","music_discovery_min_confidence","music_discovery_default_limit","music_discovery_explain_results",
     ]
 
     # Defaults sensatos:
@@ -6263,7 +6299,6 @@ class ModeloConfiguracion(QObject):
         "enable_audio_mood_models": "0",
         "enable_audio_embeddings": "0",
         "enable_audio_tagging_models": "0",
-        "audio_intelligence_analyze_on_import": "0",
         "audio_intelligence_analyze_after_import_background": "0",
         "audio_intelligence_background": "0",
         "audio_intelligence_background_autostart": "0",
@@ -6384,7 +6419,6 @@ class ModeloConfiguracion(QObject):
         "enable_audio_mood_models",
         "enable_audio_embeddings",
         "enable_audio_tagging_models",
-        "audio_intelligence_analyze_on_import",
         "audio_intelligence_analyze_after_import_background",
         "audio_intelligence_background",
         "audio_intelligence_background_autostart",
@@ -6760,7 +6794,19 @@ class ModeloConfiguracion(QObject):
 
     @Slot(str, result=str)
     def obtener(self, clave: str) -> str:
-        return self._config.get(clave, "")
+        if clave in self._config:
+            return self._config[clave]
+        # Preferencias de UI guardadas con guardar() que no figuran en los
+        # defaults (p. ej. playlists_modo_vista, playlists_categoria) no se
+        # cargan en _config al arranque, así que sin este fallback se perdían
+        # entre sesiones (la BD las tenía, pero obtener() devolvía ""). Las
+        # recuperamos de config_ui y las cacheamos para no penalizar lecturas
+        # posteriores (este getter es un hot path en bindings QML).
+        from db.conexion import obtener_config
+
+        valor = obtener_config(clave, "")
+        self._config[clave] = valor
+        return valor
 
     @Slot(str, str)
     def guardar(self, clave: str, valor: str) -> None:
@@ -7162,7 +7208,6 @@ class ModeloConfiguracion(QObject):
             "enable_audio_mood_models": _bool_key("enable_audio_mood_models", "0"),
             "enable_audio_embeddings": _bool_key("enable_audio_embeddings", "0"),
             "enable_audio_tagging_models": _bool_key("enable_audio_tagging_models", "0"),
-            "audio_intelligence_analyze_on_import": _bool_key("audio_intelligence_analyze_on_import", "0"),
             "audio_intelligence_analyze_after_import_background": _bool_key("audio_intelligence_analyze_after_import_background"),
             "audio_intelligence_resume_pending_on_startup": _bool_key("audio_intelligence_resume_pending_on_startup"),
             "audio_intelligence_background_autostart": _bool_key("audio_intelligence_background_autostart"),
