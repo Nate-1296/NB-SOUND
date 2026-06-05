@@ -6,8 +6,10 @@
 # =============================================================================
 
 APP_NAME = "NB SOUND"
-APP_VERSION = "1.0.1"
-APP_VERSION_DISPLAY = "v1"
+APP_VERSION = "1.1.0"
+# Versión legible para banners/--version. Sigue a APP_VERSION para que CLI y UI
+# muestren siempre la versión real (p. ej. "v1.1.0"), no solo el major.
+APP_VERSION_DISPLAY = f"v{APP_VERSION}"
 
 CLI_NAME = f"{APP_NAME} CLI"
 UI_NAME = f"{APP_NAME} UI"

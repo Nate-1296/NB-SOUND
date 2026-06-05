@@ -105,10 +105,16 @@ def _flickable_config(vista):
 
 
 def _ensure_visible(runtime, vista, item, target_y=360):
+    # Converge el item hacia `target_y` (zona central segura) de forma
+    # determinista. La versión anterior aceptaba cualquier posición dentro de
+    # [80, alto-160]; en esa banda el item podía quedar pegado al borde
+    # inferior (sobre la barra de reproducción) y el click sintético offscreen
+    # no aterrizaba sobre el control, haciendo el test flaky. Centrar el item
+    # garantiza que la coordenada del click caiga sobre él en cada ejecución.
     flickable = _flickable_config(vista)
-    for _ in range(4):
+    for _ in range(8):
         punto = _centro_item(runtime, item)
-        if 80 <= punto.y() <= runtime.root.property("height") - 160:
+        if abs(punto.y() - target_y) <= 60:
             return
         content_y = float(flickable.property("contentY") or 0)
         nuevo_y = max(0.0, content_y + punto.y() - target_y)
@@ -193,8 +199,31 @@ def qml_factory(tmp_path, monkeypatch):
 
     yield _factory
 
+    # Teardown: ocultar la ventana, limpiar la caché de componentes QML y drenar
+    # la cola de eventos para que el siguiente test parta de un estado limpio
+    # (sin esto, objetos/timers de tests previos contaminan la entrega de eventos
+    # sintéticos —clicks/scroll— y vuelven flaky a los tests siguientes).
+    #
+    # Los engines se CONSERVAN vivos en `_PERSISTENT_QML_RUNTIMES`, nunca se
+    # destruyen ni se dejan para GC: destruir/recolectar un QQmlApplicationEngine
+    # en la QGuiApplication compartida del proceso —con librerías nativas pesadas
+    # cargadas (torch/essentia/…)— puede segfaultear el proceso de tests.
+    from PySide6.QtCore import QCoreApplication
+
     for runtime in runtimes:
-        runtime.root.setProperty("visible", False)
+        try:
+            runtime.root.setProperty("visible", False)
+        except Exception:
+            pass
+        try:
+            runtime.engine.clearComponentCache()
+        except Exception:
+            pass
+    app = QCoreApplication.instance()
+    if app is not None:
+        for _ in range(5):
+            app.sendPostedEvents(None, 0)
+            app.processEvents()
     _PERSISTENT_QML_RUNTIMES.extend(runtimes)
     cerrar_db()
 

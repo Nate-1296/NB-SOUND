@@ -35,111 +35,14 @@ def _cerrar_db_seguro() -> None:
 # =============================================================================
 
 _DESCRIPCION = textwrap.dedent(f"""\
-  {CLI_BANNER} — Catalogador inteligente de bibliotecas de audio
-  ──────────────────────────────────────────────────────────────
-  Analiza archivos de audio (entrada multiformato, salida final MP3)
-  usando fingerprints acusticos (AcoustID),
-  reconocimiento de audio (Shazam), consultas a MusicBrainz y,
-  cuando hay ambiguedad, desempate con IA. Organiza la biblioteca
-  con tags canónicos y estructura de carpetas predecible.
+  {CLI_BANNER} — Catalogador inteligente de bibliotecas de audio.
+
+  Procesa los archivos de audio de una carpeta de entrada y los cataloga en una
+  biblioteca organizada (identificación, tags y estructura de carpetas).
+
+  En la app instalada se invoca como «nb-sound cli» (p. ej. «nb-sound cli --scan»).
 """)
 
-_EPILOG = textwrap.dedent("""\
-  ──────────────────────────────────────────────────────────────────────
-  CONFIGURACION PERMANENTE (recomendado)
-  ──────────────────────────────────────────────────────────────────────
-
-  Edita config/settings.py — SECCION A — y rellena las rutas de usuario:
-
-    USER_INPUT_DIR      = "/home/usuario/Descargas/musica"
-    USER_LIBRARY_DIR    = "/home/usuario/Musica/biblioteca"
-    USER_QUARANTINE_DIR = "/home/usuario/Musica/cuarentena"
-    USER_REVIEW_DIR     = "/home/usuario/Musica/revision"
-    USER_LOGS_DIR       = "/home/usuario/Musica/logs"
-    USER_PROCESSED_DIR  = "/home/usuario/Musica/procesados"
-
-  Una vez configurado puedes ejecutar simplemente:
-
-    python main.py
-
-  ──────────────────────────────────────────────────────────────────────
-  MODULOS OPCIONALES (activan mayor precision)
-  ──────────────────────────────────────────────────────────────────────
-
-  AcoustID (fingerprint acustico):
-    pip install pyacoustid
-    apt install libchromaprint-tools   # o brew install chromaprint
-    Clave gratuita en: https://acoustid.org/login
-    Agregar en settings.py:  ACOUSTID_API_KEY = "tu_clave"
-
-  Shazam (reconocimiento de audio):
-    pip install shazamio
-    No requiere clave de API.
-
-  Desempate por IA:
-    pip install anthropic
-    Clave en: https://console.anthropic.com
-    Agregar en settings.py:  ANTHROPIC_API_KEY = "tu_clave"
-
-  ──────────────────────────────────────────────────────────────────────
-  EJEMPLOS
-  ──────────────────────────────────────────────────────────────────────
-
-  Ejecucion basica (rutas configuradas en settings.py):
-    python main.py
-
-  Solo entrada por CLI (el resto viene de settings.py):
-    python main.py --input ~/Descargas/musica
-
-  Todas las rutas por CLI:
-    python main.py \\
-      --input      ~/Descargas/musica \\
-      --library    ~/Musica/biblioteca \\
-      --quarantine ~/Musica/cuarentena \\
-      --review     ~/Musica/revision \\
-      --logs       ~/Musica/logs
-      --processed  ~/Musica/procesados
-
-  Modo inspeccion (analiza pero NO modifica ni mueve nada):
-    python main.py --dry-run
-
-  Limpiar cache antes de ejecutar:
-    python main.py --clear-cache
-
-  ──────────────────────────────────────────────────────────────────────
-  ESTRUCTURA DE SALIDA
-  ──────────────────────────────────────────────────────────────────────
-
-  biblioteca/
-    radiohead/albums/ok_computer/01_airbag.mp3
-    the_beatles/albums/abbey_road/01_come_together.mp3
-    daft_punk/singles/get_lucky/01_get_lucky.mp3
-
-  cuarentena/
-    archivo_corrupto/_manifiesto.jsonl
-    puntaje_bajo/_manifiesto.jsonl
-    sin_candidatos/_manifiesto.jsonl
-    metadata_insuficiente/_manifiesto.jsonl
-
-  revision/
-    candidatos_ambiguos/_manifiesto.jsonl
-    puntaje_intermedio/_manifiesto.jsonl
-    ia_revision_manual/_manifiesto.jsonl
-
-  logs/
-    tagger_run.log
-    tagger_events.jsonl
-    20250101_120000_tagger_summary.json
-
-  ──────────────────────────────────────────────────────────────────────
-  UMBRALES DE DECISION (ajustables en config/settings.py)
-  ──────────────────────────────────────────────────────────────────────
-
-  score >= 0.82  ->  ACEPTADO    (procesado automaticamente)
-  score >= 0.55  ->  REVISION    (requiere decision manual)
-  score <  0.55  ->  CUARENTENA  (preservado sin modificar)
-
-""")
 
 
 # =============================================================================
@@ -148,9 +51,8 @@ _EPILOG = textwrap.dedent("""\
 
 def construir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="nb_sound_cli_v2",
+        prog="nb-sound cli",
         description=_DESCRIPCION,
-        epilog=_EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         add_help=True,
     )

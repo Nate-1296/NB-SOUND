@@ -14,6 +14,27 @@ from servicios.reproductor import EstadoReproductor, Reproductor
 _ORIGINAL_INICIALIZAR_VLC = reproductor_mod.Reproductor._inicializar_vlc
 
 
+def _teardown_qml(app, engine, root):
+    """Oculta la ventana QML del test y drena la cola de eventos.
+
+    No se destruye el engine: hacerlo re-evalúa los bindings de los ítems contra
+    context-properties (tema, reproductor…) ya anuladas y dispara una cascada de
+    TypeError de teardown. El aislamiento real de estos tests lo da el uso de un
+    QEventLoop LOCAL (en vez de app.exec()/app.quit() globales), que evita que un
+    timer de cierre de otro test interfiera. Ocultar + drenar es suficiente para
+    que la ventana no capture eventos sintéticos de los tests siguientes.
+    """
+    try:
+        if root is not None:
+            root.setProperty("visible", False)
+    except Exception:
+        pass
+    if app is not None:
+        for _ in range(3):
+            app.sendPostedEvents(None, 0)
+            app.processEvents()
+
+
 @pytest.fixture()
 def db_reproductor(tmp_path, monkeypatch):
     monkeypatch.setattr(reproductor_mod.Reproductor, "_inicializar_vlc", lambda self: None)
@@ -2341,7 +2362,7 @@ def test_qml_popup_cola_vacia_abre_con_altura_positiva(db_reproductor, monkeypat
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     monkeypatch.setenv("QML_DISABLE_DISK_CACHE", "1")
 
-    from PySide6.QtCore import QTimer, QUrl
+    from PySide6.QtCore import QEventLoop, QTimer, QUrl
     from PySide6.QtGui import QGuiApplication
     from PySide6.QtQml import QQmlApplicationEngine
     import main_ui as main_ui_mod
@@ -2365,21 +2386,28 @@ def test_qml_popup_cola_vacia_abre_con_altura_positiva(db_reproductor, monkeypat
         for child in obj.children():
             yield from walk(child)
 
-    barra = next(obj for obj in walk(root) if "cola_visible" in prop_names(obj))
-    assert barra.metaObject().invokeMethod(barra, "alternar_cola")
+    try:
+        barra = next(obj for obj in walk(root) if "cola_visible" in prop_names(obj))
+        assert barra.metaObject().invokeMethod(barra, "alternar_cola")
 
-    QTimer.singleShot(120, app.quit)
-    app.exec()
+        # Event loop LOCAL en vez de app.exec()/app.quit() globales: un timer
+        # quit pendiente de otro test no debe cerrar este loop antes de tiempo
+        # (causa raíz de la flakiness al correr el archivo completo).
+        loop = QEventLoop()
+        QTimer.singleShot(120, loop.quit)
+        loop.exec()
 
-    popup = next(
-        obj for obj in walk(root)
-        if "opened" in prop_names(obj)
-        and "popupMargen" in prop_names(obj)
-        and obj.property("opened")
-    )
+        popup = next(
+            obj for obj in walk(root)
+            if "opened" in prop_names(obj)
+            and "popupMargen" in prop_names(obj)
+            and obj.property("opened")
+        )
 
-    assert popup.property("height") > 0
-    assert popup.property("visible") is True
+        assert popup.property("height") > 0
+        assert popup.property("visible") is True
+    finally:
+        _teardown_qml(app, engine, root)
 
 
 def test_qml_popup_cola_cierra_con_click_fuera(db_reproductor, monkeypatch):
@@ -2387,7 +2415,7 @@ def test_qml_popup_cola_cierra_con_click_fuera(db_reproductor, monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     monkeypatch.setenv("QML_DISABLE_DISK_CACHE", "1")
 
-    from PySide6.QtCore import QPoint, QTimer, QUrl, Qt
+    from PySide6.QtCore import QEventLoop, QPoint, QTimer, QUrl, Qt
     from PySide6.QtGui import QGuiApplication
     from PySide6.QtQml import QQmlApplicationEngine
     from PySide6.QtTest import QTest
@@ -2412,24 +2440,29 @@ def test_qml_popup_cola_cierra_con_click_fuera(db_reproductor, monkeypatch):
         for child in obj.children():
             yield from walk(child)
 
-    barra = next(obj for obj in walk(root) if "cola_visible" in prop_names(obj))
-    assert barra.metaObject().invokeMethod(barra, "alternar_cola")
+    try:
+        barra = next(obj for obj in walk(root) if "cola_visible" in prop_names(obj))
+        assert barra.metaObject().invokeMethod(barra, "alternar_cola")
 
-    def click_fuera():
-        QTest.mouseClick(root, Qt.LeftButton, Qt.NoModifier, QPoint(12, 12))
-        QTimer.singleShot(120, app.quit)
+        loop = QEventLoop()
 
-    QTimer.singleShot(150, click_fuera)
-    app.exec()
+        def click_fuera():
+            QTest.mouseClick(root, Qt.LeftButton, Qt.NoModifier, QPoint(12, 12))
+            QTimer.singleShot(120, loop.quit)
 
-    popup = next(
-        obj for obj in walk(root)
-        if "opened" in prop_names(obj)
-        and "popupMargen" in prop_names(obj)
-    )
+        QTimer.singleShot(150, click_fuera)
+        loop.exec()
 
-    assert popup.property("opened") is False
-    assert popup.property("visible") is False
+        popup = next(
+            obj for obj in walk(root)
+            if "opened" in prop_names(obj)
+            and "popupMargen" in prop_names(obj)
+        )
+
+        assert popup.property("opened") is False
+        assert popup.property("visible") is False
+    finally:
+        _teardown_qml(app, engine, root)
 
 
 def test_qml_popup_cola_tocar_boton_playlist_abierto_lo_cierra(db_reproductor, monkeypatch):
@@ -2437,7 +2470,7 @@ def test_qml_popup_cola_tocar_boton_playlist_abierto_lo_cierra(db_reproductor, m
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     monkeypatch.setenv("QML_DISABLE_DISK_CACHE", "1")
 
-    from PySide6.QtCore import QTimer, QUrl, Qt
+    from PySide6.QtCore import QEventLoop, QTimer, QUrl, Qt
     from PySide6.QtGui import QGuiApplication
     from PySide6.QtQml import QQmlApplicationEngine
     from PySide6.QtTest import QTest
@@ -2462,33 +2495,38 @@ def test_qml_popup_cola_tocar_boton_playlist_abierto_lo_cierra(db_reproductor, m
         for child in obj.children():
             yield from walk(child)
 
-    barra = next(obj for obj in walk(root) if "cola_visible" in prop_names(obj))
-    assert barra.metaObject().invokeMethod(barra, "alternar_cola")
+    try:
+        barra = next(obj for obj in walk(root) if "cola_visible" in prop_names(obj))
+        assert barra.metaObject().invokeMethod(barra, "alternar_cola")
 
-    def click_boton_playlist():
-        boton = next(
+        loop = QEventLoop()
+
+        def click_boton_playlist():
+            boton = next(
+                obj for obj in walk(root)
+                if "iconSource" in prop_names(obj)
+                and "visible" in prop_names(obj)
+                and obj.property("visible") is True
+                and "playlist.svg" in str(obj.property("iconSource") or "")
+            )
+            centro_global = boton.mapToGlobal(boton.property("width") / 2, boton.property("height") / 2)
+            centro_local = root.mapFromGlobal(centro_global.toPoint())
+            QTest.mouseClick(root, Qt.LeftButton, Qt.NoModifier, centro_local)
+            QTimer.singleShot(150, loop.quit)
+
+        QTimer.singleShot(150, click_boton_playlist)
+        loop.exec()
+
+        popup = next(
             obj for obj in walk(root)
-            if "iconSource" in prop_names(obj)
-            and "visible" in prop_names(obj)
-            and obj.property("visible") is True
-            and "playlist.svg" in str(obj.property("iconSource") or "")
+            if "opened" in prop_names(obj)
+            and "popupMargen" in prop_names(obj)
         )
-        centro_global = boton.mapToGlobal(boton.property("width") / 2, boton.property("height") / 2)
-        centro_local = root.mapFromGlobal(centro_global.toPoint())
-        QTest.mouseClick(root, Qt.LeftButton, Qt.NoModifier, centro_local)
-        QTimer.singleShot(150, app.quit)
 
-    QTimer.singleShot(150, click_boton_playlist)
-    app.exec()
-
-    popup = next(
-        obj for obj in walk(root)
-        if "opened" in prop_names(obj)
-        and "popupMargen" in prop_names(obj)
-    )
-
-    assert popup.property("opened") is False
-    assert popup.property("visible") is False
+        assert popup.property("opened") is False
+        assert popup.property("visible") is False
+    finally:
+        _teardown_qml(app, engine, root)
 
 
 def test_qml_principal_escucha_avisos_y_usa_toast_o_dialog():
@@ -2559,8 +2597,9 @@ def test_qml_nav_lateral_compacta_vertical_y_usa_animacion_compartida():
     assert "alto_item_nav" in nav
     assert "alto_separador_nav" in nav
     # La marca dejó de ser texto "NB SOUND": ahora es el emblema de la app,
-    # dimensionado por `lado_marca_nav` para llenar el ancho de la barra.
-    assert 'source: "../assets/logo/logo_ui.png"' in nav
+    # dimensionado por `lado_marca_nav` para llenar el ancho de la barra. El
+    # logo cambia según el tema activo (`tema.logo`), cayendo al logo base.
+    assert '"../assets/logo/"' in nav and "tema.logo" in nav
     assert "readonly property int lado_marca_nav" in nav
     assert "Layout.preferredWidth: Math.min(bloque_superior.width, raiz.lado_marca_nav)" in nav
     assert "sourceSize.width: 512" in nav

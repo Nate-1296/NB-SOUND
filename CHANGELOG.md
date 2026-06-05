@@ -2,6 +2,69 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [1.1.0] — 2026-06-05
+
+Versión menor: eliminación definitiva de pistas, logo distintivo por tema, y
+suite de tests de interfaz endurecida.
+
+### Añadido
+
+- **Eliminar pistas desde «Biblioteca → Pistas»**: cada fila de pista incorpora
+  un botón de papelera que abre un diálogo de confirmación (acción irreversible,
+  con Cancelar / Eliminar). La eliminación es total y segura:
+  - Borra la pista de la base de datos (cascada a playlists, cola, karaoke,
+    sesiones de DJ, embeddings y transferencias de stems; índice de búsqueda
+    incluido) y de las tablas de análisis que no tienen clave foránea, además
+    del historial y el override de catalogación.
+  - Borra el archivo de audio, su copia archivada en «procesados» (validada por
+    hash para no borrar un archivo equivocado), sus letras/sidecars y las
+    carátulas propias, **conservando** las carátulas de álbum o fotos de artista
+    que sigan compartiendo otras canciones.
+  - Elimina el álbum o el artista si quedaran sin ninguna pista.
+  - Recompone las posiciones de las playlists y sesiones de DJ afectadas, saca
+    la pista del reproductor (cola y reproducción activa) y refresca en vivo
+    Inicio, Biblioteca, Búsqueda, Playlists, Importación, Karaoke y Explorador
+    Ciego. Registra tombstones para que la app móvil también la elimine al
+    sincronizar.
+- **Logo por tema en la barra lateral**: cada uno de los 63 temas tiene su
+  propio logo. Al cambiar de tema, en la NavLateral solo cambia la imagen del
+  logo (mismo tamaño y posición), para una transición fluida.
+
+### Corregido
+
+- **Fechas que no se mostraban**: en Importación (historial y detalle de
+  ejecuciones) y en Sincronización (última conexión de dispositivos y última
+  copia de seguridad) los campos aparecían vacíos. El formateador de fechas
+  usaba `Locale.ShortFormat`, que no está disponible en un archivo JS
+  `.pragma library` (lanzaba «ReferenceError: Locale is not defined»); ahora se
+  formatea a mano en hora local. Los datos en la base ya eran correctos (UTC).
+- **Suite de tests de UI (QML) endurecida**: los tres tests de interfaz que
+  fallaban de forma intermitente quedaron deterministas: el de escala/tema
+  (el helper de scroll dejaba el control en una posición donde el click
+  sintético offscreen no aterrizaba), y los dos del popup de la cola (usaban
+  `app.exec()`/`app.quit()` globales que un temporizador de otro test podía
+  abortar; ahora usan un bucle de eventos local). Se añadió limpieza de la
+  caché de componentes QML entre tests para evitar contaminación de eventos, y
+  un binding de Inicio quedó blindado contra el modelo nulo durante el cierre.
+
+### Cambiado
+
+- **Ayuda de la CLI**: `nb-sound cli --help` muestra ahora solo los comandos y
+  su descripción; se quitó el bloque extra (`.env`, módulos opcionales,
+  ejemplos, umbrales) y se identifica como «nb-sound cli» (antes
+  «nb_sound_cli_v2»).
+- **Versión visible**: la CLI y la UI muestran la versión real (`v1.1.0`) en sus
+  banners y en `--version` (antes solo el major, «v1»).
+
+### Notas
+
+- El suite completo de tests se ejecuta ahora con **aislamiento por proceso**
+  (`pytest-forked`: cada test en su propio proceso), activado automáticamente en
+  POSIX desde `tests/conftest.py`. Resuelve de raíz el fallo de segmentación
+  pre-existente que provocaba acumular en un mismo proceso varias librerías
+  nativas pesadas (torch, essentia, etc.) junto con Qt. Para depurar un test
+  puntual con salida en vivo o pdb, exportar `NB_SOUND_TEST_NO_FORK=1`.
+
 ## [1.0.1] — 2026-06-04
 
 Versión de parche centrada en consistencia de zona horaria, correcciones de

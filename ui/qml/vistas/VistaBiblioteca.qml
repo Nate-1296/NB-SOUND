@@ -422,6 +422,15 @@ Rectangle {
         }
     }
 
+    // Eliminación definitiva de una pista: abre el diálogo de confirmación.
+    property var _pistaPendienteEliminar: ({})
+    function pedir_eliminar_pista(pista) {
+        if (!pista || !pista.id)
+            return
+        _pistaPendienteEliminar = pista
+        dialogoEliminarPista.open()
+    }
+
     function abrir_album_id(albumId, guardarHistorial) {
         if (!albumId)
             return
@@ -1577,6 +1586,9 @@ Rectangle {
         id: boton
         property string iconSource: ""
         property bool primary: false
+        // Color del icono. Por defecto sigue el estado (primario/hover); se puede
+        // sobreescribir (p. ej. rojo para acciones destructivas como eliminar).
+        property color iconColor: boton.primary ? tema.fondo : (botonMouse.containsMouse ? tema.texto : tema.textoSec)
         signal clicked()
         width: UiTokens.controlHeightMd
         height: UiTokens.controlHeightMd
@@ -1591,7 +1603,7 @@ Rectangle {
             width: 17
             height: 17
             source: boton.iconSource
-            iconColor: boton.primary ? tema.fondo : (botonMouse.containsMouse ? tema.texto : tema.textoSec)
+            iconColor: boton.iconColor
         }
         MouseArea {
             id: botonMouse
@@ -1985,6 +1997,12 @@ Rectangle {
                     iconSource: "../assets/icons/more-vertical.svg"
                     onClicked: menuAgregarPlaylist.abrir(filaPista.pista.id, _textoPista(filaPista.pista))
                 }
+                IconButton {
+                    objectName: "biblioteca_pista_eliminar"
+                    iconSource: "../assets/icons/trash.svg"
+                    iconColor: tema.peligro
+                    onClicked: pedir_eliminar_pista(filaPista.pista)
+                }
                 LibraryActionButton {
                     visible: !filaPista.accionesCompactas
                     primary: true
@@ -2060,5 +2078,129 @@ Rectangle {
         id: menuAgregarPlaylist
         tema: raiz.tema
         onGuardado: function(mensaje) { mostrar_toast(mensaje) }
+    }
+
+    // ─── Confirmación de eliminación definitiva de una pista ──────────────────
+    Popup {
+        id: dialogoEliminarPista
+        objectName: "biblioteca_dialogo_eliminar"
+        parent: Overlay.overlay
+        modal: true
+        dim: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        width: Math.min(480, raiz.width - UiTokens.spacing32)
+        x: Math.round((((parent ? parent.width : raiz.width) - width) / 2))
+        y: Math.round((((parent ? parent.height : raiz.height) - height) / 2))
+        padding: 0
+
+        readonly property string _titulo: (raiz._pistaPendienteEliminar && raiz._pistaPendienteEliminar.titulo)
+            ? raiz._pistaPendienteEliminar.titulo : "esta canción"
+
+        background: Rectangle {
+            color: tema.fondoElevado
+            radius: UiTokens.radiusLg
+            border.color: Qt.rgba(tema.peligro.r, tema.peligro.g, tema.peligro.b, 0.45)
+            border.width: 1
+        }
+
+        contentItem: ColumnLayout {
+            spacing: UiTokens.spacing16
+            // padding interno
+            Item { Layout.preferredHeight: UiTokens.spacing4 }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: UiTokens.spacing20
+                Layout.rightMargin: UiTokens.spacing20
+                spacing: UiTokens.spacing12
+                Rectangle {
+                    width: 36; height: 36; radius: 18
+                    color: Qt.rgba(tema.peligro.r, tema.peligro.g, tema.peligro.b, 0.14)
+                    ThemedIcon {
+                        anchors.centerIn: parent
+                        width: 18; height: 18
+                        source: "../assets/icons/trash.svg"
+                        iconColor: tema.peligro
+                    }
+                }
+                AppText {
+                    Layout.fillWidth: true
+                    text: "Eliminar canción"
+                    color: tema.texto
+                    font.pixelSize: UiTokens.fontSizeXl
+                    font.bold: true
+                    wrapMode: Text.WordWrap
+                }
+            }
+
+            AppText {
+                Layout.fillWidth: true
+                Layout.leftMargin: UiTokens.spacing20
+                Layout.rightMargin: UiTokens.spacing20
+                text: "Vas a eliminar «" + dialogoEliminarPista._titulo + "» de forma permanente."
+                color: tema.texto
+                font.pixelSize: UiTokens.fontSizeBase
+                wrapMode: Text.WordWrap
+            }
+            AppText {
+                Layout.fillWidth: true
+                Layout.leftMargin: UiTokens.spacing20
+                Layout.rightMargin: UiTokens.spacing20
+                text: "Se borrarán su archivo de audio, sus datos, letras y carátulas propias, "
+                      + "y desaparecerá de la biblioteca, las playlists y las sesiones de DJ. "
+                      + "Las carátulas o fotos de artista compartidas con otras canciones se conservan. "
+                      + "Esta acción no se puede deshacer."
+                color: tema.textoMuted
+                font.pixelSize: UiTokens.fontSizeSm
+                wrapMode: Text.WordWrap
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: UiTokens.spacing20
+                Layout.rightMargin: UiTokens.spacing20
+                Layout.bottomMargin: UiTokens.spacing20
+                spacing: UiTokens.spacing10
+                Item { Layout.fillWidth: true }
+                LibraryActionButton {
+                    texto: "Cancelar"
+                    onClicked: dialogoEliminarPista.close()
+                }
+                // Botón destructivo (rojo) — distinto del primario de acento.
+                Rectangle {
+                    id: botonEliminarDef
+                    objectName: "biblioteca_eliminar_confirmar"
+                    Layout.preferredHeight: 36
+                    implicitWidth: filaEliminar.implicitWidth + UiTokens.spacing24
+                    radius: UiTokens.radiusSm
+                    color: eliminarMa.containsMouse
+                        ? Qt.darker(tema.peligro, 1.12) : tema.peligro
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    RowLayout {
+                        id: filaEliminar
+                        anchors.centerIn: parent
+                        spacing: UiTokens.spacing6
+                        AppText {
+                            text: "Eliminar"
+                            color: UiUtils.contrasteSobre(tema.peligro)
+                            font.pixelSize: UiTokens.fontSizeBase
+                            font.weight: Font.DemiBold
+                        }
+                    }
+                    MouseArea {
+                        id: eliminarMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            var pista = raiz._pistaPendienteEliminar
+                            dialogoEliminarPista.close()
+                            if (pista && pista.id)
+                                biblioteca.eliminar_pista(pista.id)
+                        }
+                    }
+                }
+            }
+        }
     }
 }

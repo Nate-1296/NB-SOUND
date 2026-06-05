@@ -456,6 +456,9 @@ ApplicationWindow {
         revision.cargar()
         playlists.cargar()
         busqueda.recargar()
+        karaoke.cargar()
+        exploradorCiego.refrescar()
+        // DJ Privado se refresca solo al volver a su vista (onVisibleChanged).
     }
 
     function alternar_vista_lyrics() {
@@ -732,6 +735,18 @@ ApplicationWindow {
         target: importacion
         function onImportacionFin() { refrescar_datos_ui() }
         function onImportacionCancelada() { refrescar_datos_ui() }
+    }
+
+    Connections {
+        target: biblioteca
+        function onPistaEliminada(pista_id, resumen) {
+            // Saca la pista del reproductor (cola/activa) y refresca todas las
+            // vistas para que no quede rastro visible de la canción eliminada.
+            reproductor.purgar_pista(pista_id)
+            refrescar_datos_ui()
+            if (resumen && resumen.mensaje)
+                mostrar_toast_global(resumen.mensaje, "info")
+        }
     }
 
     Connections {

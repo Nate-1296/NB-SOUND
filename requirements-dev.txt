@@ -1,2 +1,7 @@
 -r requirements.txt
 pytest>=8.0
+# Aislamiento por proceso del suite: ejecutar cada test en su propio proceso
+# (fork) evita el fallo de segmentación al acumular librerías nativas pesadas
+# (torch, essentia, …) junto con Qt en un único proceso. tests/conftest.py lo
+# activa automáticamente en POSIX al correr el suite completo. Solo Unix/macOS.
+pytest-forked>=1.6; sys_platform != "win32"

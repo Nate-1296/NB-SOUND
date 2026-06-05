@@ -3998,6 +3998,330 @@ def quitar_de_playlist(playlist_id: int, pista_id: int) -> dict:
     return {"ok": True, "mensaje": "Canción quitada de esta playlist.", "playlist_id": int(playlist_id), "pista_id": int(pista_id)}
 
 
+# =============================================================================
+# ELIMINACIÓN DEFINITIVA DE UNA PISTA (destructivo e irreversible)
+# =============================================================================
+
+def _sha256_archivo(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _borrar_archivo_seguro(ruta: str) -> None:
+    if not ruta:
+        return
+    try:
+        Path(ruta).unlink(missing_ok=True)
+    except OSError as exc:
+        logger.debug("No se pudo borrar archivo %s: %s", ruta, exc)
+
+
+def _recomponer_posiciones_sesion_dj(conexion, sesion_id: int) -> None:
+    """Renumera 1..N las pistas de una sesión DJ tras quitar una.
+
+    La PK de dj_pistas_sesion es (sesion_id, posicion); se desplazan primero las
+    posiciones a un rango alto para evitar colisiones de PK durante el renumerado.
+    """
+    filas = conexion.execute(
+        "SELECT pista_id FROM dj_pistas_sesion WHERE sesion_id = ? ORDER BY posicion, agregado_en",
+        (sesion_id,),
+    ).fetchall()
+    conexion.execute("UPDATE dj_sesiones SET actualizado_en = datetime('now') WHERE id = ?", (sesion_id,))
+    if not filas:
+        return
+    desplazamiento = 1_000_000
+    for fila in filas:
+        conexion.execute(
+            "UPDATE dj_pistas_sesion SET posicion = posicion + ? WHERE sesion_id = ? AND pista_id = ?",
+            (desplazamiento, sesion_id, fila["pista_id"]),
+        )
+    for nueva, fila in enumerate(filas, start=1):
+        conexion.execute(
+            "UPDATE dj_pistas_sesion SET posicion = ? WHERE sesion_id = ? AND pista_id = ?",
+            (nueva, sesion_id, fila["pista_id"]),
+        )
+
+
+def _leer_entrada_assets(ruta_archivo: str) -> dict:
+    """Devuelve la entrada del assets_manifest para un archivo, o {}."""
+    path = _manifest_assets()
+    if not path or not ruta_archivo or not Path(path).exists():
+        return {}
+    objetivo = str(ruta_archivo)
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            for linea in fh:
+                texto = linea.strip()
+                if not texto:
+                    continue
+                try:
+                    row = json.loads(texto)
+                except json.JSONDecodeError:
+                    continue
+                if str(row.get("archivo") or "") == objetivo:
+                    return row
+    except OSError:
+        return {}
+    return {}
+
+
+_CLAVES_COVER_MANIFEST = (
+    "track_cover", "track_cover_hd", "album_cover", "album_cover_hd",
+    "artist_avatar", "artist_avatar_hd",
+)
+
+
+def _covers_referenciadas(path) -> set:
+    """Conjunto de TODAS las rutas de carátula referenciadas en el manifiesto."""
+    refs: set[str] = set()
+    if not path or not Path(path).exists():
+        return refs
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            for linea in fh:
+                texto = linea.strip()
+                if not texto:
+                    continue
+                try:
+                    row = json.loads(texto)
+                except json.JSONDecodeError:
+                    continue
+                for k in _CLAVES_COVER_MANIFEST:
+                    v = str(row.get(k) or "").strip()
+                    if v:
+                        refs.add(v)
+    except OSError:
+        pass
+    return refs
+
+
+def _reescribir_manifest_sin(path, clave: str, valor: str) -> None:
+    """Reescribe un manifiesto JSONL omitiendo las líneas con row[clave]==valor."""
+    if not path or not valor or not Path(path).exists():
+        return
+    objetivo = str(valor)
+    conservadas: list[str] = []
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            for linea in fh:
+                texto = linea.rstrip("\n")
+                if not texto.strip():
+                    continue
+                try:
+                    row = json.loads(texto)
+                except json.JSONDecodeError:
+                    conservadas.append(texto)  # no romper líneas no parseables
+                    continue
+                if str(row.get(clave) or "") == objetivo:
+                    continue
+                conservadas.append(texto)
+    except OSError:
+        return
+    tmp = Path(str(path) + ".tmp")
+    try:
+        with open(tmp, "w", encoding="utf-8") as fh:
+            for texto in conservadas:
+                fh.write(texto + "\n")
+        tmp.replace(path)
+    except OSError as exc:
+        logger.debug("No se pudo reescribir manifiesto %s: %s", path, exc)
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def _borrar_manifests_track(ruta_archivo: str, hash_sha: str) -> None:
+    """Borra tracks/<id>.json cuyo ruta_actual/hash coincida + su fila de índice."""
+    base = _settings.DEFAULT_MANIFESTS_DIR
+    if base is None:
+        return
+    carpeta = Path(base) / "tracks"
+    if not carpeta.exists():
+        return
+    objetivo_ruta = str(ruta_archivo or "")
+    objetivo_hash = str(hash_sha or "")
+    for json_path in carpeta.glob("*.json"):
+        try:
+            data = json.loads(json_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        coincide = (
+            (objetivo_ruta and str(data.get("ruta_actual") or "") == objetivo_ruta)
+            or (objetivo_hash and str(data.get("hash") or "") == objetivo_hash)
+        )
+        if not coincide:
+            continue
+        key = str(data.get("track_id") or "")
+        _borrar_archivo_seguro(str(json_path))
+        if key:
+            try:
+                ejecutar(
+                    "DELETE FROM manifests_index WHERE entity_type = 'track' AND entity_key = ?",
+                    (key,),
+                )
+            except Exception as exc:
+                logger.debug("No se pudo limpiar manifests_index de %s: %s", key, exc)
+
+
+def _borrar_procesado_por_hash(nombre_archivo: str, hash_sha: str) -> None:
+    """Borra la copia archivada en `procesados` SOLO si su SHA-256 coincide.
+
+    La copia archivada conserva el nombre ORIGINAL del archivo importado, que
+    puede diferir del de la biblioteca; por eso se busca por nombre (incluidas
+    variantes con sufijo `_N`) pero solo se borra si el contenido (hash) es el
+    mismo, garantizando que nunca se borre un archivo equivocado.
+    """
+    base = _settings.DEFAULT_PROCESSED_DIR
+    if base is None or not hash_sha:
+        return
+    raiz = Path(base)
+    if not raiz.exists():
+        return
+    nombre = str(nombre_archivo or "")
+    if not nombre:
+        return
+    tallo = Path(nombre).stem
+    ext = Path(nombre).suffix
+    for sub in raiz.iterdir():
+        if not sub.is_dir():
+            continue
+        for candidato in sub.glob(f"{tallo}*{ext}"):
+            try:
+                if candidato.is_file() and _sha256_archivo(candidato) == hash_sha:
+                    _borrar_archivo_seguro(str(candidato))
+            except OSError:
+                continue
+
+
+def eliminar_pista(pista_id: int) -> dict:
+    """Elimina una pista de raíz: BD, archivo, copias, carátulas y manifiestos.
+
+    Operación DESTRUCTIVA e IRREVERSIBLE. Borra:
+      - La fila de `pistas` (cascada FK: pistas_playlist, cola, karaoke_jobs,
+        dj_pistas_sesion, dj_track_emb, sync_stem_transfers; el índice FTS se
+        limpia por trigger), las tablas con `track_id` TEXT sin FK
+        (features/deep/vibe/jobs), el historial y el override de catalogación.
+      - El archivo de audio y su copia archivada en `procesados` (validada por
+        hash, para nunca borrar un archivo equivocado).
+      - Carátulas/portadas y entradas de manifiesto, **conservando** las que
+        otras pistas sigan compartiendo (foto de artista, portada de álbum…).
+      - El álbum/artista si quedaran sin ninguna pista.
+    Recompone las posiciones de las playlists y sesiones DJ afectadas y registra
+    tombstones para la sincronización móvil. Devuelve un resumen para la UI.
+    """
+    pid = int(pista_id or 0)
+    pista = obtener_una_fila(
+        "SELECT id, titulo, ruta_archivo, nombre_archivo, hash_sha256, album_id, artista_id "
+        "FROM pistas WHERE id = ?",
+        (pid,),
+    )
+    if not pista:
+        return {"ok": False, "mensaje": "No encontré esa pista."}
+
+    ruta_archivo = str(pista["ruta_archivo"] or "")
+    nombre_archivo = str(pista["nombre_archivo"] or "")
+    hash_sha = str(pista["hash_sha256"] or "")
+    album_id = pista["album_id"]
+    artista_id = pista["artista_id"]
+    track_txt = str(pid)
+    titulo = str(pista["titulo"] or nombre_archivo or "la pista")
+
+    # Carátulas declaradas para ESTA pista (se leen antes de tocar el manifiesto).
+    entrada_assets = _leer_entrada_assets(ruta_archivo)
+    covers_pista = [
+        str(entrada_assets.get(k) or "").strip() for k in _CLAVES_COVER_MANIFEST
+    ]
+    covers_pista = [c for c in covers_pista if c]
+
+    # Playlists / sesiones DJ afectadas (capturadas ANTES de la cascada FK).
+    playlists_afectadas = [
+        int(f["playlist_id"]) for f in obtener_filas(
+            "SELECT DISTINCT playlist_id FROM pistas_playlist WHERE pista_id = ?", (pid,))
+    ]
+    sesiones_dj_afectadas = [
+        int(f["sesion_id"]) for f in obtener_filas(
+            "SELECT DISTINCT sesion_id FROM dj_pistas_sesion WHERE pista_id = ?", (pid,))
+    ]
+
+    album_huerfano = False
+    artista_huerfano = False
+    with transaccion() as cx:
+        # Tablas con track_id TEXT (sin FK → borrado manual).
+        cx.execute("DELETE FROM track_audio_features WHERE track_id = ?", (track_txt,))
+        cx.execute("DELETE FROM track_deep_audio_features WHERE track_id = ?", (track_txt,))
+        cx.execute("DELETE FROM track_vibe_tags WHERE track_id = ?", (track_txt,))
+        cx.execute("DELETE FROM audio_analysis_jobs WHERE track_id = ?", (track_txt,))
+        # Historial y override de catalogación (sin rastro).
+        cx.execute("DELETE FROM historial WHERE pista_id = ?", (pid,))
+        if hash_sha:
+            cx.execute(
+                "DELETE FROM overrides_catalogacion WHERE match_type = 'hash' AND match_value = ?",
+                (hash_sha,),
+            )
+        # La pista → dispara cascada FK + trigger FTS.
+        cx.execute("DELETE FROM pistas WHERE id = ?", (pid,))
+        # Recomponer posiciones de las playlists y sesiones DJ afectadas.
+        for plid in playlists_afectadas:
+            _recomponer_posiciones_playlist(cx, plid)
+            cx.execute("UPDATE playlists SET actualizado_en = datetime('now') WHERE id = ?", (plid,))
+        for sid in sesiones_dj_afectadas:
+            _recomponer_posiciones_sesion_dj(cx, sid)
+        # Álbum / artista huérfanos (sin más pistas).
+        if album_id is not None:
+            album_huerfano = cx.execute(
+                "SELECT 1 FROM pistas WHERE album_id = ? LIMIT 1", (album_id,)).fetchone() is None
+            if album_huerfano:
+                cx.execute("DELETE FROM albums WHERE id = ?", (album_id,))
+        if artista_id is not None:
+            artista_huerfano = cx.execute(
+                "SELECT 1 FROM pistas WHERE artista_id = ? LIMIT 1", (artista_id,)).fetchone() is None
+            if artista_huerfano:
+                cx.execute("DELETE FROM artistas WHERE id = ?", (artista_id,))
+
+    # Tombstones para la sincronización móvil (fuera de la transacción; lock propio).
+    try:
+        from db.conexion import registrar_tombstone
+        registrar_tombstone("pista", pid)
+        if album_huerfano and album_id is not None:
+            registrar_tombstone("album", int(album_id))
+        if artista_huerfano and artista_id is not None:
+            registrar_tombstone("artista", int(artista_id))
+    except Exception as exc:
+        logger.debug("No se pudo registrar tombstone al eliminar pista %s: %s", pid, exc)
+
+    # --- Archivos y manifiestos (best-effort, ya fuera de la BD) ---
+    # Quitar la línea de la pista de los manifiestos JSONL (match por ruta).
+    _reescribir_manifest_sin(_manifest_assets(), "archivo", ruta_archivo)
+    _reescribir_manifest_sin(_ruta_manifest_letras(), "file", ruta_archivo)
+    # Borrar el manifiesto JSON por-pista (tracks/<id>.json) + su índice.
+    _borrar_manifests_track(ruta_archivo, hash_sha)
+
+    # Carátulas: borrar SOLO las que ninguna otra pista siga referenciando.
+    covers_supervivientes = _covers_referenciadas(_manifest_assets())
+    for cover in covers_pista:
+        if cover and cover not in covers_supervivientes:
+            _borrar_archivo_seguro(cover)
+
+    # Audio de la biblioteca + copia archivada en procesados (validada por hash).
+    _borrar_archivo_seguro(ruta_archivo)
+    _borrar_procesado_por_hash(nombre_archivo, hash_sha)
+
+    logger.info("Pista %s eliminada de raíz: %s", pid, ruta_archivo)
+    return {
+        "ok": True,
+        "mensaje": f"«{titulo}» se eliminó por completo.",
+        "pista_id": pid,
+        "album_eliminado": bool(album_huerfano),
+        "artista_eliminado": bool(artista_huerfano),
+        "playlists_afectadas": playlists_afectadas,
+        "sesiones_dj_afectadas": sesiones_dj_afectadas,
+    }
+
+
 def vaciar_playlist(playlist_id: int) -> dict:
     """Elimina todas las pistas de una playlist."""
     playlist = _obtener_playlist(int(playlist_id or 0))

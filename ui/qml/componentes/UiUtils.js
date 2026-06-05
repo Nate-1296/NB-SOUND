@@ -90,8 +90,14 @@ function normalizarMarcaUtc(valor) {
     return s
 }
 
-// Marca de tiempo UTC almacenada -> texto local legible (formato corto del
-// locale del sistema). `placeholder` se devuelve cuando no hay valor.
+// Marca de tiempo UTC almacenada -> texto local legible "DD/MM/AAAA HH:MM".
+// `placeholder` se devuelve cuando no hay valor.
+//
+// El formateo es MANUAL (no usa `Locale`/`toLocaleString`): en un archivo JS con
+// `.pragma library` el enum `Locale` no está en el scope y `Locale.ShortFormat`
+// lanza «ReferenceError: Locale is not defined», lo que dejaba el campo vacío.
+// `Date.getHours()`/`getDate()`/… ya devuelven la hora LOCAL del sistema, así que
+// la conversión UTC->local se mantiene correcta.
 function formatearFechaLocal(valor, placeholder) {
     var ph = (placeholder === undefined) ? "—" : placeholder
     var norm = normalizarMarcaUtc(valor)
@@ -100,5 +106,7 @@ function formatearFechaLocal(valor, placeholder) {
     var d = new Date(norm)
     if (isNaN(d.getTime()))
         return String(valor).replace("T", " ").replace("Z", "")
-    return d.toLocaleString(Qt.locale(), Locale.ShortFormat)
+    function _p2(n) { return (n < 10 ? "0" : "") + n }
+    return _p2(d.getDate()) + "/" + _p2(d.getMonth() + 1) + "/" + d.getFullYear()
+         + " " + _p2(d.getHours()) + ":" + _p2(d.getMinutes())
 }

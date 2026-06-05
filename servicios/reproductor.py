@@ -1548,6 +1548,36 @@ class Reproductor:
         self._persistir_cola()
         self._emitir_cola()
 
+    def purgar_pista(self, pista_id) -> None:
+        """Quita TODAS las apariciones de una pista de la cola.
+
+        Pensado para cuando la pista se elimina de la biblioteca: reutiliza la
+        lógica de `quitar_de_cola` (que gestiona la pista activa, el avance y la
+        persistencia). Si la pista eliminada es además la activa fuera de cola,
+        se detiene la reproducción para no dejar sonando un archivo inexistente.
+        """
+        try:
+            pid = int(pista_id)
+        except (TypeError, ValueError):
+            return
+        while True:
+            with self._lock:
+                indice = next(
+                    (i for i, p in enumerate(self._cola) if int(p.get("id") or 0) == pid),
+                    -1,
+                )
+            if indice < 0:
+                break
+            self.quitar_de_cola(indice)
+
+        # Pista activa que no provenía de la cola (reproducción suelta): detener.
+        with self._lock:
+            activa = self._pista_activa
+            activa_de_cola = self._activa_desde_cola
+        if activa is not None and not activa_de_cola and int(getattr(activa, "id", 0) or 0) == pid:
+            self._detener_y_limpiar_pista_activa()
+            self._emitir_cola()
+
     def obtener_cola(self) -> list[dict]:
         with self._lock:
             return list(self._cola)

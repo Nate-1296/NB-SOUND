@@ -260,6 +260,9 @@ class ModeloBiblioteca(QObject):
     # permiten que la UI muestre progreso y el resumen sin reiniciar la app.
     dedupeObservableProgreso   = Signal(dict)
     dedupeObservableFinalizado = Signal(dict)
+    # Eliminación definitiva de una pista. La UI (Principal) escucha esta señal
+    # para purgarla del reproductor y refrescar todas las vistas en vivo.
+    pistaEliminada      = Signal(int, dict)  # (pista_id, resumen)
 
     _CLAVE_ESTADO_VISTA = "vista_biblioteca_estado"
 
@@ -579,6 +582,24 @@ class ModeloBiblioteca(QObject):
                 worker.wait(3000)
             except Exception as exc:
                 _log.debug("cerrar worker dedupe fallo: %s", exc)
+
+    @Slot(int, result="QVariantMap")
+    def eliminar_pista(self, pista_id: int) -> dict:
+        """Elimina una pista de raíz (BD, archivo, carátulas, manifiestos).
+
+        Acción destructiva e irreversible; la UI confirma antes de invocarla.
+        Al terminar emite `pistaEliminada` para que Principal purgue la pista del
+        reproductor y refresque todas las vistas en vivo. Devuelve el resumen
+        (incluye un mensaje y qué entidades quedaron huérfanas) para el toast.
+        """
+        try:
+            resultado = svc_bib.eliminar_pista(int(pista_id))
+        except Exception as exc:
+            _log.warning("No se pudo eliminar la pista %s: %s", pista_id, exc)
+            return {"ok": False, "mensaje": "No se pudo eliminar la pista."}
+        if resultado.get("ok"):
+            self.pistaEliminada.emit(int(pista_id), dict(resultado))
+        return resultado
 
     @Slot(result="QVariantMap")
     def estado_vista(self) -> dict:
@@ -1400,6 +1421,12 @@ class ModeloReproductor(QObject):
     @Slot(int)
     def quitar_de_cola(self, indice: int) -> None:
         self._rep.quitar_de_cola(indice)
+        self._actualizar_lista_cola()
+
+    @Slot(int)
+    def purgar_pista(self, pista_id: int) -> None:
+        """Quita una pista de la cola/reproducción tras eliminarla de la biblioteca."""
+        self._rep.purgar_pista(int(pista_id))
         self._actualizar_lista_cola()
 
     @Slot(int, int)
@@ -5821,6 +5848,76 @@ class ModeloTema(QObject):
         _tema.setdefault("modoBoxBorde", _tema.get("borde", "#2a2a2a"))
     del _tema
 
+    # Logo distintivo por tema (archivos en ui/qml/assets/logo/). Solo cambia la
+    # imagen del logo en la NavLateral según el tema activo; el tamaño y demás se
+    # mantienen. Para "custom" o cualquier tema sin entrada se usa el logo base.
+    _LOGO_DEFECTO = "logo_ui.png"
+    _LOGOS_TEMA = {
+        "negro_puro": "logo_negro_puro.png",
+        "arcilla_nocturna": "logo_arcilla_nocturna.png",
+        "arcilla_calida": "logo_arcilla_calida.png",
+        "oro_liquido": "logo_oro_liquido.png",
+        "oscuro_profundo": "logo_oscuro_profundo.png",
+        "electrico_voltaje": "logo_electrico_voltaje.png",
+        "lima_suave": "logo_lima_suave.png",
+        "carmesi_nocturno": "logo_carmesi_nocturno.png",
+        "aurora_boreal": "logo_aurora_boreal.png",
+        "selva_neon": "logo_selva_neon.png",
+        "crepusculo_violeta": "logo_crepusculo_violeta.png",
+        "cobalto_night": "logo_cobalto_night.png",
+        "menta_fresh": "logo_menta_fresh.png",
+        "carbono": "logo_carbono.png",
+        "vampiro_royal": "logo_vampiro_royal.png",
+        "ambar_calido": "logo_ambar_calido.png",
+        "nieve": "logo_nieve.png",
+        "ocean_profundo": "logo_ocean_profundo.png",
+        "galaxia": "logo_galaxia.png",
+        "desierto_dorado": "logo_desierto_dorado.png",
+        "bosque_mistico": "logo_bosque_mistico.png",
+        "fuego_solar": "logo_fuego_solar.png",
+        "sakura_nocturno": "logo_sakura_nocturno.png",
+        "glacial": "logo_glacial.png",
+        "terminal_verde": "logo_terminal_verde.png",
+        "sangre_dragon": "logo_sangre_dragon.png",
+        "prisma": "logo_prisma.png",
+        "lava": "logo_lava.png",
+        "sepia": "logo_sepia.png",
+        "medianoche": "logo_medianoche.png",
+        "esmeralda": "logo_esmeralda.png",
+        "titanio": "logo_titanio.png",
+        "coral_sunrise": "logo_coral_sunrise.png",
+        "indigo_profundo": "logo_indigo_profundo.png",
+        "aurora_rosa": "logo_aurora_rosa.png",
+        "cafe_nocturno": "logo_cafe_nocturno.png",
+        "obsidiana_neon": "logo_obsidiana_neon.png",
+        "hielo_oled": "logo_hielo_oled.png",
+        "blanco_editorial": "logo_blanco_editorial.png",
+        "oro_negro": "logo_oro_negro.png",
+        "jade_nocturno": "logo_jade_nocturno.png",
+        "plasma_morado": "logo_plasma_morado.png",
+        "amanecer_sintetico": "logo_amanecer_sintetico.png",
+        "tinta_marina": "logo_tinta_marina.png",
+        "frambuesa_dark": "logo_frambuesa_dark.png",
+        "cielo_coral": "logo_cielo_coral.png",
+        "violeta_laser": "logo_violeta_laser.png",
+        "acero_azul": "logo_acero_azul.png",
+        "rosa_polar": "logo_rosa_polar.png",
+        "circuito_verde": "logo_circuito_verde.png",
+        "ultra_violeta": "logo_ultra_violeta.png",
+        "marfil_grafito": "logo_marfil_grafito.png",
+        "noche_arcade": "logo_noche_arcade.png",
+        "neon_citrico": "logo_neon_citrico.png",
+        "cosmic_latte": "logo_cosmic_latte.png",
+        "turquesa_electrica": "logo_turquesa_electrica.png",
+        "magma_violeta": "logo_magma_violeta.png",
+        "bruma_artica": "logo_bruma_artica.png",
+        "cobre_oxidado": "logo_cobre_oxidado.png",
+        "sombra_lima": "logo_sombra_lima.png",
+        "zafiro_medianoche": "logo_zafiro_medianoche.png",
+        "rosa_quimera": "logo_rosa_quimera.png",
+        "grafito_radioactivo": "logo_grafito_radioactivo.png",
+    }
+
     def __init__(self, configuracion: "ModeloConfiguracion", parent=None):
         super().__init__(parent)
         self._configuracion = configuracion
@@ -5854,6 +5951,15 @@ class ModeloTema(QObject):
     @Property(str, notify=temaCambiado)
     def tema_id(self) -> str:
         return self._tema_id
+
+    @Property(str, notify=temaCambiado)
+    def logo(self) -> str:
+        """Archivo de logo del tema activo (carpeta ui/qml/assets/logo/).
+
+        Permite que la NavLateral muestre un logo distinto por tema. Cae al logo
+        base en "custom" o en cualquier tema sin entrada.
+        """
+        return self._LOGOS_TEMA.get(self._tema_id, self._LOGO_DEFECTO)
 
     @Property("QVariantList", notify=temaCambiado)
     def temas_disponibles(self) -> list[dict]:

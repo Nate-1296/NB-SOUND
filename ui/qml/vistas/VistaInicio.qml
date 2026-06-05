@@ -1370,7 +1370,7 @@ Rectangle {
                                     color: tema.acento
                                     width: {
                                         var ratio = 0
-                                        var pa = reproductor.pista_activa
+                                        var pa = reproductor ? reproductor.pista_activa : null
                                         if (heroSec.pistaRetomar && pa && pa.id
                                                 && pa.id === heroSec.pistaRetomar.id
                                                 && (reproductor.duracion_seg || 0) > 0) {

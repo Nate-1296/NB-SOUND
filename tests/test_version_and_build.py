@@ -25,9 +25,8 @@ def test_app_version_es_semver():
 
 
 def test_app_version_display_coherente():
-    # Display debe coincidir con major version
-    major = APP_VERSION.split(".")[0]
-    assert f"v{major}" == APP_VERSION_DISPLAY
+    # Display debe reflejar la versión completa (p. ej. "v1.1.0").
+    assert APP_VERSION_DISPLAY == f"v{APP_VERSION}"
 
 
 def test_banners_contienen_nombre_y_version():

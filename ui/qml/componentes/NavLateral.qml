@@ -110,7 +110,9 @@ Rectangle {
                     Layout.bottomMargin: raiz.margen_marca_nav
                     Layout.preferredWidth: Math.min(bloque_superior.width, raiz.lado_marca_nav)
                     Layout.preferredHeight: Layout.preferredWidth
-                    source: "../assets/logo/logo_ui.png"
+                    // Logo distintivo por tema: solo cambia la imagen (no el
+                    // tamaño) según el tema activo, para una transición fluida.
+                    source: "../assets/logo/" + ((tema && tema.logo) ? tema.logo : "logo_ui.png")
                     fillMode: Image.PreserveAspectFit
                     sourceSize.width: 512
                     sourceSize.height: 512

@@ -27,6 +27,7 @@ os.environ.setdefault("QML_DISABLE_DISK_CACHE", "1")
 os.environ.setdefault("NB_SOUND_UI_WORKER_SYNC", "1")
 
 
+
 def pytest_configure(config):
     config.addinivalue_line(
         "markers",
