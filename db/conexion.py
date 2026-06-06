@@ -317,6 +317,98 @@ def _aplicar_migraciones_ligeras(conexion: sqlite3.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_playlists_sync_version ON playlists(sync_version)"
     )
 
+    # Backfill del catalogo legacy (v1.1.1): etiqueta para sync las entidades
+    # preexistentes que quedaron en sync_version=0 al anadir la columna.
+    _backfill_sync_version_legacy(conexion)
+
+
+def _backfill_sync_version_legacy(conexion: sqlite3.Connection) -> None:
+    """
+    Asigna sync_version a las entidades del catalogo preexistente que quedaron
+    en 0 cuando se anadio la columna (`DEFAULT 0`).
+
+    Sin esto, solo las pistas indexadas DESPUES de habilitar el ecosistema movil
+    obtienen version (via `marcar_sync_version` en el indexador) y llegan al
+    cliente por /manifest; las preexistentes nunca se exponen. Se etiquetan solo
+    las pistas con estado='biblioteca' (las 'duplicado' no deben sincronizarse) y
+    los albumes/artistas referenciados por ellas.
+
+    Idempotente: corre una sola vez (flag en `sync_estado`). Asigna versiones
+    monotonas crecientes (albumes y artistas antes que pistas para que el delta
+    llegue con los padres primero) y avanza el contador global una sola vez,
+    respetando la semantica de `siguiente_sync_version`.
+    """
+    ya_hecho = conexion.execute(
+        "SELECT 1 FROM sync_estado WHERE clave = 'backfill_sync_version_v1'"
+    ).fetchone()
+    if ya_hecho:
+        return
+
+    albums = [
+        fila["id"]
+        for fila in conexion.execute(
+            """
+            SELECT id FROM albums
+            WHERE sync_version = 0 AND id IN (
+                SELECT DISTINCT album_id FROM pistas
+                WHERE estado = 'biblioteca' AND album_id IS NOT NULL
+            )
+            ORDER BY id
+            """
+        )
+    ]
+    artistas = [
+        fila["id"]
+        for fila in conexion.execute(
+            """
+            SELECT id FROM artistas
+            WHERE sync_version = 0 AND id IN (
+                SELECT DISTINCT artista_id FROM pistas
+                WHERE estado = 'biblioteca' AND artista_id IS NOT NULL
+            )
+            ORDER BY id
+            """
+        )
+    ]
+    pistas = [
+        fila["id"]
+        for fila in conexion.execute(
+            "SELECT id FROM pistas "
+            "WHERE estado = 'biblioteca' AND sync_version = 0 ORDER BY id"
+        )
+    ]
+
+    if albums or artistas or pistas:
+        fila_cont = conexion.execute(
+            "SELECT valor FROM sync_estado WHERE clave = 'sync_version_actual'"
+        ).fetchone()
+        version = int(fila_cont["valor"]) if fila_cont else 0
+        for tabla, ids in (
+            ("albums", albums),
+            ("artistas", artistas),
+            ("pistas", pistas),
+        ):
+            for entidad_id in ids:
+                version += 1
+                conexion.execute(
+                    f"UPDATE {tabla} SET sync_version = ? WHERE id = ?",
+                    (version, entidad_id),
+                )
+        conexion.execute(
+            """
+            INSERT INTO sync_estado(clave, valor)
+                VALUES ('sync_version_actual', ?)
+            ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor
+            """,
+            (str(version),),
+        )
+
+    conexion.execute(
+        "INSERT OR REPLACE INTO sync_estado(clave, valor) "
+        "VALUES ('backfill_sync_version_v1', '1')"
+    )
+    conexion.commit()
+
 
 def inicializar_db(ruta_db: Path) -> None:
     """

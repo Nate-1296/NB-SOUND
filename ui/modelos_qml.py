@@ -11194,6 +11194,21 @@ class ModeloSincronizacion(QObject):
                 rep.set_aleatorio(bool(mensaje.get("activo", False)))
             elif accion in ("queue", "cola"):
                 self._difundir_cola()
+            elif accion in ("reproducir_pista", "play_track"):
+                # Handoff desde el móvil: reproducir en el PC la pista indicada
+                # (por id de la biblioteca) y, si llega, saltar a su posición.
+                from servicios.biblioteca import obtener_pista
+                datos = obtener_pista(int(mensaje.get("pista_id") or 0))
+                if datos:
+                    rep.reproducir_pista(dict(datos))
+                    posicion = float(mensaje.get("posicion_seg", 0) or 0)
+                    if posicion > 0:
+                        rep.buscar_posicion(posicion)
+            elif accion in ("encolar_pista", "enqueue_track"):
+                from servicios.biblioteca import obtener_pista
+                datos = obtener_pista(int(mensaje.get("pista_id") or 0))
+                if datos:
+                    rep.agregar_a_cola(dict(datos))
             else:
                 _log.debug("Acción WS desconocida: %s", accion)
         except Exception as exc:
