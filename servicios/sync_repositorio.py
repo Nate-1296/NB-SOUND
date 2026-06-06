@@ -412,6 +412,72 @@ def _paginar_manifest(manifest: dict, limite: int) -> dict:
     return manifest
 
 
+def enlazar_portadas_album_pendientes() -> int:
+    """Vincula `albums.portada_ruta` a las carátulas ya extraídas (registradas en
+    el assets-manifest) que aún no estaban enlazadas.
+
+    El pipeline de assets extrae la portada del álbum a disco y la anota en el
+    assets-manifest, pero nada poblaba `albums.portada_ruta`, que es lo que el
+    servidor sirve en `/api/v1/asset/cover/{album_id}` → 404 aunque el archivo
+    exista. Es idempotente y barato (guard por COUNT); se invoca al construir el
+    manifest para que el móvil reciba las carátulas sin acciones manuales.
+    Devuelve cuántos álbumes se enlazaron.
+    """
+    pendientes = obtener_una_fila(
+        "SELECT COUNT(*) AS c FROM albums a "
+        "WHERE COALESCE(a.portada_ruta, '') = '' AND EXISTS ("
+        " SELECT 1 FROM pistas p WHERE p.album_id = a.id AND p.estado = 'biblioteca')"
+    )
+    if not pendientes or not pendientes["c"]:
+        return 0
+
+    from config import settings
+
+    manifest_path = Path(settings.DEFAULT_ASSETS_DIR) / "assets_manifest.jsonl"
+    if not manifest_path.is_file():
+        return 0
+
+    cover_por_archivo: dict[str, str] = {}
+    try:
+        with manifest_path.open("r", encoding="utf-8") as fh:
+            for linea in fh:
+                try:
+                    fila = json.loads(linea)
+                except json.JSONDecodeError:
+                    continue
+                archivo = str(fila.get("archivo") or "").strip()
+                if not archivo:
+                    continue
+                portada = str(
+                    fila.get("album_cover_hd") or fila.get("album_cover") or ""
+                ).strip()
+                if portada:
+                    cover_por_archivo[archivo] = portada
+    except OSError as exc:
+        _log.warning("No se pudo leer assets-manifest para portadas: %s", exc)
+        return 0
+
+    filas = obtener_filas(
+        "SELECT a.id AS album_id, MIN(p.ruta_archivo) AS ruta FROM albums a "
+        "JOIN pistas p ON p.album_id = a.id AND p.estado = 'biblioteca' "
+        "WHERE COALESCE(a.portada_ruta, '') = '' GROUP BY a.id"
+    )
+    enlazados = 0
+    for fila in filas:
+        portada = cover_por_archivo.get(str(fila["ruta"] or ""))
+        if not portada or not Path(portada).is_file():
+            continue
+        ejecutar(
+            "UPDATE albums SET portada_ruta = ? "
+            "WHERE id = ? AND COALESCE(portada_ruta, '') = ''",
+            (portada, int(fila["album_id"])),
+        )
+        enlazados += 1
+    if enlazados:
+        _log.info("enlazar_portadas_album_pendientes: %d álbumes enlazados", enlazados)
+    return enlazados
+
+
 def construir_manifest(
     since: int = 0,
     *,
@@ -429,6 +495,12 @@ def construir_manifest(
     se mantiene como alias compatible de `sync_version_actual`.
     """
     since = max(0, int(since or 0))
+    # Enlaza portadas ya extraídas pero sin portada_ruta (best-effort) para que
+    # el móvil reciba las carátulas automáticamente, sin comandos manuales.
+    try:
+        enlazar_portadas_album_pendientes()
+    except Exception as exc:  # best-effort: nunca debe romper el sync
+        _log.debug("enlazar_portadas_album_pendientes falló: %s", exc)
     version = sync_version_actual()
     manifest = {
         "protocolo": PROTOCOLO_VERSION,

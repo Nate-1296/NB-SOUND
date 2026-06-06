@@ -317,10 +317,6 @@ def _aplicar_migraciones_ligeras(conexion: sqlite3.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_playlists_sync_version ON playlists(sync_version)"
     )
 
-    # Backfill del catalogo legacy (v1.1.1): etiqueta para sync las entidades
-    # preexistentes que quedaron en sync_version=0 al anadir la columna.
-    _backfill_sync_version_legacy(conexion)
-
 
 def _backfill_sync_version_legacy(conexion: sqlite3.Connection) -> None:
     """
@@ -468,6 +464,15 @@ def inicializar_db(ruta_db: Path) -> None:
                 raise RuntimeError(
                     f"No se pudo crear BD nueva después de detectar corrupción: {e_create}"
                 )
+
+        # Backfill del catalogo legacy (v1.1.1): etiqueta para sync las entidades
+        # preexistentes que quedaron en sync_version=0 al anadir la columna. Es
+        # migracion de DATOS (no de esquema), por eso va aqui y no en
+        # _aplicar_esquema. Best-effort: nunca debe impedir el arranque.
+        try:
+            _backfill_sync_version_legacy(conexion)
+        except sqlite3.DatabaseError as exc:
+            print(f"[WARN] Backfill de sync_version falló (no crítico): {exc}")
 
         _conexion_global = conexion
         _ruta_db_global  = ruta_db

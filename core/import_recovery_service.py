@@ -160,64 +160,15 @@ class ImportRecoveryService:
         }
 
     def backfill_portadas_album(self) -> int:
-        """Vincula a `albums.portada_ruta` las carátulas de álbum ya extraídas.
+        """Vincula `albums.portada_ruta` a las carátulas ya extraídas.
 
-        El pipeline de assets escribe el archivo de portada y lo registra en el
-        assets-manifest (por archivo de audio), pero nada poblaba
-        `albums.portada_ruta`, que es lo que el servidor de sync sirve en
-        `/api/v1/asset/cover/{album_id}`. Sin esto las portadas dan 404 aunque
-        el archivo exista en disco.
-
-        Para cada álbum con pistas `estado='biblioteca'` y sin `portada_ruta`,
-        busca el `album_cover` (HD si existe) de una de sus pistas en el manifest
-        y, si el archivo existe, lo fija. Idempotente y barato si no hay
-        pendientes. Devuelve cuántos álbumes se enlazaron.
+        Delega en `sync_repositorio.enlazar_portadas_album_pendientes` (la lógica
+        canónica, que también corre automáticamente al construir el manifest).
+        Devuelve cuántos álbumes se enlazaron.
         """
-        pendientes = obtener_una_fila(
-            """
-            SELECT COUNT(*) AS c FROM albums a
-            WHERE COALESCE(a.portada_ruta, '') = ''
-              AND EXISTS (
-                  SELECT 1 FROM pistas p
-                  WHERE p.album_id = a.id AND p.estado = 'biblioteca'
-              )
-            """
-        )
-        if not pendientes or not pendientes["c"]:
-            return 0
+        from servicios.sync_repositorio import enlazar_portadas_album_pendientes
 
-        assets_by_file = self._assets_manifest_by_file()
-        filas = obtener_filas(
-            """
-            SELECT a.id AS album_id, MIN(p.ruta_archivo) AS ruta
-            FROM albums a
-            JOIN pistas p ON p.album_id = a.id AND p.estado = 'biblioteca'
-            WHERE COALESCE(a.portada_ruta, '') = ''
-            GROUP BY a.id
-            """
-        )
-        enlazados = 0
-        for fila in filas:
-            row = assets_by_file.get(str(fila["ruta"] or ""), {})
-            portada = None
-            for clave in ("album_cover_hd", "album_cover"):
-                if self._asset_exists(row.get(clave)):
-                    portada = str(row[clave]).strip()
-                    break
-            if not portada:
-                continue
-            ejecutar(
-                "UPDATE albums SET portada_ruta = ? "
-                "WHERE id = ? AND COALESCE(portada_ruta, '') = ''",
-                (portada, int(fila["album_id"])),
-            )
-            enlazados += 1
-        if enlazados:
-            _log.info(
-                "backfill_portadas_album: %d álbumes enlazados a su carátula",
-                enlazados,
-            )
-        return enlazados
+        return enlazar_portadas_album_pendientes()
 
     def retry_enrichment_missing(self, *, lyrics_only: bool = False, limit: int = 0) -> dict:
         enrichment_by_file = self._enrichment_manifest_by_file()
