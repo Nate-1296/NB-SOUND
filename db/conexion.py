@@ -406,6 +406,56 @@ def _backfill_sync_version_legacy(conexion: sqlite3.Connection) -> None:
     conexion.commit()
 
 
+def _backfill_sync_version_playlists(conexion: sqlite3.Connection) -> None:
+    """Asigna sync_version a las playlists visibles que quedaron en 0.
+
+    El backfill legacy (`_backfill_sync_version_v1`) solo etiquetó pistas,
+    álbumes y artistas; las playlists nunca recibían sync_version (ninguna ruta
+    llamaba a `marcar_sync_version('playlists', ...)`), por lo que `_playlists_desde`
+    —que filtra `sync_version > since`— jamás las exponía al móvil. Sin esto, el
+    celular nunca recibía ninguna playlist (incluida "Me gusta"). Idempotente:
+    corre una sola vez (flag propio en `sync_estado`).
+    """
+    ya_hecho = conexion.execute(
+        "SELECT 1 FROM sync_estado WHERE clave = 'backfill_playlists_sync_v1'"
+    ).fetchone()
+    if ya_hecho:
+        return
+
+    playlists = [
+        fila["id"]
+        for fila in conexion.execute(
+            "SELECT id FROM playlists "
+            "WHERE COALESCE(visible, 1) = 1 AND COALESCE(sync_version, 0) = 0 ORDER BY id"
+        )
+    ]
+    if playlists:
+        fila_cont = conexion.execute(
+            "SELECT valor FROM sync_estado WHERE clave = 'sync_version_actual'"
+        ).fetchone()
+        version = int(fila_cont["valor"]) if fila_cont else 0
+        for playlist_id in playlists:
+            version += 1
+            conexion.execute(
+                "UPDATE playlists SET sync_version = ? WHERE id = ?",
+                (version, playlist_id),
+            )
+        conexion.execute(
+            """
+            INSERT INTO sync_estado(clave, valor)
+                VALUES ('sync_version_actual', ?)
+            ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor
+            """,
+            (str(version),),
+        )
+
+    conexion.execute(
+        "INSERT OR REPLACE INTO sync_estado(clave, valor) "
+        "VALUES ('backfill_playlists_sync_v1', '1')"
+    )
+    conexion.commit()
+
+
 def inicializar_db(ruta_db: Path) -> None:
     """
     Abre (o crea) la base de datos en ruta_db y aplica el esquema completo.
@@ -473,6 +523,13 @@ def inicializar_db(ruta_db: Path) -> None:
             _backfill_sync_version_legacy(conexion)
         except sqlite3.DatabaseError as exc:
             print(f"[WARN] Backfill de sync_version falló (no crítico): {exc}")
+
+        # Backfill de playlists (v1.2): las playlists nunca recibían sync_version,
+        # así que el móvil jamás las recibía. Etiqueta las visibles preexistentes.
+        try:
+            _backfill_sync_version_playlists(conexion)
+        except sqlite3.DatabaseError as exc:
+            print(f"[WARN] Backfill de sync_version de playlists falló (no crítico): {exc}")
 
         _conexion_global = conexion
         _ruta_db_global  = ruta_db

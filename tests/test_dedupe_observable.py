@@ -377,3 +377,37 @@ def test_modelo_biblioteca_ejecuta_dedupe_observable(_db, tmp_path):
     assert estados[conservar] == "biblioteca"
     assert estados[duplicada] == "duplicado"
     assert spy_fin and spy_fin[-1]["duplicados_resueltos"] == 1
+
+
+# ─── Flag "barrido pendiente" (solo se dedupe al arrancar si hubo cambios) ────
+
+def test_barrido_pendiente_true_por_defecto(_db):
+    """Sin clave previa (instalación nueva / tras actualizar) se considera
+    pendiente: se hace una limpieza inicial al arrancar."""
+    from servicios.dedupe_observable import hay_barrido_pendiente
+    assert hay_barrido_pendiente() is True
+
+
+def test_marcar_pendiente_y_lectura(_db):
+    from db.conexion import guardar_config
+    from servicios.dedupe_observable import hay_barrido_pendiente, marcar_barrido_pendiente
+    guardar_config("dedupe_observable_pendiente", "0")
+    assert hay_barrido_pendiente() is False
+    marcar_barrido_pendiente()
+    assert hay_barrido_pendiente() is True
+
+
+def test_barrido_completado_limpia_pendiente(_db):
+    """Un barrido que termina (no cancelado) marca la biblioteca como
+    verificada, de modo que el siguiente arranque ya NO lo repite."""
+    from servicios.dedupe_observable import (
+        ServicioDedupeObservable,
+        hay_barrido_pendiente,
+        marcar_barrido_pendiente,
+    )
+    marcar_barrido_pendiente()
+    assert hay_barrido_pendiente() is True
+    res = ServicioDedupeObservable().escanear()  # biblioteca vacía -> completa
+    assert res.completado is True
+    assert res.cancelado is False
+    assert hay_barrido_pendiente() is False

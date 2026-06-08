@@ -47,6 +47,43 @@ ESTADO_DUPLICADO = "duplicado"
 # Claves de checkpoint/observabilidad en config_ui.
 _CLAVE_ULTIMA_CORRIDA = "dedupe_observable_ultima_corrida"
 _CLAVE_PROGRESO = "dedupe_observable_progreso"
+# Flag de "hay cambios por verificar". Evita correr el barrido en CADA arranque
+# (coste innecesario que retrasaba el inicio): solo se ejecuta al arrancar si la
+# biblioteca cambió desde el último barrido COMPLETADO. Se marca al importar o
+# eliminar pistas; se limpia cuando un barrido termina sin cancelarse.
+_CLAVE_PENDIENTE = "dedupe_observable_pendiente"
+
+
+def hay_barrido_pendiente() -> bool:
+    """¿Conviene correr el barrido al arrancar?
+
+    True si la biblioteca cambió desde el último barrido completado. Por defecto
+    (clave ausente) devuelve True para que los usuarios existentes hagan una
+    limpieza inicial tras actualizar; al completarse queda en "0" y no se repite
+    hasta el siguiente cambio.
+    """
+    try:
+        return str(obtener_config(_CLAVE_PENDIENTE, "1")).strip() not in ("0", "", "false", "False")
+    except Exception:
+        # Ante cualquier fallo de lectura, preferimos correr el barrido (seguro).
+        return True
+
+
+def marcar_barrido_pendiente() -> None:
+    """Registra que la biblioteca cambió (importación/eliminación): el próximo
+    arranque ejecutará el barrido. Best-effort."""
+    try:
+        guardar_config(_CLAVE_PENDIENTE, "1")
+    except Exception:
+        _log.debug("dedupe_observable: no se pudo marcar barrido pendiente", exc_info=True)
+
+
+def _limpiar_barrido_pendiente() -> None:
+    """Marca que la biblioteca ya está verificada (barrido completado)."""
+    try:
+        guardar_config(_CLAVE_PENDIENTE, "0")
+    except Exception:
+        _log.debug("dedupe_observable: no se pudo limpiar barrido pendiente", exc_info=True)
 
 
 @dataclass
@@ -161,6 +198,9 @@ class ServicioDedupeObservable:
 
         if not resultado.cancelado:
             resultado.completado = True
+            # Biblioteca verificada: el próximo arranque no necesita repetir el
+            # barrido salvo que vuelva a haber un cambio (importación/eliminación).
+            _limpiar_barrido_pendiente()
         self._persistir_progreso(resultado, final=True)
         _log.info(
             "dedupe_observable: corrida %s. grupos=%d resueltos=%d escaneadas=%d",

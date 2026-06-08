@@ -2879,11 +2879,15 @@ def test_qml_biblioteca_fase5_ux_acciones_claras_sin_deprecated():
     assert "ScrollBar.horizontal" not in album
     track_list = biblioteca[
         biblioteca.index("id: trackList"):
-        biblioteca.index("header: LibraryHeaderRow", biblioteca.index("id: trackList"))
+        biblioteca.index("delegate: PistaFila", biblioteca.index("id: trackList"))
     ]
     assert "LibraryScrollBar {" in track_list
     assert "ScrollBar.vertical" not in track_list
     assert "flickable: trackList" in track_list
+    # La cabecera de columnas de Pistas es FIJA (fuera del ListView), no un
+    # `header:` que se desplace con el scroll.
+    assert "header: LibraryHeaderRow" not in biblioteca
+    assert "id: pistasHeaderFijo" in biblioteca
     assert "readonly property real _trackRange" in biblioteca
     assert "position / _trackRange" in biblioteca
     assert "ratio * _maxContentY" in biblioteca

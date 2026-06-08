@@ -199,3 +199,70 @@ def test_reporte_serializable_a_json():
     )
     s = json.dumps(rep.a_dict(), ensure_ascii=False)
     assert "ok" in s
+
+
+# ─── Resiliencia del instalador (issue: re-instalar tras corte) ──────────────
+
+def test_instalar_pip_fuerza_reinstalacion_limpia_y_reintentos(tmp_path, monkeypatch):
+    """`instalar_pip` siempre repara: una instalación previa interrumpida deja
+    el --target a medias y pip, sin estas banderas, la daba por 'ya presente'
+    (código 0) mientras la app nunca la reconocía. El comando debe forzar la
+    reinstalación limpia y traer reintentos de red."""
+    from infra import instalador
+    monkeypatch.setattr(instalador, "detectar_python_sistema", lambda: "/usr/bin/python3")
+    monkeypatch.setattr(instalador, "ruta_site_packages_runtime", lambda: tmp_path / "sp")
+    capturado = {}
+
+    def _fake_ejecutar(cmd, timeout=None, en_callback=None):
+        capturado["cmd"] = list(cmd)
+        return 0, "instalado", ""
+
+    monkeypatch.setattr(instalador, "_ejecutar", _fake_ejecutar)
+    res = instalador.instalar_pip("aiohttp>=3.9.0")
+    assert res.ok is True
+    cmd = capturado["cmd"]
+    assert "--upgrade" in cmd
+    assert "--force-reinstall" in cmd
+    assert "--retries" in cmd
+    assert "--target" in cmd
+    assert cmd[-1] == "aiohttp>=3.9.0"
+
+
+def test_aplicar_runtime_pip_userdir_invalida_caches(tmp_path, monkeypatch):
+    """Tras añadir el site-packages runtime a sys.path se deben invalidar los
+    caches de importlib; si no, una verificación in-process seguía viendo el
+    módulo recién instalado como faltante."""
+    import importlib
+    from infra import dependencias, instalador
+    monkeypatch.setattr(instalador, "ruta_site_packages_runtime",
+                        lambda: tmp_path / "sp")
+    (tmp_path / "sp").mkdir()
+    contador = {"n": 0}
+    monkeypatch.setattr(importlib, "invalidate_caches",
+                        lambda: contador.__setitem__("n", contador["n"] + 1))
+    dependencias.aplicar_runtime_pip_userdir()
+    assert contador["n"] >= 1
+
+
+# ─── Arranque no bloqueante: lectura de cache sin ejecutar verificadores ─────
+
+def test_reportes_cacheados_no_ejecuta_verificadores(monkeypatch):
+    """`reportes_cacheados` jamás debe construir el catálogo ni correr
+    verificadores (subprocesos torch/essentia, instancia VLC): eso congelaba
+    el arranque cuando el cache caducaba."""
+    from infra import dependencias as deps
+
+    def _boom():
+        raise AssertionError("construir_catalogo NO debe llamarse al leer cache")
+
+    monkeypatch.setattr(deps, "construir_catalogo", _boom)
+
+    # Sin cache: lista vacía, sin tocar el catálogo.
+    assert deps.reportes_cacheados() == []
+
+    # Con cache poblado: devuelve los reportes, también sin verificar.
+    from db.conexion import guardar_config
+    guardar_config("dependencias_cache",
+                   json.dumps({"vlc": {"id": "vlc", "estado": "ok", "version": "3.0"}}))
+    reps = deps.reportes_cacheados()
+    assert len(reps) == 1 and reps[0].id == "vlc" and reps[0].estado == "ok"

@@ -603,6 +603,15 @@ def cablear_refrescos_post_import(modelos: dict) -> None:
         except Exception as exc:
             _log.debug("Re-init logger tras import fallo: %s", exc)
 
+        # La importación pudo introducir duplicados observables: marca el
+        # barrido como pendiente ANTES de lanzarlo, de modo que si la app se
+        # cierra a mitad del barrido en sesión, el próximo arranque lo retome.
+        try:
+            from servicios.dedupe_observable import marcar_barrido_pendiente
+            marcar_barrido_pendiente()
+        except Exception as exc:
+            _log.debug("No se pudo marcar barrido pendiente tras import: %s", exc)
+
         for clave, accion in (
             ("reproductor",  "refrescar_letras_pista_activa"),
             ("estadisticas", "cargar"),
@@ -786,18 +795,49 @@ def main() -> int:
         # competir con el primer frame: limpia duplicados preexistentes que
         # quedaron de importaciones anteriores. Corre en QThread de baja
         # prioridad y refresca la biblioteca en vivo si resuelve algo.
+        #
+        # Solo se ejecuta si la biblioteca cambió desde el último barrido
+        # completado (importación/eliminación). En arranques sin cambios se
+        # omite, acortando el inicio (antes corría siempre, sin necesidad).
         _biblioteca_modelo = modelos.get("biblioteca")
         if _biblioteca_modelo is not None:
-            QTimer.singleShot(2500, _biblioteca_modelo.ejecutar_dedupe_observable)
+            try:
+                from servicios.dedupe_observable import hay_barrido_pendiente
+                _dedupe_pendiente = hay_barrido_pendiente()
+            except Exception:
+                _dedupe_pendiente = True
+            if _dedupe_pendiente:
+                QTimer.singleShot(2500, _biblioteca_modelo.ejecutar_dedupe_observable)
+            else:
+                _log.debug("Dedupe de arranque omitido: sin cambios desde el último barrido.")
 
         # Copia de seguridad programada: si el usuario configuró una frecuencia
         # y ya venció el plazo desde la última copia (reloj en BD), crea una
         # automática en background. Diferido para no competir con el primer
         # frame ni con el barrido de duplicados. El reloj solo avanza con la
         # app abierta; un QTimer interno del modelo re-chequea en sesiones largas.
+        # Exposición inicial para el móvil (migración única, automática e
+        # idempotente): re-sella los favoritos preexistentes y versiona las
+        # playlists que quedaron sin sync_version, para que la PRÓXIMA
+        # sincronización entregue todo completo (favoritos y playlists, incluida
+        # "Me gusta") sin que el usuario ejecute comandos ni migraciones.
+        # Diferida para no competir con el primer frame; corre una sola vez.
+        def _exposicion_inicial_sync() -> None:
+            try:
+                from servicios.sync_repositorio import asegurar_exposicion_inicial_sync
+                asegurar_exposicion_inicial_sync()
+            except Exception as exc:
+                _log.debug("No se pudo ejecutar la exposición inicial de sync: %s", exc)
+        QTimer.singleShot(5000, _exposicion_inicial_sync)
+
         _sync_modelo = modelos.get("sincronizacion")
         if _sync_modelo is not None:
             QTimer.singleShot(6000, _sync_modelo.verificarBackupProgramado)
+            # Encendido automático del servidor de sincronización al abrir, si
+            # el usuario activó el toggle en la vista de Sincronización. El
+            # arranque real ocurre en un QThread (no bloquea); lo diferimos para
+            # no competir con el primer frame. Si el toggle está apagado, no-op.
+            QTimer.singleShot(1500, _sync_modelo.autoEncenderSiCorresponde)
 
         # Restaurar la sesión DJ que quedó activa al cerrar (#7a). Diferido
         # para no competir con el primer frame; el prewarm de imports DJ

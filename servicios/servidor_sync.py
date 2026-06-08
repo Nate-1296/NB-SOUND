@@ -603,6 +603,8 @@ class ServidorSync:
             ruta = sync_repositorio.ruta_portada_album(asset_id)
         elif tipo == "artist":
             ruta = self._resolver_imagen_artista(asset_id)
+        elif tipo == "playlist":
+            ruta = sync_repositorio.ruta_portada_playlist(asset_id)
         if ruta is None:
             return web.json_response({"error": "no_encontrado"}, status=404)
         return web.FileResponse(ruta)

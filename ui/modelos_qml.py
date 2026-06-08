@@ -275,6 +275,14 @@ class ModeloBiblioteca(QObject):
         self._album_detalle: Optional[dict] = None
         self._artista_detalle: Optional[dict] = None
         self._cargando  = False
+        # Últimos parámetros con los que se listó la tabla principal de pistas.
+        # `recargar()` (refresco global tras importar/eliminar/dedupe) los reusa
+        # para NO revertir el orden/filtro activo del usuario a los valores por
+        # defecto (causaba que tras eliminar una pista la lista volviera a
+        # "Título A-Z" aunque el filtro siguiera marcado en la UI).
+        self._ultimo_filtro_pistas = ""
+        self._ultimo_solo_favoritas = False
+        self._ultimo_orden_pistas = "titulo"
         # Worker para que las queries pesadas (listar_artistas, listar_albums,
         # listar_pistas, …) corran en QThread separados y el slot retorne
         # de inmediato. Sin esto la primera apertura de Biblioteca trababa
@@ -388,6 +396,11 @@ class ModeloBiblioteca(QObject):
     @Slot(str)
     @Slot(str, bool, str)
     def cargar_pistas(self, filtro_texto: str = "", solo_favoritas: bool = False, orden: str = "titulo") -> None:
+        # Recuerda los parámetros para que `recargar()` no pierda el orden/filtro
+        # activo en los refrescos globales (importación, eliminación, dedupe).
+        self._ultimo_filtro_pistas = filtro_texto
+        self._ultimo_solo_favoritas = bool(solo_favoritas)
+        self._ultimo_orden_pistas = orden
         datos = svc_bib.listar_pistas(
             filtro_texto=filtro_texto,
             solo_favoritas=bool(solo_favoritas),
@@ -526,7 +539,13 @@ class ModeloBiblioteca(QObject):
         self.cargar_grupos_albums()
         self.cargar_artistas()
         self.cargar_albums_por_grupo(self.primer_grupo_albums())
-        self.cargar_pistas()
+        # Conserva el orden/filtro de pistas que el usuario tenía activo en vez
+        # de revertir a los valores por defecto (ver _ultimo_* en __init__).
+        self.cargar_pistas(
+            self._ultimo_filtro_pistas,
+            self._ultimo_solo_favoritas,
+            self._ultimo_orden_pistas,
+        )
 
     @Slot()
     def ejecutar_dedupe_observable(self) -> None:
@@ -598,6 +617,12 @@ class ModeloBiblioteca(QObject):
             _log.warning("No se pudo eliminar la pista %s: %s", pista_id, exc)
             return {"ok": False, "mensaje": "No se pudo eliminar la pista."}
         if resultado.get("ok"):
+            # La biblioteca cambió: el próximo arranque verificará duplicados.
+            try:
+                from servicios.dedupe_observable import marcar_barrido_pendiente
+                marcar_barrido_pendiente()
+            except Exception:
+                pass
             self.pistaEliminada.emit(int(pista_id), dict(resultado))
         return resultado
 
@@ -10421,6 +10446,35 @@ class _WorkerDescargarModelosEssentia(QObject):
             self.completado.emit(self._dep_id, False, mensaje, detalle[:500])
 
 
+class _WorkerDetectarDeps(QObject):
+    """Ejecuta la detección COMPLETA de dependencias en un QThread.
+
+    Los verificadores pueden lanzar subprocesos (torch/essentia, ~decenas de
+    segundos en el peor caso) y crear instancias VLC; correrlos en el hilo de
+    Qt al arrancar congelaba el inicio. Este worker los aísla. Emite la lista de
+    reportes ya filtrada por plataforma (sin las deps deep en Windows).
+    """
+    completado = Signal(list)
+
+    @Slot()
+    def ejecutar(self) -> None:
+        datos: list = []
+        try:
+            from infra.dependencias import (
+                IDS_DEPENDENCIAS_DEEP,
+                deep_analytics_disponible,
+                detectar,
+            )
+            reportes = detectar(force_refresh=True)
+            datos = [r.a_dict() for r in reportes]
+            if not deep_analytics_disponible():
+                datos = [d for d in datos if d.get("id") not in IDS_DEPENDENCIAS_DEEP]
+        except Exception as exc:
+            _log.warning("_WorkerDetectarDeps falló: %s", exc)
+            datos = []
+        self.completado.emit(datos)
+
+
 class ModeloDependencias(QObject):
     """Bridge QML <-> infra.dependencias.
 
@@ -10445,12 +10499,90 @@ class ModeloDependencias(QObject):
         self._reportes: list[dict] = []
         self._workers: dict[str, QObject] = {}
         self._hilos: dict[str, object] = {}
+        # Detección diferida en segundo plano (arranque no bloqueante).
+        self._hilo_detectar = None
+        self._worker_detectar = None
         # Cola de "Instalar todo": instala las dependencias auto-instalables
         # pendientes una por una (secuencial), respetando el filtrado por OS.
         self._cola_instalar_todo: list[str] = []
         self._instalar_todo_activo = False
         self.instalacionTerminada.connect(self._al_terminar_instalacion_de_cola)
-        self._cargar(force_refresh=False)
+        # Arranque NO bloqueante: muestra lo cacheado al instante (sin ejecutar
+        # verificadores) y, si el cache está vencido o vacío, revalida en
+        # segundo plano una vez la ventana es visible. Antes, cuando el cache
+        # caducaba (cada 14 días / 20 aperturas / primer arranque), `_cargar`
+        # corría TODOS los verificadores —incluidos subprocesos de torch/
+        # essentia— de forma síncrona en el constructor, congelando el inicio.
+        self._cargar_inicial()
+
+    def _cargar_inicial(self) -> None:
+        import os
+        if os.environ.get("NB_SOUND_UI_WORKER_SYNC", "").strip().lower() in {"1", "true", "yes"}:
+            # Modo test: detección síncrona y determinista (sin hilos diferidos),
+            # para que las aserciones tras construir el modelo vean el estado ya
+            # aplicado. En producción no se entra aquí (env solo lo fija la suite).
+            self._cargar(force_refresh=False)
+            return
+        obsoleto = True
+        try:
+            from infra.dependencias import (
+                IDS_DEPENDENCIAS_DEEP,
+                cache_obsoleto,
+                deep_analytics_disponible,
+                reportes_cacheados,
+            )
+            datos = [r.a_dict() for r in reportes_cacheados()]
+            if not deep_analytics_disponible():
+                datos = [d for d in datos if d.get("id") not in IDS_DEPENDENCIAS_DEEP]
+            self._reportes = datos
+            obsoleto = cache_obsoleto()
+        except Exception as exc:
+            _log.warning("ModeloDependencias._cargar_inicial falló: %s", exc)
+            self._reportes = []
+            obsoleto = True
+        self.estadoCambiado.emit()
+        if obsoleto or not self._reportes:
+            # Diferido para no competir con el primer frame; corre en QThread.
+            QTimer.singleShot(1200, self._revalidar_en_background)
+
+    def _revalidar_en_background(self) -> None:
+        if self._worker_detectar is not None:
+            return
+        from PySide6.QtCore import QThread
+
+        hilo = QThread(self)
+        worker = _WorkerDetectarDeps()
+        worker.moveToThread(hilo)
+
+        def _aplicar(datos: list) -> None:
+            if isinstance(datos, list) and datos:
+                self._reportes = datos
+                self.estadoCambiado.emit()
+            hilo.quit()
+
+        worker.completado.connect(_aplicar)
+        hilo.started.connect(worker.ejecutar)
+        hilo.finished.connect(self._limpiar_detectar)
+        self._worker_detectar = worker
+        self._hilo_detectar = hilo
+        hilo.start()
+
+    def _limpiar_detectar(self) -> None:
+        hilo = self._hilo_detectar
+        worker = self._worker_detectar
+        self._hilo_detectar = None
+        self._worker_detectar = None
+        if hilo is not None:
+            try:
+                hilo.wait(2000)
+                hilo.deleteLater()
+            except Exception:
+                pass
+        if worker is not None:
+            try:
+                worker.deleteLater()
+            except Exception:
+                pass
 
     @Property("QVariantList", notify=estadoCambiado)
     def estado(self) -> list[dict]:
@@ -10735,6 +10867,16 @@ class ModeloDependencias(QObject):
                 pass
         self._hilos.clear()
         self._workers.clear()
+        # Hilo de detección diferida en segundo plano (arranque no bloqueante).
+        hilo_det = self._hilo_detectar
+        if hilo_det is not None:
+            try:
+                hilo_det.quit()
+                hilo_det.wait(3000)
+            except Exception:
+                pass
+        self._hilo_detectar = None
+        self._worker_detectar = None
 
 
 # =============================================================================
@@ -10821,6 +10963,7 @@ class ModeloSincronizacion(QObject):
     """
 
     activoCambiado        = Signal()
+    autoEncenderCambiado  = Signal()
     dispositivosCambiado  = Signal()
     qrCambiado            = Signal()
     estadoCambiado        = Signal()
@@ -10833,6 +10976,9 @@ class ModeloSincronizacion(QObject):
     # Señal interna: marshala un comando recibido por WS (hilo servidor) al
     # hilo de Qt mediante conexion en cola.
     _comandoRecibido      = Signal(object)
+
+    # Clave en config_ui del toggle "encender al abrir la app".
+    _CLAVE_AUTO_ENCENDER = "sync_auto_encender"
 
     def __init__(self, modelo_reproductor=None, parent=None) -> None:
         super().__init__(parent)
@@ -10895,6 +11041,48 @@ class ModeloSincronizacion(QObject):
     @Property(bool, notify=activoCambiado)
     def activo(self) -> bool:
         return bool(self._servidor and self._servidor.activo)
+
+    @Property(bool, notify=autoEncenderCambiado)
+    def autoEncender(self) -> bool:
+        """¿Encender el servidor automáticamente al abrir la app?
+
+        Persistido en config_ui; la UI lo expone como un toggle junto al botón
+        de encender/apagar. Cambiarlo guarda el ajuste de inmediato.
+        """
+        try:
+            from db.conexion import obtener_config
+            return str(obtener_config(self._CLAVE_AUTO_ENCENDER, "0")).strip() in ("1", "true", "True")
+        except Exception:
+            return False
+
+    @autoEncender.setter
+    def autoEncender(self, valor: bool) -> None:
+        self.setAutoEncender(bool(valor))
+
+    @Slot(bool)
+    def setAutoEncender(self, valor: bool) -> None:
+        """Guarda el ajuste de auto-encendido y lo notifica a la UI."""
+        try:
+            from db.conexion import guardar_config
+            guardar_config(self._CLAVE_AUTO_ENCENDER, "1" if valor else "0")
+        except Exception as exc:
+            _log.warning("No se pudo guardar autoEncender: %s", exc)
+        self.autoEncenderCambiado.emit()
+
+    @Slot()
+    def autoEncenderSiCorresponde(self) -> None:
+        """Enciende el servidor al arrancar SOLO si el usuario activó el toggle.
+
+        Se invoca diferido desde el arranque (main_ui). Idempotente y seguro:
+        respeta `encender()` (no hace nada si ya está activo, ocupado o si
+        faltan dependencias). Cualquier fallo de arranque se refleja en
+        `mensaje`, igual que el encendido manual.
+        """
+        if not self.autoEncender:
+            return
+        if self._ocupado or (self._servidor and self._servidor.activo):
+            return
+        self.encender()
 
     @Property(bool, notify=estadoCambiado)
     def ocupado(self) -> bool:

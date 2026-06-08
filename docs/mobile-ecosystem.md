@@ -60,7 +60,7 @@ Razón: minimizar superficie de red y consumo cuando no se usa.
 | `POST` | `/api/v1/pair` | Handshake: valida token del QR, registra dispositivo, devuelve `device_token` de larga vida |
 | `GET` | `/api/v1/manifest?since=<sync_version>` | Delta de cambios desde la última sync (pistas/álbumes/artistas/playlists/perfil) |
 | `GET` | `/api/v1/track/{id}/audio` | Stream/descarga del audio (soporta `Range` para reanudar) |
-| `GET` | `/api/v1/asset/{tipo}/{id}` | Portada/imagen de artista (con ETag) |
+| `GET` | `/api/v1/asset/{tipo}/{id}` | Portada de álbum (`cover`/`album`), imagen de artista (`artist`) o carátula de playlist (`playlist`) |
 | `GET` | `/api/v1/track/{id}/stems` | Stems de karaoke (opt-in, ver protocolo) |
 | `POST` | `/api/v1/history` | Recibe historial/favoritos locales del celular (merge) |
 | `WS` | `/api/v1/control` | Estado del reproductor (push) + comandos (play/pause/next/prev/seek/volume/queue) |
@@ -122,9 +122,18 @@ por sus endpoints. Campos basados en columnas reales de la BD del PC.
 - **Álbumes**: `id`, `titulo`, `artista_id`, `tipo`, `anio`, `cover_url`
   (desde `albums.portada_ruta`).
 - **Artistas**: `id`, `nombre`, `imagen_url`.
-- **Playlists**: `id`, `nombre`, `tipo` (manual/automática/sistema),
-  `auto_key`, lista ordenada de `pista_id` (desde `pistas_playlist`), incluida
-  "Me gusta".
+- **Playlists**: `id`, `nombre`, `descripcion`, `tipo`
+  (manual/automática/sistema), `subtipo`, `origen`, `auto_key`, `es_anclada`,
+  `num_pistas`, lista ordenada de `pista_id` (desde `pistas_playlist`) y
+  `cover_url` (carátula en uso, desde `playlists.portada_ruta`, igual que los
+  álbumes). Para que el celular agrupe igual que el PC se incluye `categoria`
+  (`me_gusta` | `creada` | `inteligente` | `this_is` | `sistema`), su `etiqueta`
+  legible y `es_favoritos`. Incluye "Me gusta" como lista canónica de
+  favoritos (todas las favoritas, sin tope).
+  Nota de implementación: cada mutación de playlist (crear/editar/membresía/
+  portada/anclar) bumpea `playlists.sync_version`; un backfill único etiqueta
+  las preexistentes. Sin esto el delta (`sync_version > since`) nunca las
+  enviaba.
 - **Historial de reproducción**: viaja **del celular al PC** (el celular es
   su fuente de verdad); el PC lo agrega a `historial`.
 - **Perfil**: nombre, foto, estadísticas agregadas (solo lectura hacia el

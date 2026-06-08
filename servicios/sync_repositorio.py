@@ -253,9 +253,20 @@ def _artistas_desde(since: int) -> list[dict]:
 
 
 def _playlists_desde(since: int) -> list[dict]:
+    """Delta de playlists visibles con metadata completa para el celular.
+
+    Cada playlist viaja como los álbumes (con ``cover_url``) y, además, con la
+    clasificación del PC para que el móvil agrupe igual: ``categoria``
+    (me_gusta | creada | inteligente | this_is | sistema) + ``etiqueta`` legible.
+    Incluye ``descripcion``, ``portada`` en uso (vía ``cover_url``), ``pista_ids``
+    en orden y el conteo. "Me gusta" es la lista canónica de favoritos (sin tope).
+    """
+    from servicios.biblioteca import clasificacion_sync_playlist
+
     filas = obtener_filas(
         """
-        SELECT id, nombre, tipo, auto_key, sync_version
+        SELECT id, nombre, descripcion, tipo, subtipo, origen, auto_key,
+               es_anclada, portada_ruta, sync_version
         FROM playlists
         WHERE sync_version > ? AND visible = 1
         ORDER BY sync_version ASC
@@ -271,14 +282,28 @@ def _playlists_desde(since: int) -> list[dict]:
                 (f["id"],),
             )
         ]
+        clasif = clasificacion_sync_playlist(f)
+        tiene_portada = bool((f.get("portada_ruta") or "").strip())
         playlists.append(
             {
                 "id": f["id"],
                 "nombre": f["nombre"],
+                "descripcion": f.get("descripcion") or "",
                 "tipo": f["tipo"],
+                "subtipo": clasif["subtipo"],
+                "origen": clasif["origen"],
                 "auto_key": f["auto_key"],
+                # Clasificación estable + etiqueta legible (igual que el PC).
+                "categoria": clasif["categoria"],
+                "etiqueta": clasif["etiqueta"],
+                "es_favoritos": clasif["categoria"] == "me_gusta",
+                "es_anclada": bool(f.get("es_anclada") or 0),
+                "num_pistas": len(pistas_ids),
                 "sync_version": f["sync_version"],
                 "pista_ids": pistas_ids,
+                # Carátula en uso (mosaico para listas del sistema). Igual que
+                # los álbumes: URL estable; 404 si la playlist aún no tiene una.
+                "cover_url": f"/api/v1/asset/playlist/{f['id']}" if tiene_portada else None,
             }
         )
     return playlists
@@ -476,6 +501,65 @@ def enlazar_portadas_album_pendientes() -> int:
     if enlazados:
         _log.info("enlazar_portadas_album_pendientes: %d álbumes enlazados", enlazados)
     return enlazados
+
+
+_CLAVE_MIGRACION_EXPOSICION = "sync_exposicion_inicial_v1"
+
+
+def asegurar_exposicion_inicial_sync() -> None:
+    """Migración ÚNICA, idempotente y AUTOMÁTICA (sin que el usuario ejecute
+    nada) para exponer al móvil todo el estado preexistente tras los arreglos de
+    sincronización. Se llama al arrancar la app.
+
+    Por qué hace falta: los arreglos de bump de `sync_version` solo afectan a los
+    cambios FUTUROS. Los datos creados antes (p.ej. favoritos marcados por vías
+    que no bumpeaban el delta, o playlists que nunca recibieron versión) no
+    llegarían al celular hasta volver a tocarlos uno a uno. Esta migración los
+    "renueva" una sola vez:
+
+      1. Re-sella `sync_version` de cada pista `favorita = 1` → la próxima sync
+         las entrega TODAS por el delta por-pista (arregla el "salían 6 de 25").
+      2. Materializa/actualiza "Me gusta" con todas las favoritas y la versiona.
+      3. Versiona cualquier playlist visible que quedara en `sync_version = 0`.
+
+    Idempotente: corre una sola vez (flag en config_ui). Si algo falla NO marca
+    el flag, de modo que se reintenta en el próximo arranque.
+    """
+    try:
+        from db.conexion import obtener_config
+        if str(obtener_config(_CLAVE_MIGRACION_EXPOSICION, "")).strip() == "1":
+            return
+    except Exception:
+        return
+    try:
+        from db.conexion import guardar_config, marcar_sync_version
+        from servicios.biblioteca import _sincronizar_playlist_favoritos
+
+        # "Me gusta" al día (existe + membresía completa + versionada).
+        try:
+            _sincronizar_playlist_favoritos()
+        except Exception as exc:
+            _log.debug("Migración sync: sincronizar 'Me gusta' falló: %s", exc)
+
+        favoritas = obtener_filas(
+            "SELECT id FROM pistas WHERE estado = 'biblioteca' AND COALESCE(favorita, 0) = 1"
+        )
+        for fila in favoritas:
+            marcar_sync_version("pistas", int(fila["id"]))
+
+        sin_version = obtener_filas(
+            "SELECT id FROM playlists WHERE COALESCE(visible, 1) = 1 AND COALESCE(sync_version, 0) = 0"
+        )
+        for fila in sin_version:
+            marcar_sync_version("playlists", int(fila["id"]))
+
+        guardar_config(_CLAVE_MIGRACION_EXPOSICION, "1")
+        _log.info(
+            "Exposición inicial de sync aplicada: %d favoritas re-selladas, %d playlists versionadas.",
+            len(favoritas), len(sin_version),
+        )
+    except Exception as exc:
+        _log.warning("Exposición inicial de sync falló (se reintentará en el próximo arranque): %s", exc)
 
 
 def construir_manifest(
@@ -677,6 +761,16 @@ def ruta_stem_pista(pista_id: int) -> Optional[Path]:
 
 def ruta_portada_album(album_id: int) -> Optional[Path]:
     fila = obtener_una_fila("SELECT portada_ruta FROM albums WHERE id = ?", (int(album_id),))
+    if not fila or not fila["portada_ruta"]:
+        return None
+    ruta = Path(fila["portada_ruta"])
+    return ruta if ruta.is_file() else None
+
+
+def ruta_portada_playlist(playlist_id: int) -> Optional[Path]:
+    """Carátula EN USO de la playlist (mosaico generado para listas del sistema
+    como "Me gusta"/inteligentes, o la portada propia). None si no existe."""
+    fila = obtener_una_fila("SELECT portada_ruta FROM playlists WHERE id = ?", (int(playlist_id),))
     if not fila or not fila["portada_ruta"]:
         return None
     ruta = Path(fila["portada_ruta"])

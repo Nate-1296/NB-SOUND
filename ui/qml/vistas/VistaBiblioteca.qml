@@ -37,8 +37,17 @@ Rectangle {
     readonly property bool mostrando_detalle: detalle_abierto || detalle_artista_abierto
     readonly property int margen_lateral: width < 980 ? UiTokens.spacing16 : UiTokens.spacing24
     readonly property bool mostrar_columna_album: width >= 1080
-    readonly property int ancho_columna_album: width < 1180 ? 150 : 230
-    readonly property int acciones_pistas_ancho: width < 1080 ? 300 : (width < 1180 ? 464 : 528)
+    readonly property int ancho_columna_album: width < 1320 ? 150 : 230
+    // Ancho FIJO de la columna de acciones. Header y filas usan el mismo valor,
+    // así las columnas quedan alineadas. Debe contener con holgura el set de
+    // botones activo para que NO desborde y robe ancho a la columna "Pista"
+    // (causa del descuadre en ventanas estrechas): set compacto (solo iconos,
+    // ~288px) por debajo de 1320; set con etiquetas completas (~586px) a partir
+    // de 1320. El umbral coincide con `accionesCompactas` (accionesWidth < 360).
+    readonly property int acciones_pistas_ancho: width < 1320 ? 300 : 620
+    // Altura de la fila de cabecera de columnas de Pistas (LibraryHeaderRow).
+    // Fijada aquí para reservar su espacio sobre la lista (cabecera fija).
+    readonly property int altura_header_pistas: 36
 
     function portadaDe(ruta) { return UiUtils.toMediaSource(ruta) }
 
@@ -1208,12 +1217,38 @@ Rectangle {
                     }
                 }
 
+                // Cabecera de columnas FIJA: vive fuera del ListView para que
+                // permanezca siempre visible (antes era `header:` del ListView y
+                // se desplazaba con el scroll, por lo que al entrar a Pistas o al
+                // (des)activar Favoritas el contentY inicial dejaba la primera
+                // pista arriba y la cabecera quedaba oculta).
+                LibraryHeaderRow {
+                    id: pistasHeaderFijo
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: raiz.margen_lateral
+                    anchors.rightMargin: raiz.margen_lateral
+                    anchors.topMargin: UiTokens.spacing12
+                    visible: modo_vista === "pistas" && biblioteca.pistas.total > 0
+                    mostrarFavorito: true
+                    mostrarArtista: true
+                    accionesWidth: raiz.acciones_pistas_ancho
+                    mostrarAlbum: raiz.mostrar_columna_album
+                    z: 3
+                }
+
                 ListView {
                     id: trackList
                     anchors.fill: parent
                     anchors.leftMargin: raiz.margen_lateral
                     anchors.rightMargin: raiz.margen_lateral
+                    // Reserva el alto de la cabecera fija sobre la lista (solo
+                    // cuando hay pistas y la cabecera es visible).
                     anchors.topMargin: UiTokens.spacing12
+                                       + (biblioteca.pistas.total > 0
+                                          ? raiz.altura_header_pistas + UiTokens.spacing8
+                                          : 0)
                     anchors.bottomMargin: UiTokens.spacing16
                     visible: modo_vista === "pistas"
                     clip: true
@@ -1230,15 +1265,6 @@ Rectangle {
                         anchors.bottom: trackList.bottom
                         z: 20
                         policy: trackList.visible && trackList.contentHeight > trackList.height + 2 ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
-                    }
-
-                    header: LibraryHeaderRow {
-                        width: trackList.width
-                        mostrarFavorito: true
-                        mostrarArtista: true
-                        accionesWidth: raiz.acciones_pistas_ancho
-                        mostrarAlbum: raiz.mostrar_columna_album
-                        z: 2
                     }
 
                     delegate: PistaFila {
@@ -1971,7 +1997,12 @@ Rectangle {
                 font.pixelSize: UiTokens.fontSizeMd
                 elide: Text.ElideRight
                 maximumLineCount: 1
+                // Columna de álbum estrictamente acotada: nunca crece más allá
+                // de su ancho asignado (si el título es largo, recorta con elide
+                // en vez de empujar el resto de columnas).
                 Layout.preferredWidth: raiz.ancho_columna_album
+                Layout.minimumWidth: 0
+                Layout.maximumWidth: raiz.ancho_columna_album
                 horizontalAlignment: Text.AlignLeft
             }
 
@@ -1984,9 +2015,16 @@ Rectangle {
             }
 
             RowLayout {
+                // Ancho FIJO: nunca desborda ni roba ancho a la columna "Pista"
+                // (lo que descuadraba la tabla). El espaciador inicial mantiene
+                // los botones pegados a la derecha y absorbe la holgura.
                 Layout.preferredWidth: filaPista.accionesWidth
+                Layout.minimumWidth: 0
+                Layout.maximumWidth: filaPista.accionesWidth
                 spacing: UiTokens.spacing6
                 Layout.alignment: Qt.AlignVCenter
+
+                Item { Layout.fillWidth: true }
 
                 FavoriteButton {
                     visible: filaPista.mostrarFavorito

@@ -271,7 +271,10 @@ def _verificar_modulo_subprocess(nombre: str, atributo_version: str = "__version
         f"    sys.exit(1)\n"
     )
     kwargs: dict = {
-        "capture_output": True, "text": True, "timeout": 20.0, "check": False,
+        # 60s: la PRIMERA importación de un wheel nativo recién instalado
+        # (torch ~250MB, demucs) puede tardar bastante en disco lento; un
+        # timeout corto daba un falso "faltante" justo tras instalar.
+        "capture_output": True, "text": True, "timeout": 60.0, "check": False,
         "env": env,
     }
     if sys.platform.startswith("win"):
@@ -362,7 +365,9 @@ def _verificar_essentia_tensorflow() -> tuple[bool, str]:
         "    sys.exit(1)\n"
     )
     kwargs: dict = {
-        "capture_output": True, "text": True, "timeout": 30.0, "check": False,
+        # 60s: importar essentia + cargar libtensorflow.so la primera vez tras
+        # instalar puede ser lento; evita falsos "faltante" por timeout.
+        "capture_output": True, "text": True, "timeout": 60.0, "check": False,
         "env": env,
     }
     if sys.platform.startswith("win"):
@@ -708,6 +713,20 @@ def detectar(force_refresh: bool = False) -> list[ReporteDependencia]:
     return reportes
 
 
+def reportes_cacheados() -> list[ReporteDependencia]:
+    """Devuelve los reportes guardados en cache SIN ejecutar verificadores.
+
+    Para un arranque NO bloqueante: los verificadores pueden lanzar subprocesos
+    (torch/essentia) y crear instancias VLC, lo que congelaba el inicio cuando
+    el cache estaba vencido. La UI pinta esto al instante y revalida en segundo
+    plano. Devuelve lista vacía si no hay nada cacheado todavía.
+    """
+    cacheados = _leer_cache()
+    if not cacheados:
+        return []
+    return [_reporte_desde_dict(d) for d in cacheados.values()]
+
+
 def detectar_uno(dep_id: str) -> Optional[ReporteDependencia]:
     """Verifica una sola dependencia y actualiza su entrada en cache."""
     catalogo = construir_catalogo()
@@ -789,6 +808,14 @@ def aplicar_runtime_pip_userdir() -> None:
     if sp not in sys.path:
         sys.path.insert(0, sp)
         _log.debug("site-packages runtime agregado a sys.path: %s", sp)
+    # Tras una instalación en runtime, los finders de importlib pueden conservar
+    # en caché que el módulo NO existía (negative cache) o el listado del
+    # directorio previo a la escritura de los wheels. Sin invalidar, una
+    # verificación in-process (find_spec) seguiría devolviendo "faltante" aunque
+    # pip lo acabe de instalar: el usuario veía "instalado correctamente" pero la
+    # app nunca lo reconocía. invalidate_caches() lo resuelve sin reiniciar y es
+    # idempotente (barato si no había nada que invalidar).
+    importlib.invalidate_caches()
 
 
 def registrar_apertura() -> None:

@@ -420,11 +420,14 @@ class ResultadoInstalacion:
 def instalar_pip(
     pip_specifier: str,
     *,
-    upgrade: bool = False,
     extra_index_url: str = "",
     en_progreso: Optional[Callable[[str], None]] = None,
 ) -> ResultadoInstalacion:
-    """Instala ``pip_specifier`` en el directorio runtime de NB Sound.
+    """Instala (o repara) ``pip_specifier`` en el directorio runtime de NB Sound.
+
+    Siempre fuerza una reinstalación limpia (``--upgrade --force-reinstall``):
+    el botón de instalar opera sobre dependencias que no están OK, y una
+    instalación previa interrumpida puede haber dejado el paquete a medias.
 
     El paquete queda accesible vía ``sys.path`` luego de que
     ``infra.dependencias.aplicar_runtime_pip_userdir()`` se ejecute (cosa
@@ -472,10 +475,20 @@ def instalar_pip(
             mensaje=f"No se pudo crear {sp}: {exc}",
         )
 
+    # `--upgrade --force-reinstall`: el botón de instalar es siempre una acción
+    # de REPARACIÓN sobre una dependencia que no está OK. Una instalación previa
+    # interrumpida (cierre de la app, corte de red) deja el `--target` con un
+    # paquete a medias; con `pip install --target` SIN estas banderas pip
+    # considera el paquete "ya presente" y NO lo reemplaza, devolviendo código 0
+    # ("instalado correctamente") mientras los archivos siguen corruptos y la
+    # app nunca lo reconoce. Forzar la reinstalación garantiza un árbol limpio.
+    # El coste es bajo: pip reusa el wheel de su caché HTTP (no re-descarga), así
+    # que solo re-extrae a disco.
+    # `--retries`/`--timeout`: resiliencia ante redes intermitentes (mismo
+    # criterio que la descarga de binarios del pipeline de release).
     cmd = [python, "-m", "pip", "install", "--no-input", "--disable-pip-version-check",
-           "--target", str(sp)]
-    if upgrade:
-        cmd.append("--upgrade")
+           "--retries", "5", "--timeout", "30",
+           "--upgrade", "--force-reinstall", "--target", str(sp)]
     if extra_index_url:
         cmd.extend(["--extra-index-url", extra_index_url])
     cmd.append(pip_specifier)

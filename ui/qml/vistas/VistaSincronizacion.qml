@@ -226,7 +226,26 @@ Rectangle {
                             RowLayout {
                                 Layout.fillWidth: true
                                 spacing: UiTokens.spacing12
-                                Item { Layout.fillWidth: true }
+
+                                // Toggle: encender el servidor automáticamente
+                                // al abrir la app. Se guarda al instante (sin
+                                // botón de confirmar): evita entrar a esta vista
+                                // solo para encenderlo cada sesión.
+                                Switch {
+                                    id: toggleAutoEncender
+                                    objectName: "sync_auto_encender_switch"
+                                    checked: sincronizacion.autoEncender
+                                    onToggled: sincronizacion.setAutoEncender(checked)
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+                                AppText {
+                                    text: "Encender al abrir la app"
+                                    color: tema.texto
+                                    font.pixelSize: UiTokens.fontSizeBase
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
                                 BotonSecundario {
                                     visible: sincronizacion.activo
                                     texto: "Regenerar QR"

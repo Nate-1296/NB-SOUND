@@ -271,3 +271,35 @@ def _patch_loopback(modelo):
         )
 
     return _crear
+
+
+# ─── Issue: toggle "encender al abrir la app" ────────────────────────────────
+
+def test_auto_encender_persiste_entre_modelos(app, db_sync):
+    """El ajuste de auto-encendido se guarda al instante y un modelo nuevo
+    (siguiente arranque) lo recuerda."""
+    modelo = ModeloSincronizacion(parent=None)
+    try:
+        assert modelo.autoEncender is False  # por defecto, apagado
+        modelo.setAutoEncender(True)
+        assert modelo.autoEncender is True
+        # Un modelo nuevo (simula el siguiente arranque) lee el valor persistido.
+        modelo2 = ModeloSincronizacion(parent=None)
+        try:
+            assert modelo2.autoEncender is True
+        finally:
+            modelo2.cerrar()
+    finally:
+        modelo.cerrar()
+
+
+def test_auto_encender_apagado_no_arranca_servidor(app, db_sync):
+    """Con el toggle apagado, autoEncenderSiCorresponde es un no-op seguro."""
+    modelo = ModeloSincronizacion(parent=None)
+    try:
+        modelo.setAutoEncender(False)
+        modelo.autoEncenderSiCorresponde()
+        assert modelo.activo is False
+        assert modelo.ocupado is False
+    finally:
+        modelo.cerrar()

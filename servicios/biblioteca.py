@@ -2321,6 +2321,42 @@ def _etiqueta_playlist(subtipo: str, tipo: str, origen: str) -> str:
     return "Manual"
 
 
+def clasificacion_sync_playlist(playlist: dict) -> dict:
+    """Clasifica una playlist para el ecosistema móvil, reusando la lógica del
+    escritorio.
+
+    Devuelve:
+      * ``categoria``: clave estable para que el celular agrupe igual que el PC:
+        ``me_gusta`` | ``creada`` | ``inteligente`` | ``this_is`` | ``sistema``.
+      * ``etiqueta``: texto legible ("Me gusta", "Manual", "This is...", …).
+      * ``subtipo`` / ``tipo`` / ``origen``: valores crudos por si el cliente
+        quiere un criterio propio.
+    """
+    subtipo = _subtipo_playlist(playlist)
+    tipo = str(playlist.get("tipo") or "manual").strip() or "manual"
+    origen = _origen_playlist(playlist)
+    etiqueta = _etiqueta_playlist(subtipo, tipo, origen)
+    if subtipo == "favoritos":
+        categoria = "me_gusta"
+    elif subtipo == "this_is":
+        categoria = "this_is"
+    elif tipo == "manual" and origen == "usuario":
+        categoria = "creada"
+    elif tipo == "automatica" or origen == "generado":
+        categoria = "inteligente"
+    elif tipo == "sistema":
+        categoria = "sistema"
+    else:
+        categoria = "creada"
+    return {
+        "categoria": categoria,
+        "etiqueta": etiqueta,
+        "subtipo": subtipo,
+        "tipo": tipo,
+        "origen": origen,
+    }
+
+
 def _validar_nombre_playlist(nombre: str, *, excluir_id: Optional[int] = None) -> str:
     limpio = _normalizar_nombre_playlist(nombre)
     if not limpio:
@@ -2446,6 +2482,21 @@ def _recomponer_posiciones_playlist(conexion, playlist_id: int) -> None:
         )
 
 
+def _marcar_playlist_sync(playlist_id: int) -> None:
+    """Asigna una nueva `sync_version` a la playlist para que el delta del
+    ecosistema móvil la reenvíe (cambió su metadata o su contenido).
+
+    Sin esto las playlists nunca llegaban al celular: ninguna ruta bumpeaba su
+    `sync_version` y `_playlists_desde` filtra `sync_version > since`. Best-effort:
+    un fallo aquí no debe romper la operación principal sobre la playlist.
+    """
+    try:
+        from db.conexion import marcar_sync_version
+        marcar_sync_version("playlists", int(playlist_id))
+    except Exception as exc:
+        logger.warning("No se pudo marcar sync_version de la playlist %s: %s", playlist_id, exc)
+
+
 def _reemplazar_pistas_playlist(
     conexion,
     playlist_id: int,
@@ -2474,6 +2525,17 @@ def _reemplazar_pistas_playlist(
         if tope is not None and len(ids_limpios) >= tope:
             break
 
+    # Membresía previa para decidir si la sync_version debe bumpearse: las
+    # regeneraciones idempotentes (p.ej. "Me gusta" al abrir Playlists) no deben
+    # inflar la versión ni reenviar la playlist al móvil sin cambios reales.
+    ids_previos = [
+        int(f["pista_id"])
+        for f in conexion.execute(
+            "SELECT pista_id FROM pistas_playlist WHERE playlist_id = ? ORDER BY posicion",
+            (playlist_id,),
+        )
+    ]
+
     conexion.execute("DELETE FROM pistas_playlist WHERE playlist_id = ?", (playlist_id,))
     for posicion, pista_id in enumerate(ids_limpios, start=1):
         conexion.execute(
@@ -2487,6 +2549,15 @@ def _reemplazar_pistas_playlist(
         "UPDATE playlists SET actualizado_en = datetime('now') WHERE id = ?",
         (playlist_id,),
     )
+
+    if ids_previos != ids_limpios:
+        # Bump atómico (misma transacción que la reescritura de membresía).
+        from db.conexion import siguiente_sync_version
+        version = siguiente_sync_version()
+        conexion.execute(
+            "UPDATE playlists SET sync_version = ? WHERE id = ?",
+            (version, playlist_id),
+        )
 
 
 def _marcar_editada_si_corresponde(conexion, playlist: dict) -> None:
@@ -2801,6 +2872,12 @@ def actualizar_portada_playlist_si_cambio(playlist_id: int) -> Optional[str]:
     nueva = generar_portada_playlist(int(playlist_id or 0))
     if not nueva:
         return None
+    previa = obtener_una_fila(
+        "SELECT portada_ruta FROM playlists WHERE id = ?", (int(playlist_id),)
+    )
+    portada_previa = (previa["portada_ruta"] if previa else "") or ""
+    if portada_previa == nueva:
+        return nueva  # sin cambios: no churn de sync_version
     ejecutar(
         """
         UPDATE playlists
@@ -2809,6 +2886,9 @@ def actualizar_portada_playlist_si_cambio(playlist_id: int) -> Optional[str]:
         """,
         (nueva, int(playlist_id), nueva),
     )
+    # La carátula en uso cambió: bumpea sync_version para que el móvil vuelva a
+    # descargar la portada de la playlist (cover_url estable, contenido nuevo).
+    _marcar_playlist_sync(int(playlist_id))
     return nueva
 
 
@@ -3916,6 +3996,7 @@ def crear_playlist(nombre: str, descripcion: str = "") -> int:
         (nombre_limpio, descripcion_limpia),
     )
     actualizar_portada_playlist_si_cambio(playlist_id)
+    _marcar_playlist_sync(int(playlist_id))
     return int(playlist_id)
 
 
@@ -3932,6 +4013,7 @@ def renombrar_playlist(playlist_id: int, nombre: str) -> dict:
             (nombre_limpio, int(playlist_id)),
         )
         _marcar_editada_si_corresponde(conexion, playlist)
+    _marcar_playlist_sync(int(playlist_id))
     return {"ok": True, "mensaje": "Playlist renombrada.", "playlist_id": int(playlist_id), "nombre": nombre_limpio}
 
 
@@ -3948,6 +4030,7 @@ def editar_descripcion_playlist(playlist_id: int, descripcion: str) -> dict:
             (descripcion_limpia, int(playlist_id)),
         )
         _marcar_editada_si_corresponde(conexion, playlist)
+    _marcar_playlist_sync(int(playlist_id))
     return {"ok": True, "mensaje": "Descripción actualizada.", "playlist_id": int(playlist_id)}
 
 
@@ -3959,7 +4042,21 @@ def agregar_a_playlist(playlist_id: int, pista_id: int) -> dict:
     if not _pista_existe(int(pista_id or 0)):
         return {"ok": False, "mensaje": "No encontré esa canción en la biblioteca."}
     if _es_playlist_favoritos(playlist):
-        ejecutar("UPDATE pistas SET favorita = 1, actualizado_en = datetime('now') WHERE id = ?", (int(pista_id),))
+        # Sella favorita_actualizada_en y bumpea sync_version igual que el
+        # corazón (toggle_favorita): si no, marcar favorita por esta vía no
+        # llegaba al móvil en el delta por-pista (favoritos incompletos en el
+        # celular).
+        ejecutar(
+            "UPDATE pistas SET favorita = 1, "
+            "favorita_actualizada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), "
+            "actualizado_en = datetime('now') WHERE id = ?",
+            (int(pista_id),),
+        )
+        try:
+            from db.conexion import marcar_sync_version
+            marcar_sync_version("pistas", int(pista_id))
+        except Exception as exc:
+            logger.warning("No se pudo marcar sync_version al favoritar %s: %s", pista_id, exc)
         _sincronizar_playlist_favoritos()
         return {"ok": True, "mensaje": "Canción marcada como favorita.", "playlist_id": int(playlist_id), "pista_id": int(pista_id)}
 
@@ -3989,6 +4086,7 @@ def agregar_a_playlist(playlist_id: int, pista_id: int) -> dict:
         _marcar_editada_si_corresponde(conexion, playlist)
     if posicion <= 4:
         actualizar_portada_playlist_si_cambio(int(playlist_id))
+    _marcar_playlist_sync(int(playlist_id))
     return {"ok": True, "mensaje": "Canción añadida.", "playlist_id": int(playlist_id), "pista_id": int(pista_id)}
 
 
@@ -4017,6 +4115,14 @@ def eliminar_playlist(playlist_id: int) -> dict:
         """,
         (int(playlist_id),),
     )
+    # Propaga la ocultación al móvil: `_playlists_desde` solo envía visibles, así
+    # que una playlist ya entregada no se "des-enviaría" sola; el tombstone la
+    # elimina del dispositivo.
+    try:
+        from db.conexion import registrar_tombstone
+        registrar_tombstone("playlist", int(playlist_id))
+    except Exception as exc:
+        logger.debug("No se pudo registrar tombstone de playlist oculta %s: %s", playlist_id, exc)
     return {"ok": True, "mensaje": "Playlist ocultada.", "oculta": True}
 
 
@@ -4026,7 +4132,19 @@ def quitar_de_playlist(playlist_id: int, pista_id: int) -> dict:
     if not playlist:
         return {"ok": False, "mensaje": "No encontré esa playlist."}
     if _es_playlist_favoritos(playlist):
-        ejecutar("UPDATE pistas SET favorita = 0, actualizado_en = datetime('now') WHERE id = ?", (int(pista_id),))
+        # Sella timestamp + bumpea sync_version (igual que el corazón): el
+        # desmarcado por esta vía también debe propagarse al móvil.
+        ejecutar(
+            "UPDATE pistas SET favorita = 0, "
+            "favorita_actualizada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), "
+            "actualizado_en = datetime('now') WHERE id = ?",
+            (int(pista_id),),
+        )
+        try:
+            from db.conexion import marcar_sync_version
+            marcar_sync_version("pistas", int(pista_id))
+        except Exception as exc:
+            logger.warning("No se pudo marcar sync_version al quitar favorita %s: %s", pista_id, exc)
         _sincronizar_playlist_favoritos()
         return {"ok": True, "mensaje": "Canción quitada de Me gusta.", "playlist_id": int(playlist_id), "pista_id": int(pista_id)}
     posicion_previa = obtener_una_fila(
@@ -4047,6 +4165,7 @@ def quitar_de_playlist(playlist_id: int, pista_id: int) -> dict:
     posicion_valor = int(posicion_previa["posicion"] if posicion_previa else 9999)
     if posicion_valor <= 4:
         actualizar_portada_playlist_si_cambio(int(playlist_id))
+    _marcar_playlist_sync(int(playlist_id))
     return {"ok": True, "mensaje": "Canción quitada de esta playlist.", "playlist_id": int(playlist_id), "pista_id": int(pista_id)}
 
 
@@ -4389,6 +4508,7 @@ def vaciar_playlist(playlist_id: int) -> dict:
         )
         _marcar_editada_si_corresponde(conexion, playlist)
     actualizar_portada_playlist_si_cambio(int(playlist_id))
+    _marcar_playlist_sync(int(playlist_id))
     return {"ok": True, "mensaje": "Playlist vaciada.", "playlist_id": int(playlist_id)}
 
 
@@ -4466,6 +4586,7 @@ def anclar_playlist(playlist_id: int, anclada: bool) -> dict:
         "UPDATE playlists SET es_anclada = ?, anclada_en = ?, actualizado_en = datetime('now') WHERE id = ?",
         (1 if anclada else 0, _ahora_iso() if anclada else None, int(playlist_id)),
     )
+    _marcar_playlist_sync(int(playlist_id))
     return {"ok": True, "mensaje": "Playlist anclada." if anclada else "Playlist desanclada.", "playlist_id": int(playlist_id)}
 
 
