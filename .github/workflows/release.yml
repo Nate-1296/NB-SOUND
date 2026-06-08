@@ -81,7 +81,7 @@ jobs:
           # ffprobe es REQUERIDO por `demucs.audio.AudioFile` (lo invoca
           # por nombre vía subprocess al leer cualquier MP3). Sin él,
           # Karaoke falla con "audio_corrupto" aunque ffmpeg esté en PATH.
-          curl --fail -sSL "${{ env.FFMPEG_LINUX_URL }}" -o /tmp/ffmpeg.tar.xz
+          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "${{ env.FFMPEG_LINUX_URL }}" -o /tmp/ffmpeg.tar.xz
           tar -xJf /tmp/ffmpeg.tar.xz -C /tmp
           cp /tmp/ffmpeg-master-latest-linux64-gpl/bin/ffmpeg external_bin/ffmpeg
           cp /tmp/ffmpeg-master-latest-linux64-gpl/bin/ffprobe external_bin/ffprobe
@@ -89,7 +89,7 @@ jobs:
           # fpcalc oficial de Chromaprint (ruta explícita — no depende de find)
           CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-linux-x86_64"
           CP_URL="https://github.com/acoustid/chromaprint/releases/download/v${{ env.CHROMAPRINT_VERSION }}/${CP_DIR}.tar.gz"
-          curl --fail -sSL "$CP_URL" -o /tmp/fpcalc.tar.gz
+          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "$CP_URL" -o /tmp/fpcalc.tar.gz
           tar -xzf /tmp/fpcalc.tar.gz -C /tmp
           cp "/tmp/${CP_DIR}/fpcalc" external_bin/fpcalc
           chmod +x external_bin/fpcalc
@@ -129,7 +129,8 @@ jobs:
         run: |
           set -euo pipefail
           VER="${{ steps.ver.outputs.value }}"
-          curl -sSL "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" \
+          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors \
+            "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" \
             -o /tmp/appimagetool
           chmod +x /tmp/appimagetool
 
@@ -319,7 +320,7 @@ jobs:
           # ffmpeg + ffprobe — BtbN GPL win64 (URL estable "latest").
           # Estructura del zip: ffmpeg-master-latest-win64-gpl/bin/{ffmpeg,ffprobe}.exe.
           # ffprobe es requerido por demucs.audio (lo invoca por nombre).
-          curl --fail -sSL "${{ env.FFMPEG_WINDOWS_URL }}" -o /tmp/ffmpeg.zip
+          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "${{ env.FFMPEG_WINDOWS_URL }}" -o /tmp/ffmpeg.zip
           unzip -q /tmp/ffmpeg.zip -d /tmp/ffmpeg-extracted
           find /tmp/ffmpeg-extracted -name "ffmpeg.exe" -type f \
             -exec cp {} external_bin/ffmpeg.exe \;
@@ -330,7 +331,7 @@ jobs:
           # fpcalc oficial de Chromaprint (ruta explícita)
           CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-windows-x86_64"
           CP_URL="https://github.com/acoustid/chromaprint/releases/download/v${{ env.CHROMAPRINT_VERSION }}/${CP_DIR}.zip"
-          curl --fail -sSL "$CP_URL" -o /tmp/fpcalc.zip
+          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "$CP_URL" -o /tmp/fpcalc.zip
           unzip -q /tmp/fpcalc.zip -d /tmp/fpcalc-extracted
           cp "/tmp/fpcalc-extracted/${CP_DIR}/fpcalc.exe" external_bin/fpcalc.exe
           ls -la external_bin/
@@ -441,18 +442,18 @@ jobs:
           mkdir -p external_bin
           # ffmpeg + ffprobe desde evermeet.cx (zip contiene solo el binario en la raíz).
           # ffprobe es requerido por demucs.audio (lo invoca por nombre).
-          curl --fail -sSL "${{ env.FFMPEG_MACOS_URL }}" -o /tmp/ffmpeg.zip
+          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "${{ env.FFMPEG_MACOS_URL }}" -o /tmp/ffmpeg.zip
           unzip -q /tmp/ffmpeg.zip -d /tmp/ffmpeg-extracted
           cp /tmp/ffmpeg-extracted/ffmpeg external_bin/ffmpeg
           chmod +x external_bin/ffmpeg
-          curl --fail -sSL "${{ env.FFPROBE_MACOS_URL }}" -o /tmp/ffprobe.zip
+          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "${{ env.FFPROBE_MACOS_URL }}" -o /tmp/ffprobe.zip
           unzip -q /tmp/ffprobe.zip -d /tmp/ffprobe-extracted
           cp /tmp/ffprobe-extracted/ffprobe external_bin/ffprobe
           chmod +x external_bin/ffprobe
           # fpcalc oficial de Chromaprint (ruta explícita — no depende de find)
           CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-macos-x86_64"
           CP_URL="https://github.com/acoustid/chromaprint/releases/download/v${{ env.CHROMAPRINT_VERSION }}/${CP_DIR}.tar.gz"
-          curl --fail -sSL "$CP_URL" -o /tmp/fpcalc.tar.gz
+          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "$CP_URL" -o /tmp/fpcalc.tar.gz
           tar -xzf /tmp/fpcalc.tar.gz -C /tmp
           cp "/tmp/${CP_DIR}/fpcalc" external_bin/fpcalc
           chmod +x external_bin/fpcalc
