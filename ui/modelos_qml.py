@@ -11200,7 +11200,12 @@ class ModeloSincronizacion(QObject):
                 from servicios.biblioteca import obtener_pista
                 datos = obtener_pista(int(mensaje.get("pista_id") or 0))
                 if datos:
-                    rep.reproducir_pista(dict(datos))
+                    # `ModeloReproductor` expone la reproducción de una pista
+                    # como slot `reproducir(datos)`; `reproducir_pista` solo
+                    # existe en el servicio interno (`self._rep`), no en el
+                    # modelo, así que llamarlo aquí lanzaba AttributeError y el
+                    # handoff desde el móvil no hacía nada.
+                    rep.reproducir(dict(datos))
                     posicion = float(mensaje.get("posicion_seg", 0) or 0)
                     if posicion > 0:
                         rep.buscar_posicion(posicion)

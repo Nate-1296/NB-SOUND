@@ -17,6 +17,7 @@ import pytest
 from infra.bootstrap import (
     RutasEstandar,
     asegurar_entorno,
+    elevar_limite_descriptores,
     primer_arranque_necesario,
     resolver_rutas_estandar,
 )
@@ -139,3 +140,45 @@ class TestPrimerArranque:
     def test_no_activa_si_library_ya_resuelta(self, tmp_path):
         # Caso real: usuario sin .env pero con USER_LIBRARY_DIR via env var
         assert primer_arranque_necesario(env_existe=False, library_resuelta=tmp_path) is False
+
+
+# -----------------------------------------------------------------------------
+# Limite de descriptores de archivo (RLIMIT_NOFILE)
+# -----------------------------------------------------------------------------
+
+class TestElevarLimiteDescriptores:
+
+    def test_sube_blando_y_es_idempotente(self):
+        resource = pytest.importorskip("resource")
+        original = resource.getrlimit(resource.RLIMIT_NOFILE)
+        _soft0, hard0 = original
+        esperado = 8192 if hard0 == resource.RLIM_INFINITY else min(8192, hard0)
+        try:
+            # Fuerza un blando bajo (sin tocar el duro: bajarlo no requiere
+            # privilegios, pero restaurarlo si lo elevaramos, si) para ejercitar
+            # la elevacion.
+            resource.setrlimit(resource.RLIMIT_NOFILE, (min(256, esperado), hard0))
+            res = elevar_limite_descriptores()
+            assert res is not None
+            soft_final = resource.getrlimit(resource.RLIMIT_NOFILE)[0]
+            assert soft_final == esperado == res[0]
+            # Idempotente: una segunda llamada no baja el limite.
+            elevar_limite_descriptores()
+            assert resource.getrlimit(resource.RLIMIT_NOFILE)[0] == esperado
+        finally:
+            resource.setrlimit(resource.RLIMIT_NOFILE, original)
+
+    def test_no_rompe_en_plataforma_sin_resource(self, monkeypatch):
+        # En Windows `import resource` lanza ImportError; el helper debe
+        # devolver None sin propagar.
+        import builtins
+
+        real_import = builtins.__import__
+
+        def _import_falla(nombre, *args, **kwargs):
+            if nombre == "resource":
+                raise ImportError("simulado: plataforma sin resource")
+            return real_import(nombre, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", _import_falla)
+        assert elevar_limite_descriptores() is None

@@ -283,6 +283,41 @@ def primer_arranque_necesario(env_existe: bool,
     return True
 
 
+def elevar_limite_descriptores(objetivo: int = 8192) -> Optional[tuple[int, int]]:
+    """Eleva el limite blando de descriptores de archivo (RLIMIT_NOFILE).
+
+    NB Sound corre, en el mismo proceso, la UI Qt, el servidor de
+    sincronizacion aiohttp (sirve audio/portadas a varios dispositivos a la
+    vez), zeroconf/mDNS y SQLite. Bajo carga -p. ej. el movil descargando la
+    biblioteca o abriendo una vista con cientos de caratulas- las aperturas
+    concurrentes (sockets + archivos) pueden superar el limite blando por
+    defecto (1024) y provocar ``[Errno 24] Too many open files``, que llega a
+    cerrar la app.
+
+    Sube el limite blando hasta ``min(objetivo, limite_duro)``. Es idempotente
+    y best-effort: en plataformas sin ``resource`` (Windows) o si el SO lo
+    rechaza, no hace nada. Devuelve ``(blando, duro)`` resultante, o ``None``
+    si no se pudo aplicar.
+    """
+    try:
+        import resource  # POSIX-only; ausente en Windows.
+    except ImportError:
+        return None
+    try:
+        blando, duro = resource.getrlimit(resource.RLIMIT_NOFILE)
+    except (ValueError, OSError):
+        return None
+    # Un limite duro "infinito" (RLIM_INFINITY) permite subir hasta `objetivo`.
+    nuevo = objetivo if duro == resource.RLIM_INFINITY else min(objetivo, duro)
+    if blando != resource.RLIM_INFINITY and nuevo <= blando:
+        return (blando, duro)  # El limite vigente ya es suficiente.
+    try:
+        resource.setrlimit(resource.RLIMIT_NOFILE, (nuevo, duro))
+    except (ValueError, OSError):
+        return (blando, duro)
+    return (nuevo, duro)
+
+
 def emitir_resumen(resultado: ResultadoBootstrap, stream=None) -> None:
     """Imprime un resumen compacto del bootstrap. Util en CLI/primer arranque."""
     stream = stream or sys.stderr

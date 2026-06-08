@@ -526,6 +526,57 @@ def test_asegurar_portadas_playlists_regenera_las_que_faltan_y_es_idempotente(
     assert svc_bib.asegurar_portadas_playlists() == []
 
 
+def test_generar_portada_no_redecodifica_si_no_cambio(db_playlists, tmp_path, monkeypatch):
+    """Regresion: regenerar la caratula de una playlist sin cambios debe usar el
+    early-return barato (firma rapida) y NO decodificar ninguna imagen. Es lo
+    que evita que la red de seguridad de arranque re-decodifique miles de
+    portadas en cada inicio."""
+    Image = pytest.importorskip("PIL.Image")
+    from config import settings as _settings
+    monkeypatch.setattr(_settings, "DEFAULT_CACHE_DIR", tmp_path / "cache")
+
+    covers = []
+    for idx, color in enumerate(("red", "green", "blue", "yellow")):
+        path = tmp_path / f"cover-{idx}.png"
+        Image.new("RGB", (40, 40), color=color).save(path)
+        covers.append(path)
+    ids = [
+        _crear_pista(db_playlists, f"Pista {i}", artista="Artista", album=f"Album {i}", portada=str(covers[i]))
+        for i in range(4)
+    ]
+    playlist_id = svc_bib.crear_playlist("Estable")
+    for pista_id in ids:
+        svc_bib.agregar_a_playlist(playlist_id, pista_id)
+
+    # Primera generacion: deja la caratula al dia.
+    primera = svc_bib.actualizar_portada_playlist_si_cambio(playlist_id)
+    assert primera and Path(primera).exists()
+
+    # Espia la seleccion costosa (la unica via que decodifica imagenes).
+    llamadas = {"n": 0}
+    real = svc_bib._portadas_playlist_con_ids
+
+    def _spy(*args, **kwargs):
+        llamadas["n"] += 1
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(svc_bib, "_portadas_playlist_con_ids", _spy)
+
+    # Sin cambios -> early-return barato, cero decodificacion.
+    segunda = svc_bib.generar_portada_playlist(playlist_id)
+    assert segunda == primera
+    assert llamadas["n"] == 0, "no debe decodificar imagenes si la playlist no cambio"
+
+    # Al cambiar las pistas, si debe regenerar (y por tanto seleccionar/decodificar).
+    quinta = tmp_path / "cover-extra.png"
+    Image.new("RGB", (40, 40), color="purple").save(quinta)
+    extra = _crear_pista(db_playlists, "Extra", artista="Artista", album="Album Extra", portada=str(quinta))
+    svc_bib.agregar_a_playlist(playlist_id, extra)
+    tercera = svc_bib.generar_portada_playlist(playlist_id)
+    assert tercera != primera
+    assert llamadas["n"] >= 1, "una playlist modificada si debe regenerar"
+
+
 def test_collage_deduplica_portadas_visualmente_iguales_y_tolera_faltantes(db_playlists, tmp_path, monkeypatch):
     Image = pytest.importorskip("PIL.Image")
     from config import settings as _settings

@@ -699,6 +699,14 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    # Sube el limite de descriptores antes de levantar el servidor de sync: la
+    # app sirve audio/portadas a varios dispositivos a la vez (aiohttp) ademas
+    # de Qt/SQLite/mDNS; con el limite blando por defecto (1024) una rafaga de
+    # descargas del movil agota los FDs y la app puede cerrarse con
+    # "Too many open files". Best-effort y no-op en Windows.
+    from infra.bootstrap import elevar_limite_descriptores
+    elevar_limite_descriptores()
+
     ruta_db = Path(args.db).expanduser().resolve()
 
     # Evita reutilizar bytecode QML obsoleto entre ejecuciones cuando se hacen

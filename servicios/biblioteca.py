@@ -2559,6 +2559,50 @@ def _portadas_playlist_con_ids(playlist_id: int, limite: int = 4) -> list[dict]:
     return out
 
 
+def _firma_rapida_playlist(playlist_id: int, limite: int = 4) -> str:
+    """Firma barata (sin decodificar imagenes) de las entradas que alimentan la
+    caratula de la playlist: id de pista + ruta de portada + (mtime, size) del
+    archivo. Cambia cuando cambian las pistas, su orden, la portada de su album
+    o el contenido del archivo de portada.
+
+    Permite a `generar_portada_playlist` decidir si la caratula sigue vigente
+    SIN abrir ni decodificar ninguna imagen (el hash perceptual de
+    `_portadas_playlist_con_ids` es lo caro). Espeja la consulta de candidatos
+    de `_portadas_playlist_con_ids`; manten ambas consistentes.
+    """
+    filas = obtener_filas(
+        """
+        SELECT
+            p.id AS pista_id,
+            al.portada_ruta AS album_portada_ruta,
+            al.mb_release_id AS album_mb_release_id
+        FROM pistas_playlist pp
+        JOIN pistas p ON p.id = pp.pista_id
+        LEFT JOIN albums al ON al.id = p.album_id
+        WHERE pp.playlist_id = ? AND p.estado = 'biblioteca'
+        ORDER BY pp.posicion
+        LIMIT 80
+        """,
+        (int(playlist_id),),
+    )
+    piezas = [PLAYLIST_COVER_ALGO_VERSION, str(int(playlist_id)), str(max(1, int(limite or 4)))]
+    for fila in filas:
+        portada = _resolver_portada_fila(fila["album_portada_ruta"], fila["album_mb_release_id"])
+        if not portada:
+            continue
+        marca = ""
+        path_local = _ruta_local_portada(portada)
+        if path_local is not None:
+            try:
+                st = path_local.stat()
+            except OSError:
+                # No existe / inaccesible: igual que en la seleccion, no aporta.
+                continue
+            marca = f"{st.st_mtime_ns}:{st.st_size}"
+        piezas.append(f"{int(fila['pista_id'])}:{portada}:{marca}")
+    return hashlib.sha256("|".join(piezas).encode("utf-8")).hexdigest()[:24]
+
+
 def _clave_portada_playlist(ruta: str) -> str:
     path = _ruta_local_portada(ruta)
     if path is not None:
@@ -2690,15 +2734,23 @@ def generar_portada_playlist(playlist_id: int) -> Optional[str]:
         from PIL import ImageDraw
 
         size = 512
-        entradas = _portadas_playlist_con_ids(int(playlist_id), limite=4)
-        digest = _firma_portada_playlist(int(playlist_id), entradas)
-        destino = _directorio_portadas_playlist() / f"playlist_{int(playlist_id)}_{digest}.png"
+        # Firma barata (sin decodificar imagenes) de las entradas de la
+        # caratula. Nombra el archivo y habilita el early-return de abajo sin
+        # abrir una sola imagen cuando la playlist no cambio: asi la red de
+        # seguridad de arranque (`asegurar_portadas_playlists`) no
+        # re-decodifica miles de portadas en cada inicio.
+        fastsig = _firma_rapida_playlist(int(playlist_id), limite=4)
+        destino = _directorio_portadas_playlist() / f"playlist_{int(playlist_id)}_{fastsig}.png"
         destino.parent.mkdir(parents=True, exist_ok=True)
 
         actual = str(playlist.get("portada_ruta") or "").strip()
         if actual == str(destino) and destino.exists() and destino.stat().st_size > 0:
             return str(destino)
 
+        # Regeneracion real: recien aqui seleccionamos las portadas con dedupe
+        # visual (esto si decodifica) y construimos el mosaico.
+        entradas = _portadas_playlist_con_ids(int(playlist_id), limite=4)
+        digest = _firma_portada_playlist(int(playlist_id), entradas)
         base = _crear_lienzo_playlist(size, digest)
         total = len(entradas)
         if total == 1:
