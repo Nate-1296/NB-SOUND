@@ -554,13 +554,20 @@ jobs:
           done
           [ -n "$got" ] || { echo "ERROR: ffmpeg/ffprobe no disponibles en ningún mirror"; exit 1; }
           chmod +x external_bin/ffmpeg external_bin/ffprobe
-          # fpcalc oficial de Chromaprint (ruta explícita — no depende de find)
-          CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-macos-x86_64"
+          # fpcalc oficial de Chromaprint (ruta explícita)
+          CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-macOS-x86_64"
           CP_URL="https://github.com/acoustid/chromaprint/releases/download/v${{ env.CHROMAPRINT_VERSION }}/${CP_DIR}.tar.gz"
-          "${CURL[@]}" "$CP_URL" -o /tmp/fpcalc.tar.gz
+          
+          echo ">>> Descargando fpcalc desde $CP_URL"
+          "${CURL[@]}" "$CP_URL" -o /tmp/fpcalc.tar.gz || {
+            echo "ERROR: Falló la descarga de fpcalc. El CDN de GitHub devolvió un error HTTP persistente (probablemente 504 o 404)."
+            exit 1
+          }
+          
           tar -xzf /tmp/fpcalc.tar.gz -C /tmp
           cp "/tmp/${CP_DIR}/fpcalc" external_bin/fpcalc
           chmod +x external_bin/fpcalc
+          
           ls -la external_bin/
           ./external_bin/ffmpeg -version | head -1
           ./external_bin/fpcalc -version
