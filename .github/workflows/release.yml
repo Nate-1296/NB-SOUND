@@ -19,17 +19,29 @@ permissions:
   contents: write
 
 env:
-  # ffmpeg/ffprobe (GPL; ffprobe lo requiere demucs). Se descargan de mirrors
-  # AJENOS a GitHub como vía primaria: el CDN de releases de GitHub
-  # (release-assets.githubusercontent.com) devuelve 504 a los runners en
-  # archivos grandes (el rolling "latest" de BtbN: 142 MB Linux / 221 MB Windows),
-  # y los reintentos no bastan porque el 504 es persistente. macOS ya usaba un
-  # host externo (evermeet.cx) y por eso nunca fallaba. BtbN queda como FALLBACK
-  # por si el mirror principal está caído; la extracción localiza los binarios
-  # con `find`, así que tolera la estructura de cualquiera de los dos.
-  # johnvansickle (Linux) y gyan.dev (Windows) son los mirrors estándar de CI y
-  # publican builds estáticos GPL con ffmpeg + ffprobe.
+  # ffmpeg/ffprobe (GPL; ffprobe lo REQUIERE demucs.audio por nombre). Se bajan
+  # de hosts AJENOS a GitHub porque el CDN de releases de GitHub
+  # (release-assets.githubusercontent.com) devuelve 504 PERSISTENTE a los runners
+  # en archivos grandes (el rolling "latest" de BtbN: 142 MB Linux / 221 MB Win).
+  #
+  # Todas las descargas usan curl forzado a HTTP/1.1 + User-Agent de navegador:
+  # el Apache de johnvansickle negocia mal HTTP/2 con la IP de los runners de
+  # Azure y devolvía "curl (16) Error in the HTTP2 framing layer" + 415, tumbando
+  # el job de Linux incluso con reintentos. HTTP/1.1 elimina esa clase de fallo en
+  # todos los hosts (verificado: gyan / evermeet / GitHub / Cloudflare lo sirven
+  # igual). El UA es seguro extra contra filtros por cliente.
+  #
+  # Linux encadena TRES fuentes independientes hasta obtener AMBOS binarios
+  # (ver job linux):
+  #   1) johnvansickle  — build 100% ESTÁTICO (el más portable), tar.xz
+  #   2) martin-riedl   — mirror tras Cloudflare (fiable desde CI), ffmpeg.zip +
+  #                       ffprobe.zip; build dinámico (glibc/libstdc++), solo si
+  #                       (1) está inaccesible
+  #   3) BtbN (GitHub)  — último recurso
+  # La extracción localiza los binarios con `find`, tolerando cualquier estructura.
   FFMPEG_LINUX_URL: "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
+  FFMPEG_LINUX_URL_MR: "https://ffmpeg.martin-riedl.de/redirect/latest/linux/amd64/release/ffmpeg.zip"
+  FFPROBE_LINUX_URL_MR: "https://ffmpeg.martin-riedl.de/redirect/latest/linux/amd64/release/ffprobe.zip"
   FFMPEG_LINUX_URL_FALLBACK: "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"
   FFMPEG_WINDOWS_URL: "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
   FFMPEG_WINDOWS_URL_FALLBACK: "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
@@ -86,31 +98,63 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p external_bin
+          # curl endurecido: --http1.1 evita el "(16) Error in the HTTP2 framing
+          # layer" + 415 que el Apache de johnvansickle devuelve a la IP de los
+          # runners; UA de navegador como seguro extra; reintentos con backoff.
+          CURL=(curl --fail -sSL --http1.1 --connect-timeout 30
+                -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+                --retry 5 --retry-delay 5 --retry-all-errors)
+
           # ffmpeg + ffprobe estáticos (build GPL — compatible con GPL-3.0+).
-          # ffprobe es REQUERIDO por `demucs.audio.AudioFile` (lo invoca
-          # por nombre vía subprocess al leer cualquier MP3). Sin él,
-          # Karaoke falla con "audio_corrupto" aunque ffmpeg esté en PATH.
-          # Primario: johnvansickle (host ajeno a GitHub, builds estáticos);
-          # fallback: BtbN. Se localizan con `find` para no depender del nombre
-          # del directorio (johnvansickle: ffmpeg-<ver>-amd64-static/; BtbN: .../bin/).
-          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "${{ env.FFMPEG_LINUX_URL }}" -o /tmp/ffmpeg.tar.xz \
-            || curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "${{ env.FFMPEG_LINUX_URL_FALLBACK }}" -o /tmp/ffmpeg.tar.xz
-          mkdir -p /tmp/ffmpeg-extracted
-          tar -xJf /tmp/ffmpeg.tar.xz -C /tmp/ffmpeg-extracted
-          find /tmp/ffmpeg-extracted -name ffmpeg -type f -exec cp {} external_bin/ffmpeg \;
-          find /tmp/ffmpeg-extracted -name ffprobe -type f -exec cp {} external_bin/ffprobe \;
-          test -f external_bin/ffmpeg || { echo "ERROR: ffmpeg no encontrado en el archivo"; exit 1; }
-          test -f external_bin/ffprobe || { echo "ERROR: ffprobe no encontrado en el archivo"; exit 1; }
+          # ffprobe es REQUERIDO por `demucs.audio.AudioFile` (lo invoca por
+          # nombre vía subprocess al leer cualquier MP3); sin él, Karaoke falla
+          # con "audio_corrupto" aunque ffmpeg esté en PATH.
+          # Se intentan, en orden, tres fuentes independientes (ver `env:`) hasta
+          # obtener AMBOS binarios. Se localizan con `find` para no depender del
+          # nombre del directorio interno de cada archivo.
+          fetch_jvs() {   # johnvansickle: tar.xz, build 100% estático (preferido)
+            "${CURL[@]}" "${{ env.FFMPEG_LINUX_URL }}" -o /tmp/ffmpeg.tar.xz || return 1
+            rm -rf /tmp/ffx && mkdir -p /tmp/ffx
+            tar -xJf /tmp/ffmpeg.tar.xz -C /tmp/ffx || return 1
+            find /tmp/ffx -name ffmpeg  -type f -exec cp {} external_bin/ffmpeg  \;
+            find /tmp/ffx -name ffprobe -type f -exec cp {} external_bin/ffprobe \;
+          }
+          fetch_mr() {    # martin-riedl: ffmpeg.zip + ffprobe.zip (Cloudflare)
+            "${CURL[@]}" "${{ env.FFMPEG_LINUX_URL_MR }}"  -o /tmp/ffmpeg.zip  || return 1
+            "${CURL[@]}" "${{ env.FFPROBE_LINUX_URL_MR }}" -o /tmp/ffprobe.zip || return 1
+            unzip -oq /tmp/ffmpeg.zip  -d external_bin || return 1
+            unzip -oq /tmp/ffprobe.zip -d external_bin || return 1
+          }
+          fetch_btbn() {  # BtbN (GitHub): tar.xz, último recurso
+            "${CURL[@]}" "${{ env.FFMPEG_LINUX_URL_FALLBACK }}" -o /tmp/ffmpeg.tar.xz || return 1
+            rm -rf /tmp/ffx && mkdir -p /tmp/ffx
+            tar -xJf /tmp/ffmpeg.tar.xz -C /tmp/ffx || return 1
+            find /tmp/ffx -name ffmpeg  -type f -exec cp {} external_bin/ffmpeg  \;
+            find /tmp/ffx -name ffprobe -type f -exec cp {} external_bin/ffprobe \;
+          }
+          got=""
+          for src in jvs mr btbn; do
+            echo ">>> ffmpeg/ffprobe: probando fuente '$src'"
+            rm -f external_bin/ffmpeg external_bin/ffprobe
+            if "fetch_$src" && [ -f external_bin/ffmpeg ] && [ -f external_bin/ffprobe ]; then
+              got="$src"; echo ">>> ffmpeg/ffprobe obtenidos de '$src'"; break
+            fi
+            echo ">>> fuente '$src' no sirvió; probando siguiente"
+          done
+          [ -n "$got" ] || { echo "ERROR: ffmpeg/ffprobe no disponibles en ningún mirror"; exit 1; }
           chmod +x external_bin/ffmpeg external_bin/ffprobe
-          # fpcalc oficial de Chromaprint (ruta explícita — no depende de find)
+
+          # fpcalc oficial de Chromaprint (GitHub, archivo pequeño y fiable;
+          # ruta explícita — no depende de find)
           CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-linux-x86_64"
           CP_URL="https://github.com/acoustid/chromaprint/releases/download/v${{ env.CHROMAPRINT_VERSION }}/${CP_DIR}.tar.gz"
-          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "$CP_URL" -o /tmp/fpcalc.tar.gz
+          "${CURL[@]}" "$CP_URL" -o /tmp/fpcalc.tar.gz
           tar -xzf /tmp/fpcalc.tar.gz -C /tmp
           cp "/tmp/${CP_DIR}/fpcalc" external_bin/fpcalc
           chmod +x external_bin/fpcalc
           ls -la external_bin/
           ./external_bin/ffmpeg -version | head -1
+          ./external_bin/ffprobe -version | head -1
           ./external_bin/fpcalc -version
 
       - name: Construir bundle con PyInstaller
@@ -145,7 +189,9 @@ jobs:
         run: |
           set -euo pipefail
           VER="${{ steps.ver.outputs.value }}"
-          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors \
+          curl --fail -sSL --http1.1 --connect-timeout 30 \
+            -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36" \
+            --retry 5 --retry-delay 5 --retry-all-errors \
             "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" \
             -o /tmp/appimagetool
           chmod +x /tmp/appimagetool
@@ -333,12 +379,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p external_bin
+          # curl endurecido (igual que Linux): --http1.1 + UA de navegador para
+          # evitar fallos de negociación HTTP/2 desde la IP de los runners.
+          CURL=(curl --fail -sSL --http1.1 --connect-timeout 30
+                -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+                --retry 5 --retry-delay 5 --retry-all-errors)
           # ffmpeg + ffprobe (GPL win64). ffprobe es requerido por demucs.audio
           # (lo invoca por nombre). Primario: gyan.dev (host ajeno a GitHub,
           # estructura ffmpeg-<ver>-essentials_build/bin/*.exe); fallback: BtbN.
           # Se localizan con `find`, así que no dependen del nombre del directorio.
-          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "${{ env.FFMPEG_WINDOWS_URL }}" -o /tmp/ffmpeg.zip \
-            || curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "${{ env.FFMPEG_WINDOWS_URL_FALLBACK }}" -o /tmp/ffmpeg.zip
+          "${CURL[@]}" "${{ env.FFMPEG_WINDOWS_URL }}" -o /tmp/ffmpeg.zip \
+            || "${CURL[@]}" "${{ env.FFMPEG_WINDOWS_URL_FALLBACK }}" -o /tmp/ffmpeg.zip
           unzip -q /tmp/ffmpeg.zip -d /tmp/ffmpeg-extracted
           find /tmp/ffmpeg-extracted -name "ffmpeg.exe" -type f \
             -exec cp {} external_bin/ffmpeg.exe \;
@@ -349,7 +400,7 @@ jobs:
           # fpcalc oficial de Chromaprint (ruta explícita)
           CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-windows-x86_64"
           CP_URL="https://github.com/acoustid/chromaprint/releases/download/v${{ env.CHROMAPRINT_VERSION }}/${CP_DIR}.zip"
-          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "$CP_URL" -o /tmp/fpcalc.zip
+          "${CURL[@]}" "$CP_URL" -o /tmp/fpcalc.zip
           unzip -q /tmp/fpcalc.zip -d /tmp/fpcalc-extracted
           cp "/tmp/fpcalc-extracted/${CP_DIR}/fpcalc.exe" external_bin/fpcalc.exe
           ls -la external_bin/
@@ -458,20 +509,24 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p external_bin
+          # curl endurecido (igual que Linux/Windows): --http1.1 + UA de navegador.
+          CURL=(curl --fail -sSL --http1.1 --connect-timeout 30
+                -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+                --retry 5 --retry-delay 5 --retry-all-errors)
           # ffmpeg + ffprobe desde evermeet.cx (zip contiene solo el binario en la raíz).
           # ffprobe es requerido por demucs.audio (lo invoca por nombre).
-          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "${{ env.FFMPEG_MACOS_URL }}" -o /tmp/ffmpeg.zip
+          "${CURL[@]}" "${{ env.FFMPEG_MACOS_URL }}" -o /tmp/ffmpeg.zip
           unzip -q /tmp/ffmpeg.zip -d /tmp/ffmpeg-extracted
           cp /tmp/ffmpeg-extracted/ffmpeg external_bin/ffmpeg
           chmod +x external_bin/ffmpeg
-          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "${{ env.FFPROBE_MACOS_URL }}" -o /tmp/ffprobe.zip
+          "${CURL[@]}" "${{ env.FFPROBE_MACOS_URL }}" -o /tmp/ffprobe.zip
           unzip -q /tmp/ffprobe.zip -d /tmp/ffprobe-extracted
           cp /tmp/ffprobe-extracted/ffprobe external_bin/ffprobe
           chmod +x external_bin/ffprobe
           # fpcalc oficial de Chromaprint (ruta explícita — no depende de find)
           CP_DIR="chromaprint-fpcalc-${{ env.CHROMAPRINT_VERSION }}-macos-x86_64"
           CP_URL="https://github.com/acoustid/chromaprint/releases/download/v${{ env.CHROMAPRINT_VERSION }}/${CP_DIR}.tar.gz"
-          curl --fail -sSL --retry 5 --retry-delay 5 --retry-all-errors "$CP_URL" -o /tmp/fpcalc.tar.gz
+          "${CURL[@]}" "$CP_URL" -o /tmp/fpcalc.tar.gz
           tar -xzf /tmp/fpcalc.tar.gz -C /tmp
           cp "/tmp/${CP_DIR}/fpcalc" external_bin/fpcalc
           chmod +x external_bin/fpcalc
