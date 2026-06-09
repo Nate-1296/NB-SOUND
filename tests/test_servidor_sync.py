@@ -163,6 +163,38 @@ def test_pair_token_valido_e_invalido(servidor):
     assert srv.payload_qr()["token"] != token
 
 
+def test_pair_con_codigo_corto_sin_qr(servidor):
+    """Emparejamiento sin cámara: el código corto (8 chars) vale como credencial,
+    es insensible a mayúsculas y rota tras un uso."""
+    srv, base, _rep, _tmp = servidor
+    codigo = srv.pairing_codigo
+    assert isinstance(codigo, str) and len(codigo) == 8
+
+    async def _t():
+        async with _cliente() as s:
+            # Código inválido -> 401
+            async with s.post(
+                f"{base}/api/v1/pair", json={"token": "BADCODE9", "nombre": "X"}
+            ) as r:
+                assert r.status == 401
+            # Código válido en minúsculas (insensible a mayúsculas) -> 200
+            async with s.post(
+                f"{base}/api/v1/pair",
+                json={"token": codigo.lower(), "nombre": "SinCamara", "plataforma": "android"},
+            ) as r:
+                assert r.status == 200
+                data = await r.json()
+                assert data["ok"] is True
+                assert data["device_token"]
+                return data["device_token"]
+
+    device_token = _run(_t())
+    disp = sync_repositorio.obtener_dispositivo_por_token(device_token)
+    assert disp is not None and disp["nombre"] == "SinCamara"
+    # Tras emparejar, el código rotó junto al token (un solo uso).
+    assert srv.pairing_codigo != codigo
+
+
 def test_endpoints_requieren_auth(servidor):
     srv, base, _rep, _tmp = servidor
 

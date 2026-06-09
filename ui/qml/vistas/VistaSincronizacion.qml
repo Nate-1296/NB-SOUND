@@ -205,6 +205,17 @@ Rectangle {
                                 font.pixelSize: UiTokens.fontSizeBase
                                 font.family: "monospace"
                             }
+                            // Código corto para emparejar SIN escanear el QR
+                            // (dispositivos sin cámara). Se teclea junto a la IP.
+                            AppText {
+                                Layout.fillWidth: true
+                                visible: sincronizacion.activo && sincronizacion.pairingCode.length > 0
+                                text: "Código para conectar sin QR: " + sincronizacion.pairingCode
+                                color: tema.texto
+                                font.pixelSize: UiTokens.fontSizeBase
+                                font.family: "monospace"
+                                font.weight: Font.DemiBold
+                            }
                             AppText {
                                 Layout.fillWidth: true
                                 visible: sincronizacion.activo

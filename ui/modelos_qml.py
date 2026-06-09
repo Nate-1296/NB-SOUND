@@ -11125,6 +11125,14 @@ class ModeloSincronizacion(QObject):
             return (payload or {}).get("token", "") if payload else ""
         return ""
 
+    @Property(str, notify=qrCambiado)
+    def pairingCode(self) -> str:
+        """Código corto (8 chars) para emparejar sin QR. Se muestra como texto en
+        la UI; se regenera con el QR y caduca igual que el token."""
+        if self._servidor and self._servidor.activo:
+            return self._servidor.pairing_codigo or ""
+        return ""
+
     # ── Slots de control del servidor ────────────────────────────────────────
 
     @Slot()

@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib.util
+import secrets
 import threading
 import time
 from pathlib import Path
@@ -119,6 +120,9 @@ class ServidorSync:
         self._mdns_info = None
 
         self._pairing_token: Optional[str] = None
+        # Código corto alternativo (8 chars) para emparejar sin QR. Comparte el
+        # ciclo de vida del token (se regenera y caduca con él).
+        self._pairing_codigo: Optional[str] = None
         self._pairing_expira: float = 0.0
 
     # ── Propiedades de estado ────────────────────────────────────────────────
@@ -164,6 +168,7 @@ class ServidorSync:
             "fingerprint": self._fingerprint,
             "version_protocolo": sync_repositorio.PROTOCOLO_VERSION,
             "pairing_token": self._pairing_token if self._token_vigente() else None,
+            "pairing_codigo": self._pairing_codigo if self._token_vigente() else None,
             "clientes_ws": self.numero_clientes_ws(),
             "error": self._error_arranque,
         }
@@ -194,10 +199,31 @@ class ServidorSync:
         return bool(self._pairing_token) and time.monotonic() < self._pairing_expira
 
     def regenerar_token(self) -> str:
-        """Emite un nuevo token efimero (invalida el anterior). Devuelve el token."""
+        """Emite un nuevo token efimero (invalida el anterior). Devuelve el token.
+
+        Regenera también el código corto de emparejamiento sin QR: ambos son
+        equivalentes y comparten expiración (un solo uso por ronda de pairing).
+        """
         self._pairing_token = sync_repositorio.generar_token()
+        self._pairing_codigo = sync_repositorio.generar_codigo_corto()
         self._pairing_expira = time.monotonic() + TTL_TOKEN_EMPAREJAMIENTO
         return self._pairing_token
+
+    @property
+    def pairing_codigo(self) -> Optional[str]:
+        """Código corto vigente para emparejar sin QR (None si caducó/inactivo)."""
+        return self._pairing_codigo if self._token_vigente() else None
+
+    def _credencial_valida(self, valor: str) -> bool:
+        """True si [valor] es el token del QR o el código corto vigente (este
+        último insensible a mayúsculas/espacios). Comparación de tiempo constante."""
+        if not valor or not self._token_vigente():
+            return False
+        tok = self._pairing_token or ""
+        if tok and secrets.compare_digest(valor, tok):
+            return True
+        cod = self._pairing_codigo or ""
+        return bool(cod) and secrets.compare_digest(valor.strip().upper(), cod)
 
     # ── Ciclo de vida ────────────────────────────────────────────────────────
 
@@ -459,8 +485,10 @@ class ServidorSync:
             datos = await request.json()
         except Exception:
             datos = {}
-        token = str(datos.get("token") or "")
-        if not self._token_vigente() or token != self._pairing_token:
+        # Acepta el token largo del QR o el código corto (emparejar sin cámara).
+        # El cliente envía cualquiera de los dos en el campo `token`.
+        token = str(datos.get("token") or datos.get("codigo") or "")
+        if not self._credencial_valida(token):
             return web.json_response({"error": "token_invalido_o_expirado"}, status=401)
 
         # El cliente Flutter envia `nombre_dispositivo` (ver

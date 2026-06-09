@@ -58,6 +58,21 @@ def generar_token() -> str:
     return secrets.token_urlsafe(32)
 
 
+# Alfabeto del código corto de emparejamiento: mayúsculas + dígitos SIN
+# caracteres ambiguos (0/O, 1/I/L) para que sea fácil de leer y teclear.
+_ALFABETO_CODIGO = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+
+def generar_codigo_corto(longitud: int = 8) -> str:
+    """Código corto alfanumérico (8 chars por defecto) para emparejar SIN QR.
+
+    Pensado para teclearse a mano cuando no se puede escanear el QR (dispositivos
+    sin cámara, cámara dañada, etc.). Es efímero y de un solo uso igual que el
+    token del QR: comparte su ciclo de vida en `ServidorSync`.
+    """
+    return "".join(secrets.choice(_ALFABETO_CODIGO) for _ in range(longitud))
+
+
 def _normalizar_plataforma(valor: Optional[str]) -> str:
     v = (valor or "").strip().lower()
     return v if v in _PLATAFORMAS_VALIDAS else "desconocida"
