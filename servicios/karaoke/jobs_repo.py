@@ -356,6 +356,12 @@ def marcar_lista(job_id: int, ruta_salida: str, *, bytes_salida: int,
                 """,
                 (ruta_salida, fila["pista_id"]),
             )
+            # Bump de sync_version: el karaoke recién generado debe llegar al
+            # móvil en el siguiente delta para que reprobe `/stems` (la app móvil
+            # resetea el estado de stems de las pistas que cambian). Atómico: misma
+            # conexión/transacción (el lock es reentrante).
+            from db.conexion import marcar_sync_version
+            marcar_sync_version("pistas", int(fila["pista_id"]))
         return True
 
 
@@ -610,6 +616,9 @@ def asignar_instrumental_manual(pista_id: int, ruta: str) -> bool:
             """,
             (ruta, pista_id),
         )
+        # Bump de sync_version para que el karaoke llegue al móvil (ver marcar_lista).
+        from db.conexion import marcar_sync_version
+        marcar_sync_version("pistas", int(pista_id))
     return True
 
 

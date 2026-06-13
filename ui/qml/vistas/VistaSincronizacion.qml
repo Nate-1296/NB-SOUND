@@ -410,6 +410,29 @@ Rectangle {
                                                 font.pixelSize: UiTokens.fontSizeSm
                                             }
                                         }
+                                        // Estado de conexión REAL (presencia en
+                                        // vivo): verde si el dispositivo está
+                                        // conectado ahora (Connect activo o
+                                        // actividad reciente), gris si no.
+                                        RowLayout {
+                                            spacing: UiTokens.spacing6
+                                            Layout.alignment: Qt.AlignVCenter
+                                            Rectangle {
+                                                width: 10
+                                                height: 10
+                                                radius: 5
+                                                color: modelData.conectado
+                                                       ? "#3FB950" : tema.textoMuted
+                                            }
+                                            AppText {
+                                                text: modelData.conectado
+                                                      ? "Conectado" : "Desconectado"
+                                                color: modelData.conectado
+                                                       ? tema.texto : tema.textoMuted
+                                                font.pixelSize: UiTokens.fontSizeSm
+                                                font.weight: Font.DemiBold
+                                            }
+                                        }
                                         BotonSecundario {
                                             texto: "Revocar"
                                             width: 120

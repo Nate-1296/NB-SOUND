@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import json
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -154,6 +154,28 @@ def tocar_dispositivo(dispositivo_id: int) -> None:
         "UPDATE sync_dispositivos SET ultima_conexion = ? WHERE id = ?",
         (_ahora_iso(), int(dispositivo_id)),
     )
+
+
+# Ventana de presencia: un dispositivo cuenta como "conectado ahora" si tocó el
+# servidor (cualquier request autenticado, sync, o el heartbeat /ping) dentro de
+# este margen. Más amplia que la cadencia del heartbeat del móvil (~25 s) para
+# tolerar saltos puntuales sin parpadeo.
+VENTANA_PRESENCIA_SEG = 75
+
+
+def dispositivos_conectados_ids(ventana_seg: int = VENTANA_PRESENCIA_SEG) -> set:
+    """Ids de dispositivos NO revocados con `ultima_conexion` dentro de la ventana
+    (actividad reciente). Orden lexicográfico de las ISO == cronológico, así que
+    basta comparar cadenas. Lo usa la UI para mostrar el estado real de conexión."""
+    corte = (datetime.now(timezone.utc) - timedelta(seconds=ventana_seg)).strftime(
+        "%Y-%m-%dT%H:%M:%S.%fZ"
+    )
+    filas = obtener_filas(
+        "SELECT id FROM sync_dispositivos "
+        "WHERE revocado = 0 AND ultima_conexion IS NOT NULL AND ultima_conexion >= ?",
+        (corte,),
+    )
+    return {int(f["id"]) for f in filas}
 
 
 def guardar_ultima_sync_version(dispositivo_id: int, version: int) -> None:
@@ -512,6 +534,14 @@ def enlazar_portadas_album_pendientes() -> int:
             "WHERE id = ? AND COALESCE(portada_ruta, '') = ''",
             (portada, int(fila["album_id"])),
         )
+        # Bump del álbum: la portada recién enlazada debe llegar al móvil en el
+        # siguiente delta para que rebaje la carátula (la app móvil resetea el
+        # estado del asset de los álbumes que cambian).
+        try:
+            marcar_sync_version("albums", int(fila["album_id"]))
+        except Exception as exc:
+            _log.warning("No se pudo bumpear sync_version del álbum %s: %s",
+                         fila["album_id"], exc)
         enlazados += 1
     if enlazados:
         _log.info("enlazar_portadas_album_pendientes: %d álbumes enlazados", enlazados)

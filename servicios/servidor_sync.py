@@ -116,6 +116,11 @@ class ServidorSync:
         self._error_arranque: Optional[str] = None
 
         self._ws_clientes: set = set()
+        # Presencia en vivo: dispositivo_id -> nº de WS de control abiertos. Un
+        # dispositivo con ≥1 WS está "conectado ahora" (Connect activo) sin esperar
+        # ventanas de tiempo. Se complementa con `ultima_conexion` reciente para los
+        # que están online pero sin Connect (heartbeat /ping).
+        self._ws_dispositivos: dict = {}
         self._zeroconf = None
         self._mdns_info = None
 
@@ -141,6 +146,12 @@ class ServidorSync:
 
     def numero_clientes_ws(self) -> int:
         return len(self._ws_clientes)
+
+    def dispositivos_ws_ids(self) -> set:
+        """Ids de dispositivos con al menos un WS de control abierto (Connect
+        activo ahora mismo). Thread-safe en la práctica: lectura de un dict cuyo
+        snapshot basta para la UI."""
+        return {d for d, n in self._ws_dispositivos.items() if n > 0}
 
     @property
     def tls_activo(self) -> bool:
@@ -309,6 +320,7 @@ class ServidorSync:
         self._site = None
         self._app = None
         self._ws_clientes = set()
+        self._ws_dispositivos = {}
 
     async def _teardown(self) -> None:
         # Cerrar WS abiertos antes de tumbar el runner.
@@ -444,6 +456,18 @@ class ServidorSync:
         @web.middleware
         async def auth_mw(request, handler):
             if request.path in self._RUTAS_PUBLICAS:
+                # `/ping` es público, pero si el cliente envía su token lo usamos
+                # como **heartbeat de presencia**: refresca `ultima_conexion` para
+                # que la UI lo muestre conectado aunque no esté en Connect (sin WS).
+                if request.path == "/api/v1/ping":
+                    token = self._extraer_bearer(request)
+                    if token:
+                        disp = sync_repositorio.obtener_dispositivo_por_token(token)
+                        if disp:
+                            try:
+                                sync_repositorio.tocar_dispositivo(disp["id"])
+                            except Exception:
+                                pass
                 return await handler(request)
             token = self._extraer_bearer(request)
             dispositivo = sync_repositorio.obtener_dispositivo_por_token(token)
@@ -653,6 +677,12 @@ class ServidorSync:
         ws = web.WebSocketResponse(heartbeat=30.0)
         await ws.prepare(request)
         self._ws_clientes.add(ws)
+        # Presencia por dispositivo (refcount): el WS pasó por el middleware de
+        # auth, así que `request["dispositivo"]` está poblado.
+        disp = request.get("dispositivo") or {}
+        disp_id = disp.get("id")
+        if disp_id is not None:
+            self._ws_dispositivos[disp_id] = self._ws_dispositivos.get(disp_id, 0) + 1
         try:
             # Frame inicial de estado (plano) para que el cliente pinte ya.
             if self._estado_provider:
@@ -668,6 +698,12 @@ class ServidorSync:
                     _log.debug("WS cerrado con excepción: %s", ws.exception())
         finally:
             self._ws_clientes.discard(ws)
+            if disp_id is not None:
+                restante = self._ws_dispositivos.get(disp_id, 0) - 1
+                if restante > 0:
+                    self._ws_dispositivos[disp_id] = restante
+                else:
+                    self._ws_dispositivos.pop(disp_id, None)
         return ws
 
     async def _procesar_mensaje_ws(self, ws, data: str) -> None:

@@ -11007,6 +11007,14 @@ class ModeloSincronizacion(QObject):
         # cola al hilo de Qt, donde es seguro reemitir backupConfigCambiada).
         self.backupTerminado.connect(self._on_backup_terminado_interno)
         self._cablear_reproductor()
+        # Presencia en vivo: refresca el estado "conectado" de los dispositivos cada
+        # ~2 s mientras el servidor está activo, para que la UI muestre quién está
+        # realmente conectado (WS de Connect o actividad reciente vía heartbeat) en
+        # vez del antiguo conteo de WS que casi siempre daba 0.
+        self._conectados_prev: set = set()
+        self._presencia_timer = QTimer(self)
+        self._presencia_timer.setInterval(2000)
+        self._presencia_timer.timeout.connect(self._refrescar_presencia)
         self._recargar_dispositivos(emitir=False)
 
         # Reloj de las copias automáticas: corre solo mientras la app está
@@ -11104,7 +11112,12 @@ class ModeloSincronizacion(QObject):
 
     @Property(int, notify=estadoCambiado)
     def clientesConectados(self) -> int:
-        return self._servidor.numero_clientes_ws() if self._servidor and self._servidor.activo else 0
+        # Conectados REALES = WS de Connect abiertos ∪ actividad reciente (heartbeat
+        # /ping o sync), no solo el conteo de WS (que casi siempre era 0 fuera de
+        # Connect y hacía que la UI dijera "sin dispositivos conectados").
+        if not (self._servidor and self._servidor.activo):
+            return 0
+        return len(self._ids_conectados())
 
     @Property(str, notify=mensajeCambiado)
     def mensaje(self) -> str:
@@ -11245,6 +11258,8 @@ class ModeloSincronizacion(QObject):
             self._set_mensaje(f"Servidor activo en {self.direccion}")
             self._refrescar_qr()
             self._recargar_dispositivos()
+            if not self._presencia_timer.isActive():
+                self._presencia_timer.start()
         self.activoCambiado.emit()
         self.estadoCambiado.emit()
 
@@ -11252,6 +11267,9 @@ class ModeloSincronizacion(QObject):
         self._set_ocupado(False)
         self._set_mensaje("Servidor apagado." if ok else f"Error al apagar: {error}")
         self._qr_ruta = ""
+        if self._presencia_timer.isActive():
+            self._presencia_timer.stop()
+        self._conectados_prev = set()
         self.qrCambiado.emit()
         self.activoCambiado.emit()
         self.estadoCambiado.emit()
@@ -11304,12 +11322,26 @@ class ModeloSincronizacion(QObject):
                     señal.connect(self._on_reproductor_cambio)
                 except Exception:
                     pass
+        # Además del estado, empuja la COLA completa en cada cambio (colas
+        # espejadas PC→móvil en vivo, no solo cuando el móvil la pide con `queue`).
+        señal_cola = getattr(rep, "colaCambiada", None)
+        if señal_cola is not None:
+            try:
+                señal_cola.connect(self._on_cola_cambio)
+            except Exception:
+                pass
 
     @Slot()
     def _on_reproductor_cambio(self) -> None:
         self._estado_snapshot = self._construir_snapshot()
         if self._servidor and self._servidor.activo:
             self._servidor.difundir_estado(self._estado_snapshot)
+
+    @Slot()
+    def _on_cola_cambio(self) -> None:
+        """La cola del PC cambió: empuja el frame `cola` a los clientes WS para
+        que el móvil refleje en vivo la cola espejada (no solo ante `queue`)."""
+        self._difundir_cola()
 
     def _construir_snapshot(self) -> dict:
         """Estado del reproductor en el esquema PLANO que espera el móvil
@@ -11349,6 +11381,9 @@ class ModeloSincronizacion(QObject):
             "aleatorio": bool(_g("aleatorio", False)),
             "karaoke_activo": bool(_g("karaoke_activo", False)),
             "indice_cola": int(_g("indice_cola", -1) if _g("indice_cola", -1) is not None else -1),
+            # DJ Privado: el PC tiene el control global del audio. El móvil lo
+            # refleja (banner) y bloquea sus comandos hasta que la sesión termine.
+            "dj_activo": bool(_g("modo_dj_activo", False)),
         }
 
     @Slot(object)
@@ -11390,6 +11425,37 @@ class ModeloSincronizacion(QObject):
                 rep.set_aleatorio(bool(mensaje.get("activo", False)))
             elif accion in ("queue", "cola"):
                 self._difundir_cola()
+            elif accion in ("karaoke", "toggle_karaoke"):
+                # Alterna el instrumental en el PC (no-op si la pista no tiene
+                # karaoke listo). El estado autoritativo viaja en `karaoke_activo`.
+                rep.alternar_karaoke()
+            elif accion in ("set_queue", "establecer_cola"):
+                # Cola espejada: reemplaza la cola del PC por las pistas indicadas
+                # (por id de biblioteca) y reproduce el índice dado. Una sola
+                # difusión desde el móvil, no pista a pista.
+                from servicios.biblioteca import obtener_pista
+                ids = mensaje.get("ids") or []
+                datos = []
+                for x in ids:
+                    try:
+                        d = obtener_pista(int(x))
+                    except (TypeError, ValueError):
+                        d = None
+                    if d:
+                        datos.append(dict(d))
+                if datos:
+                    indice = int(mensaje.get("indice", 0) or 0)
+                    indice = max(0, min(indice, len(datos) - 1))
+                    rep.reproducir_cola_desde_pistas(datos, indice)
+            elif accion in ("move_queue", "mover_cola"):
+                rep.mover_en_cola(
+                    int(mensaje.get("desde", 0) or 0),
+                    int(mensaje.get("hasta", 0) or 0),
+                )
+            elif accion in ("remove_queue", "quitar_cola"):
+                rep.quitar_de_cola(int(mensaje.get("indice", 0) or 0))
+            elif accion in ("clear_queue", "vaciar_cola"):
+                rep.vaciar_cola_mantener_actual()
             elif accion in ("reproducir_pista", "play_track"):
                 # Handoff desde el móvil: reproducir en el PC la pista indicada
                 # (por id de la biblioteca) y, si llega, saltar a su posición.
@@ -11447,13 +11513,54 @@ class ModeloSincronizacion(QObject):
     def _recargar_dispositivos(self, emitir: bool = True) -> None:
         try:
             from servicios import sync_repositorio
-            self._dispositivos = sync_repositorio.listar_dispositivos(incluir_revocados=False)
+            disp = sync_repositorio.listar_dispositivos(incluir_revocados=False)
+            conectados = self._ids_conectados()
+            for d in disp:
+                try:
+                    d["conectado"] = int(d.get("id")) in conectados
+                except (TypeError, ValueError):
+                    d["conectado"] = False
+            self._dispositivos = disp
+            self._conectados_prev = conectados
         except Exception as exc:
             _log.debug("No se pudieron listar dispositivos: %s", exc)
             self._dispositivos = []
         if emitir:
             self.dispositivosCambiado.emit()
             self.estadoCambiado.emit()
+
+    def _ids_conectados(self) -> set:
+        """Ids de dispositivos conectados AHORA: con un WS de Connect abierto o con
+        actividad reciente (sync/heartbeat dentro de la ventana de presencia)."""
+        ids: set = set()
+        srv = self._servidor
+        if srv is not None and getattr(srv, "activo", False):
+            try:
+                ids |= srv.dispositivos_ws_ids()
+            except Exception:
+                pass
+        try:
+            from servicios import sync_repositorio
+            ids |= sync_repositorio.dispositivos_conectados_ids()
+        except Exception:
+            pass
+        return ids
+
+    def _refrescar_presencia(self) -> None:
+        """Tick del timer de presencia: si cambió el conjunto de conectados,
+        actualiza las banderas `conectado` y reemite (sin reconsultar la lista
+        completa salvo que cambie, para no reconstruir la UI cada 2 s)."""
+        conectados = self._ids_conectados()
+        if conectados == self._conectados_prev:
+            return
+        self._conectados_prev = conectados
+        for d in self._dispositivos:
+            try:
+                d["conectado"] = int(d.get("id")) in conectados
+            except (TypeError, ValueError):
+                d["conectado"] = False
+        self.dispositivosCambiado.emit()
+        self.estadoCambiado.emit()
 
     def _refrescar_qr(self) -> None:
         self._qr_ruta = ""
@@ -11699,6 +11806,11 @@ class ModeloSincronizacion(QObject):
         try:
             if self._timer_backup is not None:
                 self._timer_backup.stop()
+        except Exception:
+            pass
+        try:
+            if self._presencia_timer is not None:
+                self._presencia_timer.stop()
         except Exception:
             pass
         try:

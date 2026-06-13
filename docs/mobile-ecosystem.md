@@ -63,7 +63,7 @@ Razón: minimizar superficie de red y consumo cuando no se usa.
 | `GET` | `/api/v1/asset/{tipo}/{id}` | Portada de álbum (`cover`/`album`), imagen de artista (`artist`) o carátula de playlist (`playlist`) |
 | `GET` | `/api/v1/track/{id}/stems` | Stems de karaoke (opt-in, ver protocolo) |
 | `POST` | `/api/v1/history` | Recibe historial/favoritos locales del celular (merge) |
-| `WS` | `/api/v1/control` | Estado del reproductor (push) + comandos (play/pause/next/prev/seek/volume/queue) |
+| `WS` | `/api/v1/control` | Estado del reproductor (push, incluye `dj_activo`) + comandos. Acciones: play_pause/next/prev/stop/seek/set_volume/play_index/repeat/shuffle/**karaoke**/queue, **set_queue** (cola espejada), **move_queue**/**remove_queue**/**clear_queue**, reproducir_pista/encolar_pista. El PC difunde el frame `cola` **ante cada cambio** de la cola (no solo a `queue`). |
 
 ### Seguridad en red local
 
@@ -78,6 +78,14 @@ Razón: minimizar superficie de red y consumo cuando no se usa.
   preferir la IP de la subred del WiFi.
 - **Revocación**: el usuario puede revocar un dispositivo desde la Vista de
   Sincronización (borra su `device_token`).
+- **Presencia en vivo (2026-06-13)**: la Vista de Sincronización muestra el estado
+  REAL de conexión por dispositivo (verde "Conectado"), no solo "última conexión".
+  Un dispositivo está conectado si tiene un WS de control abierto (Connect activo,
+  `servidor_sync._ws_dispositivos`) **o** tocó el servidor dentro de la ventana de
+  presencia (`sync_repositorio.dispositivos_conectados_ids`, ~75 s). El móvil manda
+  un **heartbeat** autenticado a `/ping` cada ~25 s en primer plano (el middleware
+  refresca `ultima_conexion` aunque `/ping` sea público). `ModeloSincronizacion`
+  refresca el estado cada ~2 s con un `QTimer` mientras el servidor está activo.
 
 ### Integración con el ciclo de vida
 
@@ -182,6 +190,16 @@ teléfono), independiente de qué metadata se sincroniza.
   `hash_sha256` para validar que el audio descargado coincide.
 - **Tombstones**: tabla `sync_tombstones` para propagar borrados (id + tipo +
   `sync_version`), ya que un DELETE no se detecta por `sync_version`.
+- **Bumps añadidos (2026-06-13)** para que el móvil propague cambios sobre media
+  ya descargada (resetea su recurso offline y lo rebaja con el contenido nuevo):
+  - **Karaoke generado** → `jobs_repo.marcar_lista` / `asignar_instrumental_manual`
+    bumpéan `pistas.sync_version`. Sin esto la pista no llegaba en el delta y el
+    móvil no reprobaba `/stems`.
+  - **Portada de álbum enlazada/cambiada** → `sync_repositorio.
+    enlazar_portadas_album_pendientes` bumpéa `albums.sync_version`.
+  - El móvil, al recibir una entidad en el delta, resetea sus assets descargados
+    (`done`/`unavailable` → `none`) y los rebaja; ante un tombstone, borra la media
+    offline huérfana.
 
 ### Transferencia interrumpida
 

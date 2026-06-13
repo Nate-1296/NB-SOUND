@@ -55,6 +55,8 @@ class _ReproductorFake:
 
     def __init__(self):
         self.acciones = []
+        # Refleja el estado de DJ Privado en el snapshot WS (dj_activo).
+        self.modo_dj_activo = False
 
     # El modelo se conecta a estas señales si existen; aquí no hace falta.
     def pausar_reanudar(self):
@@ -68,6 +70,22 @@ class _ReproductorFake:
 
     def set_volumen(self, v):
         self.acciones.append(("set_volumen", v))
+
+    # Comandos nuevos de Connect (karaoke + manipulación de cola espejada).
+    def alternar_karaoke(self):
+        self.acciones.append("alternar_karaoke")
+
+    def reproducir_cola_desde_pistas(self, datos, indice):
+        self.acciones.append(("set_queue", [d["id"] for d in datos], indice))
+
+    def mover_en_cola(self, desde, hasta):
+        self.acciones.append(("mover_en_cola", desde, hasta))
+
+    def quitar_de_cola(self, indice):
+        self.acciones.append(("quitar_de_cola", indice))
+
+    def vaciar_cola_mantener_actual(self):
+        self.acciones.append("vaciar_cola_mantener_actual")
 
 
 def test_encender_expone_qr_con_host_puerto_token(app, db_sync):
@@ -114,6 +132,85 @@ def test_puente_comando_ws_aplica_en_reproductor(app, db_sync):
         assert ack["ok"] is True
         # El comando se entrega en cola: procesar eventos para aplicarlo.
         assert _esperar(app, lambda: "pausar_reanudar" in rep.acciones, timeout=3.0)
+    finally:
+        modelo.cerrar()
+
+
+def test_puente_comandos_cola_karaoke(app, db_sync, monkeypatch):
+    """Los comandos nuevos de Connect (karaoke + cola espejada) se traducen a
+    llamadas del reproductor."""
+    rep = _ReproductorFake()
+    modelo = ModeloSincronizacion(rep, parent=None)
+
+    # set_queue resuelve ids vía obtener_pista: se simula la biblioteca.
+    import servicios.biblioteca as bib
+    monkeypatch.setattr(
+        bib, "obtener_pista", lambda pid: {"id": pid, "titulo": f"T{pid}"}
+    )
+
+    try:
+        def enviar(msg):
+            modelo._comando_control_thread_safe(msg)
+
+        enviar({"tipo": "comando", "accion": "karaoke"})
+        enviar({"tipo": "comando", "accion": "set_queue", "ids": [3, 1, 2], "indice": 1})
+        enviar({"tipo": "comando", "accion": "move_queue", "desde": 0, "hasta": 2})
+        enviar({"tipo": "comando", "accion": "remove_queue", "indice": 1})
+        enviar({"tipo": "comando", "accion": "clear_queue"})
+
+        assert _esperar(
+            app,
+            lambda: "vaciar_cola_mantener_actual" in rep.acciones,
+            timeout=3.0,
+        )
+        assert "alternar_karaoke" in rep.acciones
+        assert ("set_queue", [3, 1, 2], 1) in rep.acciones
+        assert ("mover_en_cola", 0, 2) in rep.acciones
+        assert ("quitar_de_cola", 1) in rep.acciones
+    finally:
+        modelo.cerrar()
+
+
+def test_presencia_dispositivos_conectados_por_ventana(app, db_sync):
+    """dispositivos_conectados_ids incluye los tocados recientemente y excluye los
+    inactivos; el modelo marca `conectado` en cada dispositivo."""
+    from db.conexion import ejecutar
+
+    reciente = sync_repositorio.registrar_dispositivo("Reciente", "android")
+    viejo = sync_repositorio.registrar_dispositivo("Viejo", "android")
+
+    # El reciente tocó el servidor hace nada; el viejo hace 10 minutos.
+    sync_repositorio.tocar_dispositivo(reciente["id"])
+    ejecutar(
+        "UPDATE sync_dispositivos SET ultima_conexion = ? WHERE id = ?",
+        ("2000-01-01T00:00:00.000000Z", viejo["id"]),
+    )
+
+    ids = sync_repositorio.dispositivos_conectados_ids()
+    assert reciente["id"] in ids
+    assert viejo["id"] not in ids
+
+    # El modelo refleja la bandera `conectado` en la lista de dispositivos.
+    modelo = ModeloSincronizacion(parent=None)
+    try:
+        modelo._recargar_dispositivos(emitir=False)
+        por_id = {d["id"]: d for d in modelo.dispositivos}
+        assert por_id[reciente["id"]]["conectado"] is True
+        assert por_id[viejo["id"]]["conectado"] is False
+    finally:
+        modelo.cerrar()
+
+
+def test_snapshot_estado_incluye_dj_activo(app, db_sync):
+    """El frame de estado WS expone dj_activo desde modo_dj_activo del reproductor."""
+    rep = _ReproductorFake()
+    modelo = ModeloSincronizacion(rep, parent=None)
+    try:
+        snap = modelo._construir_snapshot()
+        assert snap["dj_activo"] is False
+        rep.modo_dj_activo = True
+        snap2 = modelo._construir_snapshot()
+        assert snap2["dj_activo"] is True
     finally:
         modelo.cerrar()
 
