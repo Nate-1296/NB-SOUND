@@ -63,10 +63,15 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          # Best-effort install. choco is preinstalled on GitHub runners.
-          choco install -y --no-progress ffmpeg chromaprint vlc | Out-Null
+          # Best-effort install (igual que macOS con `|| true`): choco puede
+          # devolver un código no-cero (paquete ya instalado, reboot requerido,
+          # checksum/red) y `| Out-Null` oculta la salida pero NO el exit code, por
+          # lo que el wrapper pwsh terminaba el job con ese código. Se tolera el
+          # fallo: los tests del CI no necesitan los binarios (degradan con gracia).
+          try { choco install -y --no-progress ffmpeg chromaprint vlc | Out-Null } catch { }
           $env:Path += ";C:\Program Files\VideoLAN\VLC"
           echo "C:\Program Files\VideoLAN\VLC" >> $env:GITHUB_PATH
+          exit 0
 
       - name: Upgrade pip
         run: python -m pip install --upgrade pip setuptools wheel
