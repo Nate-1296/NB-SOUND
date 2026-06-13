@@ -73,6 +73,9 @@ class _ReproductorFake:
     def set_volumen(self, v):
         self.acciones.append(("set_volumen", v))
 
+    def buscar_posicion(self, posicion):
+        self.acciones.append(("buscar_posicion", posicion))
+
     # Comandos nuevos de Connect (karaoke + manipulación de cola espejada).
     def alternar_karaoke(self):
         self.acciones.append("alternar_karaoke")
@@ -169,6 +172,54 @@ def test_puente_comandos_cola_karaoke(app, db_sync, monkeypatch):
         assert ("set_queue", [3, 1, 2], 1) in rep.acciones
         assert ("mover_en_cola", 0, 2) in rep.acciones
         assert ("quitar_de_cola", 1) in rep.acciones
+    finally:
+        modelo.cerrar()
+
+
+def test_set_queue_con_posicion_busca_tras_cargar(app, db_sync, monkeypatch):
+    """Handoff con cola completa: si set_queue trae posicion_seg, el PC carga la
+    cola y salta a esa posición (conserva dónde iba la pista al cambiar de
+    dispositivo). Sin posicion_seg no se busca."""
+    rep = _ReproductorFake()
+    modelo = ModeloSincronizacion(rep, parent=None)
+
+    import servicios.biblioteca as bib
+    monkeypatch.setattr(
+        bib, "obtener_pista", lambda pid: {"id": pid, "titulo": f"T{pid}"}
+    )
+
+    try:
+        modelo._comando_control_thread_safe({
+            "tipo": "comando",
+            "accion": "set_queue",
+            "ids": [5, 6, 7],
+            "indice": 2,
+            "posicion_seg": 42.5,
+        })
+        assert _esperar(
+            app,
+            lambda: ("buscar_posicion", 42.5) in rep.acciones,
+            timeout=3.0,
+        )
+        assert ("set_queue", [5, 6, 7], 2) in rep.acciones
+
+        # Sin posicion_seg: NO se busca (solo carga la cola).
+        rep.acciones.clear()
+        modelo._comando_control_thread_safe({
+            "tipo": "comando",
+            "accion": "set_queue",
+            "ids": [8],
+            "indice": 0,
+        })
+        assert _esperar(
+            app,
+            lambda: ("set_queue", [8], 0) in rep.acciones,
+            timeout=3.0,
+        )
+        assert not any(
+            isinstance(a, tuple) and a[0] == "buscar_posicion"
+            for a in rep.acciones
+        )
     finally:
         modelo.cerrar()
 

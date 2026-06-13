@@ -11452,6 +11452,13 @@ class ModeloSincronizacion(QObject):
                     indice = int(mensaje.get("indice", 0) or 0)
                     indice = max(0, min(indice, len(datos) - 1))
                     rep.reproducir_cola_desde_pistas(datos, indice)
+                    # Handoff con cola completa desde el móvil: si llega la
+                    # posición de la pista en curso, salta a ella para conservar
+                    # dónde iba al cambiar de dispositivo. Best-effort (misma
+                    # semántica que el handoff de una sola pista).
+                    posicion = float(mensaje.get("posicion_seg", 0) or 0)
+                    if posicion > 0:
+                        rep.buscar_posicion(posicion)
             elif accion in ("move_queue", "mover_cola"):
                 rep.mover_en_cola(
                     int(mensaje.get("desde", 0) or 0),

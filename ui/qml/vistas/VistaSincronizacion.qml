@@ -32,6 +32,22 @@ Rectangle {
     readonly property int horizontalPadding:
         raiz.width >= 1200 ? 44 : (raiz.width >= 860 ? 32 : UiTokens.spacing20)
 
+    // Presencia en vivo dentro de la vista: refresca la lista de dispositivos al
+    // ENTRAR (primera carga y cada vez que la vista vuelve a mostrarse en el
+    // StackLayout) y cada pocos segundos mientras está visible, para reflejar al
+    // instante quién está conectado y su "última conexión" sin depender solo del
+    // refresco global. `recargarDispositivos` reconsulta la BD y recalcula las
+    // banderas `conectado` (WS de Connect o heartbeat reciente).
+    Component.onCompleted: sincronizacion.recargarDispositivos()
+    onVisibleChanged: if (raiz.visible) sincronizacion.recargarDispositivos()
+
+    Timer {
+        interval: 3000
+        repeat: true
+        running: raiz.visible
+        onTriggered: sincronizacion.recargarDispositivos()
+    }
+
     function _plataformaEtiqueta(p) {
         switch (String(p || "").toLowerCase()) {
             case "android": return "Android"
