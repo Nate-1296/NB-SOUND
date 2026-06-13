@@ -57,6 +57,8 @@ class _ReproductorFake:
         self.acciones = []
         # Refleja el estado de DJ Privado en el snapshot WS (dj_activo).
         self.modo_dj_activo = False
+        # Disponibilidad de karaoke de la pista en curso (karaoke_disponible).
+        self.karaoke_disponible = False
 
     # El modelo se conecta a estas señales si existen; aquí no hace falta.
     def pausar_reanudar(self):
@@ -211,6 +213,21 @@ def test_snapshot_estado_incluye_dj_activo(app, db_sync):
         rep.modo_dj_activo = True
         snap2 = modelo._construir_snapshot()
         assert snap2["dj_activo"] is True
+    finally:
+        modelo.cerrar()
+
+
+def test_snapshot_estado_incluye_karaoke_disponible(app, db_sync):
+    """El frame de estado WS expone karaoke_disponible para que el móvil habilite
+    o deshabilite su botón de karaoke según la pista en curso del PC."""
+    rep = _ReproductorFake()
+    modelo = ModeloSincronizacion(rep, parent=None)
+    try:
+        snap = modelo._construir_snapshot()
+        assert snap["karaoke_disponible"] is False
+        rep.karaoke_disponible = True
+        snap2 = modelo._construir_snapshot()
+        assert snap2["karaoke_disponible"] is True
     finally:
         modelo.cerrar()
 

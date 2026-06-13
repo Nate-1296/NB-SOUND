@@ -63,7 +63,7 @@ Razón: minimizar superficie de red y consumo cuando no se usa.
 | `GET` | `/api/v1/asset/{tipo}/{id}` | Portada de álbum (`cover`/`album`), imagen de artista (`artist`) o carátula de playlist (`playlist`) |
 | `GET` | `/api/v1/track/{id}/stems` | Stems de karaoke (opt-in, ver protocolo) |
 | `POST` | `/api/v1/history` | Recibe historial/favoritos locales del celular (merge) |
-| `WS` | `/api/v1/control` | Estado del reproductor (push, incluye `dj_activo`) + comandos. Acciones: play_pause/next/prev/stop/seek/set_volume/play_index/repeat/shuffle/**karaoke**/queue, **set_queue** (cola espejada), **move_queue**/**remove_queue**/**clear_queue**, reproducir_pista/encolar_pista. El PC difunde el frame `cola` **ante cada cambio** de la cola (no solo a `queue`). |
+| `WS` | `/api/v1/control` | Estado del reproductor (push, incluye `dj_activo` y `karaoke_disponible`) + comandos. `repeat` usa el enum `ModoRepeticion` (`ninguno`/`uno`/`todo`). Acciones: play_pause/next/prev/stop/seek/set_volume/play_index/repeat/shuffle/**karaoke**/queue, **set_queue** (cola espejada), **move_queue**/**remove_queue**/**clear_queue**, reproducir_pista/encolar_pista. El PC difunde el frame `cola` **ante cada cambio** de la cola (no solo a `queue`). |
 
 ### Seguridad en red local
 

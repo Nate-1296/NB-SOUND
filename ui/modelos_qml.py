@@ -11351,7 +11351,8 @@ class ModeloSincronizacion(QObject):
             return {
                 "reproduciendo": False, "pista": None, "posicion_seg": 0.0,
                 "volumen": 100, "modo_repeticion": "ninguno", "aleatorio": False,
-                "karaoke_activo": False, "indice_cola": -1,
+                "karaoke_activo": False, "karaoke_disponible": False,
+                "indice_cola": -1,
             }
 
         def _g(attr, default):
@@ -11380,6 +11381,10 @@ class ModeloSincronizacion(QObject):
             "modo_repeticion": str(_g("modo_repeticion", "ninguno") or "ninguno"),
             "aleatorio": bool(_g("aleatorio", False)),
             "karaoke_activo": bool(_g("karaoke_activo", False)),
+            # Si la pista en curso tiene instrumental listo: el móvil habilita/
+            # deshabilita su botón de karaoke con esto (lo refresca karaokeCambiado,
+            # ya cableado a un push de estado). Sin pista o sin stems ⇒ False.
+            "karaoke_disponible": bool(_g("karaoke_disponible", False)),
             "indice_cola": int(_g("indice_cola", -1) if _g("indice_cola", -1) is not None else -1),
             # DJ Privado: el PC tiene el control global del audio. El móvil lo
             # refleja (banner) y bloquea sus comandos hasta que la sesión termine.
