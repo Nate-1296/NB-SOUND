@@ -73,7 +73,7 @@ def base_datas(root: Path) -> list[tuple[str, str]]:
 # Paquetes Python opcionales cuyos data files se incluyen si estan instalados.
 # Si el paquete no esta en el entorno del builder, se omite silenciosamente
 # para producir un bundle minimo (sin karaoke/AudioIntelligence).
-_OPTIONAL_DATA_PACKAGES = ("librosa", "soundfile", "demucs")
+_OPTIONAL_DATA_PACKAGES = ("librosa", "soundfile", "demucs", "torch", "torchaudio", "essentia")
 
 # Modulos Python que PyInstaller debe forzar a empaquetar aunque no aparezcan
 # en el analisis estatico. Los modulos QML (ui.modelos_qml) se cargan desde
@@ -207,6 +207,9 @@ _DYNAMIC_SUBMODULES = (
     "zeroconf",
     "qrcode",
     "cryptography",
+    "torch",
+    "torchaudio",
+    "essentia",
 )
 
 

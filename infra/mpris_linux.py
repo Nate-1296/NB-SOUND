@@ -134,8 +134,13 @@ if DBUS_DISPONIBLE:
             if not pista:
                 return {}
                 
+            from PySide6.QtDBus import QDBusObjectPath
+            
+            # Limpiar el id para que sea un path valido (no guiones, etc.)
+            clean_id = str(pista.id).replace('-', '_').replace(' ', '_')
+            
             meta = {
-                "mpris:trackid": f"/org/mpris/MediaPlayer2/Track/{pista.id}",
+                "mpris:trackid": QDBusObjectPath(f"/org/mpris/MediaPlayer2/Track/{clean_id}"),
                 "xesam:title": pista.titulo or "Desconocido",
             }
             if pista.artista:
