@@ -408,6 +408,10 @@ def construir_modelos(app: QGuiApplication):
 
     reproductor_backend = Reproductor()
 
+    # Integracion con MPRIS (Linux D-Bus) para controles multimedia
+    from infra.mpris_linux import inicializar_mpris
+    app._mpris_bridge = inicializar_mpris(reproductor_backend)
+
     modelos = {
         "biblioteca":    ModeloBiblioteca(parent=app),
         "reproductor":   ModeloReproductor(reproductor_backend, parent=app),
