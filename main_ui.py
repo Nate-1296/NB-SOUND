@@ -30,11 +30,32 @@ if len(sys.argv) > 1 and sys.argv[1] == "--deep-runner":
     sys.exit(0)
 
 if len(sys.argv) > 1 and sys.argv[1] == "--verifier-torch":
-    import torch
+    import json
+    try:
+        import torch
+        dev = ['cpu']
+        if getattr(torch.cuda, 'is_available', lambda: False)(): dev.append('cuda')
+        backends_mps = getattr(torch.backends, 'mps', None)
+        if backends_mps is not None and backends_mps.is_available(): dev.append('mps')
+        print(json.dumps({'ok': True, 'version': str(torch.__version__), 'devices': dev}))
+    except Exception as e:
+        print(json.dumps({'ok': False, 'error': str(e)}))
     sys.exit(0)
 
 if len(sys.argv) > 1 and sys.argv[1] == "--verifier-demucs":
-    import demucs
+    import json
+    try:
+        import demucs
+        v = getattr(demucs, "__version__", "")
+        if not v:
+            try:
+                from importlib.metadata import version as _v
+                v = _v("demucs")
+            except Exception:
+                v = "instalado"
+        print(json.dumps({'ok': True, 'version': str(v)}))
+    except Exception as e:
+        print(json.dumps({'ok': False, 'error': str(e)}))
     sys.exit(0)
 
 if len(sys.argv) > 1 and sys.argv[1] == "--verifier-essentia-tf":

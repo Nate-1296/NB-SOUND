@@ -147,8 +147,11 @@ if DBUS_DISPONIBLE:
                 meta["xesam:artist"] = [pista.artista]
             if pista.album:
                 meta["xesam:album"] = pista.album
-            if pista.duracion_seg > 0:
-                meta["mpris:length"] = int(pista.duracion_seg * 1000000)
+            # KDE Plasma strict DBus type parsing rejects the whole Metadata map
+            # if mpris:length is 'i' instead of 'x'. PySide6 auto-casts small ints to 'i'.
+            # By omitting it, the duration won't be shown, but artist/title/cover will work.
+            # if pista.duracion_seg > 0:
+            #     meta["mpris:length"] = int(pista.duracion_seg * 1000000)
                 
             ruta_portada = pista.portada_hd_ruta or pista.portada_ruta
             if ruta_portada:
@@ -164,7 +167,7 @@ if DBUS_DISPONIBLE:
         def Volume(self, value: float):
             self.reproductor.set_volumen(int(value * 100))
             
-        @Property(int)
+        @Property('qint64')
         def Position(self):
             return int(self.reproductor.posicion_seg * 1000000)
             

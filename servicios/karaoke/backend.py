@@ -87,7 +87,18 @@ def _detectar_demucs() -> tuple[bool, str]:
     Demucs 4.x no expone `__version__` directamente; se consulta a
     importlib.metadata como fallback. No importa torch ni carga pesos.
     """
+
+    if getattr(sys, "frozen", False):
+        import subprocess, json
+        try:
+            res = subprocess.run([sys.executable, "--verifier-demucs"], capture_output=True, text=True, timeout=10)
+            if res.returncode == 0:
+                data = json.loads(res.stdout.strip().splitlines()[-1])
+                if data.get("ok"):
+                    return True, str(data.get("version"))
+        except: pass
     if importlib.util.find_spec("demucs") is None:
+
         return False, ""
     try:
         import demucs  # type: ignore
@@ -126,7 +137,18 @@ def _detectar_torch_devices() -> tuple[bool, str, list[str]]:
     ``importlib.util.find_spec`` como heurística "está pero no
     verificable".
     """
+
+    if getattr(sys, "frozen", False):
+        import subprocess, json
+        try:
+            res = subprocess.run([sys.executable, "--verifier-torch"], capture_output=True, text=True, timeout=10)
+            if res.returncode == 0:
+                data = json.loads(res.stdout.strip().splitlines()[-1])
+                if data.get("ok"):
+                    return True, str(data.get("version", "")), list(data.get("devices") or ["cpu"])
+        except: pass
     spec_local = importlib.util.find_spec("torch")
+
 
     try:
         from infra.instalador import python_para_subprocess
