@@ -330,7 +330,7 @@ def filter_linux_system_libs(binaries):
             continue
         dest = entrada[0]
         nombre = Path(dest).name
-        if nombre in _LINUX_LIBS_DEL_SISTEMA:
+        if nombre in _LINUX_LIBS_DEL_SISTEMA or nombre.startswith("libpulse") or nombre.startswith("libasound") or nombre.startswith("libwayland"):
             continue
         resultado.append(entrada)
     return resultado
