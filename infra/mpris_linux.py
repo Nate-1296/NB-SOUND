@@ -35,7 +35,7 @@ class MprisBridge:
         pass
 
 if DBUS_DISPONIBLE:
-    @ClassInfo(name="D-Bus Interface", value="org.mpris.MediaPlayer2")
+    @ClassInfo({"D-Bus Interface": "org.mpris.MediaPlayer2"})
     class MprisRootAdaptor(QDBusAbstractAdaptor):
         
         def __init__(self, parent: QObject, reproductor: Reproductor):
@@ -72,7 +72,7 @@ if DBUS_DISPONIBLE:
             return "nb_sound"
 
 
-    @ClassInfo(name="D-Bus Interface", value="org.mpris.MediaPlayer2.Player")
+    @ClassInfo({"D-Bus Interface": "org.mpris.MediaPlayer2.Player"})
     class MprisPlayerAdaptor(QDBusAbstractAdaptor):
         
         def __init__(self, parent: QObject, reproductor: Reproductor):
@@ -216,7 +216,7 @@ if DBUS_DISPONIBLE:
                 logger.warning(f"MPRIS: No se pudo registrar {nombre_servicio}. Tal vez ya este en uso?")
                 return
                 
-            if not self.bus.registerObject("/org/mpris/MediaPlayer2", self):
+            if not self.bus.registerObject("/org/mpris/MediaPlayer2", self, QDBusConnection.RegisterOption.ExportAdaptors):
                 logger.warning("MPRIS: No se pudo registrar el objeto base.")
                 return
                 
