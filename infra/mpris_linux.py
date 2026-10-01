@@ -16,10 +16,11 @@ logger = logging.getLogger(__name__)
 
 # Importacion condicional para no romper Windows/macOS ni fallar si no hay DBus
 try:
-    from PySide6.QtCore import QObject, Slot, Property, QVariant
+    from PySide6.QtCore import QObject, Slot, Property, ClassInfo
     from PySide6.QtDBus import QDBusConnection, QDBusAbstractAdaptor, QDBusMessage
     DBUS_DISPONIBLE = True
-except ImportError:
+except Exception as e:
+    logger.error(f"Error importando dependencias de D-Bus: {e}", exc_info=True)
     DBUS_DISPONIBLE = False
 
 
@@ -34,8 +35,8 @@ class MprisBridge:
         pass
 
 if DBUS_DISPONIBLE:
+    @ClassInfo(name="D-Bus Interface", value="org.mpris.MediaPlayer2")
     class MprisRootAdaptor(QDBusAbstractAdaptor):
-        Q_CLASSINFO("D-Bus Interface", "org.mpris.MediaPlayer2")
         
         def __init__(self, parent: QObject, reproductor: Reproductor):
             super().__init__(parent)
@@ -43,8 +44,6 @@ if DBUS_DISPONIBLE:
             
         @Slot()
         def Quit(self):
-            # No cerramos forzosamente por MPRIS para evitar cierres accidentales,
-            # o podemos hacerlo si esta preparado.
             logger.info("Cierre solicitado via MPRIS")
             self.reproductor.detener()
             
@@ -73,8 +72,8 @@ if DBUS_DISPONIBLE:
             return "nb_sound"
 
 
+    @ClassInfo(name="D-Bus Interface", value="org.mpris.MediaPlayer2.Player")
     class MprisPlayerAdaptor(QDBusAbstractAdaptor):
-        Q_CLASSINFO("D-Bus Interface", "org.mpris.MediaPlayer2.Player")
         
         def __init__(self, parent: QObject, reproductor: Reproductor):
             super().__init__(parent)
