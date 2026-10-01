@@ -305,12 +305,22 @@ def _verificar_modulo_subprocess(nombre: str, atributo_version: str = "__version
 
 
 def _verificar_torch() -> tuple[bool, str]:
-    """torch importable sin SIGSEGV. Usa subprocess para aislar faults nativos."""
+    if getattr(sys, "frozen", False):
+        import subprocess, json
+        try:
+            res = subprocess.run([sys.executable, "--verifier-torch"], capture_output=True, timeout=10)
+            return (res.returncode == 0, "bundled")
+        except: return False, ""
     return _verificar_modulo_subprocess("torch")
 
 
 def _verificar_demucs() -> tuple[bool, str]:
-    """demucs importable sin SIGSEGV (depende de torch nativo)."""
+    if getattr(sys, "frozen", False):
+        import subprocess, json
+        try:
+            res = subprocess.run([sys.executable, "--verifier-demucs"], capture_output=True, timeout=10)
+            return (res.returncode == 0, "bundled")
+        except: return False, ""
     return _verificar_modulo_subprocess("demucs")
 
 
@@ -323,14 +333,16 @@ def _verificar_soundfile() -> tuple[bool, str]:
 
 
 def _verificar_essentia_tensorflow() -> tuple[bool, str]:
-    """essentia + algoritmos *Tensorflow* expuestos.
+    if getattr(sys, "frozen", False):
+        import subprocess, json
+        try:
+            res = subprocess.run([sys.executable, "--verifier-essentia-tf"], capture_output=True, text=True, timeout=10)
+            if res.returncode == 0:
+                data = json.loads(res.stdout.strip())
+                return data.get("ok", False), data.get("version", "bundled")
+        except: pass
+        return False, ""
 
-    Aislado en subprocess (Python externo + PYTHONPATH al site-packages
-    runtime cuando NB Sound corre como bundle). essentia-tensorflow carga
-    libtensorflow.so, que puede crashear el proceso si las libs del
-    bundle / del sistema no son ABI-compatibles. La app no puede
-    sobrevivir a SIGSEGV vía try/except, por eso usamos subprocess.
-    """
     spec_local = importlib.util.find_spec("essentia")
 
     try:

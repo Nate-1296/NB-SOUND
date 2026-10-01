@@ -25,6 +25,34 @@ from pathlib import Path
 DIR_PROYECTO = Path(__file__).resolve().parent
 sys.path.insert(0, str(DIR_PROYECTO))
 
+if len(sys.argv) > 1 and sys.argv[1] == "--deep-runner":
+    import infra.deep_runner
+    sys.exit(0)
+
+if len(sys.argv) > 1 and sys.argv[1] == "--verifier-torch":
+    import torch
+    sys.exit(0)
+
+if len(sys.argv) > 1 and sys.argv[1] == "--verifier-demucs":
+    import demucs
+    sys.exit(0)
+
+if len(sys.argv) > 1 and sys.argv[1] == "--verifier-essentia-tf":
+    import json
+    try:
+        import essentia.standard as es
+        from importlib.metadata import version, PackageNotFoundError
+        try: v = version('essentia-tensorflow')
+        except PackageNotFoundError:
+            try: v = version('essentia')
+            except PackageNotFoundError: v = 'desconocida'
+        tiene_tf = any(hasattr(es, n) for n in ('TensorflowPredictMusiCNN', 'TensorflowPredict2D'))
+        print(json.dumps({'ok': True, 'tf': bool(tiene_tf), 'version': str(v)}))
+    except Exception as e:
+        print(json.dumps({'ok': False, 'error': str(e)}))
+    sys.exit(0)
+
+
 
 def _bootstrap_temprano() -> None:
     """Ejecuta el bootstrap del entorno antes de cualquier import dependiente.

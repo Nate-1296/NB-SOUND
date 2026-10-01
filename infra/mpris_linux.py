@@ -89,7 +89,7 @@ if DBUS_DISPONIBLE:
             
         @Slot()
         def Pause(self):
-            if self.reproductor.estado() == EstadoReproductor.REPRODUCIENDO:
+            if self.reproductor.estado == EstadoReproductor.REPRODUCIENDO:
                 self.reproductor.pausar_reanudar()
                 
         @Slot()
@@ -102,12 +102,12 @@ if DBUS_DISPONIBLE:
             
         @Slot()
         def Play(self):
-            if self.reproductor.estado() != EstadoReproductor.REPRODUCIENDO:
+            if self.reproductor.estado != EstadoReproductor.REPRODUCIENDO:
                 self.reproductor.pausar_reanudar()
                 
         @Property(str)
         def PlaybackStatus(self):
-            st = self.reproductor.estado()
+            st = self.reproductor.estado
             if st == EstadoReproductor.REPRODUCIENDO:
                 return "Playing"
             elif st == EstadoReproductor.PAUSADO:
@@ -126,11 +126,11 @@ if DBUS_DISPONIBLE:
             
         @Property(bool)
         def Shuffle(self):
-            return self.reproductor.es_aleatorio()
+            return self.reproductor.es_aleatorio
             
         @Property('QVariantMap')
         def Metadata(self):
-            pista = self.reproductor.pista_activa()
+            pista = self.reproductor.pista_activa
             if not pista:
                 return {}
                 
@@ -158,7 +158,7 @@ if DBUS_DISPONIBLE:
             
         @Property(float)
         def Volume(self):
-            return self.reproductor.volumen() / 100.0
+            return self.reproductor.volumen / 100.0
             
         @Volume.setter
         def Volume(self, value: float):
@@ -166,7 +166,7 @@ if DBUS_DISPONIBLE:
             
         @Property(int)
         def Position(self):
-            return int(self.reproductor.posicion_seg() * 1000000)
+            return int(self.reproductor.posicion_seg * 1000000)
             
         @Property(float)
         def MinimumRate(self): return 1.0

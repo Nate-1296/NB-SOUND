@@ -277,8 +277,14 @@ class DeepAnalyzerSubprocess:
             except Exception:
                 pass
         try:
-            from infra.instalador import python_para_subprocess
-            ejecutable, env = python_para_subprocess()
+            if getattr(sys, "frozen", False):
+                ejecutable = sys.executable
+                env = dict(os.environ)
+                cmd = [ejecutable, "--deep-runner"]
+            else:
+                from infra.instalador import python_para_subprocess
+                ejecutable, env = python_para_subprocess()
+                cmd = [ejecutable, "-m", "infra.deep_runner"]
         except Exception as exc:
             _log.warning("python_para_subprocess fallo: %s", exc)
             return None
@@ -297,7 +303,6 @@ class DeepAnalyzerSubprocess:
                 str(proyecto_root) + ((":" + existing) if existing and sys.platform != "win32"
                                        else ((";" + existing) if existing else ""))
             )
-        cmd = [ejecutable, "-m", "infra.deep_runner"]
         kwargs: dict = {
             "stdin": subprocess.PIPE,
             "stdout": subprocess.PIPE,
