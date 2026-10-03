@@ -69,7 +69,7 @@ if DBUS_DISPONIBLE:
             
         @Property(str)
         def DesktopEntry(self):
-            return "nb_sound"
+            return "nb-sound"  # Debe coincidir con nb-sound.desktop
 
 
     @ClassInfo({"D-Bus Interface": "org.mpris.MediaPlayer2.Player"})
@@ -117,8 +117,16 @@ if DBUS_DISPONIBLE:
                 
         @Property(str)
         def LoopStatus(self):
-            # Opcional
+            rep = self.reproductor.modo_repeticion
+            if rep == "uno": return "Track"
+            if rep == "todo": return "Playlist"
             return "None"
+            
+        @LoopStatus.setter
+        def LoopStatus(self, value: str):
+            if value == "Track": self.reproductor.set_modo_repeticion("uno")
+            elif value == "Playlist": self.reproductor.set_modo_repeticion("todo")
+            else: self.reproductor.set_modo_repeticion("ninguno")
             
         @Property(float)
         def Rate(self):
@@ -127,6 +135,10 @@ if DBUS_DISPONIBLE:
         @Property(bool)
         def Shuffle(self):
             return self.reproductor.es_aleatorio
+            
+        @Shuffle.setter
+        def Shuffle(self, value: bool):
+            self.reproductor.set_aleatorio(value)
             
         @Property('QVariantMap')
         def Metadata(self):
@@ -147,15 +159,13 @@ if DBUS_DISPONIBLE:
                 meta["xesam:artist"] = [pista.artista]
             if pista.album:
                 meta["xesam:album"] = pista.album
-            # KDE Plasma strict DBus type parsing rejects the whole Metadata map
-            # if mpris:length is 'i' instead of 'x'. PySide6 auto-casts small ints to 'i'.
-            # By omitting it, the duration won't be shown, but artist/title/cover will work.
-            # if pista.duracion_seg > 0:
-            #     meta["mpris:length"] = int(pista.duracion_seg * 1000000)
+            if pista.duracion_seg > 0:
+                meta["mpris:length"] = int(pista.duracion_seg * 1000000)
                 
             ruta_portada = pista.portada_hd_ruta or pista.portada_ruta
             if ruta_portada:
-                meta["mpris:artUrl"] = f"file://{ruta_portada}"
+                import urllib.parse
+                meta["mpris:artUrl"] = f"file://{urllib.parse.quote(ruta_portada)}"
                 
             return meta
             
@@ -232,26 +242,45 @@ if DBUS_DISPONIBLE:
             
             # Escuchar eventos de reproduccion
             self.reproductor.on_estado(self._al_cambiar_estado)
-            
-        def _al_cambiar_estado(self, estado: EstadoReproductor, pista: Optional[PistaActiva]):
+            self.reproductor.on_cola(self._al_cambiar_cola)
+
+        def _emitir_cambios(self, changed_props: dict) -> None:
+            """Emite PropertiesChanged con la firma exacta 'sa{sv}as'.
+
+            IMPORTANTE: una lista Python vacia se serializa como 'av', lo que
+            produce la firma 'sa{sv}av'. Los clientes Qt/KDE (Plasma, KDE
+            Connect) se suscriben con 'sa{sv}as' y descartan la senal en
+            silencio, dejando todo como "Desconocido". Por eso se construye un
+            array de strings tipado explicitamente.
             """
-            Se llama cuando el Reproductor cambia de pista o hace pausa/play.
-            Notificamos a D-Bus que las propiedades han cambiado.
-            """
-            msg = QDBusMessage.createSignal(
-                "/org/mpris/MediaPlayer2",
-                "org.freedesktop.DBus.Properties",
-                "PropertiesChanged"
-            )
-            
-            # Solo enviamos lo que cambio
-            changed_props = {
+            try:
+                from PySide6.QtCore import QMetaType
+                from PySide6.QtDBus import QDBusArgument
+                invalidadas = QDBusArgument()
+                invalidadas.beginArray(QMetaType(QMetaType.Type.QString).id())
+                invalidadas.endArray()
+
+                msg = QDBusMessage.createSignal(
+                    "/org/mpris/MediaPlayer2",
+                    "org.freedesktop.DBus.Properties",
+                    "PropertiesChanged"
+                )
+                msg.setArguments(["org.mpris.MediaPlayer2.Player", changed_props, invalidadas])
+                self.bus.send(msg)
+            except Exception as e:
+                logger.error(f"MPRIS: fallo emitiendo PropertiesChanged: {e}", exc_info=True)
+
+        def _al_cambiar_estado(self, estado, pista):
+            self._emitir_cambios({
                 "PlaybackStatus": self.player_adaptor.PlaybackStatus,
-                "Metadata": self.player_adaptor.Metadata
-            }
-            
-            msg.setArguments(["org.mpris.MediaPlayer2.Player", changed_props, []])
-            self.bus.send(msg)
+                "Metadata": self.player_adaptor.Metadata,
+            })
+
+        def _al_cambiar_cola(self, *args):
+            self._emitir_cambios({
+                "Shuffle": self.player_adaptor.Shuffle,
+                "LoopStatus": self.player_adaptor.LoopStatus,
+            })
 
 def inicializar_mpris(reproductor: Reproductor) -> Optional[object]:
     """Factory seguro que retorna MprisBridge solo si esta soportado."""

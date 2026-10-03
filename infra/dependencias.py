@@ -156,19 +156,47 @@ def _ejecutar_silencioso(cmd: list[str], timeout: float = 4.0) -> tuple[int, str
         return 1, "", str(exc)
 
 
+_ALIAS_DISTRIBUCION = {
+    "vlc": "python-vlc",
+    "zeroconf": "zeroconf",
+    "soundfile": "soundfile",
+}
+
+
+def _version_de_modulo(nombre: str) -> str:
+    """Obtiene la versión: dist-info (con alias) y, si no, ``__version__``.
+
+    En el bundle PyInstaller muchos paquetes no traen dist-info, así que
+    caemos a importar el módulo (solo se usa con módulos ligeros).
+    """
+    try:
+        from importlib.metadata import version, PackageNotFoundError
+        for dist in (_ALIAS_DISTRIBUCION.get(nombre, nombre), nombre):
+            try:
+                return version(dist)
+            except PackageNotFoundError:
+                continue
+    except Exception:
+        pass
+    try:
+        import importlib
+        mod = importlib.import_module(nombre)
+        for attr in ("__version__", "version", "VERSION"):
+            v = getattr(mod, attr, None)
+            if isinstance(v, (str, int, float)) and str(v):
+                return str(v)
+            if isinstance(v, tuple):
+                return ".".join(map(str, v))
+    except Exception:
+        pass
+    return "desconocida"
+
+
 def _verificar_modulo_python(nombre: str) -> tuple[bool, str]:
-    """Devuelve (importable, version). No importa el módulo si pesa mucho."""
+    """Devuelve (importable, version)."""
     if importlib.util.find_spec(nombre) is None:
         return False, ""
-    try:
-        # importlib.metadata es estándar y no carga el módulo.
-        from importlib.metadata import version, PackageNotFoundError
-        try:
-            return True, version(nombre)
-        except PackageNotFoundError:
-            return True, "desconocida"
-    except Exception:
-        return True, "desconocida"
+    return True, _version_de_modulo(nombre)
 
 
 def _verificar_vlc() -> tuple[bool, str]:
@@ -304,23 +332,33 @@ def _verificar_modulo_subprocess(nombre: str, atributo_version: str = "__version
         return False, ""
 
 
+def _verificar_bundled(flag: str) -> tuple[bool, str]:
+    """Ejecuta el verificador embebido del bundle y lee su JSON."""
+    import json
+    try:
+        res = subprocess.run([sys.executable, flag], capture_output=True, text=True, timeout=30)
+        if res.returncode != 0:
+            return False, ""
+        for linea in reversed(res.stdout.strip().splitlines()):
+            linea = linea.strip()
+            if linea.startswith("{"):
+                data = json.loads(linea)
+                return bool(data.get("ok", False)), str(data.get("version") or "bundled")
+        return True, "bundled"
+    except Exception as exc:
+        _log.debug("verificador %s fallo: %s", flag, exc)
+        return False, ""
+
+
 def _verificar_torch() -> tuple[bool, str]:
     if getattr(sys, "frozen", False):
-        import subprocess, json
-        try:
-            res = subprocess.run([sys.executable, "--verifier-torch"], capture_output=True, timeout=10)
-            return (res.returncode == 0, "bundled")
-        except: return False, ""
+        return _verificar_bundled("--verifier-torch")
     return _verificar_modulo_subprocess("torch")
 
 
 def _verificar_demucs() -> tuple[bool, str]:
     if getattr(sys, "frozen", False):
-        import subprocess, json
-        try:
-            res = subprocess.run([sys.executable, "--verifier-demucs"], capture_output=True, timeout=10)
-            return (res.returncode == 0, "bundled")
-        except: return False, ""
+        return _verificar_bundled("--verifier-demucs")
     return _verificar_modulo_subprocess("demucs")
 
 
@@ -334,14 +372,7 @@ def _verificar_soundfile() -> tuple[bool, str]:
 
 def _verificar_essentia_tensorflow() -> tuple[bool, str]:
     if getattr(sys, "frozen", False):
-        import subprocess, json
-        try:
-            res = subprocess.run([sys.executable, "--verifier-essentia-tf"], capture_output=True, text=True, timeout=10)
-            if res.returncode == 0:
-                data = json.loads(res.stdout.strip())
-                return data.get("ok", False), data.get("version", "bundled")
-        except: pass
-        return False, ""
+        return _verificar_bundled("--verifier-essentia-tf")
 
     spec_local = importlib.util.find_spec("essentia")
 
