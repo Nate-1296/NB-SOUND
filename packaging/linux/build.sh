@@ -23,14 +23,39 @@ for arg in "$@"; do
   esac
 done
 
-echo "[nb_sound] Verificando entorno…"
-python3 -m pip show pyinstaller > /dev/null 2>&1 || python3 -m pip install "pyinstaller>=6.0"
+echo "[nb_sound] Verificando entorno Python (requiere Python 3.12)…"
+PYTHON_BIN="${PYTHON_BIN:-}"
+if [[ -z "$PYTHON_BIN" ]]; then
+  if [[ -x "$ROOT/.venv/bin/python" ]] && "$ROOT/.venv/bin/python" -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 12) else 1)' 2>/dev/null; then
+    PYTHON_BIN="$ROOT/.venv/bin/python"
+  elif command -v python3.12 >/dev/null 2>&1; then
+    PYTHON_BIN="python3.12"
+  elif [[ -x "$HOME/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/bin/python3.12" ]]; then
+    PYTHON_BIN="$HOME/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/bin/python3.12"
+  elif command -v python3 >/dev/null 2>&1 && python3 -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 12) else 1)' 2>/dev/null; then
+    PYTHON_BIN="python3"
+  else
+    echo "[nb_sound] ERROR: No se encontró Python 3.12. Instala Python 3.12 o define PYTHON_BIN." >&2
+    exit 1
+  fi
+fi
+
+echo "[nb_sound] Usando Python: $("$PYTHON_BIN" --version) ($PYTHON_BIN)"
+
+if ! "$PYTHON_BIN" -m PyInstaller --version >/dev/null 2>&1; then
+  echo "[nb_sound] PyInstaller no encontrado en $PYTHON_BIN, instalando…"
+  if command -v uv >/dev/null 2>&1; then
+    uv pip install "pyinstaller>=6.0" --python "$PYTHON_BIN"
+  else
+    "$PYTHON_BIN" -m pip install "pyinstaller>=6.0"
+  fi
+fi
 
 echo "[nb_sound] Limpiando builds previos…"
 rm -rf build dist
 
 echo "[nb_sound] Generando bundle PyInstaller…"
-python3 -m PyInstaller packaging/linux/nb_sound.spec --noconfirm
+"$PYTHON_BIN" -m PyInstaller packaging/linux/nb_sound.spec --noconfirm
 
 ARTIFACT_DIR="dist/nb_sound"
 if [[ ! -d "$ARTIFACT_DIR" ]]; then
