@@ -1870,6 +1870,7 @@ class ModeloReproductor(QObject):
         self._cola.set_datos(cola)
         self.pistaVisualCambiada.emit()
         self.colaCambiada.emit()
+        self.modoCambiado.emit()
 
     def _al_cambiar_cola_backend(self) -> None:
         self.colaBackendCambiada.emit()

@@ -1598,6 +1598,7 @@ class Reproductor:
         try:
             self._modo_repeticion = ModoRepeticion(modo)
             guardar_config("modo_repeticion", modo)
+            self._emitir_cola()
         except ValueError:
             pass
 
@@ -1616,7 +1617,7 @@ class Reproductor:
         guardar_config("modo_aleatorio", "1" if activo else "0")
         if cola_modificada:
             self._persistir_cola()
-            self._emitir_cola()
+        self._emitir_cola()
 
     # ------------------------------------------------------------------
     # ECUALIZADOR Y OPCIONES DE AUDIO (solo reproductor GLOBAL)

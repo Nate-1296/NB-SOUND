@@ -23,6 +23,93 @@ except Exception as e:
     logger.error(f"Error importando dependencias de D-Bus: {e}", exc_info=True)
     DBUS_DISPONIBLE = False
 
+_fn_metatype = None
+_fn_variant_ctor = None
+_fn_append_variant = None
+_helpers_inicializados = False
+
+
+def _init_int64_helpers():
+    global _fn_metatype, _fn_variant_ctor, _fn_append_variant, _helpers_inicializados
+    if _helpers_inicializados:
+        return
+    _helpers_inicializados = True
+    try:
+        import ctypes
+        from pathlib import Path
+        from PySide6 import QtCore, QtDBus
+
+        rutas_core = [
+            Path(QtCore.__file__).parent / "Qt" / "lib" / "libQt6Core.so.6",
+            Path(QtCore.__file__).parent / "Qt" / "lib" / "libQt6Core.so",
+            Path(sys.executable).parent / "_internal" / "libQt6Core.so.6",
+            Path(sys.executable).parent / "_internal" / "PySide6" / "Qt" / "lib" / "libQt6Core.so.6",
+        ]
+        rutas_dbus = [
+            Path(QtDBus.__file__).parent / "Qt" / "lib" / "libQt6DBus.so.6",
+            Path(QtDBus.__file__).parent / "Qt" / "lib" / "libQt6DBus.so",
+            Path(sys.executable).parent / "_internal" / "libQt6DBus.so.6",
+            Path(sys.executable).parent / "_internal" / "PySide6" / "Qt" / "lib" / "libQt6DBus.so.6",
+        ]
+        if hasattr(sys, "_MEIPASS"):
+            rutas_core.append(Path(sys._MEIPASS) / "libQt6Core.so.6")
+            rutas_core.append(Path(sys._MEIPASS) / "PySide6" / "Qt" / "lib" / "libQt6Core.so.6")
+            rutas_dbus.append(Path(sys._MEIPASS) / "libQt6DBus.so.6")
+            rutas_dbus.append(Path(sys._MEIPASS) / "PySide6" / "Qt" / "lib" / "libQt6DBus.so.6")
+
+        core_lib = None
+        for r in rutas_core:
+            if r.exists():
+                core_lib = ctypes.CDLL(str(r))
+                break
+
+        dbus_lib = None
+        for r in rutas_dbus:
+            if r.exists():
+                dbus_lib = ctypes.CDLL(str(r))
+                break
+
+        if core_lib and dbus_lib:
+            _fn_metatype = core_lib._ZN9QMetaTypeC1Ei
+            _fn_metatype.argtypes = [ctypes.c_void_p, ctypes.c_int]
+            _fn_metatype.restype = None
+
+            _fn_variant_ctor = core_lib._ZN8QVariantC1E9QMetaTypePKv
+            _fn_variant_ctor.argtypes = [ctypes.c_void_p, ctypes.c_uint64, ctypes.c_void_p]
+            _fn_variant_ctor.restype = None
+
+            _fn_append_variant = dbus_lib._ZN13QDBusArgument13appendVariantERK8QVariant
+            _fn_append_variant.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+            _fn_append_variant.restype = None
+    except Exception as e:
+        logger.debug(f"No se pudieron inicializar helpers nativos de int64 para D-Bus: {e}")
+
+
+def _make_int64_dbus_arg(val: int):
+    """Convierte un entero a QDBusArgument con firma estricta 'x' (int64).
+
+    PySide6 serializa números enteros de Python en QVariant como 'i' (int32) si caben en
+    32 bits (< 2^31). La especificación MPRIS exige que 'mpris:length' sea 'x' (int64).
+    """
+    try:
+        _init_int64_helpers()
+        if _fn_metatype and _fn_variant_ctor and _fn_append_variant:
+            import ctypes
+            import shiboken6
+            from PySide6.QtDBus import QDBusArgument
+            var_buf = (ctypes.c_uint8 * 32)()
+            mt = ctypes.c_uint64(0)
+            _fn_metatype(ctypes.byref(mt), 4)  # 4 = QMetaType::Type::LongLong
+            v = ctypes.c_int64(int(val))
+            _fn_variant_ctor(ctypes.byref(var_buf), mt.value, ctypes.byref(v))
+            arg = QDBusArgument()
+            arg_ptr = shiboken6.getCppPointer(arg)[0]
+            _fn_append_variant(arg_ptr, ctypes.byref(var_buf))
+            return arg
+    except Exception as e:
+        logger.debug(f"Fallback int64 D-Bus argument: {e}")
+    return int(val)
+
 
 class MprisRootAdaptor:
     pass
@@ -160,7 +247,7 @@ if DBUS_DISPONIBLE:
             if pista.album:
                 meta["xesam:album"] = pista.album
             if pista.duracion_seg > 0:
-                meta["mpris:length"] = int(pista.duracion_seg * 1000000)
+                meta["mpris:length"] = _make_int64_dbus_arg(int(pista.duracion_seg * 1000000))
                 
             ruta_portada = pista.portada_hd_ruta or pista.portada_ruta
             if ruta_portada:
