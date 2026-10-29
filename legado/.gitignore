@@ -1,0 +1,254 @@
+# =========================================================
+# Python
+# =========================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.python-version
+
+# Extensiones compiladas / binarias
+*.so
+*.dylib
+*.dll
+
+# Distribución / empaquetado
+.Python
+build/
+dist/
+# Binarios externos preparados por el CI / build local antes de PyInstaller.
+external_bin/
+downloads/
+develop-eggs/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Instaladores / logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Cobertura / testing / reportes
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Type checkers / linters / formatters
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+.pyright/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Dependencias / locks
+# Descomenta según tu flujo
+# poetry.lock
+# Pipfile.lock
+
+# Logs temporales
+*.log
+*.tmp
+*.temp
+
+# Scripts locales
+clean_pycache_local.py
+reset_musica.py
+
+# =========================================================
+# Qt / QML / PySide / PyQt
+# =========================================================
+
+# Cachés compiladas de QML
+*.qmlc
+*.jsc
+*.mjsc
+qmlcache_loader.cpp
+.qtc_clangd/
+
+# Archivos generados por Qt Creator
+*.pro.user
+*.pro.user.*
+*.pri.user
+*.qbs.user
+*.qbs.user.*
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles/
+cmake-build-*/
+build-*/
+
+# Archivos autogenerados de Qt/CMake
+.autogen/
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# Artefactos generales Qt
+*.autosave
+*.qm
+*.obj
+*.o
+*.a
+*.lib
+*.exe
+*.out
+*.app
+
+# Qt Creator
+.qtcreator/
+.qtcreator.db
+.qtcreator.ini
+
+# =========================================================
+# Editor / IDE
+# =========================================================
+
+# VS Code
+.vscode/
+
+# JetBrains / PyCharm
+.idea/
+*.iml
+
+# Vim / Neovim / Emacs
+*.swp
+*.swo
+*~
+\Session.vim
+.netrwhist
+
+# Sublime / Kate / otros
+*.sublime-project
+*.sublime-workspace
+.kate-swp
+
+# =========================================================
+# Archivos locales de configuración / secretos
+# =========================================================
+.env
+.env.*
+!.env.example
+*.env
+*.local
+*.secret
+secrets.json
+config.local.*
+credentials.*
+token.*
+tokens.*
+auth.*
+
+# =========================================================
+# Bases de datos / runtime locales
+# =========================================================
+*.sqlite3
+*.sqlite
+*.db
+
+# PIDs / sockets / colas
+*.pid
+*.pid.lock
+*.sock
+
+# =========================================================
+# Archivos de sistema operativo
+# =========================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*/
+.nfs*
+
+# =========================================================
+# Archivos comprimidos / backups
+# =========================================================
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.7z
+*.gz
+*.zip
+*.tar
+*.tgz
+*.bz2
+*.rar
+
+# =========================================================
+# Artefactos de despliegue / empaquetado opcionales
+# =========================================================
+*.deb
+*.rpm
+*.AppImage
+*.snap
+*.flatpak
+
+# PyInstaller / Nuitka / cx_Freeze
+*.manifest
+*.spec
+!packaging/**/*.spec
+__nuitka_cache__/
+*.build/
+
+# =========================================================
+# Directorios del proyecto que suelen ser generados
+# Ajusta o elimina los que no uses
+# =========================================================
+coverage/
+site/
+tmp/
+temp/
+logs/
+.cache-loader/
+

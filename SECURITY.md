@@ -60,7 +60,7 @@ explícitamente en el reporte para priorizar.
 Pedimos divulgación coordinada: no publicar detalles públicos hasta que la
 release con el parche esté disponible y los usuarios tengan un margen
 razonable para actualizar. Una vez liberado el parche se acreditará a quien
-reportó en el [CHANGELOG](CHANGELOG.md), salvo que solicites lo contrario.
+reportó en las notas de la versión, salvo que solicites lo contrario.
 
 ## Alcance
 

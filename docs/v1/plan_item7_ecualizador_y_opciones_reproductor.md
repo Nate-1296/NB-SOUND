@@ -9,7 +9,7 @@
 
 ## 0. Resumen de implementación
 
-- **Backend** ([servicios/reproductor.py](../../servicios/reproductor.py)):
+- **Backend** ([servicios/reproductor.py](../../legado/servicios/reproductor.py)):
   constantes verificadas contra libVLC (`EQ_PRESETS`, `EQ_BANDAS_HZ`, rangos),
   funciones puras `bandas_de_preset`/`preamp_de_preset`, estado del EQ + normvol,
   `set_ecualizador_*`, `set_normalizar_volumen`, `_aplicar_equalizer_a_media_player`
@@ -19,22 +19,22 @@
   (API de la librería, balance banda/preamp correcto); solo "Personalizado" arma
   el EQ a mano. Nombres de preajuste en español para la UI (`EQ_PRESET_NOMBRES_ES`,
   conservando géneros sin traducción: Pop, Rock, Reggae, Ska, Techno, Club…).
-- **Modelo** ([ui/modelos_qml.py](../../ui/modelos_qml.py) · `ModeloReproductor`):
+- **Modelo** ([ui/modelos_qml.py](../../legado/ui/modelos_qml.py) · `ModeloReproductor`):
   propiedades reactivas `eq_activo`, `eq_preset` (-1 = Personalizado), `eq_bandas`,
   `eq_preamp`, `normalizar_volumen` + metadatos `eq_presets_nombres`/`eq_bandas_hz`
   /rangos, y slots `set_ecualizador_activo|preset|banda|preamp` y
   `set_normalizar_volumen`. Persisten al instante.
-- **UI** ([VistaConfiguracion.qml](../../ui/qml/vistas/VistaConfiguracion.qml)):
+- **UI** ([VistaConfiguracion.qml](../../legado/ui/qml/vistas/VistaConfiguracion.qml)):
   subtítulo actualizado + `GrupoConfig` "Ecualizador del reproductor" antes de
   "Tipografía" (toggle, chips de preset + "Personalizado", 10 sliders verticales
   `EqBandaSlider`, slider de pre-amp con `SliderLine`, toggle normvol con nota).
   Las barras se atenúan/deshabilitan con el EQ apagado.
 - **Persistencia** (config_ui, sin cambio de esquema): `eq_activo`, `eq_preset`
   (índice o `custom`), `eq_bandas` (JSON 10 floats), `eq_preamp`, `audio_normalizar`.
-- **Tests**: [tests/test_reproductor_ecualizador.py](../../tests/test_reproductor_ecualizador.py)
+- **Tests**: [tests/test_reproductor_ecualizador.py](../../legado/tests/test_reproductor_ecualizador.py)
   (tabla contrastada contra libVLC, funciones puras, preset→custom, round-trip de
   persistencia, normvol per-media, aislamiento del DJ) y smoke QML en
-  [tests/test_ui_configuracion_runtime.py](../../tests/test_ui_configuracion_runtime.py).
+  [tests/test_ui_configuracion_runtime.py](../../legado/tests/test_ui_configuracion_runtime.py).
 
 ### Desviación respecto al plan: normvol per-media (no recreación de instancia)
 
@@ -61,7 +61,7 @@ Y cambiar el subtítulo de la sección.
 
 ## 2. Cambio de subtítulo (trivial)
 
-En [VistaConfiguracion.qml](../../ui/qml/vistas/VistaConfiguracion.qml#L1726):
+En [VistaConfiguracion.qml](../../legado/ui/qml/vistas/VistaConfiguracion.qml#L1726):
 
 ```
 - "Ajusta tema, tipografía y escala. Esta sección se guarda al instante."
@@ -142,7 +142,7 @@ Para esta caja: incluir solo lo que VLC sí permite (§3.1–3.3).
     misma pista/posición (mismo mecanismo de `_reanudar_seg_pendiente`).
   - Reaplicar el ecualizador activo.
 - Construir los args en `_inicializar_vlc`
-  ([anchor](../../servicios/reproductor.py#L193)) leyendo config_ui:
+  ([anchor](../../legado/servicios/reproductor.py#L193)) leyendo config_ui:
   - `audio_normalizar` ("0"/"1") → añade `--audio-filter=normvol --norm-max-level=… --norm-buff-size=…`.
   - (Opcional) `audio_replaygain_mode` → `--audio-replay-gain-mode=…`.
 - Por simplicidad de UX, ofrecer SOLO "Estabilizar volumen" (normvol) como
@@ -157,7 +157,7 @@ Para esta caja: incluir solo lo que VLC sí permite (§3.1–3.3).
 
 ### 4.4 UI (respetar la maquetación existente)
 - Insertar un `GrupoConfig` nuevo **antes** del de "Tipografía"
-  ([anchor](../../ui/qml/vistas/VistaConfiguracion.qml#L1733)), justo tras la
+  ([anchor](../../legado/ui/qml/vistas/VistaConfiguracion.qml#L1733)), justo tras la
   cabecera de la sección.
 - Estructura del grupo:
   - Toggle "Ecualizador" (activar/desactivar) con `PillOption`/switch del estilo
@@ -165,7 +165,7 @@ Para esta caja: incluir solo lo que VLC sí permite (§3.1–3.3).
   - Selector de preajuste: fila de chips (`PillOption`) con los 18 presets +
     "Personalizado". Reusar el patrón de chips de la propia VistaConfiguracion.
   - 10 barras verticales (una por banda) usando
-    [SliderLine.qml](../../ui/qml/componentes/SliderLine.qml) o un slider vertical
+    [SliderLine.qml](../../legado/ui/qml/componentes/SliderLine.qml) o un slider vertical
     equivalente; etiqueta de frecuencia bajo cada barra. Mover una barra →
     preset "Personalizado".
   - Pre-amplificación: un slider extra.
