@@ -13,7 +13,7 @@
 | Iteración | Estado |
 |---|---|
 | F1.1.1 Capa de base de datos (pool, WAL, `BEGIN IMMEDIATE`, migraciones) | Pendiente |
-| F1.1.2 Esquema V2: catálogo (artistas, álbumes, pistas, archivos, portadas) | Pendiente |
+| F1.1.2 Esquema V2: catálogo (artistas, álbumes, pistas con `verificada`, archivos, portadas, pendientes de revisar) | Pendiente |
 | F1.1.3 Esquema V2: uso (playlists, favoritos, historial, cola, estado del reproductor) | Pendiente |
 | F1.1.4 Esquema V2: análisis resumido (rasgos, embeddings `f32`, LUFS, paleta) | Pendiente |
 | F1.1.5 Esquema V2: sincronización (dispositivos, `sync_version`, tumbas, transferencias) | Pendiente |

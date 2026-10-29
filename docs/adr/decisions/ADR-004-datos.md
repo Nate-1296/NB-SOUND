@@ -40,8 +40,10 @@ atravesar dos procesos.
    * copia el certificado y la clave del servidor móvil (`~/.config/nb_sound/sync/sync_cert.pem` y
      `sync_key.pem`) para que la huella no cambie;
    * deja un informe que cuenta lo migrado por tabla, y una prueba exige que cuadre fila a fila.
-   * No migra lo que era operativo de la V1: `archivos_pendientes`, `manifests_index`, colas de trabajos
-     terminados, ejecuciones de análisis.
+   * Migra a **Por revisar** las filas de `archivos_pendientes` sin resolver cuyo archivo siga existiendo; las
+     resueltas (hoy las 116) no. Las pistas importadas tal como están se marcan con `verificada = 0`.
+   * No migra lo que era operativo de la V1: `manifests_index`, colas de trabajos terminados, ejecuciones de
+     análisis.
 
 ## Alternativas consideradas
 

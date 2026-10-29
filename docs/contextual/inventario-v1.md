@@ -25,14 +25,15 @@ Base: NB Sound v1.1.16. Unas 111.000 líneas: 60.000 de Python de aplicación (`
 | Reproducción expandida y minirreproductor | `VistaReproduccionExpandida.qml` | Se porta | F2.2.6 |
 | Perfil (identidad musical, ánimo, actividad) | `VistaPerfil.qml` | Se porta como **Tu música** | F2.2.8 |
 | Temas (unas 60 paletas, un PNG de logo por paleta) | `ui/modelos_qml.py`, `ui/qml/assets/logo/` | Se rediseña: Material 3, color por portada, las paletas como acentos | F0.2.7, F2.2.7 |
-| Importación | `VistaImportacion.qml`, `core/pipeline.py` | Se rediseña: sin vista; arrastrar, carpeta vigilada, "necesitan tu atención" | F4.2 |
+| Importación | `VistaImportacion.qml`, `core/pipeline.py` | Se rediseña: sin vista; arrastrar, carpeta vigilada y **Por revisar** | F4.2 |
 | Catalogación: normalización, AcoustID, MusicBrainz, Shazam, iTunes, segunda y tercera etapa, desempate por IA | `core/`, `external/` | Se porta | F4.1 |
 | Duplicados exactos y semánticos | `core/dedupe.py`, `servicios/dedupe_observable.py` | Se porta | F4.1.8 |
 | Overrides de catalogación | `core/overrides.py` | Se porta como "editar metadatos" | F4.2.5 |
 | Portadas e imágenes de artista (seis fuentes) | `core/assets_pipeline.py` | Se porta | F4.1.10 |
 | Transcodificación | `external/transcoder.py` | Se porta con el `ffmpeg` empaquetado | F4.1.9 |
+| Cuarentena y revisión | `infra/quarantine.py`, `archivos_pendientes` | Se rediseña: **Por revisar**, con motivo claro e "importar tal como está"; las pistas así importadas entran en la misma base y llegan al móvil ([ADR-007](../adr/decisions/ADR-007-arquitectura-de-informacion.md#enmienda-del-2026-10-29-por-revisar)) | F4.2.4, F4.2.8 |
 | Recuperación tras cierre a medias | `core/import_recovery_service.py` | Se porta | F4.1.13 |
-| Auditoría de la biblioteca | `core/audit.py` | Se rediseña: comprobación en segundo plano; lo que necesite al usuario va a "necesitan tu atención" | F4.2.4 |
+| Auditoría de la biblioteca | `core/audit.py` | Se rediseña: comprobación en segundo plano; lo que necesite al usuario va a Por revisar | F4.2.4 |
 | Copia de seguridad y restauración | `servicios/backup.py` | Se porta | F4.2.6 |
 | Rasgos básicos (librosa) | `core/audio_features.py` | Se porta a Rust; tonalidad con modo | F0.4.4, F4.1.12 |
 | Análisis profundo (Essentia) | `core/audio_intelligence_*.py` | Se porta a ONNX como agregado | F0.4.3, F5.3 |
@@ -56,7 +57,7 @@ Base: NB Sound v1.1.16. Unas 111.000 líneas: 60.000 de Python de aplicación (`
 | Ganchos de PyInstaller y del bundle de VLC | `packaging/` | Tauri empaqueta |
 | Puente QML y trabajadores de Qt | `ui/modelos_qml.py`, `workers/workers_qt.py` | Lo sustituyen el puente de Tauri y las tareas de Tokio |
 | Más de 100 variables de `.env` | `config/settings.py`, `.env` | [ADR-009](../adr/decisions/ADR-009-configuracion-y-red.md) |
-| Seis directorios configurables, cuarentena y revisión visibles | `config/settings.py` | Una sola carpeta de música ([ADR-007](../adr/decisions/ADR-007-arquitectura-de-informacion.md)) |
+| Seis directorios configurables (incluidas las carpetas de cuarentena y revisión) | `config/settings.py` | Una sola carpeta de música; cuarentena y revisión siguen como estado en Por revisar ([ADR-007](../adr/decisions/ADR-007-arquitectura-de-informacion.md)) |
 | CLI de la canalización | `main.py`, `docs/v1/cli.md` | Era una herramienta de desarrollo; la aplicación importa sola |
 | Manifiestos de importación en disco | `core/manifests.py` | Información operativa; va al registro |
 | Modo de progreso de terminal | `infra/progress.py` | Sin terminal |

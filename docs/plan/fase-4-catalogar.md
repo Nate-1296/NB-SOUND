@@ -2,7 +2,7 @@
 
 > **Objetivo:** portar la canalización de catalogación de la V1 (`core/pipeline.py` y sus etapas, `external/`) a
 > Rust, con la experiencia de [ADR-007](../adr/decisions/ADR-007-arquitectura-de-informacion.md): arrastrar y
-> soltar en cualquier parte, carpeta vigilada y "necesitan tu atención".
+> soltar en cualquier parte, carpeta vigilada y **Por revisar**.
 >
 > **Prerrequisitos:** Fases 1 y 2, y F0.4.4 y F0.4.6. Contratos: ADR-002, ADR-007, ADR-009.
 >
@@ -28,10 +28,11 @@
 | F4.2.1 Arrastrar y soltar en toda la ventana; "Añadir música" | Pendiente |
 | F4.2.2 Carpeta de música vigilada | Pendiente |
 | F4.2.3 Progreso discreto y resumen | Pendiente |
-| F4.2.4 "Necesitan tu atención": comparador lado a lado | Pendiente |
+| F4.2.4 Por revisar: lista con el motivo en lenguaje llano, comparador lado a lado y acciones | Pendiente |
 | F4.2.5 Editar metadatos de una pista o un álbum | Pendiente |
 | F4.2.6 Copia de seguridad y restauración (`servicios/backup.py`) | Pendiente |
 | F4.2.7 Ajustes > Privacidad y servicios en línea; Inteligencia artificial | Pendiente |
+| F4.2.8 Importar tal como está: pistas sin verificar, su filtro y "Completar datos" | Pendiente |
 
 ## Criterios
 
@@ -40,7 +41,14 @@
   las etiquetas borradas, fuera de la carpeta real) se importa con la V1 y con la V2; las decisiones (álbum,
   artista, título, número de pista, ¿revisión?) coinciden en ≥ 98 %, y cada diferencia queda explicada en el
   informe.
-* **F4.2.4:** el panel solo muestra pistas concretas con sus candidatos; ningún texto interno de la V1 aparece.
+* **F4.2.4:** cada causa interna de la V1 tiene su mensaje y sus acciones según la tabla de la
+  [enmienda de ADR-007](../adr/decisions/ADR-007-arquitectura-de-informacion.md#enmienda-del-2026-10-29-por-revisar);
+  una prueba recorre todas las causas y falla si alguna llega a la interfaz sin traducir. La entrada de la barra
+  lateral solo existe con algo pendiente. Descartar manda a la papelera del sistema.
+* **F4.2.8:** una pista importada tal como está se reproduce, entra en playlists y en el DJ, aparece en el filtro
+  "Sin verificar", y antes de confirmar se advierte lo que le falta. Con un teléfono conectado, el manifiesto la
+  incluye y el teléfono real la descarga sin cambios en NB Sound Mobile (arnés de respuestas doradas en verde).
+  "Completar datos" le añade portada y letra sin cambiar su `id`.
 * **F4.2.2:** copiar un álbum en la carpeta de música lo añade sin abrir nada.
 * Las salidas de red pasan por `net.rs`; con todo desactivado, la importación funciona solo con las etiquetas.
 

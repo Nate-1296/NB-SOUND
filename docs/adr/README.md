@@ -21,7 +21,7 @@ conservar **por qué** se tomó.
 | [004](./decisions/ADR-004-datos.md) | Rust es dueño de los datos; la V1 se migra sin pérdida | Aceptado |
 | [005](./decisions/ADR-005-contrato-movil.md) | El contrato con NB Sound Mobile queda congelado | Aceptado |
 | [006](./decisions/ADR-006-agregados.md) | Agregados que se instalan con un clic | Aceptado |
-| [007](./decisions/ADR-007-arquitectura-de-informacion.md) | Arquitectura de información: destinos y lo que deja de existir | Aceptado |
+| [007](./decisions/ADR-007-arquitectura-de-informacion.md) | Arquitectura de información: destinos, Por revisar y lo que deja de existir | Aceptado, enmendado el 2026-10-29 |
 | [008](./decisions/ADR-008-sistema-de-diseno.md) | Material 3 compartido con NB Books y color por portada | Aceptado |
 | [009](./decisions/ADR-009-configuracion-y-red.md) | Configuración mínima, secretos en el llavero y una sola puerta de red | Aceptado |
 | [010](./decisions/ADR-010-licencia.md) | Licencia del código y de los modelos | Aceptado |

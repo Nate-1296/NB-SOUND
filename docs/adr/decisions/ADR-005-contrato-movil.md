@@ -30,7 +30,8 @@ Hay 12 dispositivos emparejados en la instalación real.
 3. **Respuestas doradas**: en la Fase 0 se graban respuestas reales de la V1 a cada endpoint y cada frame del
    WebSocket, con los datos sensibles redactados. Un arnés las reproduce contra el servidor de la V2 en cada
    verificación. Una diferencia que no sea un campo añadido rompe la verificación.
-4. Cualquier campo nuevo que necesite la V2 (por ejemplo, LUFS o la paleta del álbum) es aditivo y se documenta en
+4. Cualquier campo nuevo que necesite la V2 (por ejemplo, LUFS, la paleta del álbum o `verificada` para las
+   pistas importadas tal como están) es aditivo y se documenta en
    `docs/engineering/contrato-movil.md` con una nota para el móvil, que no tiene obligación de usarlo.
 5. **La app móvil no se modifica.** Si una mejora del escritorio exigiera romper el protocolo, se escribe un ADR
    que lo justifique y se sube a `version_protocolo = 2`, manteniendo el 1 mientras exista un cliente que lo use.
