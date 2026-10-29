@@ -1,0 +1,4 @@
+# Umbrales de Clippy. Las advertencias son errores en CI:
+# cargo clippy --all-targets --all-features -- -D warnings
+cognitive-complexity-threshold = 20
+too-many-arguments-threshold = 6

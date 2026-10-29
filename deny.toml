@@ -1,0 +1,52 @@
+# Política de licencias y seguridad de las dependencias de Rust (ADR-010).
+# NB Sound es GPL-3.0-or-later: admite todo lo compatible con ella. Lo mismo que
+# NB Books más GPL-3.0, que aquí sí cabe (por ejemplo, songrec).
+
+[advisories]
+version = 2
+yanked = "deny"
+# Sin mantenimiento, vía el árbol de Tauri; los mismos que acepta NB Books y por
+# el mismo motivo: no son dependencias nuestras y no hay versión a la que saltar.
+ignore = [
+  "RUSTSEC-2024-0370", # proc-macro-error
+  "RUSTSEC-2025-0075", # unic-char-range
+  "RUSTSEC-2025-0080", # unic-common
+  "RUSTSEC-2025-0081", # unic-char-property
+  "RUSTSEC-2025-0098", # unic-ucd-version
+  "RUSTSEC-2025-0100", # unic-ucd-ident
+]
+
+[licenses]
+version = 2
+confidence-threshold = 0.9
+allow = [
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "MIT",
+  "MIT-0",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Zlib",
+  "Unicode-3.0",
+  "CC0-1.0",
+  "Unlicense",
+  "BSL-1.0",
+  "MPL-2.0",
+  "0BSD",
+  "CDLA-Permissive-2.0",
+  "OFL-1.1",
+  "GPL-3.0-or-later",
+  "GPL-3.0",
+  "LGPL-2.1-or-later",
+  "LGPL-3.0-or-later",
+]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

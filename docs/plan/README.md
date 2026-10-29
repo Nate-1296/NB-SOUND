@@ -79,14 +79,10 @@ Una iteración está terminada cuando:
 
 Es exactamente lo que la V1 incumplía, y es la [regla 1](../contextual/constitution/README.md) de la Constitución.
 
-## 6. Los dos corpus
+## 6. Los corpus reales
 
-| Corpus | Dónde | Qué tiene |
-|---|---|---|
-| Música | `/home/nathan/Música/biblioteca/` | 2.397 MP3, 14 GB, organizados por la V1 |
-| Base de la V1 | `/home/nathan/.local/share/nb_sound/biblioteca/nb_sound.sqlite3` | 464 MB; 407 pistas con análisis profundo, 323 trabajos de karaoke, 12 dispositivos |
-
-**Jamás se escribe en esas rutas** durante el desarrollo; se abren en solo lectura. Las pruebas que las usan se
-saltan solas si no existen. Nada derivado de ellas (títulos, rutas, portadas) entra al repositorio ni a los
-registros. El simulador que las sustituye en `pnpm verify` conserva la variedad: títulos, duraciones, portadas y
-formatos distintos, y un modo de 100.000 pistas para medir rendimiento.
+Las pruebas que miden paridad o rendimiento usan la música y la base de la V1 de la máquina de desarrollo. Dónde
+están y qué reglas las protegen está en [CLAUDE.md](../../CLAUDE.md), sección 7: **jamás se escribe en ellas**, se
+abren en solo lectura, nada derivado entra al repositorio ni a los registros, y las pruebas que las usan se saltan
+solas si no existen. El simulador que las sustituye en `pnpm verify` conserva la variedad (títulos, duraciones,
+portadas y formatos distintos) y tiene un modo de 100.000 pistas para medir rendimiento.

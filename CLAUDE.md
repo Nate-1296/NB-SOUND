@@ -74,6 +74,8 @@ Hasta que exista el esqueleto (F0.2.1), la verificación de la V1 es `pytest` de
 
 ## 7. Los corpus reales
 
+<!-- check-docs: allow-absolute-path -->
+
 | Corpus | Ruta |
 |---|---|
 | Música | `/home/nathan/Música/biblioteca/` (2.397 MP3, 14 GB) |

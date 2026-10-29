@@ -1,0 +1,31 @@
+#!/bin/sh
+# Valida el formato del mensaje de commit y la declaración de origen (DCO).
+# Ver CLAUDE.md, sección 8
+set -e
+
+msg_file="$1"
+subject=$(head -n 1 "$msg_file")
+
+fail() { printf '\n  %s\n\n' "$1" >&2; exit 1; }
+
+# Los merges y las reversiones tienen formato propio.
+case "$subject" in
+  "Merge "*|"Revert "*|"fixup!"*|"squash!"*) exit 0 ;;
+esac
+
+pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore)(\([a-z0-9._/-]+\))?!?: .{1,}'
+echo "$subject" | grep -qE "$pattern" \
+  || fail "Formato de commit inválido.
+  Esperado: <tipo>(<ámbito opcional>): <descripción>
+  Ejemplo:  feat(reproductor): cola sin cortes entre pistas
+  Tipos:    feat fix docs style refactor perf test build ci chore"
+
+[ "${#subject}" -le 100 ] \
+  || fail "El asunto del commit supera los 100 caracteres (${#subject})."
+
+grep -qiE '^Signed-off-by: .+ <.+@.+>' "$msg_file" \
+  || fail "Falta la declaración de origen (DCO).
+  Usa: git commit -s
+  Para corregir la rama entera: git rebase --signoff origin/main"
+
+exit 0

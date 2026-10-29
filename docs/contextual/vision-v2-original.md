@@ -99,7 +99,7 @@ Las pantallas actuales de `nb_sound` sufren de sobrecarga informativa técnica. 
 * **Estado actual:** Vista administrativa con selección masiva de checkboxes, tablas de stems y botones para asociar instrumentales manuales.
 * **Rediseño V2:**
   * **El Karaoke pasa a ser una función del reproductor**, no una tarea de administración de archivos.
-  * En la barra de reproducción y en la vista de letras sincronizadas se añade un botón con icono de micrófono 🎤 (*"Modo Karaoke"*).
+  * En la barra de reproducción y en la vista de letras sincronizadas se añade un botón con icono de micrófono (*"Modo Karaoke"*).
   * Si la canción ya fue separada: conmuta instantáneamente entre la versión original y la instrumental.
   * Si aún no tiene stems: muestra un estado sutil: *"Preparando modo karaoke por primera vez (~25 seg)..."* mientras el audio original sigue sonando.
   * La vista dedicada a Karaoke en la barra lateral se transforma en una colección limpia: **"Listas para cantar"**, con una opción directa: *"Preparar mis favoritas para karaoke en segundo plano"*.

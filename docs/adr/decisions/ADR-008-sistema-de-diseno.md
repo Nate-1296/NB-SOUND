@@ -19,7 +19,8 @@ tokens `--m3c-*` generados por `scripts/generar-paletas.mjs` y Material Color Ut
   base por álbum. Se calcula una vez por portada, nunca en el webview. La interfaz cambia de esquema con una sola
   transición corta; en reposo no se anima nada. El sistema tonal de Material 3 garantiza el contraste.
 * Se puede desactivar ("color por portada") y elegir un acento fijo. Las 60 paletas de la V1 pasan a ser
-  **colores semilla** para el acento fijo; los 60 PNG desaparecen y el logo es un SVG teñido por los tokens.
+  **colores semilla** para el acento fijo. Los 60 PNG del logo, uno por paleta, desaparecen: queda un solo
+  logo, el de la V1 (`logo_512.png`), que es una ilustración y no admite teñirse sin redibujarla.
 * La barra de progreso interpola la posición con `requestAnimationFrame` a partir de los eventos de estado del
   motor (reproducir, pausar, seek, duración), solo mientras suena y la ventana es visible. El puente no lleva
   eventos de posición a 30 o 60 Hz.

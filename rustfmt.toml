@@ -1,0 +1,5 @@
+# Configuración estándar de rustfmt. El proyecto no personaliza el estilo:
+# las discusiones sobre formato no aportan valor.
+# Ver docs/adr/decisions/ADR-001-pila-tecnologica.md
+edition = "2021"
+max_width = 100

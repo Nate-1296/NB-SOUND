@@ -1,0 +1,123 @@
+/*
+ * Sistema de diseño base de NB Sound.
+ *
+ * Contrato: docs/adr/decisions/ADR-008-sistema-de-diseno.md
+ *
+ * Los colores son los de Material 3 (`--m3c-*`), generados en `paletas.css` o en
+ * caliente desde la portada que suena. Aquí solo hay tokens que no son color:
+ * espacio, radio, tipografía, movimiento y medidas de la carcasa. Ningún
+ * componente escribe un color literal; lo vigila `scripts/check-ui.mjs`.
+ */
+
+@import 'm3-svelte/etc/styles.css';
+@import './paletas.css';
+
+:root {
+  color-scheme: light dark;
+
+  --ns-font-ui: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ns-font-mono: ui-monospace, 'Cascadia Mono', 'Fira Mono', Consolas, monospace;
+
+  /* Escala tipográfica (rem sobre 16 px) */
+  --ns-texto-xs: 0.75rem;
+  --ns-texto-sm: 0.8125rem;
+  --ns-texto-md: 0.9375rem;
+  --ns-texto-lg: 1.125rem;
+  --ns-texto-xl: 1.5rem;
+  --ns-texto-2xl: 2rem;
+
+  /* Espacio, en una escala de 4 */
+  --ns-espacio-1: 0.25rem;
+  --ns-espacio-2: 0.5rem;
+  --ns-espacio-3: 0.75rem;
+  --ns-espacio-4: 1rem;
+  --ns-espacio-5: 1.5rem;
+  --ns-espacio-6: 2rem;
+  --ns-espacio-7: 3rem;
+
+  /* Radios de Material 3 */
+  --ns-radio-sm: 0.5rem;
+  --ns-radio-md: 0.75rem;
+  --ns-radio-lg: 1rem;
+  --ns-radio-xl: 1.75rem;
+  --ns-radio-pleno: 999px;
+
+  /*
+   * Movimiento. Las transiciones son cortas y solo responden a algo que hizo
+   * quien usa la aplicación: nada se anima en reposo (regla heredada de NB Books,
+   * donde un fondo animado costó diez fotogramas largos de cada noventa).
+   */
+  --ns-duracion-corta: 120ms;
+  --ns-duracion-media: 220ms;
+  --ns-curva: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Carcasa */
+  --ns-ancho-lateral: 15rem;
+  --ns-ancho-riel: 5rem;
+  --ns-alto-superior: 4rem;
+  --ns-alto-reproductor: 5.5rem;
+}
+
+:root[data-movimiento='reducido'] {
+  --ns-duracion-corta: 0ms;
+  --ns-duracion-media: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ns-duracion-corta: 0ms;
+    --ns-duracion-media: 0ms;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--ns-font-ui);
+  font-size: var(--ns-texto-md);
+  line-height: 1.45;
+  color: var(--m3c-on-surface);
+  background: var(--m3c-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--m3c-primary);
+  outline-offset: 2px;
+}
+
+.ns-solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

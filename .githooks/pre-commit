@@ -1,0 +1,57 @@
+#!/bin/sh
+# Verificación previa al commit. Portada de NB Books: los mismos guardianes, sin
+# gestor de ganchos externo. Activación: pnpm install (o git config core.hooksPath .githooks)
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+fail() { printf '\n  %s\n\n' "$1" >&2; exit 1; }
+
+# --- Interfaz -------------------------------------------------------------
+v2=$(echo "$staged" | grep -v '^legado/' || true)
+if echo "$v2" | grep -qE '\.(ts|js|mjs|json|svelte)$'; then
+  echo "$v2" | grep -E '\.(ts|js|mjs|json|svelte)$' | xargs pnpm exec biome check --no-errors-on-unmatched \
+    || fail "Biome encontró problemas. Ejecuta: pnpm lint:fix"
+fi
+
+if echo "$v2" | grep -qE '\.(svelte|css)$'; then
+  echo "$v2" | grep -E '\.(svelte|css)$' | grep -v '^src/paletas.css$' | xargs -r pnpm exec prettier --check \
+    || fail "Prettier encontró problemas de formato. Ejecuta: pnpm format"
+  node scripts/check-ui.mjs || fail "El sistema de diseño rechaza un componente (ADR-008)."
+  node scripts/generar-paletas.mjs --check || fail "src/paletas.css no está al día. Ejecuta: pnpm paletas"
+fi
+
+# --- Runtime --------------------------------------------------------------
+if echo "$staged" | grep -q '^src-tauri/.*\.rs$'; then
+  ( cd src-tauri && cargo fmt --all -- --check ) \
+    || fail "Rust sin formatear. Ejecuta: cd src-tauri && cargo fmt --all"
+  node scripts/check-error-contract.mjs || fail "Hay una firma que devuelve String como error."
+  node scripts/check-bindings.mjs || fail "Los tipos del puente están desactualizados. Añade los regenerados."
+  node scripts/check-network.mjs || fail "Hay una salida de red fuera de src/net.rs."
+  node scripts/check-registro.mjs || fail "Hay un registro que puede llevar datos del usuario sin redactar."
+  node scripts/check-rutas.mjs || fail "Hay un comando que usa una ruta del webview sin canonicalizarla."
+  node scripts/check-comandos.mjs || fail "Hay un comando del puente en el hilo de la ventana."
+  node scripts/check-plataforma.mjs || fail "Hay código de una sola plataforma sin su condición."
+  if [ -d src-tauri/src/db ]; then
+    node scripts/check-transacciones.mjs || fail "Hay una transacción de escritura abierta en diferido."
+    node scripts/check-listas.mjs || fail "Hay un comando que devuelve una lista sin acotar."
+  fi
+fi
+
+if echo "$staged" | grep -qE '^(src-tauri/src/lib\.rs|src/lib/core/ipc/.*|src/routes/.*|src/lib/ui/.*)$'; then
+  node scripts/check-puente.mjs || fail "El puente tiene comandos sin conectar o funciones sin usar."
+fi
+
+# --- Higiene ----------------------------------------------------------------
+node scripts/check-sin-python.mjs || fail "La V2 no ejecuta Python (ADR-002)."
+
+if echo "$staged" | grep -qE '\.(so|dylib|dll|a|lib|onnx|pb|exe)$'; then
+  fail "No se versionan binarios nativos ni pesos de modelos (ADR-006)."
+fi
+
+if echo "$staged" | grep -qE '^(docs/|CLAUDE\.md|README\.md)'; then
+  node scripts/check-docs.mjs || fail "La documentación tiene enlaces rotos, rutas absolutas o emoticonos."
+fi
+
+exit 0

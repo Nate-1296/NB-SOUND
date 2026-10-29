@@ -1,0 +1,122 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.3/schema.json",
+  "files": {
+    "includes": [
+      "**/*.ts",
+      "**/*.js",
+      "**/*.json",
+      "**/*.svelte",
+      "!**/node_modules",
+      "!**/build",
+      "!**/.svelte-kit",
+      "!**/target",
+      "!**/src-tauri/gen",
+      "!**/pnpm-lock.yaml",
+      "!**/.claude/settings.local.json",
+      "!**/src/lib/bindings",
+      "!**/test-results",
+      "!**/playwright-report",
+      "!**/legado"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "none"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "suspicious": {
+        "noConsole": {
+          "level": "warn",
+          "options": {
+            "allow": ["warn", "error"]
+          }
+        },
+        "noExplicitAny": "error"
+      },
+      "style": {
+        "useConst": "error",
+        "noNonNullAssertion": "error",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "@tauri-apps/api": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
+              "@tauri-apps/api/core": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
+              "@tauri-apps/api/event": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md"
+            }
+          }
+        }
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": {
+          "level": "warn",
+          "options": {
+            "maxAllowedComplexity": 15
+          }
+        }
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.svelte"],
+      "formatter": {
+        "enabled": false
+      },
+      "assist": {
+        "actions": {
+          "source": {
+            "organizeImports": "off"
+          }
+        }
+      },
+      "linter": {
+        "rules": {
+          "recommended": false,
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@tauri-apps/api": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
+                  "@tauri-apps/api/core": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
+                  "@tauri-apps/api/event": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/lib/core/ipc/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# Fija la cadena de herramientas de Rust para que la compilación sea reproducible
+# en cualquier máquina y en CI. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md
+[toolchain]
+channel = "1.98.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

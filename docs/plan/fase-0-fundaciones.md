@@ -15,17 +15,17 @@
 |---|---|---|
 | F0.1.1 Constitución, ADR y plan | Hecha | 2026-10-29 |
 | F0.1.2 Contrato de trabajo (`CLAUDE.md`) | Hecha | 2026-10-29 |
-| F0.1.3 Mover la V1 a `legado/` | Pendiente | |
+| F0.1.3 Mover la V1 a `legado/` | Hecha | 2026-10-29. Las pruebas de la V1 corren desde `legado/`; ver la nota de abajo |
 | F0.1.4 Documentación de la V1 archivada en `docs/v1/` | Hecha | 2026-10-29 |
 | F0.1.5 Repositorio público de distribución para agregados | Pendiente | |
-| F0.2.1 Esqueleto Tauri 2 + SvelteKit 2 + Svelte 5 + m3-svelte | Pendiente | |
-| F0.2.2 Herramientas idénticas a NB Books | Pendiente | |
-| F0.2.3 Contrato de errores, tipos generados y frontera del puente | Pendiente | |
-| F0.2.4 Registro con redacción | Pendiente | |
-| F0.2.5 Puerta de red con consentimiento | Pendiente | |
-| F0.2.6 Rutas estándar por plataforma | Pendiente | |
-| F0.2.7 Tokens de Material 3 compartidos | Pendiente | |
-| F0.3.1 `pnpm verify` con los guardianes portados | Pendiente | |
+| F0.2.1 Esqueleto Tauri 2 + SvelteKit 2 + Svelte 5 + m3-svelte | Hecha | Carcasa con los siete destinos, Por revisar condicional y reproductor inerte |
+| F0.2.2 Herramientas idénticas a NB Books | Parcial | Falta `cargo-deny` en la máquina; `deny.toml` está escrito |
+| F0.2.3 Contrato de errores, tipos generados y frontera del puente | Hecha | 14 códigos canónicos |
+| F0.2.4 Registro con redacción | Hecha | |
+| F0.2.5 Puerta de red con consentimiento | Hecha | De fábrica no sale nada; cada servicio con sus anfitriones |
+| F0.2.6 Rutas estándar por plataforma | Hecha | Carpetas distintas de las de la V1, con prueba |
+| F0.2.7 Tokens de Material 3 compartidos | Hecha | Los 63 temas de la V1 como acentos |
+| F0.3.1 `pnpm verify` con los guardianes portados | Parcial | Doce activos; `check-transacciones` y `check-listas` se activan con la capa de datos; faltan `check-paquete`, `check-i18n` y los avisos de terceros |
 | F0.3.2 Integración continua en tres plataformas | Pendiente | |
 | F0.3.3 Binarios empaquetados con hash fijado | Pendiente | |
 | F0.3.4 Primera puerta de empaquetado | Pendiente | |

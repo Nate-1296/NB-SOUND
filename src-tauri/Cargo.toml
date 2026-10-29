@@ -1,0 +1,54 @@
+[package]
+name = "nb-sound"
+version = "2.0.0-alpha.0"
+description = "Aplicación de escritorio para la música local"
+authors = ["The NB Sound Authors"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/Nate-1296/NB-SOUND"
+edition = "2021"
+rust-version = "1.98"
+# Cuál es "la aplicación" si algún día hay más de un binario: `tauri dev` ejecuta
+# `cargo run` y cargo no elige solo. Es la contraparte de `mainBinaryName` en
+# `tauri.conf.json`; los dos los ata `tests/identidad_del_binario.rs`, como en
+# NB Books, donde separarlos metió una herramienta en el instalador en lugar de
+# la aplicación.
+default-run = "nb-sound"
+
+[lib]
+# El sufijo `_lib` evita el choque de nombres con el binario en Windows.
+name = "nb_sound_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
+tracing-appender = "0.2.5"
+ts-rs = "12.0.1"
+# Cliente HTTP síncrono con rustls: el mismo que NB Books. Solo `net.rs` lo usa
+# (lo vigila `scripts/check-network.mjs`).
+ureq = { version = "3.4.0", default-features = false, features = ["rustls", "platform-verifier"] }
+
+[dev-dependencies]
+tauri = { version = "2", features = ["test"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0
+split-debuginfo = "unpacked"
+
+# Las dependencias se optimizan también en desarrollo: el motor de audio y los
+# decodificadores sin optimizar no llegan a tiempo real.
+[profile.dev.package."*"]
+opt-level = 2
