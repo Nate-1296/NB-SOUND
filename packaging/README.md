@@ -101,7 +101,7 @@ Tras instalar, el comando `nb-sound` queda disponible en la terminal:
 
 ```bash
 nb-sound            # abre la interfaz gráfica
-nb-sound cli --help # CLI del catalogador (mismo binario; ver docs/cli.md)
+nb-sound cli --help # CLI del catalogador (mismo binario; ver docs/v1/cli.md)
 ```
 
 ### Windows

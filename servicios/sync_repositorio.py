@@ -12,7 +12,7 @@
 #   - Estado de transferencia de stems (reanudable).
 #   - Resolucion de rutas de audio/portada para los endpoints binarios.
 #
-# Reglas de merge (ver docs/mobile-ecosystem.md, seccion B):
+# Reglas de merge (ver docs/v1/mobile-ecosystem.md, seccion B):
 #   - PC gana en metadata enriquecida (read-only para el celular).
 #   - Celular gana en su historial; el favorito es bidireccional y se resuelve
 #     por `favorita_actualizada_en` (timestamp ISO-8601 UTC).

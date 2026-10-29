@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Read(./.git/config)",
+      "Read(~/.git-credentials)",
+      "Read(~/.ssh/**)",
+      "Edit(LICENSE)",
+      "Edit(src/lib/bindings/**)",
+      "Edit(/home/nathan/Música/biblioteca/**)",
+      "Write(/home/nathan/Música/biblioteca/**)",
+      "Edit(/home/nathan/.local/share/nb_sound/**)",
+      "Write(/home/nathan/.local/share/nb_sound/**)",
+      "Edit(/home/nathan/.config/nb_sound/**)",
+      "Write(/home/nathan/.config/nb_sound/**)",
+      "Edit(/home/nathan/Proyectos/NB Digital/NB_Sound_Mobile/**)",
+      "Write(/home/nathan/Proyectos/NB Digital/NB_Sound_Mobile/**)"
+    ]
+  }
+}

@@ -1188,7 +1188,7 @@ def toggle_favorita(pista_id: int) -> bool:
 
     Sella `favorita_actualizada_en` (UTC) e incrementa `sync_version` para que
     el ecosistema movil resuelva el favorito por last-write-wins y detecte el
-    cambio en el siguiente delta. Ver docs/mobile-ecosystem.md (seccion B).
+    cambio en el siguiente delta. Ver docs/v1/mobile-ecosystem.md (seccion B).
     """
     fila = obtener_una_fila("SELECT favorita FROM pistas WHERE id = ?", (pista_id,))
     if not fila:

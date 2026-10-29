@@ -6,7 +6,7 @@
 # event loop de Qt. La UI nunca bloquea: se comunica con este servidor por
 # callbacks/colas, nunca compartiendo objetos Qt entre hilos.
 #
-# Arranque BAJO DEMANDA (no al iniciar la app). Ver docs/mobile-ecosystem.md.
+# Arranque BAJO DEMANDA (no al iniciar la app). Ver docs/v1/mobile-ecosystem.md.
 #
 # Seguridad (v1):
 #   - Emparejamiento por QR con token efimero (TTL corto, un solo uso).

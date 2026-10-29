@@ -2,7 +2,7 @@
 # servicios/backup.py
 #
 # Backup y restauracion de la biblioteca de NB Sound. Sin dependencias de Qt:
-# el modelo Qt lo invoca en un worker. Ver docs/mobile-ecosystem.md (seccion E).
+# el modelo Qt lo invoca en un worker. Ver docs/v1/mobile-ecosystem.md (seccion E).
 #
 # Formato `.nbsound-backup` = ZIP con:
 #   - db.sqlite3       : copia consistente de la BD vía `VACUUM INTO` (no

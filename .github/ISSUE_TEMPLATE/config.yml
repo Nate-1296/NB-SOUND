@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Resolución de problemas
-    url: https://github.com/Nate-1296/NB-SOUND/blob/main/docs/troubleshooting.md
+    url: https://github.com/Nate-1296/NB-SOUND/blob/main/docs/v1/troubleshooting.md
     about: Antes de abrir un issue, revisa los errores comunes y sus soluciones documentadas.
   - name: Documentación del proyecto
     url: https://github.com/Nate-1296/NB-SOUND/tree/main/docs

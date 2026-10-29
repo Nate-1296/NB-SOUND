@@ -11,7 +11,7 @@ body:
         - Verifica que no exista ya un [issue similar](https://github.com/Nate-1296/NB-SOUND/issues?q=is%3Aissue).
         - Si es una vulnerabilidad de seguridad, **no la reportes aquí**; usa
           [Security Advisories](https://github.com/Nate-1296/NB-SOUND/security/advisories/new).
-        - Revisa primero [`docs/troubleshooting.md`](https://github.com/Nate-1296/NB-SOUND/blob/main/docs/troubleshooting.md).
+        - Revisa primero [`docs/v1/troubleshooting.md`](https://github.com/Nate-1296/NB-SOUND/blob/main/docs/v1/troubleshooting.md).
 
   - type: textarea
     id: description

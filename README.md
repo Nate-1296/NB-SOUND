@@ -28,7 +28,7 @@ Todo local. Sin nube. Sin suscripciones. Sin vender tus datos.
 
 [🌐 Página Web](https://nbsound.up.railway.app/)
 
-[📖 Documentación](docs/installation.md)
+[📖 Documentación](docs/v1/installation.md)
 
 [🐞 Reportar un Bug](https://github.com/Nate-1296/NB-SOUND/issues)
 
@@ -473,14 +473,14 @@ externos.
 
 | Tema            | Documento                   |
 | --------------- | --------------------------- |
-| Instalación    | `docs/installation.md`    |
-| Configuración  | `docs/configuration.md`   |
-| Troubleshooting | `docs/troubleshooting.md` |
-| CLI             | `docs/cli.md`             |
-| UI              | `docs/ui.md`              |
-| Karaoke         | `docs/karaoke.md`         |
-| DJ Privado      | `docs/dj_privado.md`      |
-| Arquitectura    | `docs/architecture.md`    |
+| Instalación    | `docs/v1/installation.md`    |
+| Configuración  | `docs/v1/configuration.md`   |
+| Troubleshooting | `docs/v1/troubleshooting.md` |
+| CLI             | `docs/v1/cli.md`             |
+| UI              | `docs/v1/ui.md`              |
+| Karaoke         | `docs/v1/karaoke.md`         |
+| DJ Privado      | `docs/v1/dj_privado.md`      |
+| Arquitectura    | `docs/v1/architecture.md`    |
 
 ---
 

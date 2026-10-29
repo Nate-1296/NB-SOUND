@@ -202,4 +202,4 @@ Si la biblioteca está vacía o el modo elegido no tiene candidatos, la UI muest
 
 ---
 
-← [Volver al README](../README.md)
+← [Volver al README](../../README.md)

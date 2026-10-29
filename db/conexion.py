@@ -298,7 +298,7 @@ def _aplicar_migraciones_ligeras(conexion: sqlite3.Connection) -> None:
 
     # Ecosistema movil: columnas aditivas para deteccion de delta (sync_version)
     # y merge last-write-wins de favoritos (favorita_actualizada_en).
-    # Ver docs/mobile-ecosystem.md (seccion C) y mobile-rollout-plan.md (1.1).
+    # Ver docs/v1/mobile-ecosystem.md (seccion C) y mobile-rollout-plan.md (1.1).
     _agregar_columna_si_falta(conexion, "pistas", "sync_version", "INTEGER NOT NULL DEFAULT 0")
     _agregar_columna_si_falta(conexion, "pistas", "favorita_actualizada_en", "TEXT")
     _agregar_columna_si_falta(conexion, "albums", "sync_version", "INTEGER NOT NULL DEFAULT 0")
@@ -684,7 +684,7 @@ def guardar_config(clave: str, valor: str) -> None:
 # sincronizables. Centralizar el incremento aqui (en vez de repetir SQL en
 # cada servicio) garantiza que todas las escrituras usen el mismo contador
 # global y evita inconsistencias en el delta que consume el cliente movil.
-# Ver docs/mobile-ecosystem.md (seccion B/C) y mobile-rollout-plan.md (1.2).
+# Ver docs/v1/mobile-ecosystem.md (seccion B/C) y mobile-rollout-plan.md (1.2).
 # =============================================================================
 
 _CLAVE_SYNC_VERSION = "sync_version_actual"

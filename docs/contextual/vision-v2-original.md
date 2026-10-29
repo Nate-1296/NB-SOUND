@@ -1,5 +1,9 @@
 # Plan de Evolución V2: Arquitectura Tauri, Reproductor Embebido y Ecosistema
 
+> **Estado:** Superado el 2026-10-29 por el [plan de ejecución](../plan/README.md) y los [ADR](../adr/README.md).
+> Se conserva como punto de partida. Diferencias principales: no hay demonio de Python ([ADR-002](../adr/decisions/ADR-002-sin-python.md)),
+> los datos son de Rust ([ADR-004](../adr/decisions/ADR-004-datos.md)) y la migración no mantiene Qt en paralelo.
+
 > **Documento de Visión y Arquitectura Estratégica.**  
 > Recoge las decisiones de reestructuración para la próxima iteración mayor de NB SOUND: migración del frontend a Tauri v2 + Svelte 5, sustitución de LibVLC por un motor de audio embebido en Rust, simplificación de la experiencia de usuario (UX) mediante revelación progresiva, y alineación estética con el sistema de diseño Material You (Material 3).
 

@@ -543,7 +543,7 @@ CREATE TABLE IF NOT EXISTS dj_preferencias (
 -- la metadata enriquecida. Estas tablas modelan: dispositivos emparejados,
 -- borrados a propagar (tombstones), transferencias de stems reanudables y un
 -- contador global monotonico de version de sync. Todo es aditivo: no rompe
--- nada del esquema existente (ver docs/mobile-ecosystem.md, seccion C).
+-- nada del esquema existente (ver docs/v1/mobile-ecosystem.md, seccion C).
 -- -------------------------------------------------------------------------
 
 -- Dispositivos moviles emparejados.

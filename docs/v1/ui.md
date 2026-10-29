@@ -165,4 +165,4 @@ Los atajos de reproducción son configurables desde Configuración > Avanzada. P
 
 ---
 
-← [Volver al README](../README.md)
+← [Volver al README](../../README.md)
