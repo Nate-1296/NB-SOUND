@@ -1354,7 +1354,11 @@ class Reproductor:
             self._cola_base     = [dict(pista) for pista in self._cola]
             self._posicion_cola = max(0, min(desde_indice, len(self._cola) - 1))
             if self._aleatorio:
-                self._aleatorizar_cola_locked()
+                # La pista ELEGIDA encabeza la baraja. Antes se buscaba la pista
+                # que ya sonaba: si estaba en la cola nueva se conservaba ella y se
+                # ignoraba `desde_indice` (p. ej. el handoff desde el móvil o tocar
+                # otra canción del mismo álbum arrancaban en la pista anterior).
+                self._aleatorizar_cola_locked(indice_inicial=self._posicion_cola)
             self._actualizar_contexto_desde_cola_locked()
 
         if self._cola:
@@ -1850,10 +1854,26 @@ class Reproductor:
         ).start()
         self._emitir_estado()
 
-    def _aleatorizar_cola_locked(self) -> None:
-        """Reordena la cola para que siguiente/anterior sigan un orden aleatorio visible."""
+    def _aleatorizar_cola_locked(self, indice_inicial: Optional[int] = None) -> None:
+        """Reordena la cola para que siguiente/anterior sigan un orden aleatorio visible.
+
+        Con `indice_inicial` esa pista encabeza la baraja (cola recién cargada);
+        sin él, la que está sonando.
+        """
         if len(self._cola) <= 1:
             self._normalizar_indice_cola()
+            return
+
+        if indice_inicial is not None:
+            self._posicion_cola = max(0, min(indice_inicial, len(self._cola) - 1))
+            actual = self._cola[self._posicion_cola]
+            restantes = [
+                pista for i, pista in enumerate(self._cola)
+                if i != self._posicion_cola
+            ]
+            random.shuffle(restantes)
+            self._cola = [actual, *restantes]
+            self._posicion_cola = 0
             return
 
         if not self._activa_desde_cola:

@@ -710,6 +710,34 @@ def test_aleatorio_reordena_cola_visible_y_siguiente_respeta_ese_orden(db_reprod
     assert rep.pista_activa.titulo == "Pista nueve"
 
 
+def test_reproducir_cola_con_aleatorio_arranca_en_la_pista_elegida(db_reproductor, monkeypatch):
+    """Con aleatorio activo, cargar una cola nueva arranca en `desde_indice` aunque
+    la pista que ya sonaba esté en esa cola (antes se conservaba la anterior)."""
+    monkeypatch.setattr(reproductor_mod.random, "shuffle", lambda items: items.reverse())
+    pistas = [
+        _crear_pista(db_reproductor, "elegida-a"),
+        _crear_pista(db_reproductor, "elegida-b"),
+        _crear_pista(db_reproductor, "elegida-c"),
+        _crear_pista(db_reproductor, "elegida-d"),
+    ]
+    rep = _crear_reproductor()
+    rep.reproducir_cola(pistas, desde_indice=0)
+    rep.set_aleatorio(True)
+    assert rep.pista_activa is not None
+    assert rep.pista_activa.titulo == pistas[0]["titulo"]
+
+    # Misma colección, otra pista elegida: debe sonar esa, no la anterior.
+    rep.reproducir_cola(pistas, desde_indice=2)
+
+    assert rep.pista_activa is not None
+    assert rep.pista_activa.titulo == pistas[2]["titulo"]
+    assert rep.indice_cola == 0
+    assert rep.obtener_cola()[0]["titulo"] == pistas[2]["titulo"]
+    assert sorted(p["titulo"] for p in rep.obtener_cola()) == sorted(
+        p["titulo"] for p in pistas
+    )
+
+
 def test_desactivar_aleatorio_restaura_orden_original_restante(db_reproductor, monkeypatch):
     monkeypatch.setattr(reproductor_mod.random, "shuffle", lambda items: items.reverse())
     pistas = [
