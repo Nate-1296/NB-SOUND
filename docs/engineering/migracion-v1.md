@@ -23,7 +23,7 @@ perder parte de la biblioteca aunque la base cuadrara fila a fila.
 | Dato | Dónde lo tiene la V1 | Cuánto | Destino en la V2 |
 |---|---|---|---|
 | **Letras** (planas y sincronizadas) | `assets/enrichment/enrichment_manifest.jsonl`, una línea por archivo, indexada por ruta; la última línea de cada ruta manda | 2.332 de las 2.397 pistas tienen letra, 2.249 sincronizada | `→ letras` (F1.1.2), por `pista_id`, con proveedor, idioma y fecha de obtención. Entra en la búsqueda (F1.3.1) |
-| **Portadas de álbum y de pista** | `assets/covers/{albums,tracks}` y sus variantes `_hd`, enlazadas desde `albums.portada_ruta` y desde `assets_manifest.jsonl` | 1.409 álbumes con portada; 3,5 GB en total, 3,4 GB de ellos en `albums_hd` | `→ portadas` (F1.1.2) con el archivo copiado a la carpeta de la V2. Ver P11 |
+| **Portadas de álbum y de pista** | `assets/covers/{albums,tracks}` y sus variantes `_hd`, enlazadas desde `albums.portada_ruta` y desde `assets_manifest.jsonl` | 1.409 álbumes con portada; 3,5 GB en total, 3,4 GB de ellos en `albums_hd` | `→ portadas` (F1.1.2), una fila por contenido, con el archivo copiado a la carpeta de la V2. Ver P11 |
 | **Imágenes de artista** | `assets/artists` y `artists_hd`, resueltas **por el nombre** del artista a través de `assets_manifest.jsonl` | 434 y 166 imágenes | `→ portadas` con `artista_id`: la V2 resuelve por id, no por nombre, y el importador hace la correspondencia una sola vez |
 | **Instrumentales del karaoke** | `cache/karaoke/instrumentales`, enlazados desde `pistas.karaoke_ruta_instrumental` | 115 archivos, cerca de 1 GB | `→ stems` (F1.1.6), con el archivo copiado a la carpeta de la V2 |
 
@@ -49,7 +49,7 @@ Lo que no se migra de los archivos:
 |---|---|
 | `id` | `→ artistas.id`, **tal cual**: el móvil lo tiene guardado |
 | `nombre` | `→ artistas.nombre` |
-| `nombre_slug` | **Se recalcula**: la V2 normaliza con la misma regla al insertar |
+| `nombre_slug` | `→ artistas.clave`, tal cual; las nuevas siguen la misma regla (`legado/utils/text.py`, `construir_slug`) para que importar dos veces el mismo artista no dé dos filas |
 | `mb_artist_id` | `→ artistas.mbid`. Vacío en las 434 filas, pero el esquema lo conserva para el etiquetado |
 | `creado_en` | `→ artistas.creado_en` |
 | `sync_version` | `→ artistas.sync_version`, **tal cual** |
@@ -61,7 +61,7 @@ Lo que no se migra de los archivos:
 | `id` | `→ albumes.id`, tal cual |
 | `artista_id` | `→ albumes.artista_id` |
 | `titulo` | `→ albumes.titulo` |
-| `titulo_slug` | **Se recalcula** |
+| `titulo_slug` | `→ albumes.clave`, tal cual, con la misma regla para las nuevas |
 | `tipo` (`Album`, `Single`) | `→ albumes.tipo` |
 | `anio` | `→ albumes.anio` |
 | `mb_release_id` | `→ albumes.mbid` |
@@ -77,23 +77,23 @@ Lo que no se migra de los archivos:
 | `id` | `→ pistas.id`, tal cual |
 | `album_id`, `artista_id` | `→ pistas.album_id`, `pistas.artista_id` |
 | `titulo` | `→ pistas.titulo` |
-| `artista_nombre`, `album_titulo` | **Se descartan** como columnas: son copias de `artistas.nombre` y `albumes.titulo`. El contrato móvil las envía, y la V2 las obtiene con un `JOIN`. Una prueba compara las 2.397 contra las de la V1 antes de descartarlas |
-| `track_number` | `→ pistas.numero`. Vacío en las 2.397: la V1 no lo llegó a escribir. La V2 lo lee de las etiquetas |
-| `duracion_seg` | `→ pistas.duracion_ms`, entero en milisegundos: la V1 lo redondea en cada vista y el móvil recibe segundos, que se derivan |
-| `bitrate_kbps` | `→ archivos.bitrate_kbps` |
+| `artista_nombre`, `album_titulo` | `→ pistas.artista_nombre`, `pistas.album_titulo`. Parecen copias, pero no lo son: en 40 pistas el álbum que nombra la pista no es idéntico al título del álbum, y el móvil recibe el de la pista |
+| `track_number` | `→ pistas.numero` (con `pistas.disco`, nueva). Vacío en las 2.397: la V1 no lo llegó a escribir. La V2 lo lee de las etiquetas |
+| `duracion_seg` | `→ pistas.duracion_seg`, `REAL` con toda su precisión: el móvil recibe el valor de la V1 (`285.91020408163263`), y en 1.917 pistas pasarlo a milisegundos lo cambiaría |
+| `bitrate_kbps` | `→ pistas.bitrate_kbps` |
 | `anio` | `→ pistas.anio` |
 | `genero` | `→ pistas.genero`. Vacío en las 2.397; se lee de las etiquetas |
 | `isrc` | `→ pistas.isrc` |
-| `ruta_archivo` | `→ archivos.ruta`, relativa a la raíz de la biblioteca: así la biblioteca sobrevive a un cambio de carpeta |
+| `ruta_archivo` | `→ pistas.ruta`, relativa a la raíz de la biblioteca: así la biblioteca sobrevive a un cambio de carpeta |
 | `nombre_archivo` | **Se recalcula** de la ruta |
-| `tamano_bytes` | `→ archivos.tamano` |
-| `hash_sha256` | `→ archivos.sha256`. Es el `x-nb-sound-hash` del contrato móvil: se conserva tal cual |
+| `tamano_bytes` | `→ pistas.tamano` |
+| `hash_sha256` | `→ pistas.sha256`. Es el `x-nb-sound-hash` del contrato móvil: se conserva tal cual |
 | `mb_recording_id`, `mb_release_id`, `mb_release_type` | `→ pistas.mbid_grabacion`, `pistas.mbid_lanzamiento`, `pistas.tipo_lanzamiento` |
 | `tagger_fuentes` | `→ pistas.fuentes_etiquetado` (JSON corto: de dónde salió cada etiqueta) |
 | `estado` (`biblioteca` 2.240, `duplicado` 157) | `→ pistas.estado`, mismos valores. Las 157 duplicadas siguen sin verse ni ir al móvil, como en la V1 |
 | `veces_reproducida` | `→ pistas.reproducciones` |
 | `ultimo_acceso` | `→ pistas.ultima_reproduccion` |
-| `favorita`, `favorita_actualizada_en` | `→ favoritos` (`pista_id`, `marcada_en`): una tabla aparte, porque las playlists del sistema la leen como conjunto |
+| `favorita`, `favorita_actualizada_en` | `→ pistas.favorita`, `pistas.favorita_actualizada_en`. Se quedan en la pista y no en una tabla aparte: el móvil resuelve conflictos comparando la marca de tiempo, que también se guarda al desmarcar |
 | `karaoke_estado`, `karaoke_ruta_instrumental`, `karaoke_actualizado_en` | `→ stems` (F1.1.6). `en_cola` (57) se migra como pendiente; `lista` (111) solo si el archivo existe, y existen los 115 |
 | `karaoke_error_codigo`, `karaoke_error_mensaje` | **Se descartan**: vacíos en las 2.397; el error vive en el trabajo |
 | `indexado_en`, `actualizado_en` | `→ pistas.creada_en`, `pistas.actualizada_en` |
@@ -112,7 +112,7 @@ La futura vista **Por revisar** ([ADR-007](../adr/decisions/ADR-007-arquitectura
 | Columna | Destino |
 |---|---|
 | `id` | `→ por_revisar.id` |
-| `ruta_archivo`, `nombre_archivo` | `→ por_revisar.ruta` |
+| `ruta_archivo`, `nombre_archivo` | `→ por_revisar.ruta`; el nombre se recalcula de ella |
 | `tipo` (`cuarentena`, `revision`) | **Se descarta** como distinción: la V2 tiene una sola lista y la causa ya dice la gravedad |
 | `causa` | `→ por_revisar.causa`, con los mensajes de la enmienda de ADR-007 |
 | `manifiesto_json` | `→ por_revisar.metadatos`, solo lo que hace falta para importar tal como está |
@@ -124,8 +124,8 @@ La futura vista **Por revisar** ([ADR-007](../adr/decisions/ADR-007-arquitectura
 
 | Columna | Destino |
 |---|---|
-| `id`, `iniciado_en`, `finalizado_en`, `estado` | `→ importaciones` |
-| `total_descubiertos`, `total_aceptados`, `total_revision`, `total_cuarentena`, `total_errores` | `→ importaciones.resumen`; revisión y cuarentena se suman en *por revisar* |
+| `id`, `iniciado_en`, `finalizado_en`, `estado` | `→ importaciones.id`, `iniciada_en`, `terminada_en`, `estado` |
+| `total_descubiertos`, `total_aceptados`, `total_revision`, `total_cuarentena`, `total_errores` | `→ importaciones.descubiertos`, `aceptados`, `por_revisar` (revisión más cuarentena) y `errores` |
 | `directorio_entrada` | `→ importaciones.origen` |
 | `reporte_json` | **Se descarta**: informe operativo de la V1 |
 
@@ -133,8 +133,9 @@ La futura vista **Por revisar** ([ADR-007](../adr/decisions/ADR-007-arquitectura
 
 | Columna | Destino |
 |---|---|
-| `match_type`, `match_value`, `payload_json`, `reason`, `source`, `active` | `→ correcciones_catalogo`, como manda ADR-004. Vacía hoy, pero el esquema la conserva y el importador la copia si alguien la tiene |
-| `id`, `created_by`, `created_at`, `updated_at` | `→ correcciones_catalogo` |
+| `match_type`, `match_value`, `payload_json`, `reason`, `source`, `active` | `→ correcciones_catalogo.tipo`, `valor`, `cambios`, `motivo`, `origen`, `activa`, como manda ADR-004. Vacía hoy, pero el esquema la conserva y el importador la copia si alguien la tiene |
+| `id`, `created_at`, `updated_at` | `→ correcciones_catalogo.id`, `creada_en`, `actualizada_en` |
+| `created_by` | **Se descarta**: siempre `system` o el único usuario |
 
 ### `auditorias_biblioteca` (0)
 

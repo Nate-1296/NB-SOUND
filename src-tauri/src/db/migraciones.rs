@@ -24,11 +24,18 @@ struct Migracion {
 
 /// En orden estricto. **Nunca se edita una entrada publicada**: un error en una
 /// migración aplicada se corrige con una migración nueva.
-const MIGRACIONES: &[Migracion] = &[Migracion {
-    version: 1,
-    nombre: "metadatos de la instalación",
-    sql: include_str!("../../migrations/V1__instalacion.sql"),
-}];
+const MIGRACIONES: &[Migracion] = &[
+    Migracion {
+        version: 1,
+        nombre: "metadatos de la instalación",
+        sql: include_str!("../../migrations/V1__instalacion.sql"),
+    },
+    Migracion {
+        version: 2,
+        nombre: "catálogo",
+        sql: include_str!("../../migrations/V2__catalogo.sql"),
+    },
+];
 
 /// Versión de esquema aplicada (`PRAGMA user_version`).
 ///

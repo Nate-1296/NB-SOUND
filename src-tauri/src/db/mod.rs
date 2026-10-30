@@ -7,6 +7,8 @@
 //! (`src-tauri/src/db/mod.rs`), donde cada regla de aquí costó un defecto.
 
 pub mod migraciones;
+#[cfg(test)]
+mod pruebas_esquema;
 
 use std::path::{Path, PathBuf};
 use std::time::Duration;
