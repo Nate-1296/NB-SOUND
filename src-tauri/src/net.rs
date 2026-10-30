@@ -181,6 +181,27 @@ impl Red {
         url: &str,
         cabeceras: &[(&str, &str)],
     ) -> NsResult<Vec<u8>> {
+        let (estado, cuerpo) = self.obtener_con_estado(servicio, url, cabeceras)?;
+        if !(200..300).contains(&estado) {
+            tracing::debug!(?servicio, estado, "respuesta no 2xx");
+            return Err(NsError::NetworkFailure);
+        }
+        Ok(cuerpo)
+    }
+
+    /// `GET` que devuelve también el estado, para los servicios en los que un 404
+    /// es una respuesta ("no existe") y no un fallo (MusicBrainz).
+    ///
+    /// # Errors
+    ///
+    /// Los de [`Red::autorizar`], y [`NsError::NetworkFailure`] si la petición no
+    /// se completa o pasa del tope en memoria.
+    pub fn obtener_con_estado(
+        &self,
+        servicio: Servicio,
+        url: &str,
+        cabeceras: &[(&str, &str)],
+    ) -> NsResult<(u16, Vec<u8>)> {
         self.autorizar(servicio, url)?;
         let mut peticion = self.agente.get(url);
         for (nombre, valor) in cabeceras {
@@ -190,14 +211,7 @@ impl Red {
             tracing::debug!(?servicio, error = %e, "la petición no se completó");
             NsError::NetworkFailure
         })?;
-        if !respuesta.status().is_success() {
-            tracing::debug!(
-                ?servicio,
-                estado = respuesta.status().as_u16(),
-                "respuesta no 2xx"
-            );
-            return Err(NsError::NetworkFailure);
-        }
+        let estado = respuesta.status().as_u16();
         let mut cuerpo = Vec::new();
         respuesta
             .into_body()
@@ -208,7 +222,7 @@ impl Red {
         if cuerpo.len() as u64 > TOPE_EN_MEMORIA {
             return Err(NsError::NetworkFailure);
         }
-        Ok(cuerpo)
+        Ok((estado, cuerpo))
     }
 }
 

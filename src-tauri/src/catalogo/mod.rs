@@ -7,4 +7,5 @@
 
 pub mod acoustid;
 pub mod etiquetas;
+pub mod musicbrainz;
 pub mod texto;
