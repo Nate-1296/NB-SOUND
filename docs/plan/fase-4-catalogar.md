@@ -20,7 +20,7 @@
 | F4.1.6 Puntuación y emparejamiento: primera, segunda y tercera etapa | Hecha: primera etapa (`catalogo/emparejador.rs`) y `normalizer.py` (`catalogo/normalizacion.rs`), con la misma decisión, causa, puntuación y candidato que la V1 en 400 casos grabados; segunda y tercera (`catalogo/etapas.rs`) como funciones puras con sus umbrales |
 | F4.1.7 Desempate por IA opcional | Pendiente |
 | F4.1.8 Duplicados exactos y semánticos, con su política | Hecha: los tres ejes de la V1 (`catalogo/duplicados.rs`), con la huella de 512 KB al principio y al final que comprueba el teléfono; precargados con la biblioteca |
-| F4.1.9 Escritura: organizar en la carpeta de música, transcodificar con `ffmpeg` | Pendiente |
+| F4.1.9 Escritura: organizar en la carpeta de música, transcodificar con `ffmpeg` | Hecha: `catalogo/canalizacion.rs` encadena validación, duplicados, identificación, las tres etapas, organización, etiquetas, portadas, letras y alta; lo que no entra va a Por revisar con su causa. Sin transcodificar (enmienda de ADR-006). Sin permiso para MusicBrainz, lo que trae título y artista entra sin verificar |
 | F4.1.10 Portadas e imágenes de artista (las seis fuentes de la V1) | Hecha: `catalogo/portadas_red.rs`: etiquetas, Cover Art Archive, iTunes, TheAudioDB, Deezer y Wikipedia con la puntuación de la V1; una sola copia por contenido, la HD si existe (P11) |
 | F4.1.11 Letras (LRCLIB y lyrics.ovh) | Hecha: `catalogo/letras_red.rs`, con el orden, la puntuación de filas y el trato del 429 de la V1 |
 | F4.1.12 Rasgos básicos y LUFS al importar | Pendiente |

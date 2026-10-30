@@ -6,6 +6,7 @@
 //! fase).
 
 pub mod acoustid;
+pub mod canalizacion;
 pub mod duplicados;
 pub mod emparejador;
 pub mod etapas;
