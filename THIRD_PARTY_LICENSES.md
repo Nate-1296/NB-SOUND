@@ -18,7 +18,7 @@ Regenerar: `node scripts/generate-notices.mjs`
 Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
 (ADR-010).
 
-## Componentes de Rust (578)
+## Componentes de Rust (580)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -106,6 +106,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `darling` | 0.24.1 | MIT | https://github.com/TedDriggs/darling |
 | `darling_core` | 0.24.1 | MIT | https://github.com/TedDriggs/darling |
 | `darling_macro` | 0.24.1 | MIT | https://github.com/TedDriggs/darling |
+| `dasp_frame` | 0.11.0 | MIT OR Apache-2.0 | https://github.com/rustaudio/dasp.git |
 | `dasp_sample` | 0.11.0 | MIT OR Apache-2.0 | https://github.com/rustaudio/sample.git |
 | `dbus` | 0.9.12 | Apache-2.0/MIT | https://github.com/diwic/dbus-rs |
 | `defmt` | 1.2.0 | MIT OR Apache-2.0 | https://github.com/knurling-rs/defmt |
@@ -128,6 +129,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `dtoa-short` | 0.3.5 | MPL-2.0 | https://github.com/upsuper/dtoa-short |
 | `dunce` | 1.0.5 | CC0-1.0 OR MIT-0 OR Apache-2.0 | https://gitlab.com/kornelski/dunce |
 | `dyn-clone` | 1.0.20 | MIT OR Apache-2.0 | https://github.com/dtolnay/dyn-clone |
+| `ebur128` | 0.1.11 | MIT | https://github.com/sdroege/ebur128 |
 | `embed_plist` | 1.2.2 | MIT OR Apache-2.0 | https://github.com/nvzqz/embed-plist-rs |
 | `embed-resource` | 3.0.12 | MIT | https://github.com/nabijaczleweli/rust-embed-resource |
 | `endi` | 1.1.1 | MIT | https://github.com/zeenix/endi |

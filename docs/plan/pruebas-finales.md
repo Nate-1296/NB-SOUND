@@ -46,3 +46,4 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Un álbum en MP3 y otro en FLAC se oyen sin hueco entre pistas.
 - [ ] Mover la barra de posición cae donde se suelta; pausar y reanudar no hace clic.
 - [ ] Las 18 preselecciones del ecualizador se oyen como en la V1 y ninguna distorsiona al volumen máximo.
+- [ ] Con la normalización activa, pasar de una pista muy alta a una muy baja no obliga a tocar el volumen.

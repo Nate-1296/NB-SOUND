@@ -98,7 +98,12 @@ fn temporal(nombre: &str) -> PathBuf {
 
 /// Un WAV estéreo de 16 bits. Devuelve las muestras tal como las leerá el
 /// decodificador, entrelazadas.
-fn wav(ruta: &Path, tasa: u32, frames: usize, muestra: impl Fn(usize, usize) -> f32) -> Vec<f32> {
+pub(super) fn wav(
+    ruta: &Path,
+    tasa: u32,
+    frames: usize,
+    muestra: impl Fn(usize, usize) -> f32,
+) -> Vec<f32> {
     let mut datos = Vec::with_capacity(frames * 4);
     let mut leidas = Vec::with_capacity(frames * 2);
     for i in 0..frames {

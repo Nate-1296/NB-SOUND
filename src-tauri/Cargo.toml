@@ -47,6 +47,8 @@ keyring = { version = "4.2.0", default-features = false, features = ["v1"] }
 # El motor de audio (ADR-003): Symphonia decodifica y Kira mezcla y saca el
 # sonido por cpal. Las mismas versiones y formatos que midió F0.4.1.
 kira = { version = "0.12.6", default-features = false, features = ["cpal"] }
+# Sonoridad EBU R128 para normalizar el volumen (ADR-003, F2.1.4).
+ebur128 = "0.1.11"
 symphonia = { version = "0.6.1", features = ["mp3", "aac", "alac", "flac", "vorbis", "pcm", "wav", "isomp4", "ogg"] }
 # Cliente HTTP síncrono con rustls: el mismo que NB Books. Solo `net.rs` lo usa
 # (lo vigila `scripts/check-network.mjs`).

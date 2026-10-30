@@ -23,6 +23,7 @@ mod fuente;
 mod limitador;
 #[cfg(test)]
 mod pruebas;
+pub mod sonoridad;
 
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
