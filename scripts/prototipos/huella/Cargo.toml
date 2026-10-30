@@ -1,0 +1,10 @@
+[package]
+name = "prototipo-huella"
+version = "0.0.0"
+edition = "2021"
+publish = false
+license = "GPL-3.0-or-later"
+
+[dependencies]
+rusty-chromaprint = "0.3"
+symphonia = { version = "0.6", features = ["mp3", "aac", "alac", "flac", "vorbis", "pcm", "wav", "isomp4", "ogg"] }

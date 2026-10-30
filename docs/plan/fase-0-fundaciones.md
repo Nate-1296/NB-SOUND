@@ -26,7 +26,7 @@
 | F0.2.6 Rutas estándar por plataforma | Hecha | Carpetas distintas de las de la V1, con prueba |
 | F0.2.7 Tokens de Material 3 compartidos | Hecha | Los 63 temas de la V1 como acentos |
 | F0.3.1 `pnpm verify` con los guardianes portados | Parcial | Doce activos; `check-transacciones` y `check-listas` se activan con la capa de datos; faltan `check-paquete`, `check-i18n` y los avisos de terceros |
-| F0.3.2 Integración continua en tres plataformas | Parcial | `.github/workflows/ci.yml` escrito (convenciones, `pnpm verify`, runtime en Linux, Windows y macOS, `cargo-deny`). Falta verlo correr en GitHub |
+| F0.3.2 Integración continua en tres plataformas | Parcial | `.github/workflows/ci.yml` escrito (convenciones, `pnpm verify`, runtime en Linux, Windows y macOS, `cargo-deny`). El 2026-10-29 GitHub no arrancó ningún trabajo: "recent account payments have failed or your spending limit needs to be increased" (lo mismo que le pasa a NB Books). Mientras tanto, `check-plataforma` es la única red multiplataforma |
 | F0.3.3 Binarios empaquetados con hash fijado | Parcial | Linux y Windows fijados (`fpcalc` 1.6.2, ONNX Runtime 1.31.1); macOS pendiente de CI. `ffmpeg` sale del instalador (enmienda de ADR-006) |
 | F0.3.4 Primera puerta de empaquetado | Pendiente | |
 | F0.4.1 Prototipo del motor de audio | Hecha | ADR-003 confirmado con tres ajustes; ver el [informe](../audit/2026-10-29-prototipo-motor-audio.md) |
@@ -34,7 +34,7 @@
 | F0.4.3 Prototipo de análisis en ONNX | Pendiente | Decide ADR-002 (análisis) |
 | F0.4.4 Prototipo de rasgos básicos en Rust | Pendiente | Decide ADR-002 (rasgos) |
 | F0.4.5 Respuestas doradas del servidor móvil | Hecha | 36 respuestas (11 endpoints, errores, `Range`, selección y WebSocket) sobre un escenario inventado; grabar dos veces da lo mismo byte a byte. Revelaron campos que el contrato no documenta (las playlists traen `descripcion`, `categoria`, `etiqueta`, `num_pistas`, `cover_url`…), que la V2 también debe dar |
-| F0.4.6 Huella acústica: `fpcalc` o `rusty-chromaprint` | Pendiente | |
+| F0.4.6 Huella acústica: `fpcalc` o `rusty-chromaprint` | Hecha | En 66 pistas del corpus, `rusty-chromaprint` 0.3 da la misma longitud pero **ninguna huella idéntica** (entre 96,8 % y 99,7 % de bits iguales; la diferencia está en el remuestreo). Se queda `fpcalc` 1.6.2, que son 5 MB |
 | F0.4.7 Listas virtualizadas en WebKitGTK | Pendiente | |
 
 ---
