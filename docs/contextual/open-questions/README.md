@@ -11,3 +11,4 @@
 | P4 | 2026-10-29 | ¿Repositorio público de distribución en GitHub o Hugging Face para los agregados? | F0.1.5 | Abierta |
 | P5 | 2026-10-29 | ¿`rusty-chromaprint` produce la huella comprimida idéntica a la de `fpcalc`? | F0.4.6 | Abierta |
 | P6 | 2026-10-29 | ¿El agregado de aceleración en Linux con NVIDIA cabe en un tamaño razonable, dado que el proveedor CUDA de ONNX Runtime arrastra las librerías de CUDA? | F5.1.5, midiendo | Abierta, no bloquea |
+| P7 | 2026-10-29 | La V2 deja cada archivo en su formato. ¿NB Sound Mobile reproduce bien un FLAC o un M4A recibido por `track/{id}/audio`? La biblioteca real hoy es toda MP3, así que nunca se probó | F3.1.6, con el teléfono real | Abierta |

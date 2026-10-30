@@ -30,7 +30,7 @@ Base: NB Sound v1.1.16. Unas 111.000 líneas: 60.000 de Python de aplicación (`
 | Duplicados exactos y semánticos | `core/dedupe.py`, `servicios/dedupe_observable.py` | Se porta | F4.1.8 |
 | Overrides de catalogación | `core/overrides.py` | Se porta como "editar metadatos" | F4.2.5 |
 | Portadas e imágenes de artista (seis fuentes) | `core/assets_pipeline.py` | Se porta | F4.1.10 |
-| Transcodificación | `external/transcoder.py` | Se porta con el `ffmpeg` empaquetado | F4.1.9 |
+| Transcodificación a MP3 al importar | `external/transcoder.py` | **Se elimina**: cada archivo se queda en su formato; la V1 convertía FLAC a MP3 y perdía calidad ([enmienda de ADR-006](../adr/decisions/ADR-006-agregados.md#enmienda-del-2026-10-29-ffmpeg-no-viaja-dentro)) | F4.1.9 |
 | Cuarentena y revisión | `infra/quarantine.py`, `archivos_pendientes` | Se rediseña: **Por revisar**, con motivo claro e "importar tal como está"; las pistas así importadas entran en la misma base y llegan al móvil ([ADR-007](../adr/decisions/ADR-007-arquitectura-de-informacion.md#enmienda-del-2026-10-29-por-revisar)) | F4.2.4, F4.2.8 |
 | Recuperación tras cierre a medias | `core/import_recovery_service.py` | Se porta | F4.1.13 |
 | Auditoría de la biblioteca | `core/audit.py` | Se rediseña: comprobación en segundo plano; lo que necesite al usuario va a Por revisar | F4.2.4 |

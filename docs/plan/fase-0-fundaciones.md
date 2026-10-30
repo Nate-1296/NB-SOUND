@@ -27,7 +27,7 @@
 | F0.2.7 Tokens de Material 3 compartidos | Hecha | Los 63 temas de la V1 como acentos |
 | F0.3.1 `pnpm verify` con los guardianes portados | Parcial | Doce activos; `check-transacciones` y `check-listas` se activan con la capa de datos; faltan `check-paquete`, `check-i18n` y los avisos de terceros |
 | F0.3.2 Integración continua en tres plataformas | Pendiente | |
-| F0.3.3 Binarios empaquetados con hash fijado | Pendiente | |
+| F0.3.3 Binarios empaquetados con hash fijado | Parcial | Linux y Windows fijados (`fpcalc` 1.6.2, ONNX Runtime 1.31.1); macOS pendiente de CI. `ffmpeg` sale del instalador (enmienda de ADR-006) |
 | F0.3.4 Primera puerta de empaquetado | Pendiente | |
 | F0.4.1 Prototipo del motor de audio | Pendiente | Decide ADR-003 |
 | F0.4.2 Prototipo de karaoke en ONNX | Pendiente | Decide ADR-002 (karaoke) |
@@ -101,7 +101,7 @@ prueba que demuestra que falla cuando debe.
 flujo está escrito; si GitHub no lo ejecuta por ser privado, se dice en esta tabla (como pasó en NB Books) y
 `check-plataforma` hace de red.
 
-**F0.3.3 Binarios.** `scripts/fetch-binarios.mjs` descarga `ffmpeg`, `ffprobe`, `fpcalc` y ONNX Runtime para cada
+**F0.3.3 Binarios.** `scripts/fetch-binarios.mjs` descarga `fpcalc` y ONNX Runtime para cada
 plataforma con el hash fijado, verifica antes de extraer y los declara como `externalBin` o recurso de Tauri.
 Ningún binario entra al repositorio. Criterio: `pnpm check:binarios` falla si un hash no coincide.
 

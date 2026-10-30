@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "externalBin": ["binarios/fpcalc"],
+    "resources": {
+      "../LICENSE": "LICENSE",
+      "../THIRD_PARTY_LICENSES.md": "THIRD_PARTY_LICENSES.md",
+      "binarios/onnxruntime.dll": "onnxruntime.dll"
+    }
+  }
+}

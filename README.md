@@ -16,6 +16,7 @@ arquitectura, el plan y el inventario de lo que hacía la V1. El contrato de tra
 
 ```bash
 pnpm install
+pnpm binarios       # fpcalc y ONNX Runtime con su huella fijada (una vez)
 pnpm tauri dev      # la aplicación en modo de desarrollo
 pnpm verify         # todas las comprobaciones
 ```

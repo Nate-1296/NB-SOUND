@@ -31,8 +31,8 @@ Lo que el motor tiene que cubrir, sacado del código de la V1:
 * **Decodificación:** Symphonia 0.6 con `mp3`, `flac`, `aac`, `alac`, `vorbis`, `pcm`, `wav` e `isomp4`. Según su
   tabla oficial, MP3, FLAC, PCM y Vorbis están en "Excellent" con reproducción sin cortes; AAC-LC en "Great" **sin**
   ella; ALAC en "Great" con ella. HE-AAC y Opus figuran como "en desarrollo".
-* **Respaldo:** lo que Symphonia no decodifique (HE-AAC, Opus, WMA, APE) se decodifica con el `ffmpeg` que ya viaja
-  en el instalador, entregando PCM al mismo motor. El usuario no ve la diferencia.
+* **Respaldo:** lo que Symphonia no decodifique (HE-AAC, Opus, WMA, APE) queda para una compilación de `ffmpeg`
+  propia y solo de audio; mientras no exista, esos archivos van a Por revisar (enmienda de ADR-006).
 * **Mezcla:** Kira 0.12 (MIT/Apache-2.0): pistas de mezcla con efectos (`eq_filter`, `filter`, `volume_control`),
   transiciones con curvas, reloj para arrancar sonidos en un instante exacto y sonidos en streaming. El EQ de 10
   bandas son diez `eq_filter` en serie sobre la pista maestra.
