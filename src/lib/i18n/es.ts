@@ -199,8 +199,33 @@ export const es = {
     } as Record<string, string>
   },
   ajustes: {
+    titulo: 'Ajustes',
+    secciones: 'Secciones de Ajustes',
+    biblioteca: 'Biblioteca',
+    reproduccion: 'Reproducción',
+    apariencia: 'Apariencia',
     acercaDe: 'Acerca de',
-    version: (v: string) => `NB Sound ${v}`
+    carpeta: 'Carpeta de tu música',
+    sinCarpeta: 'Todavía no hay carpeta. La eliges al importar música.',
+    nombre: 'Tu nombre',
+    nombreAyuda: 'Lo usa Inicio para saludarte.',
+    normalizar: 'Igualar el volumen entre canciones',
+    normalizarAyuda:
+      'Lleva todas las canciones al mismo nivel (EBU R128). Se aplica desde la siguiente.',
+    ecualizador: 'Ecualizador',
+    ecualizadorActivo: 'Ecualizador activo',
+    preseleccion: 'Preselección',
+    personalizado: 'Personalizado',
+    preamp: 'Preamplificación',
+    banda: (hz: string) => `Banda de ${hz}`,
+    tema: 'Tema',
+    tipografia: 'Tipografía',
+    escala: 'Tamaño de la interfaz',
+    colorPortada: 'La vista de reproducción toma el color de la portada',
+    muestra: 'NB Sound, tu música',
+    version: (v: string) => `NB Sound ${v}`,
+    licencia: 'Software libre bajo la licencia GPL-3.0-or-later.',
+    terceros: 'Incluye componentes de terceros con sus licencias (THIRD_PARTY_LICENSES.md).'
   },
   vistas: {
     proximamente: 'Esta sección llega en una fase próxima del plan.'

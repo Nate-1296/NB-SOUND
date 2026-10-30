@@ -205,10 +205,15 @@ pub fn registrar_escucha(db: &BaseDeDatos, pista_id: i64, segundos: f64) -> NsRe
 }
 
 /// Las preferencias del ecualizador, como las dejó el usuario (o la V1).
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, ts_rs::TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
 pub struct AjustesEcualizador {
     pub activo: bool,
-    pub preseleccion: Option<usize>,
+    /// El índice de libVLC (0 a 17), o `None` si el usuario movió las bandas.
+    pub preseleccion: Option<u32>,
+    /// Siempre diez; en TypeScript, una lista.
+    #[ts(type = "number[]")]
     pub bandas: [f32; 10],
     pub preamp: f32,
 }
@@ -243,11 +248,11 @@ pub fn leer_ecualizador(conn: &Connection) -> NsResult<AjustesEcualizador> {
     // La V1 guardaba el índice como texto, o "custom" para el personalizado.
     a.preseleccion = match preferencia(conn, "ecualizador_preajuste")? {
         Some(serde_json::Value::String(s)) => s.parse().ok(),
-        Some(serde_json::Value::Number(n)) => n.as_u64().map(|n| n as usize),
+        Some(serde_json::Value::Number(n)) => n.as_u64().map(|n| n as u32),
         Some(serde_json::Value::Null) => None,
         _ => Some(0),
     }
-    .filter(|i| *i < crate::audio::ecualizador::PRESELECCIONES.len());
+    .filter(|i| (*i as usize) < crate::audio::ecualizador::PRESELECCIONES.len());
     if let Some(bandas) = preferencia(conn, "ecualizador_bandas")?.and_then(|v| {
         serde_json::from_value::<Vec<f32>>(v)
             .ok()

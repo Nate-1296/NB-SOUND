@@ -28,7 +28,7 @@ use crate::cola::{Accion, Cola, Estado, Fila, Repeticion};
 use crate::db::BaseDeDatos;
 use crate::error::{NsError, NsResult};
 
-pub use self::persistencia::AjustesEcualizador;
+pub use self::persistencia::{carpeta_musica, leer_ecualizador, AjustesEcualizador};
 
 /// Lo que la interfaz puede pedir.
 #[derive(Debug)]
@@ -397,7 +397,7 @@ impl<B: Backend> Servicio<B> {
         }
         match a
             .preseleccion
-            .and_then(|i| ecualizador::PRESELECCIONES.get(i))
+            .and_then(|i| ecualizador::PRESELECCIONES.get(i as usize))
         {
             Some(p) => self.motor.ecualizador(p.bandas_db, p.preamp_db),
             None => self.motor.ecualizador(a.bandas, a.preamp),

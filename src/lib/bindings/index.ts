@@ -8,6 +8,7 @@
  * Ver `docs/adr/decisions/ADR-001-pila-tecnologica.md`.
  */
 
+export type { AjustesEcualizador } from './AjustesEcualizador';
 export type { AlbumResumen } from './AlbumResumen';
 export type { Ambiente } from './Ambiente';
 export type { Apariencia } from './Apariencia';
@@ -34,5 +35,6 @@ export type { PaginaPistas } from './PaginaPistas';
 export type { PistaResumen } from './PistaResumen';
 export type { PlaylistResumen } from './PlaylistResumen';
 export type { PoliticaDeRed } from './PoliticaDeRed';
+export type { PreseleccionEcualizador } from './PreseleccionEcualizador';
 export type { Servicio } from './Servicio';
 export * from './errorCodes';

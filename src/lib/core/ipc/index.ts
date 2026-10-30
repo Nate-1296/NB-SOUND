@@ -14,6 +14,7 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 import type {
+  AjustesEcualizador,
   AlbumResumen,
   Ambiente,
   Apariencia,
@@ -31,10 +32,12 @@ import type {
   PaginaArtistas,
   PaginaPistas,
   PistaResumen,
-  PlaylistResumen
+  PlaylistResumen,
+  PreseleccionEcualizador
 } from '$lib/bindings';
 
 export type {
+  AjustesEcualizador,
   AlbumResumen,
   Ambiente,
   Apariencia,
@@ -58,7 +61,8 @@ export type {
   PaginaArtistas,
   PaginaPistas,
   PistaResumen,
-  PlaylistResumen
+  PlaylistResumen,
+  PreseleccionEcualizador
 } from '$lib/bindings';
 
 /** Error del runtime con su código canónico (ver `src-tauri/src/error.rs`). */
@@ -266,4 +270,16 @@ export function apariencia(): Promise<Apariencia> {
 /** Solo las claves que admite `src-tauri/src/preferencias.rs`. */
 export function guardarPreferencia(clave: string, valor: unknown): Promise<void> {
   return call<void>('guardar_preferencia', { clave, valor });
+}
+
+export function ecualizador(): Promise<AjustesEcualizador> {
+  return call<AjustesEcualizador>('ecualizador');
+}
+
+export function preseleccionesEcualizador(): Promise<PreseleccionEcualizador[]> {
+  return call<PreseleccionEcualizador[]>('preselecciones_ecualizador');
+}
+
+export function carpetaMusica(): Promise<string | null> {
+  return call<string | null>('carpeta_musica');
 }

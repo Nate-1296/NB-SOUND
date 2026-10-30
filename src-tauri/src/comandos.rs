@@ -89,6 +89,9 @@ pub enum OrdenReproductor {
     Karaoke {
         activo: bool,
     },
+    Ecualizador {
+        ajustes: crate::reproductor::AjustesEcualizador,
+    },
 }
 
 impl OrdenReproductor {
@@ -118,6 +121,7 @@ impl OrdenReproductor {
             Self::Vaciar { salvo_la_actual } => Orden::Vaciar { salvo_la_actual },
             Self::Normalizar { activo } => Orden::Normalizar(activo),
             Self::Karaoke { activo } => Orden::Karaoke(activo),
+            Self::Ecualizador { ajustes } => Orden::Ecualizador(ajustes),
             // Un número que no es un número no llega al motor.
             Self::Buscar { .. } | Self::Volumen { .. } => return Err(NsError::PathNotAllowed),
         })
@@ -443,6 +447,50 @@ pub async fn guardar_preferencia(
 ) -> NsResult<()> {
     en_segundo_plano(&estado, move |db| {
         crate::preferencias::guardar(db, &clave, &valor)
+    })
+    .await
+}
+
+/// Una preselección del ecualizador, para pintar la lista.
+#[derive(Debug, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub struct PreseleccionEcualizador {
+    pub nombre: String,
+    pub preamp_db: f32,
+    pub bandas_db: Vec<f32>,
+}
+
+/// El ecualizador como está guardado.
+#[tauri::command]
+pub async fn ecualizador(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::reproductor::AjustesEcualizador> {
+    en_segundo_plano(&estado, |db| {
+        crate::reproductor::leer_ecualizador(&*db.conexion()?)
+    })
+    .await
+}
+
+/// Cota: las 18 preselecciones de libVLC.
+#[tauri::command]
+pub async fn preselecciones_ecualizador() -> NsResult<Vec<PreseleccionEcualizador>> {
+    Ok(crate::audio::ecualizador::PRESELECCIONES
+        .iter()
+        .map(|p| PreseleccionEcualizador {
+            nombre: p.nombre.to_owned(),
+            preamp_db: p.preamp_db,
+            bandas_db: p.bandas_db.to_vec(),
+        })
+        .collect())
+}
+
+/// La carpeta de la música, para mostrarla en Ajustes. `None` si no hay.
+#[tauri::command]
+pub async fn carpeta_musica(estado: tauri::State<'_, Estado>) -> NsResult<Option<String>> {
+    en_segundo_plano(&estado, |db| {
+        Ok(crate::reproductor::carpeta_musica(&*db.conexion()?)?
+            .map(|p| p.to_string_lossy().into_owned()))
     })
     .await
 }
