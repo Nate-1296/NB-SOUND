@@ -18,7 +18,7 @@ Regenerar: `node scripts/generate-notices.mjs`
 Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
 (ADR-010).
 
-## Componentes de Rust (648)
+## Componentes de Rust (655)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -236,6 +236,8 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `indexmap` | 1.9.3 | Apache-2.0 OR MIT | https://github.com/bluss/indexmap |
 | `indexmap` | 2.14.2 | Apache-2.0 OR MIT | https://github.com/indexmap-rs/indexmap |
 | `infer` | 0.22.0 | MIT | https://github.com/bojand/infer |
+| `inotify` | 0.11.5 | ISC | https://github.com/hannobraun/inotify-rs |
+| `inotify-sys` | 0.1.8 | ISC | https://github.com/hannobraun/inotify-sys |
 | `inout` | 0.2.5 | MIT OR Apache-2.0 | https://github.com/RustCrypto/utils |
 | `ipnet` | 2.12.2 | MIT OR Apache-2.0 | https://github.com/krisprice/ipnet |
 | `itoa` | 1.0.18 | MIT OR Apache-2.0 | https://github.com/dtolnay/itoa |
@@ -259,6 +261,8 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `keyring` | 4.2.0 | MIT OR Apache-2.0 | https://github.com/open-source-cooperative/keyring-rs |
 | `keyring-core` | 1.0.1 | MIT OR Apache-2.0 | https://github.com/open-source-cooperative/keyring-core.git |
 | `kira` | 0.12.6 | MIT OR Apache-2.0 | https://github.com/tesselode/kira |
+| `kqueue` | 1.2.1 | MIT | https://gitlab.com/rust-kqueue/rust-kqueue |
+| `kqueue-sys` | 1.1.2 | MIT | https://gitlab.com/rust-kqueue/rust-kqueue-sys |
 | `lazy_static` | 1.5.1 | MIT OR Apache-2.0 | https://github.com/rust-lang-nursery/lazy-static.rs |
 | `libappindicator` | 0.9.0 | Apache-2.0 OR MIT |  |
 | `libappindicator-sys` | 0.9.0 | Apache-2.0 OR MIT |  |
@@ -296,6 +300,8 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `ndk-sys` | 0.6.0+11769913 | MIT OR Apache-2.0 | https://github.com/rust-mobile/ndk |
 | `new_debug_unreachable` | 1.0.6 | MIT | https://github.com/mbrubeck/rust-debug-unreachable |
 | `nom` | 7.1.3 | MIT | https://github.com/Geal/nom |
+| `notify` | 8.2.1 | CC0-1.0 | https://github.com/notify-rs/notify.git |
+| `notify-types` | 2.2.0 | MIT OR Apache-2.0 | https://github.com/notify-rs/notify.git |
 | `nu-ansi-term` | 0.50.3 | MIT | https://github.com/nushell/nu-ansi-term |
 | `num` | 0.4.3 | MIT OR Apache-2.0 | https://github.com/rust-num/num |
 | `num_enum` | 0.7.6 | BSD-3-Clause OR MIT OR Apache-2.0 | https://github.com/illicitonion/num_enum |
@@ -321,6 +327,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `objc2-core-graphics` | 0.3.2 | Zlib OR Apache-2.0 OR MIT | https://github.com/madsmtm/objc2 |
 | `objc2-core-image` | 0.3.2 | Zlib OR Apache-2.0 OR MIT | https://github.com/madsmtm/objc2 |
 | `objc2-core-location` | 0.3.2 | Zlib OR Apache-2.0 OR MIT | https://github.com/madsmtm/objc2 |
+| `objc2-core-services` | 0.3.2 | Zlib OR Apache-2.0 OR MIT | https://github.com/madsmtm/objc2 |
 | `objc2-core-text` | 0.3.2 | Zlib OR Apache-2.0 OR MIT | https://github.com/madsmtm/objc2 |
 | `objc2-encode` | 4.1.0 | MIT | https://github.com/madsmtm/objc2 |
 | `objc2-exception-helper` | 0.1.1 | Zlib OR Apache-2.0 OR MIT | https://github.com/madsmtm/objc2 |
