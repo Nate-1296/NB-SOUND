@@ -31,7 +31,9 @@
 * **F5.2.1:** separar con todos los núcleos ocupados no produce ningún vacío de buffer en la reproducción (la misma
   prueba de F0.4.1), y el pico de memoria del proceso separando queda por debajo de 3 GB (F0.4.2 midió 9 GB con
   la configuración por defecto de ONNX Runtime; ver P8).
-* **F5.2.4:** los 323 trabajos de karaoke de la V1 aparecen como "listos para cantar" tras migrar.
+* **F5.2.4:** las 115 pistas con instrumental de la V1 aparecen como "listas para cantar" tras migrar, sin volver a
+  separarlas. De los 323 trabajos de la V1 solo 117 terminaron; 149 se cancelaron y 57 siguen en cola, y estos
+  entran como pendientes.
 * **F5.3.1:** se mantiene la paridad de F0.4.3; el almacenamiento cumple el presupuesto de ADR-004.
 * Ajustes > Acerca de atribuye los modelos con su licencia.
 

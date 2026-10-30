@@ -94,7 +94,7 @@ Lo que no se migra de los archivos:
 | `veces_reproducida` | `→ pistas.reproducciones` |
 | `ultimo_acceso` | `→ pistas.ultima_reproduccion` |
 | `favorita`, `favorita_actualizada_en` | `→ pistas.favorita`, `pistas.favorita_actualizada_en`. Se quedan en la pista y no en una tabla aparte: el móvil resuelve conflictos comparando la marca de tiempo, que también se guarda al desmarcar |
-| `karaoke_estado`, `karaoke_ruta_instrumental`, `karaoke_actualizado_en` | `→ stems` (F1.1.6). `en_cola` (57) se migra como pendiente; `lista` (111) solo si el archivo existe, y existen los 115 |
+| `karaoke_estado`, `karaoke_ruta_instrumental`, `karaoke_actualizado_en` | `→ stems.estado`, `stems.instrumental`, `stems.terminada_en` (F1.1.6). Una pista con su instrumental en disco entra como `lista`, diga lo que diga su estado (existen los 115); las demás `en_cola` (57) entran como `pendiente`; `no_procesada` no deja fila |
 | `karaoke_error_codigo`, `karaoke_error_mensaje` | **Se descartan**: vacíos en las 2.397; el error vive en el trabajo |
 | `indexado_en`, `actualizado_en` | `→ pistas.creada_en`, `pistas.actualizada_en` |
 | `sync_version` | `→ pistas.sync_version`, tal cual |
@@ -200,7 +200,7 @@ Ninguna clave se copia a ciegas. Cada grupo tiene su destino:
 | `enable_audio_features`, `audio_features_*`, `enable_audio_intelligence_deep`, `audio_intelligence_*`, `enable_audio_*_models`, `enable_audio_embeddings` | Lo que el usuario decide (análisis activado, en segundo plano, al importar) `→ preferencias`. Lo que era ajuste interno del motor de Python (`max_workers`, `segment_seconds`, `sample_strategy`, `backend`, `model_dir`, `allow_model_downloads`…) se descarta |
 | `score_accept`, `score_review`, `duplicate_policy`, `duplicate_better_min_delta`, `enable_deduplication`, `enable_semantic_deduplication`, `enable_overrides`, `skip_already_processed`, `enable_second_stage_resolution`, `enable_third_stage_resolution`, `second_stage_*`, `third_stage_*`, `discography_ia_min_confidence`, `enable_ia_discography`, `enable_ia_tiebreak`, `ia_*` | `→ preferencias` los umbrales que la importación rediseñada conserve (F4); el resto se descarta con ella |
 | `assets_*`, `lyrics_*`, `shazam_*`, `music_discovery_*`, `enable_music_discovery` | Tiempos de espera y reintentos de los clientes de Python: **se descartan**. Los límites de la V2 viven en `net.rs` |
-| `dj_pista_id`, `dj_sesion_id`, `dj_indice_pista`, `dj_pos_global_seg`, `dj_pos_pista_seg`, `dj_volumen` | `→ dj_sesiones`, estado de la sesión en curso |
+| `dj_sesion_id`, `dj_indice_pista`, `dj_pos_global_seg`, `dj_pos_pista_seg`, `dj_volumen` | `→ dj_en_curso`, una sola fila. `dj_pista_id` **se recalcula** de la sesión y el índice |
 | `dj_privado_perfil_hardware` | **Se descarta**: la V2 mide el equipo al arrancar |
 | `sync_auto_encender` | `→ preferencias.servidor_movil_al_arrancar` |
 | `sync_exposicion_inicial_v1` | **Se descarta**: marca de una migración interna de la V1 ya hecha |
@@ -303,8 +303,10 @@ El certificado y la clave (`~/.config/nb_sound/sync/`) se copian a la carpeta de
 
 ### `dj_sesiones` (1), `dj_pistas_sesion` (12), `dj_eventos` (0)
 
-`→ dj_sesiones`, `dj_sesion_pistas` y `dj_eventos`, con todas sus columnas, como manda ADR-004. Las puntuaciones y
-los `*_json` se guardan tal cual porque el DJ de la V2 los lee para explicar por qué eligió cada pista.
+`→ dj_sesiones`, `dj_sesion_pistas` y `dj_eventos`, con todas sus columnas, como manda ADR-004: `prompt_original` pasa
+a `peticion`, `intent_json` a `intencion`, `score_*` a `puntuacion_*`, `fade_out_at_seg` a `fundido_en_seg` y cada
+`*_json` a su columna sin el sufijo. Se guardan tal cual porque el DJ de la V2 los lee para explicar por qué eligió
+cada pista.
 
 ### `dj_preferencias` (0)
 

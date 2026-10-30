@@ -590,3 +590,82 @@ fn el_manifiesto_pide_las_tumbas_por_su_indice() {
     );
     assert!(p.contains("tumbas_por_sync_version"), "{p}");
 }
+
+#[test]
+fn una_pista_lista_para_cantar_tiene_su_instrumental() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    assert!(conn
+        .execute(
+            "INSERT INTO stems (pista_id, estado) VALUES (100, 'lista')",
+            []
+        )
+        .is_err());
+    assert!(conn
+        .execute(
+            "INSERT INTO stems (pista_id, estado, instrumental) VALUES (100, 'pendiente', 'x.ogg')",
+            []
+        )
+        .is_err());
+}
+
+#[test]
+fn terminar_una_separacion_es_un_cambio_que_ve_el_movil() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    conn.execute("INSERT INTO stems (pista_id) VALUES (100)", [])
+        .unwrap();
+    let antes = version_de(&conn, "pistas", 100);
+    conn.execute(
+        "UPDATE stems SET intentos = 1, estado = 'separando' WHERE pista_id = 100",
+        [],
+    )
+    .unwrap();
+    assert_eq!(
+        version_de(&conn, "pistas", 100),
+        antes,
+        "separando no cambia nada"
+    );
+    conn.execute(
+        "UPDATE stems SET estado = 'lista', instrumental = '100.ogg' WHERE pista_id = 100",
+        [],
+    )
+    .unwrap();
+    let lista = version_de(&conn, "pistas", 100);
+    assert!(lista > antes);
+    conn.execute("DELETE FROM stems WHERE pista_id = 100", [])
+        .unwrap();
+    assert!(version_de(&conn, "pistas", 100) > lista);
+}
+
+#[test]
+fn la_cola_de_separacion_sale_de_su_indice() {
+    let (_db, conn) = base();
+    let p = plan(
+        &conn,
+        "SELECT pista_id FROM stems WHERE estado = 'pendiente' ORDER BY solicitada_en LIMIT 1",
+    );
+    assert!(p.contains("stems_por_estado"), "{p}");
+    assert!(!p.contains("TEMP B-TREE"), "ordena en memoria: {p}");
+}
+
+#[test]
+fn borrar_una_sesion_del_dj_se_lleva_sus_pistas_y_eventos() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    conn.execute_batch(
+        "INSERT INTO dj_sesiones (id, peticion, motor_version) VALUES (1, 'algo tranquilo', 'dj_v1');
+         INSERT INTO dj_sesion_pistas (sesion_id, posicion, pista_id) VALUES (1, 0, 100);
+         INSERT INTO dj_eventos (sesion_id, pista_id, tipo) VALUES (1, 100, 'saltada');
+         UPDATE dj_en_curso SET sesion_id = 1, indice = 0;
+         DELETE FROM dj_sesiones WHERE id = 1;",
+    )
+    .unwrap();
+    let cuenta = |sql: &str| -> i64 { conn.query_row(sql, [], |f| f.get(0)).unwrap() };
+    assert_eq!(cuenta("SELECT count(*) FROM dj_sesion_pistas"), 0);
+    assert_eq!(cuenta("SELECT count(*) FROM dj_eventos"), 0);
+    assert_eq!(
+        cuenta("SELECT count(*) FROM dj_en_curso WHERE sesion_id IS NULL"),
+        1
+    );
+}
