@@ -18,7 +18,7 @@ Regenerar: `node scripts/generate-notices.mjs`
 Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
 (ADR-010).
 
-## Componentes de Rust (640)
+## Componentes de Rust (642)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -386,6 +386,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `rand_core` | 0.10.1 | MIT OR Apache-2.0 | https://github.com/rust-random/rand_core |
 | `raw-window-handle` | 0.6.2 | MIT OR Apache-2.0 OR Zlib | https://github.com/rust-windowing/raw-window-handle |
 | `rcgen` | 0.14.10 | MIT OR Apache-2.0 | https://github.com/rustls/rcgen |
+| `realfft` | 3.5.1 | MIT | https://github.com/HEnquist/realfft |
 | `redox_syscall` | 0.5.18 | MIT | https://gitlab.redox-os.org/redox-os/syscall |
 | `redox_syscall` | 0.9.5 | MIT | https://gitlab.redox-os.org/redox-os/kernel |
 | `redox_users` | 0.5.3 | MIT | https://gitlab.redox-os.org/redox-os/users |
@@ -399,6 +400,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `ring` | 0.17.14 | Apache-2.0 AND ISC | https://github.com/briansmith/ring |
 | `rsqlite-vfs` | 0.1.1 | MIT |  |
 | `rtrb` | 0.4.1 | MIT OR Apache-2.0 | https://github.com/mgeier/rtrb |
+| `rubato` | 0.16.2 | MIT | https://github.com/HEnquist/rubato |
 | `rusqlite` | 0.40.2 | MIT | https://github.com/rusqlite/rusqlite |
 | `rustc_version` | 0.4.1 | MIT OR Apache-2.0 | https://github.com/djc/rustc-version-rs |
 | `rustc-hash` | 2.1.3 | Apache-2.0 OR MIT | https://github.com/rust-lang/rustc-hash |

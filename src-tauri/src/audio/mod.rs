@@ -23,6 +23,7 @@ mod fuente;
 mod limitador;
 #[cfg(test)]
 pub(crate) mod pruebas;
+pub mod remuestreo;
 pub mod sonoridad;
 
 use std::sync::atomic::{AtomicU32, Ordering};

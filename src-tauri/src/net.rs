@@ -226,6 +226,47 @@ impl Red {
     }
 }
 
+impl Red {
+    /// `POST` con un cuerpo JSON; devuelve el estado y el cuerpo (Shazam).
+    ///
+    /// # Errors
+    ///
+    /// Los de [`Red::autorizar`], y [`NsError::NetworkFailure`] si la petición no
+    /// se completa o pasa del tope en memoria.
+    pub fn enviar_json(
+        &self,
+        servicio: Servicio,
+        url: &str,
+        cabeceras: &[(&str, &str)],
+        cuerpo: &[u8],
+    ) -> NsResult<(u16, Vec<u8>)> {
+        self.autorizar(servicio, url)?;
+        let mut peticion = self
+            .agente
+            .post(url)
+            .header("Content-Type", "application/json");
+        for (nombre, valor) in cabeceras {
+            peticion = peticion.header(*nombre, *valor);
+        }
+        let respuesta = peticion.send(cuerpo).map_err(|e| {
+            tracing::debug!(?servicio, error = %e, "la petición no se completó");
+            NsError::NetworkFailure
+        })?;
+        let estado = respuesta.status().as_u16();
+        let mut leido = Vec::new();
+        respuesta
+            .into_body()
+            .into_reader()
+            .take(TOPE_EN_MEMORIA + 1)
+            .read_to_end(&mut leido)
+            .map_err(|_| NsError::NetworkFailure)?;
+        if leido.len() as u64 > TOPE_EN_MEMORIA {
+            return Err(NsError::NetworkFailure);
+        }
+        Ok((estado, leido))
+    }
+}
+
 /// El anfitrión de una URL `https://`. Las demás no se admiten: nada sale en
 /// claro.
 fn anfitrion_de(url: &str) -> Option<&str> {
