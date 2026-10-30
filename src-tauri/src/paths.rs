@@ -95,6 +95,13 @@ impl Rutas {
         self.datos.join("stems")
     }
 
+    /// Portadas e imágenes de artista originales, una por contenido. En datos y
+    /// no en caché: muchas vinieron de servicios que quizá ya no las den. Los
+    /// tamaños reducidos sí van a la caché.
+    pub fn portadas(&self) -> PathBuf {
+        self.datos.join("portadas")
+    }
+
     /// Identidad TLS del servidor móvil (ADR-005).
     pub fn identidad_movil(&self) -> PathBuf {
         self.datos.join("movil")

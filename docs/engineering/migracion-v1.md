@@ -333,3 +333,17 @@ F1.2.5 no se da por buena si no cuadran, sobre la instalación real:
 * 2.332 letras, 1.409 portadas de álbum, 434 imágenes de artista y 115 instrumentales, con su archivo presente.
 * Las claves con valor, en el llavero y **en ningún otro sitio** de la carpeta de la V2.
 * Que el archivo de la base de la V1 y las carpetas que el importador lee no cambian (hash antes y después).
+
+## Resultado sobre la instalación real (2026-10-30)
+
+`src-tauri/tests/importacion_real.rs`, con la V1 en solo lectura y el destino en disco:
+
+* Cuadran fila a fila con la V1: 434 artistas, 1.421 álbumes, 2.397 pistas, 56 playlists con sus 2.360 entradas en
+  el mismo orden, 3.225 entradas de historial, 8 en la cola, 12 dispositivos, 21 tumbas y la sesión del DJ. Los `id`
+  y las `sync_version` son los mismos, y el contador queda en el de la V1.
+* Fuera de la base: 2.332 letras, 1.805 portadas distintas (las de 1.409 álbumes y 434 artistas), 115
+  instrumentales listos y 56 pistas que esperaban en cola, pendientes.
+* Análisis: 2.396 pistas con rasgos, 407 con análisis profundo y 16.572 etiquetas de ambiente.
+* **La base de la V2 pesa 18,2 MB**, frente a los 464 MB de la V1 y al tope de 40 MB. El hash de la base de la V1 no
+  cambia.
+* La importación tarda 42 s, casi todo en copiar 4 GB de portadas e instrumentales.

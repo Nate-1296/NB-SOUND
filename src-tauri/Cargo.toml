@@ -36,6 +36,10 @@ ts-rs = "12.0.1"
 rusqlite = { version = "0.40", features = ["bundled"] }
 r2d2 = "0.8.10"
 r2d2_sqlite = "0.35.0"
+# SHA-256: la cabecera `x-nb-sound-hash` del contrato móvil (ADR-005), la
+# verificación de los agregados (ADR-006) y las portadas por contenido. Ya llega
+# por `tauri-codegen` en la misma versión, y NB Books la usa igual.
+sha2 = "0.10.9"
 # Cliente HTTP síncrono con rustls: el mismo que NB Books. Solo `net.rs` lo usa
 # (lo vigila `scripts/check-network.mjs`).
 ureq = { version = "3.4.0", default-features = false, features = ["rustls", "platform-verifier"] }
