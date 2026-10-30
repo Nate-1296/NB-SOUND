@@ -29,6 +29,7 @@ const GUARDIANES = [
   ['check-registro'],
   ['check-rutas'],
   ['check-plataforma'],
+  ['generate-notices', '--check'],
   ...(hayDatos ? [['check-transacciones'], ['check-listas']] : [])
 ];
 
