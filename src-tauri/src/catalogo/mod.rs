@@ -6,7 +6,10 @@
 //! fase).
 
 pub mod acoustid;
+pub mod emparejador;
 pub mod etiquetas;
+pub mod modelo;
 pub mod musicbrainz;
+pub mod normalizacion;
 pub mod organizacion;
 pub mod texto;
