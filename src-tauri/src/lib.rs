@@ -8,6 +8,7 @@
 pub mod comandos;
 pub mod db;
 pub mod error;
+pub mod identidad_movil;
 pub mod importador_v1;
 pub mod net;
 pub mod paths;

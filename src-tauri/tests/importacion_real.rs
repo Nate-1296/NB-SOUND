@@ -14,6 +14,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use nb_sound_lib::db::BaseDeDatos;
+use nb_sound_lib::identidad_movil;
 use nb_sound_lib::importador_v1::{archivos, importar};
 use nb_sound_lib::paths::{Rutas, RutasV1};
 use rusqlite::{Connection, OpenFlags};
@@ -165,6 +166,19 @@ fn la_instalacion_real_se_importa_sin_perder_nada() {
         hash_antes,
         "la base de la V1 cambió"
     );
+    // La huella del servidor móvil, la que tienen fijada los teléfonos (F1.2.3).
+    if let Some(origen) = RutasV1::estandar().map(|r| r.identidad_movil()) {
+        let pem_v1 = std::fs::read_to_string(origen.join(identidad_movil::CERTIFICADO)).ok();
+        let huella_v1 = pem_v1.as_deref().and_then(identidad_movil::huella_sha256);
+        let huella_v2 =
+            identidad_movil::copiar_de_la_v1(&origen, &rutas.identidad_movil()).unwrap();
+        assert_eq!(huella_v2, huella_v1, "la huella del servidor móvil cambió");
+        eprintln!(
+            "huella del servidor móvil conservada: {}",
+            huella_v2.is_some()
+        );
+    }
+
     let tamano = std::fs::metadata(rutas.base_de_datos()).unwrap().len();
     eprintln!("base de la V2: {:.1} MB", tamano as f64 / 1e6);
     assert!(tamano < 40 * 1024 * 1024, "{tamano} bytes");
