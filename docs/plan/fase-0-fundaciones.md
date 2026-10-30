@@ -30,7 +30,7 @@
 | F0.3.3 Binarios empaquetados con hash fijado | Parcial | Linux y Windows fijados (`fpcalc` 1.6.2, ONNX Runtime 1.31.1); macOS pendiente de CI. `ffmpeg` sale del instalador (enmienda de ADR-006) |
 | F0.3.4 Primera puerta de empaquetado | Pendiente | |
 | F0.4.1 Prototipo del motor de audio | Hecha | ADR-003 confirmado con tres ajustes; ver el [informe](../audit/2026-10-29-prototipo-motor-audio.md) |
-| F0.4.2 Prototipo de karaoke en ONNX | Pendiente | Decide ADR-002 (karaoke) |
+| F0.4.2 Prototipo de karaoke en ONNX | Hecha | Mismo instrumental que PyTorch (74–95 dB por debajo) a la misma velocidad; se elige fp16. Riesgo nuevo: 9 GB de memoria pico (P8). [Informe](../audit/2026-10-29-prototipo-karaoke.md) |
 | F0.4.3 Prototipo de análisis en ONNX | Pendiente | Decide ADR-002 (análisis) |
 | F0.4.4 Prototipo de rasgos básicos en Rust | Pendiente | Decide ADR-002 (rasgos) |
 | F0.4.5 Respuestas doradas del servidor móvil | Hecha | 36 respuestas (11 endpoints, errores, `Range`, selección y WebSocket) sobre un escenario inventado; grabar dos veces da lo mismo byte a byte. Revelaron campos que el contrato no documenta (las playlists traen `descripcion`, `categoria`, `etiqueta`, `num_pistas`, `cover_url`…), que la V2 también debe dar |

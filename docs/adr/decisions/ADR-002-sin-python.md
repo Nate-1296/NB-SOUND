@@ -1,7 +1,7 @@
 # ADR-002: Ningún intérprete de Python en tiempo de ejecución
 
 **Fecha:** 2026-10-29
-**Estado:** Aceptado, sujeto a verificación por F0.4.2, F0.4.3 y F0.4.4
+**Estado:** Aceptado, sujeto a verificación por F0.4.3 y F0.4.4. La parte de karaoke la confirmó F0.4.2 el 2026-10-29 ([informe](../../audit/2026-10-29-prototipo-karaoke.md))
 
 ## Contexto
 
