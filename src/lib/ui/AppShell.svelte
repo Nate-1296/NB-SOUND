@@ -12,6 +12,7 @@
 
   import { accionDeTecla, esCampoDeTexto } from '$core/atajos';
   import { abrirMinirreproductor } from '$core/ipc';
+  import { telefonos } from '$core/movil.svelte';
   import { reproductor } from '$core/reproductor.svelte';
 
   import { clasificarAncho } from './anchos';
@@ -31,6 +32,7 @@
 
   onMount(() => {
     void reproductor.arrancar();
+    void telefonos.arrancar();
   });
 
   function alPulsar(e: KeyboardEvent) {

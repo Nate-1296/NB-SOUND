@@ -24,6 +24,8 @@ import type {
   ConsultaArtistas,
   ConsultaPistas,
   ConsultaPlaylists,
+  Emparejar,
+  EstadoMovil,
   InformeDeSalud,
   Inicio,
   Instantanea,
@@ -35,7 +37,8 @@ import type {
   Perfil,
   PistaResumen,
   PlaylistResumen,
-  PreseleccionEcualizador
+  PreseleccionEcualizador,
+  Telefono
 } from '$lib/bindings';
 
 export type {
@@ -51,6 +54,8 @@ export type {
   ConsultaArtistas,
   ConsultaPistas,
   ConsultaPlaylists,
+  Emparejar,
+  EstadoMovil,
   InformeDeSalud,
   Inicio,
   Instantanea,
@@ -68,7 +73,9 @@ export type {
   PistaEscuchada,
   PistaResumen,
   PlaylistResumen,
-  PreseleccionEcualizador
+  PreseleccionEcualizador,
+  Qr,
+  Telefono
 } from '$lib/bindings';
 
 /** Error del runtime con su código canónico (ver `src-tauri/src/error.rs`). */
@@ -304,4 +311,33 @@ export function inicio(): Promise<Inicio> {
 /** Lo que el historial dice del usuario (Tu música). */
 export function perfil(): Promise<Perfil> {
   return call<Perfil>('perfil');
+}
+
+// --- Dispositivos -------------------------------------------------------------
+
+export function movilEstado(): Promise<EstadoMovil> {
+  return call<EstadoMovil>('movil_estado');
+}
+
+/** Deja que los teléfonos se conecten (o no), también en los próximos arranques. */
+export function movilPermitir(activo: boolean): Promise<EstadoMovil> {
+  return call<EstadoMovil>('movil_permitir', { activo });
+}
+
+/** Un QR y un código nuevos; enciende el servidor si hace falta. */
+export function movilEmparejar(): Promise<Emparejar> {
+  return call<Emparejar>('movil_emparejar');
+}
+
+export function movilTelefonos(): Promise<Telefono[]> {
+  return call<Telefono[]>('movil_telefonos');
+}
+
+export function movilQuitar(id: number): Promise<void> {
+  return call<void>('movil_quitar', { id });
+}
+
+/** Algo cambió en los teléfonos: uno se emparejó, se conectó o se fue. */
+export function alCambiarLosTelefonos(cada: () => void): Promise<UnlistenFn> {
+  return escuchar<null>('movil:cambio', () => cada());
 }

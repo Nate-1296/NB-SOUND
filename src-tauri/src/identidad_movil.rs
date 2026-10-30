@@ -91,9 +91,19 @@ pub fn copiar_de_la_v1(origen: &Path, destino: &Path) -> NsResult<Option<String>
 }
 
 /// Copia la clave privada sin que exista en ningún momento con permisos de
-/// lectura para otros: se crea ya con `0600` y se renombra al terminar.
+/// lectura para otros.
 fn copiar_privado(origen: &Path, destino: &Path) -> NsResult<()> {
     let contenido = std::fs::read(origen).map_err(|_| NsError::StorageFailure)?;
+    escribir_privado(destino, &contenido)
+}
+
+/// Escribe una clave privada: se crea ya con `0600` y se renombra al terminar,
+/// así que nunca hay una a medias ni legible por otros.
+///
+/// # Errors
+///
+/// [`NsError::StorageFailure`] si no se puede escribir.
+pub fn escribir_privado(destino: &Path, contenido: &[u8]) -> NsResult<()> {
     let temporal: PathBuf = destino.with_extension("pem.parcial");
     let mut opciones = std::fs::OpenOptions::new();
     opciones.write(true).create(true).truncate(true);
@@ -104,13 +114,13 @@ fn copiar_privado(origen: &Path, destino: &Path) -> NsResult<()> {
     }
     let escrito = opciones.open(&temporal).and_then(|mut f| {
         use std::io::Write;
-        f.write_all(&contenido)?;
+        f.write_all(contenido)?;
         f.sync_all()
     });
     let colocado = escrito.and_then(|()| std::fs::rename(&temporal, destino));
     colocado.map_err(|error| {
         let _ = std::fs::remove_file(&temporal);
-        tracing::error!(error = %error, "no se pudo copiar la clave del servidor móvil");
+        tracing::error!(error = %error, "no se pudo escribir la clave del servidor móvil");
         NsError::StorageFailure
     })
 }

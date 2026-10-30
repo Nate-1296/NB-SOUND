@@ -18,6 +18,7 @@ pub mod importador_v1;
 pub mod inicio;
 pub mod letras;
 pub mod medicion;
+pub mod movil;
 pub mod net;
 pub mod paths;
 pub mod perfil;
@@ -40,6 +41,7 @@ pub struct Estado {
     pub rutas: Rutas,
     pub red: Arc<Red>,
     pub db: BaseDeDatos,
+    pub movil: Arc<movil::ServidorMovil>,
 }
 
 /// La política de red que el usuario dejó guardada; la de fábrica, que no deja
@@ -66,6 +68,7 @@ fn importar_v1_en_segundo_plano(
     rutas: Rutas,
     red: Arc<Red>,
     reproductor: Option<reproductor::Buzon>,
+    servidor_movil: Arc<movil::ServidorMovil>,
 ) {
     let Some(v1) = RutasV1::estandar().filter(|v1| v1.base_de_datos().is_file()) else {
         return;
@@ -75,16 +78,8 @@ fn importar_v1_en_segundo_plano(
         .spawn(move || {
             let env = v1.config.join(".env");
             let llavero = importador_v1::claves::LlaveroDelSistema;
-            match importador_v1::importar(&v1.base_de_datos(), Some(&env), &db, &rutas, &llavero) {
-                Ok(Some(_)) => {
-                    red.cambiar_politica(politica_guardada(&db));
-                    if let Some(r) = &reproductor {
-                        r.enviar(reproductor::Orden::Recargar);
-                    }
-                }
-                Ok(None) => {}
-                Err(error) => tracing::error!(codigo = error.code(), "no se pudo importar la V1"),
-            }
+            let importada =
+                importador_v1::importar(&v1.base_de_datos(), Some(&env), &db, &rutas, &llavero);
             if let Err(error) =
                 identidad_movil::copiar_de_la_v1(&v1.identidad_movil(), &rutas.identidad_movil())
             {
@@ -93,17 +88,43 @@ fn importar_v1_en_segundo_plano(
                     "no se pudo copiar la identidad móvil de la V1"
                 );
             }
+            match importada {
+                Ok(Some(_)) => {
+                    red.cambiar_politica(politica_guardada(&db));
+                    if let Some(r) = &reproductor {
+                        r.enviar(reproductor::Orden::Recargar);
+                    }
+                    // La V1 traía su interruptor de encender el servidor al abrir; la
+                    // identidad ya está copiada, así que los teléfonos la reconocen.
+                    encender_movil_si_toca(&db, &servidor_movil);
+                }
+                Ok(None) => {}
+                Err(error) => tracing::error!(codigo = error.code(), "no se pudo importar la V1"),
+            }
         });
     if lanzado.is_err() {
         tracing::error!("no se pudo lanzar el importador de la V1");
     }
 }
 
-/// Cuenta lo que hace el reproductor a la interfaz, como eventos de Tauri, y a
-/// los controles del sistema, que llegan después porque necesitan su buzón.
+/// Enciende el servidor móvil si el usuario lo dejó así. Fuera del hilo de la
+/// ventana: la primera vez crea la identidad TLS.
+fn encender_movil_si_toca(db: &BaseDeDatos, servidor: &Arc<movil::ServidorMovil>) {
+    if !movil::al_arrancar(db).unwrap_or(false) {
+        return;
+    }
+    if let Err(error) = servidor.encender() {
+        tracing::error!(codigo = error.code(), "el servidor móvil no arrancó");
+    }
+}
+
+/// Cuenta lo que hace el reproductor a la interfaz, como eventos de Tauri; a los
+/// controles del sistema, que llegan después porque necesitan su buzón, y al
+/// servidor móvil.
 struct OyenteTauri {
     app: tauri::AppHandle,
     controles: Arc<std::sync::OnceLock<controles_sistema::ControlesSistema>>,
+    movil: movil::Puente,
 }
 
 impl reproductor::Oyente for OyenteTauri {
@@ -113,6 +134,7 @@ impl reproductor::Oyente for OyenteTauri {
         if let Some(c) = self.controles.get() {
             c.actualizar(i);
         }
+        self.movil.publicar(i);
     }
 
     fn aviso(&self, a: &reproductor::AvisoReproductor) {
@@ -135,16 +157,37 @@ pub fn run() {
 
     let db = BaseDeDatos::abrir(&rutas.base_de_datos()).expect("no se pudo abrir la base de datos");
     let red = Arc::new(Red::new(politica_guardada(&db)));
+    let puente = movil::Puente::default();
+    // El servidor avisa a Ajustes de lo que cambia; la ventana aún no existe.
+    let ventana: Arc<std::sync::OnceLock<tauri::AppHandle>> = Arc::default();
+    let aviso = Arc::clone(&ventana);
+    let servidor_movil = Arc::new(movil::ServidorMovil::nuevo(
+        db.clone(),
+        rutas.clone(),
+        puente.clone(),
+        movil::Opciones {
+            identidad_v1: RutasV1::estandar().map(|v1| v1.identidad_movil()),
+            ..movil::Opciones::default()
+        },
+        move || {
+            use tauri::Emitter;
+            if let Some(app) = aviso.get() {
+                let _ = app.emit("movil:cambio", ());
+            }
+        },
+    ));
     let estado = Estado {
         rutas: rutas.clone(),
         red: Arc::clone(&red),
         db: db.clone(),
+        movil: Arc::clone(&servidor_movil),
     };
 
     let aplicacion = tauri::Builder::default()
         .manage(estado)
         .setup(move |app| {
             use tauri::Manager;
+            let _ = ventana.set(app.handle().clone());
             // Sin salida de audio la aplicación sigue abriendo: la biblioteca se ve,
             // y Ajustes dice qué pasa con el sonido.
             let controles = Arc::new(std::sync::OnceLock::new());
@@ -154,6 +197,7 @@ pub fn run() {
                 Box::new(OyenteTauri {
                     app: app.handle().clone(),
                     controles: Arc::clone(&controles),
+                    movil: puente.clone(),
                 }),
             ) {
                 Ok(r) => {
@@ -169,6 +213,8 @@ pub fn run() {
                         let _ = controles.set(c);
                     }
                     bandeja::poner(app.handle(), b.clone());
+                    let ordenes = b.clone();
+                    puente.conectar(move |o| ordenes.enviar(o));
                     Some(b)
                 }
                 Err(error) => {
@@ -176,8 +222,18 @@ pub fn run() {
                     None
                 }
             };
-            importar_v1_en_segundo_plano(db.clone(), rutas.clone(), Arc::clone(&red), buzon);
+            importar_v1_en_segundo_plano(
+                db.clone(),
+                rutas.clone(),
+                Arc::clone(&red),
+                buzon,
+                Arc::clone(&servidor_movil),
+            );
             medicion::arrancar(db.clone());
+            let (d, s) = (db.clone(), Arc::clone(&servidor_movil));
+            let _ = std::thread::Builder::new()
+                .name("encender-movil".into())
+                .spawn(move || encender_movil_si_toca(&d, &s));
             Ok(())
         })
         .register_asynchronous_uri_scheme_protocol("portada", move |ctx, peticion, responder| {
@@ -251,7 +307,12 @@ pub fn run() {
             comandos::preselecciones_ecualizador,
             comandos::carpeta_musica,
             comandos::inicio,
-            comandos::perfil
+            comandos::perfil,
+            comandos::movil_estado,
+            comandos::movil_permitir,
+            comandos::movil_emparejar,
+            comandos::movil_telefonos,
+            comandos::movil_quitar
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");
@@ -262,6 +323,10 @@ pub fn run() {
             use tauri::Manager;
             if let Some(r) = app.try_state::<reproductor::Reproductor>() {
                 r.cerrar();
+            }
+            // Los teléfonos dejan de ver el equipo en el acto, no al caducar mDNS.
+            if let Some(e) = app.try_state::<Estado>() {
+                e.movil.apagar();
             }
         }
     });

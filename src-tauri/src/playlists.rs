@@ -471,7 +471,16 @@ pub fn reflejar_favorita(tx: &Transaction<'_>, pista: i64, favorita: bool) -> Ns
                          'favoritos', 'sistema', '{\"tipo\":\"favoritos\"}', ?1, 1, 1)",
                 [CLAVE_ME_GUSTA],
             ))?;
-            tx.last_insert_rowid()
+            let id = tx.last_insert_rowid();
+            // Nace con todas las favoritas que ya hubiera, no solo con esta: pudo
+            // haberlas marcado el teléfono antes de que existiera.
+            bd(tx.execute(
+                "INSERT INTO playlist_pistas (playlist_id, pista_id, posicion)
+                 SELECT ?1, id, row_number() OVER (ORDER BY favorita_actualizada_en DESC, id) - 1
+                 FROM pistas WHERE favorita = 1 AND estado = 'biblioteca'",
+                [id],
+            ))?;
+            id
         }
     };
     if favorita {
@@ -495,6 +504,29 @@ pub fn reflejar_favorita(tx: &Transaction<'_>, pista: i64, favorita: bool) -> Ns
             "DELETE FROM playlist_pistas WHERE playlist_id = ?1 AND pista_id = ?2",
             [id, pista],
         ))?;
+    }
+    Ok(())
+}
+
+/// Como [`reflejar_favorita`], pero sin crear "Me gusta" si no existe: el merge
+/// del teléfono no tiene por qué crear playlists en el equipo. Cuando se cree, nacerá
+/// con todas las favoritas.
+///
+/// # Errors
+///
+/// [`NsError::StorageFailure`] si no se puede escribir.
+pub fn reflejar_favorita_si_existe(
+    tx: &Transaction<'_>,
+    pista: i64,
+    favorita: bool,
+) -> NsResult<()> {
+    let existe: bool = bd(tx.query_row(
+        "SELECT count(*) > 0 FROM playlists WHERE clave_auto = ?1",
+        [CLAVE_ME_GUSTA],
+        |f| f.get(0),
+    ))?;
+    if existe {
+        reflejar_favorita(tx, pista, favorita)?;
     }
     Ok(())
 }

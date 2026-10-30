@@ -67,7 +67,13 @@ export const es = {
       ninguno: 'Repetir',
       todo: 'Repetir la cola',
       uno: 'Repetir esta canción'
-    }
+    },
+    destino: 'Dónde suena',
+    esteEquipo: 'Este equipo',
+    sonandoAqui: 'Sonando aquí',
+    controlandoDesde: (nombre: string) => `${nombre} lo está controlando`,
+    escucharEnElTelefono: 'Para escuchar en el teléfono, elígelo desde NB Sound Mobile.',
+    conectarTelefono: 'Conectar un teléfono'
   },
   biblioteca: {
     titulo: 'Biblioteca',
@@ -347,6 +353,34 @@ export const es = {
     reproduccion: 'Reproducción',
     apariencia: 'Apariencia',
     acercaDe: 'Acerca de',
+    dispositivos: 'Dispositivos',
+    permitirTelefonos: 'Permitir que tus teléfonos se conecten',
+    permitirAyuda:
+      'NB Sound Mobile sincroniza tu música y controla este equipo desde la misma red Wi-Fi.',
+    escuchandoEn: (d: string) => `Disponible en ${d}`,
+    conectarTelefono: 'Conectar un teléfono',
+    sinTelefonos: 'Todavía no has conectado ningún teléfono.',
+    conectadoAhora: 'Conectado ahora',
+    controlando: 'Controlando este equipo',
+    ultimaConexion: (fecha: string) => `Última conexión: ${fecha}`,
+    sinConexiones: 'Aún no se ha conectado',
+    quitar: 'Quitar',
+    quitarTelefono: (nombre: string) => `Quitar ${nombre}`,
+    quitarAyuda: (nombre: string) =>
+      `${nombre} dejará de sincronizar y de controlar este equipo. Para volver a usarlo tendrás que conectarlo de nuevo.`,
+    cancelar: 'Cancelar',
+    tituloQr: 'Conectar un teléfono',
+    instruccionesQr:
+      'Abre NB Sound Mobile y escanea este código. El teléfono tiene que estar en la misma red Wi-Fi que este equipo.',
+    codigoManual: 'Si no puedes escanearlo, escribe este código:',
+    caduca: (s: number) => `Caduca en ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`,
+    caducado: 'El código caducó.',
+    otroCodigo: 'Generar otro código',
+    cerrar: 'Cerrar',
+    qr: 'Código QR para conectar un teléfono',
+    emparejado: (nombre: string) => `${nombre} ya está conectado.`,
+    sinServidor:
+      'No se pudo abrir la conexión con los teléfonos. Comprueba que este equipo está conectado a una red.',
     carpeta: 'Carpeta de tu música',
     sinCarpeta: 'Todavía no hay carpeta. La eliges al importar música.',
     nombre: 'Tu nombre',

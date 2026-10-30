@@ -62,3 +62,22 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] KDE Plasma y GNOME muestran título, artista, portada, duración y posición; sus botones y las teclas multimedia controlan la aplicación; aleatorio y repetición se reflejan en los dos sentidos. En Windows (SMTC) y macOS, lo mismo salvo aleatorio y repetición desde el sistema.
 - [ ] Los atajos de la V1 funcionan en la ventana (espacio, flechas, S, R, L, F, K, +/-, Ctrl+Q, Ctrl+M) y no interfieren al escribir; la bandeja muestra el icono con su menú.
 - [ ] Tu música muestra la foto y el nombre de la V1, las cifras del historial real, la hora pico en la hora local, el mood del día, los días activos del mes y los tops.
+
+## Fase 3
+
+- [ ] **Antes de desinstalar la V1, se conserva `~/.config/nb_sound/sync/`** (el certificado y la clave del servidor
+      móvil). La copia de seguridad no la trae; sin ella la V2 crea una identidad nueva y los teléfonos tienen que
+      emparejarse otra vez.
+- [ ] Con `servidor_movil_al_arrancar` importado, la V2 enciende el servidor al abrir y el teléfono ya emparejado
+      con la V1 se conecta sin escanear el QR (F3.1.1).
+- [ ] El teléfono encuentra el equipo por mDNS tras reiniciar el equipo con otra IP.
+- [ ] Con la base real migrada, el teléfono recibe el manifiesto sin volver a descargar la biblioteca (las versiones
+      siguen donde las dejó la V1) y las playlists traen su mosaico (F3.1.4).
+- [ ] Desde el teléfono: reproducir, pausar, saltar, buscar, volumen, aleatorio, repetición y karaoke; la cola
+      espejada se mantiene al cambiar de destino en los dos sentidos (F3.2.1).
+- [ ] Ajustes > Dispositivos: conectar un teléfono nuevo con el QR y con el código corto; quitar uno lo desconecta al
+      momento (F3.3.1). El cortafuegos del sistema deja pasar el puerto 8731-8799 (en Windows, el aviso del
+      sistema la primera vez).
+- [ ] El selector de la barra dice qué teléfono controla el equipo mientras lo hace (F3.3.2).
+- [ ] Una descarga completa de la biblioteca desde el teléfono no se nota en el equipo (audio sin cortes, ventana
+      fluida).

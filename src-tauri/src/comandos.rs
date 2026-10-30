@@ -504,3 +504,77 @@ pub async fn inicio(estado: tauri::State<'_, Estado>) -> NsResult<crate::inicio:
 pub async fn perfil(estado: tauri::State<'_, Estado>) -> NsResult<crate::perfil::Perfil> {
     en_segundo_plano(&estado, crate::perfil::perfil).await
 }
+
+// --- Dispositivos (F3.3) ------------------------------------------------------
+
+/// Ejecuta un trabajo con el servidor móvil fuera del hilo de la ventana: encender
+/// espera a que escuche y, la primera vez, crea la identidad TLS.
+async fn con_movil<T: Send + 'static>(
+    estado: &tauri::State<'_, Estado>,
+    trabajo: impl FnOnce(&crate::movil::ServidorMovil) -> NsResult<T> + Send + 'static,
+) -> NsResult<T> {
+    let movil = std::sync::Arc::clone(&estado.movil);
+    tauri::async_runtime::spawn_blocking(move || trabajo(&movil))
+        .await
+        .map_err(|_| NsError::Internal)?
+}
+
+#[tauri::command]
+pub async fn movil_estado(estado: tauri::State<'_, Estado>) -> NsResult<crate::movil::EstadoMovil> {
+    con_movil(&estado, |m| m.estado()).await
+}
+
+/// Permite o deja de permitir que los teléfonos se conecten, y lo recuerda para el
+/// próximo arranque, como el interruptor de la V1.
+#[tauri::command]
+pub async fn movil_permitir(
+    estado: tauri::State<'_, Estado>,
+    activo: bool,
+) -> NsResult<crate::movil::EstadoMovil> {
+    let db = estado.db.clone();
+    con_movil(&estado, move |m| {
+        crate::preferencias::guardar(
+            &db,
+            "servidor_movil_al_arrancar",
+            &serde_json::Value::Bool(activo),
+        )?;
+        if activo {
+            m.encender()?;
+        } else {
+            m.apagar();
+        }
+        m.estado()
+    })
+    .await
+}
+
+/// Un QR nuevo para conectar un teléfono. Conectar uno es querer que se conecten:
+/// el servidor queda encendido también en los próximos arranques.
+#[tauri::command]
+pub async fn movil_emparejar(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::movil::Emparejar> {
+    let db = estado.db.clone();
+    con_movil(&estado, move |m| {
+        crate::preferencias::guardar(
+            &db,
+            "servidor_movil_al_arrancar",
+            &serde_json::Value::Bool(true),
+        )?;
+        m.emparejar()
+    })
+    .await
+}
+
+/// Cota: `movil::MAX_DISPOSITIVOS`; cada emparejamiento lo hace una persona a mano.
+#[tauri::command]
+pub async fn movil_telefonos(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<Vec<crate::movil::Telefono>> {
+    con_movil(&estado, |m| m.telefonos()).await
+}
+
+#[tauri::command]
+pub async fn movil_quitar(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<()> {
+    con_movil(&estado, move |m| m.quitar(id)).await
+}

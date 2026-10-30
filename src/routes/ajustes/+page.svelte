@@ -1,8 +1,8 @@
 <!--
   Ajustes, rediseñado (ADR-007): una sola página con sus secciones en orden y un
-  índice para saltar entre ellas. Las de esta fase son Biblioteca, Reproducción,
-  Apariencia y Acerca de; Dispositivos, Agregados, Privacidad e Inteligencia
-  artificial llegan con sus fases. Todo cambio se guarda al momento, sin botón de
+  índice para saltar entre ellas. Hay Biblioteca, Reproducción, Apariencia,
+  Dispositivos y Acerca de; Agregados, Privacidad e Inteligencia artificial
+  llegan con sus fases. Todo cambio se guarda al momento, sin botón de
   guardar.
 -->
 <script lang="ts">
@@ -17,6 +17,7 @@
   } from '$core/ipc';
   import { reproductor } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
+  import SeccionDispositivos from '$ui/dispositivos/SeccionDispositivos.svelte';
   import type { TemaV1 } from '$ui/temas-v1';
 
   const t = textos.ajustes;
@@ -83,6 +84,7 @@
     <a href="#biblioteca">{t.biblioteca}</a>
     <a href="#reproduccion">{t.reproduccion}</a>
     <a href="#apariencia">{t.apariencia}</a>
+    <a href="#dispositivos">{t.dispositivos}</a>
     <a href="#acerca">{t.acercaDe}</a>
   </nav>
 
@@ -231,6 +233,8 @@
         />
       </label>
     </section>
+
+    <SeccionDispositivos />
 
     <section id="acerca" aria-labelledby="t-acerca">
       <h2 id="t-acerca">{t.acercaDe}</h2>

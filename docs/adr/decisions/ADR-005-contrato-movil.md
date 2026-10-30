@@ -42,3 +42,18 @@ Hay 12 dispositivos emparejados en la instalación real.
 - **Negativas:** la V2 hereda nombres de campo en español y en inglés mezclados, que no se pueden cambiar.
 - **Riesgos:** comportamiento implícito de aiohttp (cabeceras, formato de errores, cierre del WebSocket) que no esté
   en el contrato. Las respuestas doradas lo capturan porque se graban de la V1 real, no del documento.
+
+## Enmienda del 2026-10-30: dependencias del servidor
+
+Además de `axum`, `rustls` y `mdns-sd`, el servidor usa, con la aprobación de Nathan:
+
+* **`tokio-rustls`**: une rustls con el servidor. Con la pila criptográfica `ring`, la que ya trae `ureq`; sin
+  `aws-lc-rs`.
+* **`rcgen`**: crea el certificado autofirmado cuando no hay identidad de la V1 (una instalación nueva). ECDSA P-256
+  como la de la V1 y con una validez que no vence: el teléfono fija la huella, y regenerar el certificado lo
+  obligaría a emparejarse de nuevo.
+* **`qrcode`**, sin las features de imagen: solo la matriz de módulos; la interfaz la dibuja.
+
+`tokio` y `futures-util` ya estaban en el árbol por Tauri y axum; se nombran en `Cargo.toml` porque el servidor los
+usa directamente. `tokio-tungstenite` solo entra como dependencia de desarrollo, para que el arnés hable con el
+WebSocket como el teléfono.

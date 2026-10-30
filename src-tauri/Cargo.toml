@@ -56,6 +56,19 @@ symphonia = { version = "0.6.1", features = ["mp3", "aac", "alac", "flac", "vorb
 # Cliente HTTP síncrono con rustls: el mismo que NB Books. Solo `net.rs` lo usa
 # (lo vigila `scripts/check-network.mjs`).
 ureq = { version = "3.4.0", default-features = false, features = ["rustls", "platform-verifier"] }
+# El servidor de NB Sound Mobile (ADR-005): HTTPS y WebSocket con axum sobre
+# rustls, con la misma pila criptográfica (ring) que ya trae ureq, y el anuncio
+# mDNS. tokio y futures-util ya estaban en el árbol por Tauri y axum; aquí se
+# nombran porque el servidor los usa directamente.
+axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio", "ws"] }
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "net", "time", "sync", "fs", "io-util", "macros"] }
+tokio-rustls = { version = "0.26.6", default-features = false, features = ["ring", "tls12", "logging"] }
+futures-util = { version = "0.3.34", default-features = false, features = ["std"] }
+mdns-sd = "0.21.6"
+# El certificado autofirmado, cuando no hay identidad de la V1 que conservar.
+rcgen = { version = "0.14.10", default-features = false, features = ["crypto", "pem", "ring"] }
+# El QR del emparejamiento: solo la matriz de módulos; la interfaz la dibuja.
+qrcode = { version = "0.14.1", default-features = false }
 
 # Controles del sistema (ADR-003, F2.1.5): MPRIS en Linux, con aleatorio y
 # repetición en los dos sentidos; SMTC en Windows y el centro de reproducción en
@@ -68,6 +81,9 @@ souvlaki = "0.9.3"
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
+# El cliente del arnés de respuestas doradas (tests/contrato_movil.rs): habla
+# WebSocket sobre TLS con el servidor como lo haría el teléfono.
+tokio-tungstenite = { version = "0.29", default-features = false, features = ["handshake"] }
 
 [profile.release]
 opt-level = 3

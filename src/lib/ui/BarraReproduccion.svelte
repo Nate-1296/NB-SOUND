@@ -12,6 +12,7 @@
   import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
 
+  import SelectorDestino from './dispositivos/SelectorDestino.svelte';
   import Icon from './Icon.svelte';
   import PanelCola from './PanelCola.svelte';
 
@@ -201,6 +202,7 @@
     >
       <Icon nombre="microfono" tamano={20} />
     </button>
+    <SelectorDestino />
     <button
       type="button"
       bind:this={botonCola}

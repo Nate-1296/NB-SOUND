@@ -370,6 +370,11 @@ fn los_tokens_de_los_telefonos_se_guardan_como_hash() {
     assert_eq!(informe.filas["dispositivos"], 2, "también el revocado");
     let hash: String = valor(&db, "SELECT token_sha256 FROM dispositivos WHERE id = 1");
     assert_eq!(hash, super::sha256_texto("token-del-telefono"));
+    assert_eq!(
+        hash,
+        crate::movil::huella_token("token-del-telefono"),
+        "el servidor móvil reconoce al teléfono de la V1 sin volver a emparejarlo"
+    );
     let base = std::fs::read(e.rutas.base_de_datos()).unwrap();
     let en_claro = base.windows(18).any(|w| w == b"token-del-telefono");
     assert!(!en_claro, "el token no está en la base de la V2");

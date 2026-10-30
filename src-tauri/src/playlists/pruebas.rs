@@ -130,6 +130,26 @@ fn marcar_favoritas_mantiene_me_gusta_con_la_ultima_primera() {
 }
 
 #[test]
+fn me_gusta_nace_con_las_favoritas_que_marco_el_telefono() {
+    let db = base();
+    // El merge del teléfono marca sin crear "Me gusta".
+    crate::movil::aplicar_historial(
+        &db,
+        &serde_json::json!({"favoritos": [
+            {"pista_id": 2, "favorita": true, "actualizada_en": "2026-01-01T00:00:00.000Z"}
+        ]}),
+    )
+    .unwrap();
+    assert!(todas(&db).iter().all(|p| p.categoria != Categoria::MeGusta));
+    crate::biblioteca::fijar_favorita(&db, 1, true).unwrap();
+    let me_gusta = todas(&db)
+        .into_iter()
+        .find(|p| p.categoria == Categoria::MeGusta)
+        .unwrap();
+    assert_eq!(ids(&db, me_gusta.id).unwrap(), [1, 2]);
+}
+
+#[test]
 fn buscar_y_filtrar_por_categoria() {
     let db = base();
     crear(&db, "Canción triste", None).unwrap();

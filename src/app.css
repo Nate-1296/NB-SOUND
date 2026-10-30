@@ -56,6 +56,14 @@
   --ns-ancho-riel: 5rem;
   --ns-alto-superior: 4rem;
   --ns-alto-reproductor: 5.5rem;
+
+  /*
+   * El QR del emparejamiento es la única excepción a "ningún color literal": los
+   * lectores de QR esperan módulos oscuros sobre fondo claro, sea cual sea el
+   * tema. Con un tema oscuro, invertido, muchos no lo leen.
+   */
+  --ns-qr-tinta: #000000;
+  --ns-qr-fondo: #ffffff;
 }
 
 :root[data-movimiento='reducido'] {
