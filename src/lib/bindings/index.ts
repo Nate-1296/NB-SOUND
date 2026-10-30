@@ -8,7 +8,9 @@
  * Ver `docs/adr/decisions/ADR-001-pila-tecnologica.md`.
  */
 
+export type { AvisoReproductor } from './AvisoReproductor';
 export type { InformeDeSalud } from './InformeDeSalud';
+export type { Instantanea } from './Instantanea';
 export type { NsErrorPayload } from './NsErrorPayload';
 export type { PoliticaDeRed } from './PoliticaDeRed';
 export type { Servicio } from './Servicio';

@@ -22,7 +22,7 @@ pub mod ecualizador;
 mod fuente;
 mod limitador;
 #[cfg(test)]
-mod pruebas;
+pub(crate) mod pruebas;
 pub mod sonoridad;
 
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -288,12 +288,12 @@ impl<B: Backend> Motor<B> {
     }
 
     #[cfg(test)]
-    fn backend(&mut self) -> &mut B {
+    pub(crate) fn backend(&mut self) -> &mut B {
         self.gestor.backend_mut()
     }
 
     #[cfg(test)]
-    fn compartido(&self) -> &Compartido {
+    pub(crate) fn compartido(&self) -> &Compartido {
         &self.compartido
     }
 }

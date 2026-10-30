@@ -14,6 +14,7 @@ pub mod identidad_movil;
 pub mod importador_v1;
 pub mod net;
 pub mod paths;
+pub mod reproductor;
 pub mod secrets;
 pub mod security;
 pub mod telemetry;
@@ -50,7 +51,12 @@ fn politica_guardada(db: &BaseDeDatos) -> PoliticaDeRed {
 /// La primera vez que la V2 encuentra la V1, la importa en segundo plano: copiar
 /// varios GB de portadas no puede retrasar la ventana. Las siguientes veces no
 /// hace nada, porque el importador deja su marca (ADR-004).
-fn importar_v1_en_segundo_plano(db: BaseDeDatos, rutas: Rutas, red: Arc<Red>) {
+fn importar_v1_en_segundo_plano(
+    db: BaseDeDatos,
+    rutas: Rutas,
+    red: Arc<Red>,
+    reproductor: Option<reproductor::Buzon>,
+) {
     let Some(v1) = RutasV1::estandar().filter(|v1| v1.base_de_datos().is_file()) else {
         return;
     };
@@ -60,7 +66,12 @@ fn importar_v1_en_segundo_plano(db: BaseDeDatos, rutas: Rutas, red: Arc<Red>) {
             let env = v1.config.join(".env");
             let llavero = importador_v1::claves::LlaveroDelSistema;
             match importador_v1::importar(&v1.base_de_datos(), Some(&env), &db, &rutas, &llavero) {
-                Ok(Some(_)) => red.cambiar_politica(politica_guardada(&db)),
+                Ok(Some(_)) => {
+                    red.cambiar_politica(politica_guardada(&db));
+                    if let Some(r) = &reproductor {
+                        r.enviar(reproductor::Orden::Recargar);
+                    }
+                }
                 Ok(None) => {}
                 Err(error) => tracing::error!(codigo = error.code(), "no se pudo importar la V1"),
             }
@@ -78,6 +89,21 @@ fn importar_v1_en_segundo_plano(db: BaseDeDatos, rutas: Rutas, red: Arc<Red>) {
     }
 }
 
+/// Cuenta a la interfaz lo que hace el reproductor, como eventos de Tauri.
+struct OyenteTauri(tauri::AppHandle);
+
+impl reproductor::Oyente for OyenteTauri {
+    fn instantanea(&self, i: &reproductor::Instantanea) {
+        use tauri::Emitter;
+        let _ = self.0.emit("reproductor:instantanea", i);
+    }
+
+    fn aviso(&self, a: &reproductor::AvisoReproductor) {
+        use tauri::Emitter;
+        let _ = self.0.emit("reproductor:aviso", a);
+    }
+}
+
 /// Arranca la aplicación.
 ///
 /// # Panics
@@ -92,13 +118,47 @@ pub fn run() {
 
     let db = BaseDeDatos::abrir(&rutas.base_de_datos()).expect("no se pudo abrir la base de datos");
     let red = Arc::new(Red::new(politica_guardada(&db)));
-    importar_v1_en_segundo_plano(db.clone(), rutas.clone(), Arc::clone(&red));
+    let estado = Estado {
+        rutas: rutas.clone(),
+        red: Arc::clone(&red),
+        db: db.clone(),
+    };
 
-    let estado = Estado { rutas, red, db };
-
-    tauri::Builder::default()
+    let aplicacion = tauri::Builder::default()
         .manage(estado)
+        .setup(move |app| {
+            use tauri::Manager;
+            // Sin salida de audio la aplicación sigue abriendo: la biblioteca se ve,
+            // y Ajustes dice qué pasa con el sonido.
+            let buzon = match reproductor::Reproductor::arrancar(
+                db.clone(),
+                rutas.stems(),
+                Box::new(OyenteTauri(app.handle().clone())),
+            ) {
+                Ok(r) => {
+                    let b = r.buzon();
+                    app.manage(r);
+                    Some(b)
+                }
+                Err(error) => {
+                    tracing::error!(codigo = error.code(), "el reproductor no arrancó");
+                    None
+                }
+            };
+            importar_v1_en_segundo_plano(db.clone(), rutas.clone(), Arc::clone(&red), buzon);
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![comandos::salud])
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");
+
+    aplicacion.run(|app, evento| {
+        // Cerrar no puede dejar audio sonando ni la sesión sin guardar (F2.1.6).
+        if let tauri::RunEvent::Exit = evento {
+            use tauri::Manager;
+            if let Some(r) = app.try_state::<reproductor::Reproductor>() {
+                r.cerrar();
+            }
+        }
+    });
 }

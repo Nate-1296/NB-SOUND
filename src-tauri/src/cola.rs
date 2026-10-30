@@ -571,6 +571,13 @@ impl Cola {
         }
     }
 
+    /// Marca el aleatorio sin barajar: al restaurar una sesión, la cola guardada ya
+    /// es la barajada. El orden de partida no se guardó, así que quitar el
+    /// aleatorio deja la cola como está.
+    pub fn marcar_aleatorio(&mut self) {
+        self.aleatorio = true;
+    }
+
     /// Restaura una sesión guardada sin empezar a sonar: la cola, su puntero y la
     /// posición dentro de la pista, que "reproducir" consume.
     pub fn restaurar(&mut self, filas: Vec<Fila>, posicion: usize, segundos: f64) {

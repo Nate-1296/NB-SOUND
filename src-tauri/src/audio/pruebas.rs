@@ -11,13 +11,13 @@ use kira::AudioManagerSettings;
 
 use super::{ecualizador, EventoMotor, Motor, PistaEnCola};
 
-struct Offline {
+pub(crate) struct Offline {
     renderer: Option<Renderer>,
     bloque: usize,
 }
 
 #[derive(Clone, Copy)]
-struct Tasa(u32);
+pub(crate) struct Tasa(pub u32);
 
 impl Default for Tasa {
     fn default() -> Self {
@@ -45,7 +45,7 @@ impl Backend for Offline {
     }
 }
 
-fn motor(tasa: u32) -> Motor<Offline> {
+pub(crate) fn motor(tasa: u32) -> Motor<Offline> {
     Motor::con(AudioManagerSettings {
         backend_settings: Tasa(tasa),
         ..Default::default()
@@ -56,7 +56,7 @@ fn motor(tasa: u32) -> Motor<Offline> {
 /// Renderiza al menos `frames` frames, esperando antes de cada bloque a que el
 /// alimentador tenga datos: en la máquina real la cola va siempre por delante,
 /// y aquí el renderizado es más rápido que el tiempo real.
-fn renderizar(m: &mut Motor<Offline>, frames: usize) -> Vec<f32> {
+pub(crate) fn renderizar(m: &mut Motor<Offline>, frames: usize) -> Vec<f32> {
     let mut salida = Vec::with_capacity(frames * 2 + 512);
     while salida.len() / 2 < frames {
         let limite = Instant::now() + Duration::from_secs(2);
@@ -98,7 +98,7 @@ fn temporal(nombre: &str) -> PathBuf {
 
 /// Un WAV estéreo de 16 bits. Devuelve las muestras tal como las leerá el
 /// decodificador, entrelazadas.
-pub(super) fn wav(
+pub(crate) fn wav(
     ruta: &Path,
     tasa: u32,
     frames: usize,
@@ -132,7 +132,7 @@ pub(super) fn wav(
 }
 
 /// Ruido determinista por debajo del umbral del limitador.
-fn ruido(semilla: u32) -> impl Fn(usize, usize) -> f32 {
+pub(crate) fn ruido(semilla: u32) -> impl Fn(usize, usize) -> f32 {
     move |i, c| {
         let mut x = (i as u32).wrapping_mul(2_654_435_761) ^ semilla.wrapping_add(c as u32 * 97);
         x ^= x >> 13;

@@ -47,3 +47,7 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Mover la barra de posición cae donde se suelta; pausar y reanudar no hace clic.
 - [ ] Las 18 preselecciones del ecualizador se oyen como en la V1 y ninguna distorsiona al volumen máximo.
 - [ ] Con la normalización activa, pasar de una pista muy alta a una muy baja no obliga a tocar el volumen.
+- [ ] Al abrir, la cola, la pista y el segundo en que se quedó la última sesión están ahí, sin sonar hasta pulsar
+      reproducir.
+- [ ] Cerrar la ventana mientras suena no deja audio sonando ni procesos vivos.
+- [ ] La primera vez, con la V1 importándose en segundo plano, el reproductor recoge la cola de la V1 al terminar.

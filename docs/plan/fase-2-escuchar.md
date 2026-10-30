@@ -16,7 +16,7 @@
 | F2.1.4 Normalización de volumen por LUFS | Hecha: medida y ganancia; medir la biblioteca en segundo plano va con F2.1.7 |
 | F2.1.5 Controles del sistema: MPRIS, SMTC y macOS | Pendiente |
 | F2.1.6 Atajos globales, bandeja y cierre limpio | Pendiente |
-| F2.1.7 Servicio de reproducción: cola, motor, sesión guardada, historial y avisos al puente | Pendiente |
+| F2.1.7 Servicio de reproducción: cola, motor, sesión guardada, historial y avisos al puente | Hecha |
 | F2.2.1 Carcasa con la disposición de la V1: barra lateral, barra superior con búsqueda, barra de reproducción | Pendiente |
 | F2.2.2 Inicio | Pendiente |
 | F2.2.3 Biblioteca: canciones, álbumes, artistas y sus detalles | Pendiente |
