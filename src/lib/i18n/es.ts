@@ -113,6 +113,19 @@ export const es = {
     quitarFavorita: 'Quitar de favoritas',
     masAcciones: 'Más acciones',
     sinVerificarInsignia: 'Sin verificar',
+    completarDatos: 'Completar datos',
+    completando: 'Buscando sus datos',
+    completado: (r: { identificada: boolean; portada: boolean; letra: boolean }) => {
+      const nuevas = [r.portada && 'la portada', r.letra && 'la letra'].filter(Boolean);
+      const anadidas =
+        nuevas.length === 0
+          ? ''
+          : `${nuevas.length === 1 ? 'Se añadió' : 'Se añadieron'} ${nuevas.join(' y ')}.`;
+      if (r.identificada) return `Identificada. ${anadidas}`.trim();
+      return anadidas || 'No se encontró nada nuevo.';
+    },
+    completarSinArchivo: 'No se encuentra el archivo de esta canción.',
+    completarFallo: 'No se pudo completar. Vuelve a intentarlo.',
     lista: 'Canciones',
     vacia: 'No hay canciones que coincidan.',
     vaciaBiblioteca: 'Tu biblioteca está vacía.',

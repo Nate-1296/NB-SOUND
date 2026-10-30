@@ -363,7 +363,8 @@ pub fn run() {
             comandos::por_revisar_contar,
             comandos::por_revisar_importar,
             comandos::por_revisar_descartar,
-            comandos::por_revisar_reintentar
+            comandos::por_revisar_reintentar,
+            comandos::completar_datos
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

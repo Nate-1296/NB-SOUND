@@ -23,6 +23,7 @@ export type { ConsultaAlbumes } from './ConsultaAlbumes';
 export type { ConsultaArtistas } from './ConsultaArtistas';
 export type { ConsultaPistas } from './ConsultaPistas';
 export type { ConsultaPlaylists } from './ConsultaPlaylists';
+export type { DatosCompletados } from './DatosCompletados';
 export type { Emparejar } from './Emparejar';
 export type { EstadoMovil } from './EstadoMovil';
 export type { InformeDeSalud } from './InformeDeSalud';

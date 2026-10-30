@@ -95,8 +95,11 @@
   let total = $state<number | null>(null);
   let primerBloque: PistaResumen[] = [];
   let version = $state(0);
+  // "Completar datos" cambia la pista en la base: se vuelve a pedir la lista.
+  let recargas = $state(0);
   $effect(() => {
     const c = consulta;
+    void recargas;
     if (vista !== 'pistas') return;
     const v = ++version;
     void bibliotecaPistas(c, 0, TAM_BLOQUE).then((p) => {
@@ -305,6 +308,7 @@
                 onanadir={() =>
                   reproductor.orden({ tipo: 'agregar', ids: [p.id], justoDespues: false })}
                 onfavorita={() => alternarFavorita(p)}
+                oncompletada={() => recargas++}
               />
             {/snippet}
           </ListaVirtual>

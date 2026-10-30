@@ -7,6 +7,7 @@
 
 pub mod acoustid;
 pub mod canalizacion;
+pub mod completar_datos;
 pub mod duplicados;
 pub mod emparejador;
 pub mod etapas;

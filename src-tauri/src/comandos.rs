@@ -735,6 +735,21 @@ pub async fn por_revisar_descartar(
 }
 
 /// Vuelve a buscarlo: a la cola de importación.
+/// "Completar datos" de una pista sin verificar (F4.2.8): identificarla de nuevo
+/// y buscarle portada y letra, sin cambiar su id.
+#[tauri::command]
+pub async fn completar_datos(
+    estado: tauri::State<'_, Estado>,
+    pista: i64,
+) -> NsResult<crate::catalogo::completar_datos::DatosCompletados> {
+    let importador = estado.importador.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        importador.con_entorno(|e| crate::catalogo::completar_datos::completar_datos(e, pista))
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
 #[tauri::command]
 pub async fn por_revisar_reintentar(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<()> {
     let importador = estado.importador.clone();

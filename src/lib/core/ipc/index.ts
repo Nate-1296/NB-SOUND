@@ -25,6 +25,7 @@ import type {
   ConsultaArtistas,
   ConsultaPistas,
   ConsultaPlaylists,
+  DatosCompletados,
   Emparejar,
   EstadoMovil,
   InformeDeSalud,
@@ -61,6 +62,7 @@ export type {
   ConsultaArtistas,
   ConsultaPistas,
   ConsultaPlaylists,
+  DatosCompletados,
   Emparejar,
   EstadoMovil,
   InformeDeSalud,
@@ -313,6 +315,14 @@ export function preseleccionesEcualizador(): Promise<PreseleccionEcualizador[]> 
 
 export function carpetaMusica(): Promise<string | null> {
   return call<string | null>('carpeta_musica');
+}
+
+/**
+ * "Completar datos" de una pista sin verificar: la identifica de nuevo y le busca
+ * portada y letra, sin cambiar su id. Dice qué se añadió.
+ */
+export function completarDatos(pista: number): Promise<DatosCompletados> {
+  return call<DatosCompletados>('completar_datos', { pista });
 }
 
 // --- Privacidad e inteligencia artificial ---------------------------------------

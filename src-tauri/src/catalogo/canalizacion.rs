@@ -133,7 +133,7 @@ pub fn validar(ruta: &Path) -> Result<(Tecnico, Cruda), CausaCuarentena> {
     Ok((t, c))
 }
 
-fn bd<T>(r: rusqlite::Result<T>) -> NsResult<T> {
+pub(super) fn bd<T>(r: rusqlite::Result<T>) -> NsResult<T> {
     r.map_err(|error| {
         tracing::error!(error = %error, "falló una escritura de la catalogación");
         NsError::StorageFailure
@@ -240,7 +240,11 @@ pub struct Alta {
     pub fuentes: Vec<&'static str>,
 }
 
-fn alta_de_candidato(c: &Candidato, n: &Normalizada, fuentes: Vec<&'static str>) -> Alta {
+pub(super) fn alta_de_candidato(
+    c: &Candidato,
+    n: &Normalizada,
+    fuentes: Vec<&'static str>,
+) -> Alta {
     Alta {
         titulo: c.titulo.clone(),
         artista: if c.artista.is_empty() {
@@ -291,7 +295,7 @@ pub fn alta_tal_cual(c: &Cruda, nombre_archivo: &str, duracion_seg: f64) -> Alta
     }
 }
 
-fn artista_id(tx: &rusqlite::Transaction<'_>, nombre: &str) -> NsResult<i64> {
+pub(super) fn artista_id(tx: &rusqlite::Transaction<'_>, nombre: &str) -> NsResult<i64> {
     let nombre = if nombre.trim().is_empty() {
         "Desconocido"
     } else {
@@ -313,7 +317,7 @@ fn artista_id(tx: &rusqlite::Transaction<'_>, nombre: &str) -> NsResult<i64> {
     Ok(tx.last_insert_rowid())
 }
 
-fn album_id(
+pub(super) fn album_id(
     tx: &rusqlite::Transaction<'_>,
     artista: i64,
     a: &Alta,
@@ -418,7 +422,7 @@ pub fn dar_de_alta(
 /// con permiso, de la red. Nada de esto impide que la pista entre.
 pub fn completar(
     e: &Entorno<'_>,
-    (pista, artista, album): (i64, i64, Option<i64>),
+    (pista, artista, album): (i64, Option<i64>, Option<i64>),
     ruta: &Path,
     a: &Alta,
     cruda: &Cruda,
@@ -461,7 +465,9 @@ pub fn completar(
             );
         }
     }
-    if sin("SELECT imagen_id FROM artistas WHERE id = ?1", artista) {
+    if let Some(artista) =
+        artista.filter(|id| sin("SELECT imagen_id FROM artistas WHERE id = ?1", *id))
+    {
         if let Some(id) =
             portadas_red::imagen_artista(&red, &a.artista, e.clave_theaudiodb.as_deref())
                 .and_then(|i| portadas_red::guardar(e.db, e.rutas, &i).ok())
@@ -559,7 +565,14 @@ pub fn importar(
         )?;
     }
     let ids = dar_de_alta(e, &destino, a, t)?;
-    completar(e, ids, &destino, a, cruda, t.duracion_seg);
+    completar(
+        e,
+        (ids.0, Some(ids.1), ids.2),
+        &destino,
+        a,
+        cruda,
+        t.duracion_seg,
+    );
     Ok(ids.0)
 }
 
@@ -581,6 +594,119 @@ fn identificar(
         })
     });
     (shazam, acoustid)
+}
+
+/// Lo que concluye la identificación de un archivo: con qué se buscó, qué se
+/// encontró y qué se decidió. Lo comparten la canalización y "Completar datos".
+pub struct Identificada {
+    pub norm: Normalizada,
+    pub shazam: Option<DeShazam>,
+    pub acoustid: Option<DeAcoustid>,
+    pub candidatos: Vec<Candidato>,
+    pub veredicto: Veredicto,
+    pub elegido: Option<Candidato>,
+    pub puntaje: f64,
+}
+
+/// Shazam y AcoustID, normalización, MusicBrainz, el emparejador (con la IA si
+/// está activa) y la segunda y tercera etapas.
+///
+/// # Errors
+///
+/// La causa de cuarentena si la normalización no deja nada que buscar.
+pub fn identificar_y_decidir(
+    e: &Entorno<'_>,
+    ruta: &Path,
+    cruda: &Cruda,
+    tecnico: &Tecnico,
+    nombre: &str,
+) -> Result<Identificada, CausaCuarentena> {
+    let (shazam, acoustid) = identificar(e, ruta, tecnico.duracion_seg);
+    let n = normalizacion::normalizar(
+        cruda,
+        tecnico.duracion_seg,
+        nombre,
+        shazam.as_ref(),
+        acoustid.as_ref(),
+    )?;
+    let ctx = Contexto {
+        norm: &n,
+        shazam: shazam.as_ref(),
+        acoustid: acoustid.as_ref(),
+    };
+    let mb = musicbrainz::Cliente::new(musicbrainz::EnLaRed::new(e.red));
+    let busqueda = Busqueda {
+        artista: n.artista.clone(),
+        titulo: n.titulo.clone(),
+        featuring: n.featuring.clone(),
+        isrc: ctx
+            .shazam
+            .and_then(|s| s.isrc.clone())
+            .or_else(|| n.isrc.clone()),
+        duracion_seg: n.duracion_seg,
+    };
+    let de_acoustid = acoustid
+        .as_ref()
+        .map(|a| a.grabaciones.clone())
+        .unwrap_or_default();
+    let candidatos = mb.candidatos(&busqueda, &de_acoustid).unwrap_or_default();
+    let cliente_ia =
+        e.ia.clone()
+            .map(|config| ia::ClienteIa { red: e.red, config });
+    let d = emparejador::evaluar(
+        candidatos.clone(),
+        &ctx,
+        cliente_ia
+            .as_ref()
+            .map(|c| c as &dyn emparejador::Desempate),
+    );
+    let (mut veredicto, mut elegido, mut puntaje) =
+        (d.veredicto, d.elegido.map(|p| p.candidato), d.puntaje);
+    if !veredicto.entra() {
+        if let Some(p) = etapas::segunda(veredicto, puntaje, &ctx, candidatos.clone(), false) {
+            (veredicto, elegido, puntaje) = (p.veredicto, Some(p.candidato), p.puntaje);
+        }
+    }
+    if !veredicto.entra() && etapas::elegible_tercera(veredicto) {
+        let hint = e
+            .red
+            .obtener(
+                Servicio::Itunes,
+                &etapas::url_itunes(&n.artista, &n.titulo),
+                &[],
+            )
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok())
+            .and_then(|v| etapas::pista_itunes(&v));
+        let otros = match hint.as_ref().and_then(|h| h.isrc.clone()) {
+            Some(isrc) if busqueda.isrc.is_none() => mb
+                .candidatos(
+                    &Busqueda {
+                        isrc: Some(isrc),
+                        ..busqueda.clone()
+                    },
+                    &de_acoustid,
+                )
+                .unwrap_or_default(),
+            _ => candidatos.clone(),
+        };
+        match etapas::tercera(veredicto, puntaje, &ctx, hint.as_ref(), otros) {
+            Tercera::Promovida(p) => {
+                (veredicto, elegido, puntaje) = (p.veredicto, Some(p.candidato), p.puntaje)
+            }
+            Tercera::ARevision => veredicto = Veredicto::Revision(CausaRevision::PuntajeIntermedio),
+            Tercera::SinCambio => {}
+        }
+    }
+    Ok(Identificada {
+        norm: n,
+        shazam,
+        acoustid,
+        candidatos,
+        veredicto,
+        elegido,
+        puntaje,
+    })
 }
 
 /// Procesa un archivo de principio a fin.
@@ -652,15 +778,16 @@ pub fn procesar(e: &Entorno<'_>, g: &mut Gestor, ruta: &Path) -> NsResult<Result
             verificada: false,
         });
     }
-    let (shazam, acoustid) = identificar(e, ruta, tecnico.duracion_seg);
-    let n = match normalizacion::normalizar(
-        &cruda,
-        tecnico.duracion_seg,
-        &nombre,
-        shazam.as_ref(),
-        acoustid.as_ref(),
-    ) {
-        Ok(n) => n,
+    let Identificada {
+        norm: n,
+        shazam,
+        acoustid,
+        candidatos,
+        veredicto,
+        elegido,
+        puntaje,
+    } = match identificar_y_decidir(e, ruta, &cruda, &tecnico, &nombre) {
+        Ok(i) => i,
         Err(c) => {
             return a_por_revisar(
                 e,
@@ -675,70 +802,6 @@ pub fn procesar(e: &Entorno<'_>, g: &mut Gestor, ruta: &Path) -> NsResult<Result
         shazam: shazam.as_ref(),
         acoustid: acoustid.as_ref(),
     };
-    let mb = musicbrainz::Cliente::new(musicbrainz::EnLaRed::new(e.red));
-    let busqueda = Busqueda {
-        artista: n.artista.clone(),
-        titulo: n.titulo.clone(),
-        featuring: n.featuring.clone(),
-        isrc: ctx
-            .shazam
-            .and_then(|s| s.isrc.clone())
-            .or_else(|| n.isrc.clone()),
-        duracion_seg: n.duracion_seg,
-    };
-    let de_acoustid = acoustid
-        .as_ref()
-        .map(|a| a.grabaciones.clone())
-        .unwrap_or_default();
-    let candidatos = mb.candidatos(&busqueda, &de_acoustid).unwrap_or_default();
-    let cliente_ia =
-        e.ia.clone()
-            .map(|config| ia::ClienteIa { red: e.red, config });
-    let d = emparejador::evaluar(
-        candidatos.clone(),
-        &ctx,
-        cliente_ia
-            .as_ref()
-            .map(|c| c as &dyn emparejador::Desempate),
-    );
-    let (mut veredicto, mut elegido, mut puntaje) =
-        (d.veredicto, d.elegido.map(|p| p.candidato), d.puntaje);
-    if !veredicto.entra() {
-        if let Some(p) = etapas::segunda(veredicto, puntaje, &ctx, candidatos.clone(), false) {
-            (veredicto, elegido, puntaje) = (p.veredicto, Some(p.candidato), p.puntaje);
-        }
-    }
-    if !veredicto.entra() && etapas::elegible_tercera(veredicto) {
-        let hint = e
-            .red
-            .obtener(
-                Servicio::Itunes,
-                &etapas::url_itunes(&n.artista, &n.titulo),
-                &[],
-            )
-            .ok()
-            .and_then(|b| serde_json::from_slice(&b).ok())
-            .and_then(|v| etapas::pista_itunes(&v));
-        let otros = match hint.as_ref().and_then(|h| h.isrc.clone()) {
-            Some(isrc) if busqueda.isrc.is_none() => mb
-                .candidatos(
-                    &Busqueda {
-                        isrc: Some(isrc),
-                        ..busqueda.clone()
-                    },
-                    &de_acoustid,
-                )
-                .unwrap_or_default(),
-            _ => candidatos.clone(),
-        };
-        match etapas::tercera(veredicto, puntaje, &ctx, hint.as_ref(), otros) {
-            Tercera::Promovida(p) => {
-                (veredicto, elegido, puntaje) = (p.veredicto, Some(p.candidato), p.puntaje)
-            }
-            Tercera::ARevision => veredicto = Veredicto::Revision(CausaRevision::PuntajeIntermedio),
-            Tercera::SinCambio => {}
-        }
-    }
     let Some(c) = elegido.filter(|_| veredicto.entra()) else {
         return a_por_revisar(
             e,

@@ -3,14 +3,15 @@
   Una canción en una lista, con la disposición de la V1 (`VistaBiblioteca.qml`):
   número, portada, título con artista, álbum y año debajo, álbum, duración, la
   estrella, el menú y las acciones Reproducir, Añadir a cola, Abrir álbum y Abrir
-  artista.
+  artista. Si está sin verificar, también "Completar datos" (F4.2.8), cuyo
+  resultado ocupa el subtítulo hasta que la lista se recarga.
 
   Durante el desplazamiento rápido no pide la portada (F0.4.7): pinta el hueco y
   la pide al frenar.
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { type PistaResumen, urlPortada } from '$core/ipc';
+  import { completarDatos, NsError, type PistaResumen, urlPortada } from '$core/ipc';
   import { formatoTiempo } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
 
@@ -25,6 +26,8 @@
     onreproducir: () => void;
     onanadir: () => void;
     onfavorita: () => void;
+    /** Se completó algo: la página recarga la lista para mostrarlo. */
+    oncompletada?: () => void;
   }
 
   let {
@@ -34,7 +37,8 @@
     sonando = false,
     onreproducir,
     onanadir,
-    onfavorita
+    onfavorita,
+    oncompletada
   }: Props = $props();
 
   const t = textos.biblioteca;
@@ -55,6 +59,25 @@
   function cerrarMenu() {
     menu?.hidePopover();
   }
+  let completando = $state(false);
+  let resultado = $state<string | null>(null);
+  async function completar() {
+    completando = true;
+    resultado = null;
+    try {
+      const r = await completarDatos(pista.id);
+      resultado = t.completado(r);
+      if (r.identificada || r.portada || r.letra) oncompletada?.();
+    } catch (error) {
+      resultado =
+        error instanceof NsError && error.code === 'FILE_NOT_FOUND'
+          ? t.completarSinArchivo
+          : t.completarFallo;
+    } finally {
+      completando = false;
+    }
+  }
+
   const subtitulo = $derived(
     [pista.artista, pista.album, pista.anio ?? ''].filter((x) => x !== '').join(' · ')
   );
@@ -81,7 +104,11 @@
       {pista.titulo}
       {#if !pista.verificada}<span class="insignia">{t.sinVerificarInsignia}</span>{/if}
     </span>
-    <span class="sub" title={subtitulo}>{subtitulo}</span>
+    {#if completando || resultado}
+      <span class="sub" role="status">{completando ? t.completando : resultado}</span>
+    {:else}
+      <span class="sub" title={subtitulo}>{subtitulo}</span>
+    {/if}
   </span>
   <span class="album" title={pista.album}>{pista.album}</span>
   <span class="duracion">{formatoTiempo(pista.duracionSeg)}</span>
@@ -121,6 +148,11 @@
     <button type="button" class="boton" onclick={onanadir}>
       <Icon nombre="reproducir" tamano={14} />{t.anadirACola}
     </button>
+    {#if !pista.verificada}
+      <button type="button" class="boton" disabled={completando} onclick={completar}>
+        {t.completarDatos}
+      </button>
+    {/if}
     <button
       type="button"
       class="boton"
