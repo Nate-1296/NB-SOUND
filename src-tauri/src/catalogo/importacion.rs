@@ -237,6 +237,7 @@ impl Importador {
                 .and_then(|v| v.as_bool())
                 .unwrap_or(true),
             importacion: None,
+            ia: super::ia::configurada(&r.db, &r.red),
         };
         f(&e)
     }
@@ -313,6 +314,8 @@ fn bucle(
         let organizar = preferencia(&r.db, "organizar_archivos")
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
+        // Una vez por tanda: leer el llavero por archivo no aporta nada.
+        let config_ia = super::ia::configurada(&r.db, &r.red);
         let (clave_acoustid, clave_theaudiodb) = (
             clave(Servicio::AcoustId, "api.acoustid.org"),
             clave(Servicio::TheAudioDb, "www.theaudiodb.com"),
@@ -330,6 +333,7 @@ fn bucle(
                 fpcalc: r.fpcalc.clone(),
                 organizar,
                 importacion: Some(importacion),
+                ia: config_ia.clone(),
             };
             let resultado = if ruta.is_file() {
                 canalizacion::procesar(&e, &mut gestor, &ruta).ok()

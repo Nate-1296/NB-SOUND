@@ -25,6 +25,7 @@ use super::duplicados::{huella_de_archivo, Calidad, Duplicado, Gestor, Referenci
 use super::emparejador::{self, Contexto};
 use super::etapas::{self, Tercera};
 use super::etiquetas::{self, Cruda, Escritura, Tecnico};
+use super::ia;
 use super::letras_red;
 use super::modelo::{CausaCuarentena, CausaRevision, DeAcoustid, DeShazam, Normalizada, Veredicto};
 use super::musicbrainz::{self, Busqueda, Candidato};
@@ -58,6 +59,8 @@ pub struct Entorno<'a> {
     /// "Organizar archivos": colocarlos en la carpeta de música por sus datos.
     pub organizar: bool,
     pub importacion: Option<i64>,
+    /// El desempate por IA, si el usuario lo activó y hay clave (F4.1.7).
+    pub ia: Option<ia::ConfigIa>,
 }
 
 /// Qué pasó con un archivo.
@@ -688,7 +691,16 @@ pub fn procesar(e: &Entorno<'_>, g: &mut Gestor, ruta: &Path) -> NsResult<Result
         .map(|a| a.grabaciones.clone())
         .unwrap_or_default();
     let candidatos = mb.candidatos(&busqueda, &de_acoustid).unwrap_or_default();
-    let d = emparejador::evaluar(candidatos.clone(), &ctx, None);
+    let cliente_ia =
+        e.ia.clone()
+            .map(|config| ia::ClienteIa { red: e.red, config });
+    let d = emparejador::evaluar(
+        candidatos.clone(),
+        &ctx,
+        cliente_ia
+            .as_ref()
+            .map(|c| c as &dyn emparejador::Desempate),
+    );
     let (mut veredicto, mut elegido, mut puntaje) =
         (d.veredicto, d.elegido.map(|p| p.candidato), d.puntaje);
     if !veredicto.entra() {
@@ -865,6 +877,7 @@ mod tests {
                 fpcalc: PathBuf::from("fpcalc"),
                 organizar: true,
                 importacion: None,
+                ia: None,
             }
         }
 

@@ -11,6 +11,7 @@ pub mod duplicados;
 pub mod emparejador;
 pub mod etapas;
 pub mod etiquetas;
+pub mod ia;
 pub mod importacion;
 pub mod letras_red;
 pub mod modelo;

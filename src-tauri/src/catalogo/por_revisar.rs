@@ -299,6 +299,7 @@ mod tests {
             fpcalc: PathBuf::from("fpcalc"),
             organizar: true,
             importacion: None,
+            ia: None,
         };
         let a = d.join("Maná - Clavado.wav");
         let _ = wav(&a, 44_100, 44_100 * 20, |i, _| (i % 50) as f32 / 200.0);

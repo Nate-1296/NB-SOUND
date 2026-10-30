@@ -453,7 +453,7 @@ export const es = {
     },
     ia: 'Inteligencia artificial',
     iaAyuda:
-      'Opcional. Cuando dos versiones de una canción empatan, un modelo de lenguaje elige entre ellas con tu propia cuenta. Solo recibe los datos de los candidatos, nunca el audio.',
+      'Opcional. Cuando dos versiones de una canción empatan, un modelo de lenguaje elige entre ellas con tu propia cuenta. Solo recibe los datos de la canción y de los candidatos, nunca el audio.',
     iaActiva: 'Desempatar con IA',
     iaSinConexion: 'Activa antes los servicios en línea.',
     proveedor: 'Proveedor',
