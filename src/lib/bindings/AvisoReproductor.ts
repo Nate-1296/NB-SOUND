@@ -3,4 +3,4 @@
 /**
  * Un aviso para la interfaz: el código canónico del error y la pista.
  */
-export type AvisoReproductor = { codigo: string, pistaId: bigint | null, };
+export type AvisoReproductor = { codigo: string, pistaId: number | null, };

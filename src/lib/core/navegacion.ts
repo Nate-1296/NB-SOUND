@@ -16,13 +16,40 @@ export interface Destino {
   readonly icono: NombreDeIcono;
 }
 
+const INICIO: Destino = { id: 'inicio', ruta: '/', etiqueta: textos.nav.inicio, icono: 'inicio' };
+const BIBLIOTECA: Destino = {
+  id: 'biblioteca',
+  ruta: '/biblioteca',
+  etiqueta: textos.nav.biblioteca,
+  icono: 'biblioteca'
+};
+const PLAYLISTS: Destino = {
+  id: 'playlists',
+  ruta: '/playlists',
+  etiqueta: textos.nav.playlists,
+  icono: 'playlists'
+};
+const DJ: Destino = { id: 'dj', ruta: '/dj', etiqueta: textos.nav.dj, icono: 'dj' };
+const A_CIEGAS: Destino = {
+  id: 'a-ciegas',
+  ruta: '/a-ciegas',
+  etiqueta: textos.nav.aCiegas,
+  icono: 'aCiegas'
+};
+const TU_MUSICA: Destino = {
+  id: 'tu-musica',
+  ruta: '/tu-musica',
+  etiqueta: textos.nav.tuMusica,
+  icono: 'tuMusica'
+};
+
 export const DESTINOS: readonly Destino[] = [
-  { id: 'inicio', ruta: '/', etiqueta: textos.nav.inicio, icono: 'inicio' },
-  { id: 'biblioteca', ruta: '/biblioteca', etiqueta: textos.nav.biblioteca, icono: 'biblioteca' },
-  { id: 'playlists', ruta: '/playlists', etiqueta: textos.nav.playlists, icono: 'playlists' },
-  { id: 'dj', ruta: '/dj', etiqueta: textos.nav.dj, icono: 'dj' },
-  { id: 'a-ciegas', ruta: '/a-ciegas', etiqueta: textos.nav.aCiegas, icono: 'aCiegas' },
-  { id: 'tu-musica', ruta: '/tu-musica', etiqueta: textos.nav.tuMusica, icono: 'tuMusica' }
+  INICIO,
+  BIBLIOTECA,
+  PLAYLISTS,
+  DJ,
+  A_CIEGAS,
+  TU_MUSICA
 ];
 
 export const AJUSTES: Destino = {
@@ -38,6 +65,19 @@ export const POR_REVISAR: Destino = {
   etiqueta: textos.nav.porRevisar,
   icono: 'porRevisar'
 };
+
+/**
+ * Las secciones de la barra lateral, con los rótulos de la V1 (`NavLateral.qml`).
+ * Ajustes y Por revisar van aparte, al pie.
+ */
+export const SECCIONES: readonly {
+  readonly etiqueta: string;
+  readonly destinos: readonly Destino[];
+}[] = [
+  { etiqueta: textos.nav.secciones.explorar, destinos: [INICIO] },
+  { etiqueta: textos.nav.secciones.tuMusica, destinos: [BIBLIOTECA, PLAYLISTS, TU_MUSICA] },
+  { etiqueta: textos.nav.secciones.experiencias, destinos: [DJ, A_CIEGAS] }
+];
 
 /** Los destinos que se pintan, en orden, según cuántos pendientes haya. */
 export function destinosVisibles(pendientes: number): readonly Destino[] {

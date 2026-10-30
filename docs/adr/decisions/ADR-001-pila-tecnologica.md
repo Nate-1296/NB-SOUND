@@ -46,3 +46,13 @@ La estructura de carpetas replica la de NB Books: `src/lib/core` (puente, estado
 - **Negativas:** hay que portar la lógica de Python a Rust (ver [ADR-002](./ADR-002-sin-python.md)).
 - **Riesgos:** WebKitGTK en Linux. NB Books documentó sus trampas (medios por esquema propio, desenfoques, animación
   en reposo) y sus guardianes ya las vigilan; se portan desde la Fase 0.
+
+## Enmienda del 2026-10-30: dos dependencias de la Fase 2
+
+Aprobadas por Nathan antes de añadirlas:
+
+* **`image` 0.25, solo con JPEG y PNG** (la misma variante que NB Books). Las portadas originales de la V1 pesan
+  2,4 MB cada una; las listas necesitan miniaturas, y la vista de reproducción el color dominante de cada portada.
+  Reducirlas en el webview costaría memoria y tiempo en cada desplazamiento.
+* **`tauri-plugin-global-shortcut`** (plugin oficial de Tauri): las teclas multimedia y los atajos globales de
+  F2.1.6. La bandeja usa la función `tray-icon` del propio Tauri, sin crate nuevo.

@@ -20,7 +20,12 @@ export const es = {
     tuMusica: 'Tu música',
     ajustes: 'Ajustes',
     porRevisar: 'Por revisar',
-    pendientes: (n: number) => (n === 1 ? '1 pendiente' : `${n} pendientes`)
+    pendientes: (n: number) => (n === 1 ? '1 pendiente' : `${n} pendientes`),
+    secciones: {
+      explorar: 'Explorar',
+      tuMusica: 'Tu música',
+      experiencias: 'Experiencias'
+    }
   },
   busqueda: {
     etiqueta: 'Buscar en tu música',
@@ -38,10 +43,20 @@ export const es = {
     aleatorio: 'Aleatorio',
     repetir: 'Repetir',
     karaoke: 'Modo karaoke',
+    karaokeNoListo: 'Esta canción aún no está lista para cantar',
     letras: 'Letras',
     cola: 'Cola',
+    colaCon: (n: number) => (n === 1 ? 'Cola, 1 canción' : `Cola, ${n} canciones`),
     volumen: 'Volumen',
-    progreso: 'Progreso de la canción'
+    silenciar: 'Silenciar',
+    quitarSilencio: 'Quitar silencio',
+    expandir: 'Reproducción a pantalla completa',
+    progreso: 'Progreso de la canción',
+    repeticion: {
+      ninguno: 'Repetir',
+      todo: 'Repetir la cola',
+      uno: 'Repetir esta canción'
+    }
   },
   ajustes: {
     acercaDe: 'Acerca de',

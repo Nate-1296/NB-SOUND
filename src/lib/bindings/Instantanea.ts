@@ -7,7 +7,7 @@ export type Instantanea = {
 /**
  * `detenido`, `reproduciendo`, `pausado` o `finalizada`.
  */
-estado: string, pistaId: bigint | null, posicionSeg: number, duracionSeg: number, indiceCola: number | null, cola: Array<bigint>, aleatorio: boolean, 
+estado: string, pistaId: number | null, posicionSeg: number, duracionSeg: number, indiceCola: number | null, cola: number[], aleatorio: boolean, 
 /**
  * `ninguno`, `todo` o `uno`.
  */

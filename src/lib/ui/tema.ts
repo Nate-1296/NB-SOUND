@@ -50,8 +50,9 @@ export interface Apariencia {
   semilla: string | null;
 }
 
+/** La V1 solo tenía esquema oscuro, y la V2 arranca igual (enmienda de ADR-008). */
 export const APARIENCIA_DE_FABRICA: Apariencia = {
-  tema: 'sistema',
+  tema: 'oscuro',
   contraste: 'normal',
   semilla: null
 };

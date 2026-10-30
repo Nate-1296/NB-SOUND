@@ -6,6 +6,7 @@
 //! (lo vigila `scripts/check-comandos.mjs`).
 
 pub mod audio;
+pub mod biblioteca;
 pub mod cola;
 pub mod comandos;
 pub mod db;
@@ -14,6 +15,7 @@ pub mod identidad_movil;
 pub mod importador_v1;
 pub mod net;
 pub mod paths;
+pub mod portadas;
 pub mod reproductor;
 pub mod secrets;
 pub mod security;
@@ -148,7 +150,36 @@ pub fn run() {
             importar_v1_en_segundo_plano(db.clone(), rutas.clone(), Arc::clone(&red), buzon);
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![comandos::salud])
+        .register_asynchronous_uri_scheme_protocol("portada", move |ctx, peticion, responder| {
+            use tauri::Manager;
+            let estado = ctx.app_handle().state::<Estado>();
+            let (db, rutas) = (estado.db.clone(), estado.rutas.clone());
+            let ruta = peticion.uri().path().to_owned();
+            // Reducir una portada es trabajo de CPU: fuera del hilo de la ventana.
+            tauri::async_runtime::spawn_blocking(move || {
+                let respuesta = match portadas::interpretar(&ruta)
+                    .ok_or(error::NsError::PathNotAllowed)
+                    .and_then(|p| portadas::servir(&db, &rutas, p))
+                {
+                    Ok((bytes, mime)) => tauri::http::Response::builder()
+                        .header("Content-Type", mime)
+                        .header("Cache-Control", "max-age=31536000, immutable")
+                        .body(bytes),
+                    Err(_) => tauri::http::Response::builder()
+                        .status(404)
+                        .body(Vec::new()),
+                };
+                if let Ok(r) = respuesta {
+                    responder.respond(r);
+                }
+            });
+        })
+        .invoke_handler(tauri::generate_handler![
+            comandos::salud,
+            comandos::reproductor_estado,
+            comandos::reproductor_orden,
+            comandos::pistas_resumen
+        ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");
 

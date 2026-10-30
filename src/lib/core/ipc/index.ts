@@ -10,10 +10,23 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
-import type { InformeDeSalud } from '$lib/bindings';
+import type {
+  AvisoReproductor,
+  InformeDeSalud,
+  Instantanea,
+  OrdenReproductor,
+  PistaResumen
+} from '$lib/bindings';
 
-export type { InformeDeSalud } from '$lib/bindings';
+export type {
+  AvisoReproductor,
+  InformeDeSalud,
+  Instantanea,
+  OrdenReproductor,
+  PistaResumen
+} from '$lib/bindings';
 
 /** Error del runtime con su código canónico (ver `src-tauri/src/error.rs`). */
 export class NsError extends Error {
@@ -47,4 +60,49 @@ export async function call<T>(comando: string, args?: Record<string, unknown>): 
 /** Comprueba que el runtime responde y devuelve su versión. */
 export function salud(): Promise<InformeDeSalud> {
   return call<InformeDeSalud>('salud');
+}
+
+/**
+ * Se suscribe a un evento del runtime. Devuelve la función que cancela la
+ * suscripción, que el componente llama al desmontarse.
+ */
+function escuchar<T>(evento: string, cada: (carga: T) => void): Promise<UnlistenFn> {
+  return listen<T>(evento, (e) => cada(e.payload));
+}
+
+// --- Reproductor -----------------------------------------------------------------
+
+/** Lo que suena y la cola; `null` mientras el reproductor arranca. */
+export function reproductorEstado(): Promise<Instantanea | null> {
+  return call<Instantanea | null>('reproductor_estado');
+}
+
+/** Manda una orden. El resultado llega por el evento `reproductor:instantanea`. */
+export function reproductorOrden(orden: OrdenReproductor): Promise<void> {
+  return call<void>('reproductor_orden', { orden });
+}
+
+export function alCambiarElReproductor(cada: (i: Instantanea) => void): Promise<UnlistenFn> {
+  return escuchar<Instantanea>('reproductor:instantanea', cada);
+}
+
+export function alAvisarElReproductor(cada: (a: AvisoReproductor) => void): Promise<UnlistenFn> {
+  return escuchar<AvisoReproductor>('reproductor:aviso', cada);
+}
+
+/** Resúmenes de pistas, en el orden pedido; como mucho 500 por petición. */
+export function pistasResumen(ids: readonly number[]): Promise<PistaResumen[]> {
+  return call<PistaResumen[]>('pistas_resumen', { ids });
+}
+
+export type ClaseDePortada = 'pista' | 'album' | 'artista';
+
+/**
+ * La URL de una portada. El runtime la sirve por su esquema propio: en Windows,
+ * WebView2 lo expone como `http://portada.localhost`.
+ */
+export function urlPortada(clase: ClaseDePortada, id: number, tamano: number): string {
+  const ruta = `${clase}/${id}/${tamano}`;
+  const windows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');
+  return windows ? `http://portada.localhost/${ruta}` : `portada://localhost/${ruta}`;
 }

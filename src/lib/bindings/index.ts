@@ -12,6 +12,8 @@ export type { AvisoReproductor } from './AvisoReproductor';
 export type { InformeDeSalud } from './InformeDeSalud';
 export type { Instantanea } from './Instantanea';
 export type { NsErrorPayload } from './NsErrorPayload';
+export type { OrdenReproductor } from './OrdenReproductor';
+export type { PistaResumen } from './PistaResumen';
 export type { PoliticaDeRed } from './PoliticaDeRed';
 export type { Servicio } from './Servicio';
 export * from './errorCodes';

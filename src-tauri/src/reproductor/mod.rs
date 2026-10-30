@@ -74,10 +74,12 @@ pub enum Orden {
 pub struct Instantanea {
     /// `detenido`, `reproduciendo`, `pausado` o `finalizada`.
     pub estado: String,
+    #[ts(type = "number | null")]
     pub pista_id: Option<i64>,
     pub posicion_seg: f64,
     pub duracion_seg: f64,
     pub indice_cola: Option<u32>,
+    #[ts(type = "number[]")]
     pub cola: Vec<i64>,
     pub aleatorio: bool,
     /// `ninguno`, `todo` o `uno`.
@@ -94,6 +96,7 @@ pub struct Instantanea {
 #[serde(rename_all = "camelCase")]
 pub struct AvisoReproductor {
     pub codigo: String,
+    #[ts(type = "number | null")]
     pub pista_id: Option<i64>,
 }
 

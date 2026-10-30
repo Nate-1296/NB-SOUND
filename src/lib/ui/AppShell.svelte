@@ -1,13 +1,16 @@
 <!--
   @component
-  La carcasa: barra lateral, barra superior, contenido y reproductor.
+  La carcasa, con la disposición de la V1 (`legado/ui/qml/Principal.qml`): la barra
+  lateral ocupa toda la altura y, a su derecha, la barra superior, el contenido y la
+  barra de reproducción.
 
   El reproductor es permanente y el contenido es lo único que se desplaza; el
-  cromo que queda encima del contenido es opaco, sin desenfoques (regla de
-  ADR-008 heredada de NB Books).
+  cromo que queda encima del contenido es opaco, sin desenfoques (ADR-008).
 -->
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
+
+  import { reproductor } from '$core/reproductor.svelte';
 
   import { clasificarAncho } from './anchos';
   import BarraReproduccion from './BarraReproduccion.svelte';
@@ -23,6 +26,10 @@
 
   let ancho = $state(0);
   const clase = $derived(clasificarAncho(ancho));
+
+  onMount(() => {
+    void reproductor.arrancar();
+  });
 </script>
 
 <div class="carcasa" data-ancho={clase} bind:clientWidth={ancho}>
@@ -34,13 +41,14 @@
 
 <style>
   .carcasa {
+    container: carcasa / inline-size;
     display: grid;
     grid-template-columns: var(--ns-ancho-lateral) minmax(0, 1fr);
     grid-template-rows: var(--ns-alto-superior) minmax(0, 1fr) var(--ns-alto-reproductor);
     grid-template-areas:
       'lateral superior'
       'lateral contenido'
-      'reproductor reproductor';
+      'lateral reproductor';
     height: 100vh;
     background: var(--m3c-surface);
   }
@@ -63,6 +71,7 @@
 
   .reproductor {
     grid-area: reproductor;
+    min-width: 0;
   }
 
   .carcasa:not([data-ancho='amplio']) {
