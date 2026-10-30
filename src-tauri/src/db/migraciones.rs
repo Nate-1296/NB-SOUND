@@ -27,7 +27,7 @@ struct Migracion {
 const MIGRACIONES: &[Migracion] = &[Migracion {
     version: 1,
     nombre: "metadatos de la instalación",
-    sql: include_str!("../../migraciones/V1__instalacion.sql"),
+    sql: include_str!("../../migrations/V1__instalacion.sql"),
 }];
 
 /// Versión de esquema aplicada (`PRAGMA user_version`).
