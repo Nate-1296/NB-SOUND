@@ -19,7 +19,7 @@
 | F4.1.5 Shazam (`shazamio-core`) e iTunes | Hecha: la firma portada de `songrec` (`catalogo/shazam.rs`, con la ventana de 10 s de la V1; en un MP3 real, los picos por banda difieren menos de un 5 % de los de `shazamio_core`) e iTunes (`catalogo/etapas.rs`). La consulta real a Shazam va a las pruebas finales |
 | F4.1.6 Puntuación y emparejamiento: primera, segunda y tercera etapa | Hecha: primera etapa (`catalogo/emparejador.rs`) y `normalizer.py` (`catalogo/normalizacion.rs`), con la misma decisión, causa, puntuación y candidato que la V1 en 400 casos grabados; segunda y tercera (`catalogo/etapas.rs`) como funciones puras con sus umbrales |
 | F4.1.7 Desempate por IA opcional | Pendiente |
-| F4.1.8 Duplicados exactos y semánticos, con su política | Pendiente |
+| F4.1.8 Duplicados exactos y semánticos, con su política | Hecha: los tres ejes de la V1 (`catalogo/duplicados.rs`), con la huella de 512 KB al principio y al final que comprueba el teléfono; precargados con la biblioteca |
 | F4.1.9 Escritura: organizar en la carpeta de música, transcodificar con `ffmpeg` | Pendiente |
 | F4.1.10 Portadas e imágenes de artista (las seis fuentes de la V1) | Pendiente |
 | F4.1.11 Letras (LRCLIB y lyrics.ovh) | Pendiente |

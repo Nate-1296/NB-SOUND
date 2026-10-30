@@ -71,3 +71,11 @@ Diferencias que la grabación no ve, todas en el mismo sentido (no guardar ni en
 * `stop` pausa: la V2 no tiene un "detener" aparte que vacíe nada.
 * Quitar un teléfono desde Ajustes cierra al momento su control remoto; en la V1 seguía abierto hasta reconectar.
 * El `device_token` no se guarda: solo su SHA-256 (V5).
+
+## La huella del audio
+
+`hash_sha256` y `x-nb-sound-hash` **no** son el SHA-256 del archivo entero: son el de sus primeros 512 KB y sus
+últimos 512 KB (`_calcular_hash_combinado` de la V1). El teléfono la comprueba con esa misma regla
+(`download_repository.dart`), y las pistas importadas traen la de la V1. La V2 calcula la de las pistas nuevas igual
+(`catalogo::duplicados::huella_de_archivo`). Hasta 1 MB coincide con el SHA-256 del archivo, y por eso la respuesta
+dorada, con archivos de 640 bytes, no distingue las dos.

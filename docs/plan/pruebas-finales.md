@@ -81,3 +81,9 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] El selector de la barra dice qué teléfono controla el equipo mientras lo hace (F3.3.2).
 - [ ] Una descarga completa de la biblioteca desde el teléfono no se nota en el equipo (audio sin cortes, ventana
       fluida).
+
+## Fase 4
+
+- [ ] Shazam reconoce de verdad pistas del corpus con la firma de la V2 (API no oficial: se comprueba contra el
+      servicio real, con el consentimiento dado en Ajustes).
+- [ ] AcoustID y MusicBrainz responden con la clave de AcoustID que el importador llevó de la V1 al llavero.

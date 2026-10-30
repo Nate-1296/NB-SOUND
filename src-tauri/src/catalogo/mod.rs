@@ -6,6 +6,7 @@
 //! fase).
 
 pub mod acoustid;
+pub mod duplicados;
 pub mod emparejador;
 pub mod etapas;
 pub mod etiquetas;
