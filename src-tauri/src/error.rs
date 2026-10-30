@@ -56,6 +56,14 @@ pub enum NsError {
     #[error("operación cancelada")]
     Cancelled,
 
+    /// Un dato que el usuario escribió no vale: un nombre vacío o demasiado largo.
+    #[error("el dato no es válido")]
+    InvalidInput,
+
+    /// Ya hay algo con ese nombre (una playlist, por ejemplo).
+    #[error("el nombre ya está en uso")]
+    NameTaken,
+
     #[error("error interno no clasificado")]
     Internal,
 }
@@ -78,6 +86,8 @@ impl NsError {
             Self::IntegrityMismatch => "INTEGRITY_MISMATCH",
             Self::AddonRequired => "ADDON_REQUIRED",
             Self::Cancelled => "CANCELLED",
+            Self::InvalidInput => "INVALID_INPUT",
+            Self::NameTaken => "NAME_TAKEN",
             Self::Internal => "INTERNAL",
         }
     }
@@ -99,6 +109,8 @@ pub const TODAS: &[NsError] = &[
     NsError::IntegrityMismatch,
     NsError::AddonRequired,
     NsError::Cancelled,
+    NsError::InvalidInput,
+    NsError::NameTaken,
     NsError::Internal,
 ];
 
@@ -171,13 +183,15 @@ mod tests {
             NsError::IntegrityMismatch => "INTEGRITY_MISMATCH",
             NsError::AddonRequired => "ADDON_REQUIRED",
             NsError::Cancelled => "CANCELLED",
+            NsError::InvalidInput => "INVALID_INPUT",
+            NsError::NameTaken => "NAME_TAKEN",
             NsError::Internal => "INTERNAL",
         }
     }
 
     #[test]
     fn los_codigos_son_estables() {
-        assert_eq!(TODAS.len(), 14, "hay una variante fuera de la lista");
+        assert_eq!(TODAS.len(), 16, "hay una variante fuera de la lista");
         for variante in TODAS {
             assert_eq!(variante.code(), codigo_esperado(variante));
         }

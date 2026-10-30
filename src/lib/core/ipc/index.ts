@@ -19,32 +19,38 @@ import type {
   ConsultaAlbumes,
   ConsultaArtistas,
   ConsultaPistas,
+  ConsultaPlaylists,
   InformeDeSalud,
   Instantanea,
   OrdenReproductor,
   PaginaAlbumes,
   PaginaArtistas,
   PaginaPistas,
-  PistaResumen
+  PistaResumen,
+  PlaylistResumen
 } from '$lib/bindings';
 
 export type {
   AlbumResumen,
   ArtistaResumen,
   AvisoReproductor,
+  Categoria,
   ConsultaAlbumes,
   ConsultaArtistas,
   ConsultaPistas,
+  ConsultaPlaylists,
   InformeDeSalud,
   Instantanea,
   OrdenAlbumes,
   OrdenArtistas,
   OrdenPistas,
+  OrdenPlaylists,
   OrdenReproductor,
   PaginaAlbumes,
   PaginaArtistas,
   PaginaPistas,
-  PistaResumen
+  PistaResumen,
+  PlaylistResumen
 } from '$lib/bindings';
 
 /** Error del runtime con su código canónico (ver `src-tauri/src/error.rs`). */
@@ -168,4 +174,55 @@ export function bibliotecaAlbum(id: number): Promise<AlbumResumen | null> {
 
 export function bibliotecaArtista(id: number): Promise<ArtistaResumen | null> {
   return call<ArtistaResumen | null>('biblioteca_artista', { id });
+}
+
+// --- Playlists -------------------------------------------------------------------
+
+export function playlistsListar(consulta: ConsultaPlaylists): Promise<PlaylistResumen[]> {
+  return call<PlaylistResumen[]>('playlists_listar', { consulta });
+}
+
+export function playlist(id: number): Promise<PlaylistResumen | null> {
+  return call<PlaylistResumen | null>('playlist', { id });
+}
+
+export function playlistPistas(id: number, desde: number, limite: number): Promise<PaginaPistas> {
+  return call<PaginaPistas>('playlist_pistas', { id, desde, limite });
+}
+
+export function reproducirPlaylist(id: number, indice: number): Promise<void> {
+  return call<void>('reproducir_playlist', { id, indice });
+}
+
+export function crearPlaylist(nombre: string, descripcion: string | null): Promise<number> {
+  return call<number>('crear_playlist', { nombre, descripcion });
+}
+
+export function renombrarPlaylist(
+  id: number,
+  nombre: string,
+  descripcion: string | null
+): Promise<void> {
+  return call<void>('renombrar_playlist', { id, nombre, descripcion });
+}
+
+export function borrarPlaylist(id: number): Promise<void> {
+  return call<void>('borrar_playlist', { id });
+}
+
+/** Añade al final sin repetir; devuelve cuántas entraron. */
+export function agregarAPlaylist(id: number, pistas: number[]): Promise<number> {
+  return call<number>('agregar_a_playlist', { id, pistas });
+}
+
+export function quitarDePlaylist(id: number, pistaId: number): Promise<void> {
+  return call<void>('quitar_de_playlist', { id, pistaId });
+}
+
+export function moverEnPlaylist(id: number, desde: number, hasta: number): Promise<void> {
+  return call<void>('mover_en_playlist', { id, desde, hasta });
+}
+
+export function anclarPlaylist(id: number, anclada: boolean): Promise<void> {
+  return call<void>('anclar_playlist', { id, anclada });
 }

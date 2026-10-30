@@ -10,6 +10,7 @@ use ts_rs::TS;
 use crate::biblioteca::{self, PistaResumen};
 use crate::cola::Repeticion;
 use crate::error::{NsError, NsResult};
+use crate::playlists;
 use crate::reproductor::{Instantanea, Orden, Reproductor};
 use crate::Estado;
 
@@ -251,4 +252,119 @@ pub async fn biblioteca_artista(
     id: i64,
 ) -> NsResult<Option<biblioteca::ArtistaResumen>> {
     en_segundo_plano(&estado, move |db| biblioteca::artista(db, id)).await
+}
+
+// --- Playlists -------------------------------------------------------------------
+
+/// Cota: `playlists::MAX_PLAYLISTS`; las del usuario son decenas y las automáticas
+/// las genera la aplicación con un número fijo.
+#[tauri::command]
+pub async fn playlists_listar(
+    estado: tauri::State<'_, Estado>,
+    consulta: playlists::ConsultaPlaylists,
+) -> NsResult<Vec<playlists::PlaylistResumen>> {
+    en_segundo_plano(&estado, move |db| playlists::listar(db, &consulta)).await
+}
+
+#[tauri::command]
+pub async fn playlist(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+) -> NsResult<Option<playlists::PlaylistResumen>> {
+    en_segundo_plano(&estado, move |db| playlists::una(db, id)).await
+}
+
+#[tauri::command]
+pub async fn playlist_pistas(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    desde: u32,
+    limite: u32,
+) -> NsResult<biblioteca::PaginaPistas> {
+    en_segundo_plano(&estado, move |db| playlists::pistas(db, id, desde, limite)).await
+}
+
+#[tauri::command]
+pub async fn reproducir_playlist(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    indice: u32,
+) -> NsResult<()> {
+    let ids = en_segundo_plano(&estado, move |db| playlists::ids(db, id)).await?;
+    reproductor(&app)?.enviar(Orden::ReproducirPistas {
+        ids,
+        desde: indice as usize,
+    });
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn crear_playlist(
+    estado: tauri::State<'_, Estado>,
+    nombre: String,
+    descripcion: Option<String>,
+) -> NsResult<i64> {
+    en_segundo_plano(&estado, move |db| {
+        playlists::crear(db, &nombre, descripcion.as_deref())
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn renombrar_playlist(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    nombre: String,
+    descripcion: Option<String>,
+) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| {
+        playlists::renombrar(db, id, &nombre, descripcion.as_deref())
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn borrar_playlist(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| playlists::borrar(db, id)).await
+}
+
+#[tauri::command]
+pub async fn agregar_a_playlist(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    pistas: Vec<i64>,
+) -> NsResult<u32> {
+    en_segundo_plano(&estado, move |db| playlists::agregar(db, id, &pistas)).await
+}
+
+#[tauri::command]
+pub async fn quitar_de_playlist(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    pista_id: i64,
+) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| playlists::quitar(db, id, pista_id)).await
+}
+
+#[tauri::command]
+pub async fn mover_en_playlist(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    desde: u32,
+    hasta: u32,
+) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| {
+        playlists::mover(db, id, desde as usize, hasta as usize)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn anclar_playlist(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    anclada: bool,
+) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| playlists::anclar(db, id, anclada)).await
 }

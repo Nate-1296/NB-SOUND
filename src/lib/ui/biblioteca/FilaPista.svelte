@@ -15,6 +15,7 @@
   import { textos } from '$lib/i18n';
 
   import Icon from '../Icon.svelte';
+  import MenuAnadir from '../playlists/MenuAnadir.svelte';
 
   interface Props {
     pista: PistaResumen;
@@ -38,6 +39,22 @@
 
   const t = textos.biblioteca;
   let rota = $state(false);
+
+  // El menú va en la capa superior (`popover`): la fila recorta lo que se sale, y
+  // la lista virtual la recicla al desplazarse.
+  let menu: HTMLDivElement | undefined = $state();
+  let menuAbierto = $state(false);
+  function abrirMenu(e: MouseEvent) {
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    if (!menu) return;
+    menu.style.top = `${Math.min(r.bottom + 4, window.innerHeight - 300)}px`;
+    menu.style.left = `${Math.max(8, r.right - 224)}px`;
+    menuAbierto = true;
+    menu.showPopover();
+  }
+  function cerrarMenu() {
+    menu?.hidePopover();
+  }
   const subtitulo = $derived(
     [pista.artista, pista.album, pista.anio ?? ''].filter((x) => x !== '').join(' · ')
   );
@@ -80,9 +97,24 @@
     >
       <Icon nombre="favorito" tamano={18} />
     </button>
-    <button type="button" class="icono" aria-label={t.masAcciones} title={t.masAcciones}>
+    <button
+      type="button"
+      class="icono"
+      aria-label={textos.playlists.anadirA}
+      title={textos.playlists.anadirA}
+      aria-haspopup="menu"
+      onclick={abrirMenu}
+    >
       <Icon nombre="mas" tamano={18} />
     </button>
+    <div
+      class="capa"
+      popover="auto"
+      bind:this={menu}
+      ontoggle={(e) => (menuAbierto = e.newState === 'open')}
+    >
+      {#if menuAbierto}<MenuAnadir pistas={[pista.id]} oncerrar={cerrarMenu} />{/if}
+    </div>
     <button type="button" class="boton principal" onclick={onreproducir}>
       <Icon nombre="reproducir" tamano={14} />{t.reproducir}
     </button>
@@ -188,6 +220,15 @@
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
     font-weight: 500;
+  }
+
+  .capa {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
   }
 
   .acciones {

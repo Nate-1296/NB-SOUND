@@ -15,6 +15,7 @@ pub mod identidad_movil;
 pub mod importador_v1;
 pub mod net;
 pub mod paths;
+pub mod playlists;
 pub mod portadas;
 pub mod reproductor;
 pub mod secrets;
@@ -185,7 +186,18 @@ pub fn run() {
             comandos::reproducir_lista,
             comandos::fijar_favorita,
             comandos::biblioteca_album,
-            comandos::biblioteca_artista
+            comandos::biblioteca_artista,
+            comandos::playlists_listar,
+            comandos::playlist,
+            comandos::playlist_pistas,
+            comandos::reproducir_playlist,
+            comandos::crear_playlist,
+            comandos::renombrar_playlist,
+            comandos::borrar_playlist,
+            comandos::agregar_a_playlist,
+            comandos::quitar_de_playlist,
+            comandos::mover_en_playlist,
+            comandos::anclar_playlist
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

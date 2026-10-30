@@ -16,6 +16,8 @@ export const ERROR_CODES = [
   'INTEGRITY_MISMATCH',
   'ADDON_REQUIRED',
   'CANCELLED',
+  'INVALID_INPUT',
+  'NAME_TAKEN',
   'INTERNAL',
 ] as const;
 

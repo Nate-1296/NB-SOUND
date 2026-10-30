@@ -114,6 +114,57 @@ export const es = {
       noEncontrado: 'Este artista ya no está en la biblioteca.'
     }
   },
+  playlists: {
+    titulo: 'Playlists',
+    subtitulo: 'Listas manuales, favoritas y mezclas locales preparadas con tu biblioteca.',
+    nueva: 'Nueva playlist',
+    buscar: 'Buscar por nombre o tipo',
+    cuenta: (n: number) => (n === 1 ? '1 playlist' : `${n} playlists`),
+    categorias: {
+      todo: 'Todo',
+      meGusta: 'Me gusta',
+      creada: 'Creadas por mí',
+      inteligente: 'Creadas para ti',
+      thisIs: 'This is...',
+      sistema: 'Sistema'
+    },
+    ordenes: {
+      recientes: 'Recientes',
+      antiguas: 'Antiguas',
+      nombreAsc: 'A → Z',
+      nombreDesc: 'Z → A',
+      masCanciones: 'Canciones ↓',
+      menosCanciones: 'Canciones ↑'
+    },
+    resumen: (n: number, duracion: string) =>
+      `${n === 1 ? '1 pista' : `${n} pistas`} · ${duracion}`,
+    abrir: 'Abrir',
+    anclar: 'Anclar',
+    desanclar: 'Desanclar',
+    reproducir: 'Reproducir',
+    renombrar: 'Renombrar',
+    borrar: 'Borrar',
+    confirmarBorrar: (nombre: string) =>
+      `¿Borrar «${nombre}»? Las canciones siguen en tu biblioteca.`,
+    quitar: 'Quitar de la playlist',
+    subir: 'Subir',
+    bajar: 'Bajar',
+    vacia: 'Esta playlist todavía no tiene canciones.',
+    noEncontrada: 'Esta playlist ya no existe.',
+    volver: 'Volver a Playlists',
+    nombre: 'Nombre',
+    descripcion: 'Descripción (opcional)',
+    crear: 'Crear',
+    guardar: 'Guardar',
+    cancelar: 'Cancelar',
+    anadirA: 'Añadir a playlist',
+    anadida: (nombre: string) => `Añadida a «${nombre}»`,
+    yaEstaba: (nombre: string) => `Ya estaba en «${nombre}»`,
+    errores: {
+      INVALID_INPUT: 'El nombre no puede estar vacío ni pasar de 120 caracteres.',
+      NAME_TAKEN: 'Ya tienes una playlist con ese nombre.'
+    } as Record<string, string>
+  },
   ajustes: {
     acercaDe: 'Acerca de',
     version: (v: string) => `NB Sound ${v}`

@@ -684,6 +684,7 @@ pub fn fijar_favorita(db: &BaseDeDatos, pista_id: i64, favorita: bool) -> NsResu
         rusqlite::params![pista_id, favorita],
     )
     .map_err(|_| NsError::StorageFailure)?;
+    crate::playlists::reflejar_favorita(&tx, pista_id, favorita)?;
     tx.commit().map_err(|_| NsError::StorageFailure)
 }
 
