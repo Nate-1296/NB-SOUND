@@ -7,6 +7,7 @@
 
 pub mod acoustid;
 pub mod emparejador;
+pub mod etapas;
 pub mod etiquetas;
 pub mod modelo;
 pub mod musicbrainz;

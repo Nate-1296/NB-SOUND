@@ -16,8 +16,8 @@
 | F4.1.2 Normalización de texto y nombres (`core/normalizer.py`, `utils/text.py`, `utils/diccionarios.py`) | Parcial: `utils/text.py` portado (`catalogo/texto.rs`), idéntico a la V1 en las 5.531 frases del corpus real; `normalizer.py` portado en `catalogo/normalizacion.rs` (ver F4.1.6). `diccionarios.py` son los saludos de Inicio, ya portados en F2.2.2 |
 | F4.1.3 Huella y AcoustID | Hecha: `catalogo/acoustid.rs`, con el `fpcalc` empaquetado y el umbral y los reintentos de la V1; la caché de consultas va con la canalización |
 | F4.1.4 MusicBrainz, discografía y Cover Art Archive | Parcial: el cliente de MusicBrainz con las seis estrategias de la V1 (`catalogo/musicbrainz.rs`, API JSON); la organización por discografía (`catalogo/organizacion.rs`) da las mismas rutas que la V1 en las 2.240 pistas de la biblioteca real; falta Cover Art Archive, que va con las portadas (F4.1.10) |
-| F4.1.5 Shazam (`shazamio-core`) e iTunes | Pendiente |
-| F4.1.6 Puntuación y emparejamiento: primera, segunda y tercera etapa | Parcial: primera etapa (`catalogo/emparejador.rs`) y `normalizer.py` (`catalogo/normalizacion.rs`), con la misma decisión, causa, puntuación y candidato que la V1 en 400 casos grabados; faltan la segunda y la tercera |
+| F4.1.5 Shazam (`shazamio-core`) e iTunes | Parcial: iTunes (`catalogo/etapas.rs`); falta Shazam |
+| F4.1.6 Puntuación y emparejamiento: primera, segunda y tercera etapa | Hecha: primera etapa (`catalogo/emparejador.rs`) y `normalizer.py` (`catalogo/normalizacion.rs`), con la misma decisión, causa, puntuación y candidato que la V1 en 400 casos grabados; segunda y tercera (`catalogo/etapas.rs`) como funciones puras con sus umbrales |
 | F4.1.7 Desempate por IA opcional | Pendiente |
 | F4.1.8 Duplicados exactos y semánticos, con su política | Pendiente |
 | F4.1.9 Escritura: organizar en la carpeta de música, transcodificar con `ffmpeg` | Pendiente |
