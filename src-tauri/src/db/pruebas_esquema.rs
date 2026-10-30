@@ -306,3 +306,143 @@ fn los_recientes_salen_del_indice_por_fecha() {
     );
     assert!(p.contains("historial_por_fecha"), "{p}");
 }
+
+/// El presupuesto de ADR-004: menos de 16 KB de análisis por pista. Se mide en el
+/// peor caso que el esquema admite (todas las columnas llenas, las etiquetas de
+/// estilo al tope y cada etiqueta de ambiente por las dos fuentes) y sobre un
+/// archivo real, porque lo que cuenta son las páginas que ocupa, no los bytes.
+#[test]
+fn el_analisis_de_una_pista_cabe_en_16_kb() {
+    const PISTAS: i64 = 500;
+    const ETIQUETAS: [&str; 11] = [
+        "bailable",
+        "concentracion",
+        "energetica",
+        "entrenamiento",
+        "feliz",
+        "fiesta",
+        "intensa",
+        "nocturna",
+        "relajada",
+        "tranquila",
+        "triste",
+    ];
+    let dir = std::env::temp_dir().join(format!("ns-presupuesto-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let db = BaseDeDatos::abrir(&dir.join("base.sqlite")).unwrap();
+    let mut conn = db.conexion().unwrap();
+    let paginas = |conn: &Connection| -> i64 {
+        conn.query_row("PRAGMA page_count", [], |f| f.get(0))
+            .unwrap()
+    };
+    let tamano_pagina: i64 = conn
+        .query_row("PRAGMA page_size", [], |f| f.get(0))
+        .unwrap();
+
+    {
+        let tx = super::transaccion_de_escritura(&mut conn).unwrap();
+        tx.execute(
+            "INSERT INTO artistas (id, nombre, clave) VALUES (1, 'a', 'a')",
+            [],
+        )
+        .unwrap();
+        for id in 1..=PISTAS {
+            tx.execute(
+                "INSERT INTO pistas (id, artista_id, titulo, ruta) VALUES (?1, 1, 't', ?2)",
+                rusqlite::params![id, format!("{id}.mp3")],
+            )
+            .unwrap();
+        }
+        tx.commit().unwrap();
+    }
+    conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE)")
+        .unwrap();
+    let antes = paginas(&conn);
+
+    let embedding = vec![0x3fu8; 200 * 4];
+    let etiquetas = format!("[{}]", vec!["[\"classic rock\",0.123456789]"; 70].join(","));
+    assert!(etiquetas.len() <= 2048, "{}", etiquetas.len());
+    let sha = "f".repeat(64);
+    {
+        let tx = super::transaccion_de_escritura(&mut conn).unwrap();
+        for id in 1..=PISTAS {
+            let r = id as f64 + 0.123_456_789;
+            tx.execute(
+                "INSERT INTO rasgos VALUES (?1, 'audio_basic_v3', ?2, ?3, 512, ?3, 'G#', 'minor',
+                 ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3,
+                 -9.5, -0.3, 7.2, '2026-10-30T00:00:00.000Z')",
+                rusqlite::params![id, sha, r],
+            )
+            .unwrap();
+            tx.execute(
+                "INSERT INTO analisis_profundo VALUES (?1, 'musicnn_v1', ?2, 0.1, 0.2, 0.3, 0.4,
+                 0.5, 0.6, 0.7, 0.8, ?3, 200, ?4, '2026-10-30T00:00:00.000Z')",
+                rusqlite::params![id, sha, embedding, etiquetas],
+            )
+            .unwrap();
+            for etiqueta in ETIQUETAS {
+                for fuente in ["basic_rules", "deep_model"] {
+                    tx.execute(
+                        "INSERT INTO etiquetas_ambiente VALUES (?1, ?2, ?3, 0.123456, 0.654321,
+                         'audio_vibe_v1', '2026-10-30T00:00:00.000Z')",
+                        rusqlite::params![id, etiqueta, fuente],
+                    )
+                    .unwrap();
+                }
+            }
+        }
+        tx.commit().unwrap();
+    }
+    conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE)")
+        .unwrap();
+    let por_pista = (paginas(&conn) - antes) * tamano_pagina / PISTAS;
+    drop(conn);
+    drop(db);
+    let _ = std::fs::remove_dir_all(&dir);
+    assert!(por_pista < 16 * 1024, "{por_pista} bytes por pista");
+}
+
+#[test]
+fn un_embedding_que_no_cuadra_con_sus_dimensiones_se_rechaza() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    assert!(conn
+        .execute(
+            "INSERT INTO analisis_profundo (pista_id, version, embedding, dimensiones)
+             VALUES (100, 'v', zeroblob(799), 200)",
+            []
+        )
+        .is_err());
+}
+
+#[test]
+fn las_listas_por_animo_salen_del_indice_de_etiquetas() {
+    let (_db, conn) = base();
+    let p = plan(
+        &conn,
+        "SELECT pista_id FROM etiquetas_ambiente WHERE etiqueta = 'nocturna' \
+         ORDER BY puntuacion DESC LIMIT 50",
+    );
+    assert!(p.contains("etiquetas_por_ambiente"), "{p}");
+    assert!(!p.contains("TEMP B-TREE"), "ordena en memoria: {p}");
+}
+
+#[test]
+fn un_color_de_portada_que_no_es_hexadecimal_se_rechaza() {
+    let (_db, conn) = base();
+    let sha = "a".repeat(64);
+    assert!(conn
+        .execute(
+            "INSERT INTO portadas (sha256, ruta, ancho, alto, bytes, mime, origen, color)
+             VALUES (?1, 'x.jpg', 1, 1, 1, 'image/jpeg', 'v1', 'rojo')",
+            [&sha]
+        )
+        .is_err());
+    conn.execute(
+        "INSERT INTO portadas (sha256, ruta, ancho, alto, bytes, mime, origen, color)
+         VALUES (?1, 'x.jpg', 1, 1, 1, 'image/jpeg', 'v1', '#1a2b3c')",
+        [&sha],
+    )
+    .unwrap();
+}
