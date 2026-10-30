@@ -10,8 +10,8 @@ La V1 (v1.1.16) son unas 111.000 líneas: 60.000 de Python de aplicación, 23.40
 últimos commits de la V1 arreglan MPRIS y el empaquetado con PyInstaller, que son los dos síntomas del problema de
 fondo: un proceso Python que carga PySide6, LibVLC, PyTorch y TensorFlow a la vez.
 
-NB Books ya resolvió la misma pregunta ([su ADR-001 y ADR-015](../../../../NB_Books/docs/adr/README.md)) y la
-probó con 152.080 documentos reales. El objetivo explícito es que el ecosistema se sienta como uno solo.
+NB Books ya resolvió la misma pregunta (sus ADR-001 y ADR-015, en `NB_Books/docs/adr/`, un repositorio aparte) y
+la probó con 152.080 documentos reales. El objetivo explícito es que el ecosistema se sienta como uno solo.
 
 ## Alternativas consideradas
 
