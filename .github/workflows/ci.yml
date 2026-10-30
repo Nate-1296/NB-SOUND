@@ -1,0 +1,116 @@
+name: CI
+
+# Verificación de la V2 en las tres plataformas (F0.3.2). Mientras el
+# repositorio sea privado y sin minutos, puede no llegar a ejecutarse; el estado
+# real está en docs/plan/fase-0-fundaciones.md.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  convenciones:
+    name: Convenciones de commit y DCO
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+      - name: Asunto convencional y Signed-off-by en lo empujado
+        env:
+          ANTES: ${{ github.event.before }}
+        run: |
+          rango="${ANTES:+$ANTES..}HEAD"
+          [ "$ANTES" = "0000000000000000000000000000000000000000" ] && rango="HEAD~1..HEAD"
+          patron='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore)(\([a-z0-9._/-]+\))?!?: .+'
+          fallo=0
+          for c in $(git rev-list "$rango" 2>/dev/null || git rev-list -1 HEAD); do
+            asunto=$(git log -1 --format=%s "$c")
+            case "$asunto" in "Merge "*|"Revert "*) continue ;; esac
+            echo "$asunto" | grep -qE "$patron" || { echo "::error::Asunto fuera de convención en $c"; fallo=1; }
+            git log -1 --format=%B "$c" | grep -qiE '^Signed-off-by: .+ <.+@.+>' \
+              || { echo "::error::El commit $c no lleva Signed-off-by"; fallo=1; }
+          done
+          exit $fallo
+
+  verify:
+    name: pnpm verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev
+      - uses: dtolnay/rust-toolchain@1.98.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm binarios
+      - run: pnpm verify
+      - run: pnpm build
+
+  runtime:
+    name: Runtime (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencias del sistema (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - uses: dtolnay/rust-toolchain@1.98.0
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      # macOS aún no tiene manifiesto de binarios (F0.3.3, Parcial).
+      - name: Binarios del instalador
+        if: runner.os != 'macOS'
+        run: node scripts/fetch-binarios.mjs
+      - name: Formato
+        working-directory: src-tauri
+        run: cargo fmt --all -- --check
+      - name: Lints
+        working-directory: src-tauri
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Pruebas
+        working-directory: src-tauri
+        run: cargo test --all-features
+
+  licencias:
+    name: Dependencias y licencias
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: src-tauri/Cargo.toml
+          arguments: --all-features
