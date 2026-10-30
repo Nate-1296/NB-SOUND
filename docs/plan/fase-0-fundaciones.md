@@ -25,7 +25,7 @@
 | F0.2.5 Puerta de red con consentimiento | Hecha | De fábrica no sale nada; cada servicio con sus anfitriones |
 | F0.2.6 Rutas estándar por plataforma | Hecha | Carpetas distintas de las de la V1, con prueba |
 | F0.2.7 Tokens de Material 3 compartidos | Hecha | Los 63 temas de la V1 como acentos |
-| F0.3.1 `pnpm verify` con los guardianes portados | Parcial | Doce activos; `check-transacciones` y `check-listas` se activan con la capa de datos; faltan `check-paquete`, `check-i18n` y los avisos de terceros |
+| F0.3.1 `pnpm verify` con los guardianes portados | Hecha | Dieciséis guardianes activos, incluidos los avisos de terceros y el presupuesto del paquete de arranque (hoy 95 KB de 250). `check-transacciones` y `check-listas` se anuncian como pendientes hasta que exista la capa de datos |
 | F0.3.2 Integración continua en tres plataformas | Parcial | `.github/workflows/ci.yml` escrito (convenciones, `pnpm verify`, runtime en Linux, Windows y macOS, `cargo-deny`). El 2026-10-29 GitHub no arrancó ningún trabajo: "recent account payments have failed or your spending limit needs to be increased" (lo mismo que le pasa a NB Books). Mientras tanto, `check-plataforma` es la única red multiplataforma |
 | F0.3.3 Binarios empaquetados con hash fijado | Parcial | Linux y Windows fijados (`fpcalc` 1.6.2, ONNX Runtime 1.31.1); macOS pendiente de CI. `ffmpeg` sale del instalador (enmienda de ADR-006) |
 | F0.3.4 Primera puerta de empaquetado | Pendiente | |
