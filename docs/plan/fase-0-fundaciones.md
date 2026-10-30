@@ -19,7 +19,7 @@
 | F0.1.4 Documentación de la V1 archivada en `docs/v1/` | Hecha | 2026-10-29 |
 | F0.1.5 Repositorio público de distribución para agregados | Pendiente | |
 | F0.2.1 Esqueleto Tauri 2 + SvelteKit 2 + Svelte 5 + m3-svelte | Hecha | Carcasa con los siete destinos, Por revisar condicional y reproductor inerte |
-| F0.2.2 Herramientas idénticas a NB Books | Parcial | Falta `cargo-deny` en la máquina; `deny.toml` está escrito |
+| F0.2.2 Herramientas idénticas a NB Books | Hecha | `cargo deny check` en verde (avisos, prohibiciones, licencias y orígenes) |
 | F0.2.3 Contrato de errores, tipos generados y frontera del puente | Hecha | 14 códigos canónicos |
 | F0.2.4 Registro con redacción | Hecha | |
 | F0.2.5 Puerta de red con consentimiento | Hecha | De fábrica no sale nada; cada servicio con sus anfitriones |
