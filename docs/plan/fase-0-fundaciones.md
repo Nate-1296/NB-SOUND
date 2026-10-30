@@ -11,6 +11,8 @@
 
 ## Estado de la fase
 
+**Cerrada el 2026-10-30.** Ver el [informe de cierre](../audit/2026-10-30-cierre-fase-0.md).
+
 | Iteración | Estado | Nota |
 |---|---|---|
 | F0.1.1 Constitución, ADR y plan | Hecha | 2026-10-29 |
@@ -28,7 +30,7 @@
 | F0.3.1 `pnpm verify` con los guardianes portados | Hecha | Dieciséis guardianes activos, incluidos los avisos de terceros y el presupuesto del paquete de arranque (hoy 95 KB de 250). `check-transacciones` y `check-listas` se anuncian como pendientes hasta que exista la capa de datos |
 | F0.3.2 Integración continua en tres plataformas | Hecha | Con el repositorio público, el CI corre: convenciones, `pnpm verify`, licencias y el runtime en Linux, Windows y macOS. Primera vez que la V2 se compila y se prueba en Windows y macOS; destapó un enlace a NB Books y una prueba que suponía Linux, ya corregidos |
 | F0.3.3 Binarios empaquetados con hash fijado | Hecha | Linux, Windows y macOS fijados (`fpcalc` 1.6.2, ONNX Runtime 1.31.1). macOS solo en Apple Silicon: ONNX Runtime 1.31 no publica binario para Intel. `ffmpeg` sale del instalador (enmienda de ADR-006) |
-| F0.3.4 Primera puerta de empaquetado | Hecha en Linux | Compilado dentro de Ubuntu 22.04 con `scripts/empaquetar-linux.sh` (compilado en Arch exigía glibc 2.44 y no arrancaba en Ubuntu 24.04). La AppImage (90 MB) arranca en Ubuntu 24.04, Ubuntu 22.04 y Debian 12 limpios, con solo la base de escritorio; el `.deb` se instala, arranca y al desinstalarlo los datos del usuario siguen ahí. Pendiente para F7.2.1: `fpcalc` se instala en `/usr/bin` y puede chocar con el paquete `chromaprint`. Windows y macOS: instaladores sin probar todavía |
+| F0.3.4 Primera puerta de empaquetado | Hecha | Compilado dentro de Ubuntu 22.04 con `scripts/empaquetar-linux.sh` (compilado en Arch exigía glibc 2.44 y no arrancaba en Ubuntu 24.04). La AppImage (90 MB) arranca en Ubuntu 24.04, Ubuntu 22.04 y Debian 12 limpios, con solo la base de escritorio; el `.deb` se instala, arranca y al desinstalarlo los datos del usuario siguen ahí. Pendiente para F7.2.1: `fpcalc` se instala en `/usr/bin` y puede chocar con el paquete `chromaprint`. Windows y macOS: instaladores sin probar todavía |
 | F0.4.1 Prototipo del motor de audio | Hecha | ADR-003 confirmado con tres ajustes; ver el [informe](../audit/2026-10-29-prototipo-motor-audio.md) |
 | F0.4.2 Prototipo de karaoke en ONNX | Hecha | Mismo instrumental que PyTorch (74–95 dB por debajo) a la misma velocidad; se elige fp16. Riesgo nuevo: 9 GB de memoria pico (P8). [Informe](../audit/2026-10-29-prototipo-karaoke.md) |
 | F0.4.3 Prototipo de análisis en ONNX | Hecha | 407 de 407 pistas dentro de 0,01 (peor 0,0041). VGGish y EffNet se retiran: nada los usaba; el agregado queda en ~4 MB. [Informe](../audit/2026-10-29-prototipo-analisis.md) |

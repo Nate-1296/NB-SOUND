@@ -9,7 +9,7 @@
 
 | Orden | Fase | Objetivo | Documento |
 |---|---|---|---|
-| 1.º | 0 | Fundaciones y prototipos que deciden | [fase-0-fundaciones.md](./fase-0-fundaciones.md) |
+| 1.º | 0 | Fundaciones y prototipos que deciden (**cerrada el 2026-10-30**) | [fase-0-fundaciones.md](./fase-0-fundaciones.md) |
 | 2.º | 1 | Datos: esquema V2 e importación de la V1 sin pérdida | [fase-1-datos.md](./fase-1-datos.md) |
 | 3.º | 2 | Escuchar: reproductor, biblioteca y la carcasa completa | [fase-2-escuchar.md](./fase-2-escuchar.md) |
 | 4.º | 3 | El móvil sigue funcionando: servidor compatible | [fase-3-movil.md](./fase-3-movil.md) |
