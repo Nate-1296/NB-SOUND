@@ -8,6 +8,7 @@
 pub mod audio;
 pub mod bandeja;
 pub mod biblioteca;
+pub mod catalogo;
 pub mod cola;
 pub mod comandos;
 pub mod controles_sistema;

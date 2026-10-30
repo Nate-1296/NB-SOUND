@@ -69,6 +69,11 @@ mdns-sd = "0.21.6"
 rcgen = { version = "0.14.10", default-features = false, features = ["crypto", "pem", "ring"] }
 # El QR del emparejamiento: solo la matriz de módulos; la interfaz la dibuja.
 qrcode = { version = "0.14.1", default-features = false }
+# La catalogación (Fase 4): la normalización de texto de la V1 (`utils/text.py`)
+# compara con NFKC/NFD y quita diacríticos, y sus reglas son expresiones
+# regulares. `regex` ya estaba en el árbol por tracing-subscriber.
+unicode-normalization = "0.1.26"
+regex = "1.13.1"
 
 # Controles del sistema (ADR-003, F2.1.5): MPRIS en Linux, con aleatorio y
 # repetición en los dos sentidos; SMTC en Windows y el centro de reproducción en

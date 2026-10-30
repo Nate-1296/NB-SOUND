@@ -18,7 +18,7 @@ Regenerar: `node scripts/generate-notices.mjs`
 Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
 (ADR-010).
 
-## Componentes de Rust (635)
+## Componentes de Rust (636)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -547,6 +547,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `typenum` | 1.20.1 | MIT OR Apache-2.0 | https://github.com/paholg/typenum |
 | `uds_windows` | 1.2.1 | MIT | https://github.com/haraldh/rust_uds_windows |
 | `unicode-ident` | 1.0.27 | (MIT OR Apache-2.0) AND Unicode-3.0 | https://github.com/dtolnay/unicode-ident |
+| `unicode-normalization` | 0.1.26 | (MIT OR Apache-2.0) AND Unicode-3.0 | https://github.com/unicode-rs/unicode-normalization |
 | `unicode-segmentation` | 1.13.3 | MIT OR Apache-2.0 | https://github.com/unicode-rs/unicode-segmentation |
 | `untrusted` | 0.9.0 | ISC | https://github.com/briansmith/untrusted |
 | `ureq` | 3.5.0 | MIT OR Apache-2.0 | https://github.com/algesten/ureq |

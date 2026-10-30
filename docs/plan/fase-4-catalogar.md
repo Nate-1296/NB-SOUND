@@ -13,7 +13,7 @@
 | Iteración | Estado |
 |---|---|
 | F4.1.1 Lectura y escritura de etiquetas con `lofty` (ID3v2, Vorbis, MP4) | Pendiente |
-| F4.1.2 Normalización de texto y nombres (`core/normalizer.py`, `utils/text.py`, `utils/diccionarios.py`) | Pendiente |
+| F4.1.2 Normalización de texto y nombres (`core/normalizer.py`, `utils/text.py`, `utils/diccionarios.py`) | Parcial: `utils/text.py` portado (`catalogo/texto.rs`), idéntico a la V1 en las 5.531 frases del corpus real; `normalizer.py` va con la canalización. `diccionarios.py` son los saludos de Inicio, ya portados en F2.2.2 |
 | F4.1.3 Huella y AcoustID | Pendiente |
 | F4.1.4 MusicBrainz, discografía y Cover Art Archive | Pendiente |
 | F4.1.5 Shazam (`shazamio-core`) e iTunes | Pendiente |

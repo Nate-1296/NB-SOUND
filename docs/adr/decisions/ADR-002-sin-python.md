@@ -62,3 +62,19 @@ Si alguno falla, se escribe un ADR que supera a este y adopta la alternativa 2 p
 - **Negativas:** portar unas 34.000 líneas de lógica. Se mitiga portando por fases y con paridad medida contra la V1.
 - **Riesgos:** que la paridad del preprocesado mel de MusiCNN/VGGish/EffNet sea difícil. Se vigila con F0.4.3
   antes de construir encima.
+
+## Enmienda del 2026-10-30: dependencias de la catalogación
+
+Para portar la canalización de la V1 (Fase 4), con la aprobación de Nathan:
+
+| Crate | Para qué | Sustituye en la V1 |
+|---|---|---|
+| `lofty` | Leer y escribir etiquetas (ya prevista arriba) | `mutagen` |
+| `unicode-normalization` | NFKC, NFD y quitar diacríticos al comparar nombres | `unicodedata` |
+| `regex` | Las reglas de `utils/text.py`; ya estaba en el árbol | `re` |
+| `notify` | Vigilar la carpeta de música | `watchdog` |
+| `trash` | Descartar desde Por revisar a la papelera del sistema | `send2trash` |
+| `zip` | Leer y escribir el `.nbsound-backup`, que es un ZIP | `zipfile` |
+| `rustfft` y `rubato` | Los rasgos básicos de F0.4.4 y la firma de Shazam, portada de `shazamio-core` | `librosa`, `numpy`, `shazamio` |
+
+Cada una entra en el commit de la iteración que la usa.
