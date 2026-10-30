@@ -210,3 +210,99 @@ fn por_revisar_lista_lo_pendiente_sin_recorrer_lo_resuelto() {
     );
     assert!(p.contains("por_revisar_pendientes"), "{p}");
 }
+
+#[test]
+fn una_pista_no_se_repite_en_una_playlist() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    conn.execute(
+        "INSERT INTO playlists (id, nombre) VALUES (5, 'Para correr')",
+        [],
+    )
+    .unwrap();
+    conn.execute(
+        "INSERT INTO playlist_pistas (playlist_id, pista_id, posicion) VALUES (5, 100, 0)",
+        [],
+    )
+    .unwrap();
+    assert!(conn
+        .execute(
+            "INSERT INTO playlist_pistas (playlist_id, pista_id, posicion) VALUES (5, 100, 1)",
+            []
+        )
+        .is_err());
+}
+
+#[test]
+fn borrar_una_pista_la_saca_de_playlists_y_cola_pero_no_del_historial() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    conn.execute_batch(
+        "INSERT INTO playlists (id, nombre) VALUES (5, 'Para correr');
+         INSERT INTO playlist_pistas (playlist_id, pista_id, posicion) VALUES (5, 100, 0);
+         INSERT INTO cola (posicion, pista_id) VALUES (0, 100);
+         INSERT INTO historial (pista_id, titulo, artista) VALUES (100, 'Apertura', 'Banda Uno');
+         UPDATE estado_reproductor SET pista_id = 100;
+         DELETE FROM pistas WHERE id = 100;",
+    )
+    .unwrap();
+    let cuenta = |sql: &str| -> i64 { conn.query_row(sql, [], |f| f.get(0)).unwrap() };
+    assert_eq!(cuenta("SELECT count(*) FROM playlist_pistas"), 0);
+    assert_eq!(cuenta("SELECT count(*) FROM cola"), 0);
+    assert_eq!(
+        cuenta("SELECT count(*) FROM historial WHERE pista_id IS NULL AND titulo = 'Apertura'"),
+        1
+    );
+    assert_eq!(
+        cuenta("SELECT count(*) FROM estado_reproductor WHERE pista_id IS NULL"),
+        1
+    );
+}
+
+#[test]
+fn el_estado_del_reproductor_es_una_sola_fila() {
+    let (_db, conn) = base();
+    assert!(conn
+        .execute("INSERT INTO estado_reproductor (id) VALUES (2)", [])
+        .is_err());
+    assert!(conn
+        .execute("UPDATE estado_reproductor SET volumen = 100", [])
+        .is_err());
+}
+
+#[test]
+fn una_preferencia_tiene_que_ser_json() {
+    let (_db, conn) = base();
+    assert!(conn
+        .execute(
+            "INSERT INTO preferencias (clave, valor) VALUES ('tema', 'oceano')",
+            []
+        )
+        .is_err());
+    conn.execute(
+        "INSERT INTO preferencias (clave, valor) VALUES ('tema', '\"oceano\"')",
+        [],
+    )
+    .unwrap();
+}
+
+#[test]
+fn una_playlist_se_abre_en_orden_desde_su_indice() {
+    let (_db, conn) = base();
+    let p = plan(
+        &conn,
+        "SELECT pista_id FROM playlist_pistas WHERE playlist_id = 5 ORDER BY posicion",
+    );
+    assert!(p.contains("playlist_pistas_en_orden"), "{p}");
+    assert!(!p.contains("TEMP B-TREE"), "ordena en memoria: {p}");
+}
+
+#[test]
+fn los_recientes_salen_del_indice_por_fecha() {
+    let (_db, conn) = base();
+    let p = plan(
+        &conn,
+        "SELECT pista_id FROM historial ORDER BY reproducida_en DESC LIMIT 50",
+    );
+    assert!(p.contains("historial_por_fecha"), "{p}");
+}

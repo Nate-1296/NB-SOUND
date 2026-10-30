@@ -150,8 +150,8 @@ La futura vista **Por revisar** ([ADR-007](../adr/decisions/ADR-007-arquitectura
 | `id` | `→ playlists.id`, tal cual |
 | `nombre`, `descripcion` | `→ playlists.nombre`, `playlists.descripcion` |
 | `tipo` (`manual` 4, `automatica` 51, `sistema` 1), `subtipo`, `origen` | `→ playlists.tipo`, `playlists.subtipo`, `playlists.origen`, mismos valores: el contrato móvil los envía |
-| `regla_json`, `auto_key` | `→ playlists.regla`, `playlists.clave_auto` |
-| `es_anclada`, `anclada_en` | `→ playlists.anclada_en` (nula si no lo está) |
+| `regla_json`, `auto_key` | `→ playlists.regla`, `playlists.clave_auto` (única, como en la instalación real) |
+| `es_anclada`, `anclada_en` | `→ playlists.anclada`, `playlists.anclada_en`. Las dos: hay una anclada sin fecha |
 | `visible` | `→ playlists.visible` |
 | `portada_ruta` | **Se recalcula**: es el mosaico de las portadas de sus pistas |
 | `ultima_generacion_en`, `auto_actualizable`, `editada_por_usuario` | `→ playlists.generada_en`, `playlists.auto_actualizable`, `playlists.editada` |
@@ -169,18 +169,18 @@ La futura vista **Por revisar** ([ADR-007](../adr/decisions/ADR-007-arquitectura
 
 | Columna | Destino |
 |---|---|
-| `id`, `pista_id`, `reproducido_en`, `completada` | `→ historial` |
-| `titulo_snap`, `artista_snap` | `→ historial`: sobreviven a que la pista se borre, que es para lo que la V1 los guardaba |
-| `duracion_seg` | `→ historial.escuchado_ms` |
+| `id`, `pista_id`, `reproducido_en`, `completada` | `→ historial.id`, `pista_id`, `reproducida_en`, `completada` |
+| `titulo_snap`, `artista_snap` | `→ historial.titulo`, `historial.artista`: sobreviven a que la pista se borre, que es para lo que la V1 los guardaba |
+| `duracion_seg` | `→ historial.escuchado_seg` |
 
 ### `cola` (8)
 
-`posicion`, `pista_id`, `agregado_en` `→ cola`, con el mismo orden.
+`posicion`, `pista_id`, `agregado_en` `→ cola.posicion`, `pista_id`, `agregada_en`, con el mismo orden.
 
 ### `estado_reproductor` (0) y las claves `reproductor_*` de `config_ui`
 
 La tabla está vacía: la V1 guarda el estado en `config_ui`. `reproductor_pista_id`, `reproductor_pos_cola`,
-`reproductor_pos_seg`, `volumen`, `modo_aleatorio`, `modo_repeticion` y `audio_normalizar` `→ estado_reproductor`.
+`reproductor_pos_seg`, `volumen`, `modo_aleatorio`, `modo_repeticion` y `audio_normalizar` `→ estado_reproductor`, una sola fila con tipos. El volumen pasa de 0–100 a 0–1; la repetición conserva los valores de la V1 (`ninguno`, `todo`, `uno`).
 El ecualizador (`eq_activo`, `eq_bandas`, `eq_preamp`, `eq_preset`) `→ preferencias`.
 
 ### `config_ui` (153 claves)
