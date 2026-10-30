@@ -14,6 +14,7 @@
       "!**/pnpm-lock.yaml",
       "!**/.claude/settings.local.json",
       "!**/src/lib/bindings",
+      "!**/src/lib/ui/temas-v1.ts",
       "!**/test-results",
       "!**/playwright-report",
       "!**/legado",

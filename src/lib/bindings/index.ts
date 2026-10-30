@@ -10,6 +10,7 @@
 
 export type { AlbumResumen } from './AlbumResumen';
 export type { Ambiente } from './Ambiente';
+export type { Apariencia } from './Apariencia';
 export type { ArtistaResumen } from './ArtistaResumen';
 export type { AvisoReproductor } from './AvisoReproductor';
 export type { Categoria } from './Categoria';

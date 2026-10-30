@@ -16,6 +16,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import type {
   AlbumResumen,
   Ambiente,
+  Apariencia,
   ArtistaResumen,
   AvisoReproductor,
   ConsultaAlbumes,
@@ -36,6 +37,7 @@ import type {
 export type {
   AlbumResumen,
   Ambiente,
+  Apariencia,
   ArtistaResumen,
   AvisoReproductor,
   Categoria,
@@ -253,4 +255,15 @@ export function abrirMinirreproductor(): Promise<void> {
 /** Cierra la ventana desde la que se llama (el minirreproductor). */
 export function cerrarEstaVentana(): Promise<void> {
   return getCurrentWindow().close();
+}
+
+// --- Preferencias -------------------------------------------------------------------
+
+export function apariencia(): Promise<Apariencia> {
+  return call<Apariencia>('apariencia');
+}
+
+/** Solo las claves que admite `src-tauri/src/preferencias.rs`. */
+export function guardarPreferencia(clave: string, valor: unknown): Promise<void> {
+  return call<void>('guardar_preferencia', { clave, valor });
 }

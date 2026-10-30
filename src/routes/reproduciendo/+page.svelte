@@ -11,6 +11,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
+  import { aparienciaActual } from '$core/apariencia.svelte';
   import { ambienteDePista, type Letra, letraDePista, urlPortada } from '$core/ipc';
   import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
@@ -30,6 +31,9 @@
     rota = false;
     if (id === undefined || !vista) return;
     const destino = vista;
+    void letraDePista(id).then((l) => (letra = l));
+    // El color de la portada es una opción (enmienda de ADR-008); sin ella, el tema.
+    if (!aparienciaActual.actual.colorPorPortada) return;
     void ambienteDePista(id).then((a) =>
       aplicarApariencia(
         destino,
@@ -37,7 +41,6 @@
         true
       )
     );
-    void letraDePista(id).then((l) => (letra = l));
   });
 
   /** La línea que suena: la última cuyo momento ya pasó. */

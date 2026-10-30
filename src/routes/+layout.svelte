@@ -5,19 +5,16 @@
   import '../app.css';
 
   import { page } from '$app/state';
+  import { aparienciaActual } from '$core/apariencia.svelte';
   import AppShell from '$ui/AppShell.svelte';
-  import { APARIENCIA_DE_FABRICA, aplicarApariencia, elSistemaPrefiereOscuro } from '$ui/tema';
 
   let { children } = $props();
 
-  // La apariencia se aplica antes de pintar. Hasta que las preferencias vivan en
-  // la base (F2.2.9) es la de fábrica, que coincide con `paletas.css`.
+  // El tema de la V1 que eligió el usuario: el de la caché antes de pintar, y el
+  // de la base en cuanto responde (ver `apariencia.svelte.ts`).
   $effect.pre(() => {
-    void aplicarApariencia(
-      document.documentElement,
-      APARIENCIA_DE_FABRICA,
-      elSistemaPrefiereOscuro()
-    );
+    aparienciaActual.aplicarCache(document.documentElement);
+    void aparienciaActual.cargar(document.documentElement);
   });
 </script>
 

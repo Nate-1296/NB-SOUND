@@ -424,3 +424,25 @@ pub async fn abrir_minirreproductor(app: AppHandle) -> NsResult<()> {
             NsError::Internal
         })
 }
+
+// --- Preferencias -------------------------------------------------------------------
+
+#[tauri::command]
+pub async fn apariencia(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::preferencias::Apariencia> {
+    en_segundo_plano(&estado, crate::preferencias::apariencia).await
+}
+
+/// Cambia una preferencia de la lista de `preferencias.rs`; las demás se rechazan.
+#[tauri::command]
+pub async fn guardar_preferencia(
+    estado: tauri::State<'_, Estado>,
+    clave: String,
+    valor: serde_json::Value,
+) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| {
+        crate::preferencias::guardar(db, &clave, &valor)
+    })
+    .await
+}

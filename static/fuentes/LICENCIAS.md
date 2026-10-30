@@ -1,12 +1,12 @@
 # Tipografías incluidas en NB Sound
 
-La familia que la interfaz usa **viajan dentro de la aplicación**, en
+Las familias que la interfaz ofrece **viajan dentro de la aplicación**, en
 `static/fuentes/`. Van aquí, y no se piden al sistema, porque el sistema no las
 tiene: sin ellas la interfaz se pintaba con una tipografía distinta en cada
 sistema operativo, y ninguna era la diseñada. El motivo largo está en la
 cabecera de `src/fuentes.css`.
 
-Está bajo la **SIL Open Font License 1.1**, que la
+Todas están bajo la **SIL Open Font License 1.1**, que la
 política de dependencias
 admite para recursos tipográficos. La OFL exige distribuir el texto de la
 licencia junto a las fuentes, y eso es lo que hace este archivo.
@@ -16,7 +16,23 @@ diseño usa. Las fuentes **no se han modificado**.
 
 | Familia | Uso | Origen |
 |---|---|---|
-| IBM Plex Sans | Interfaz | <https://github.com/IBM/plex> |
+| Inter | Interfaz, de fábrica | <https://github.com/rsms/inter> |
+| Fira Sans | Interfaz, a elección | <https://github.com/mozilla/Fira> |
+| IBM Plex Sans | Interfaz, a elección | <https://github.com/IBM/plex> |
+| Atkinson Hyperlegible | Interfaz, a elección | <https://www.brailleinstitute.org/freefont> |
+| Source Sans 3 | Interfaz, a elección | <https://github.com/adobe-fonts/source-sans> |
+
+Los archivos de Inter, Fira Sans, Atkinson Hyperlegible y Source Sans 3 se tomaron de los paquetes de Fontsource,
+que redistribuyen las fuentes originales sin cambios.
+
+Avisos de copyright:
+
+* Inter: Copyright © 2016 The Inter Project Authors (<https://github.com/rsms/inter>).
+* Fira Sans: Copyright © 2012-2018 The Mozilla Foundation, Telefonica S.A., and Carrois Corporate GbR.
+* Atkinson Hyperlegible: Copyright © 2020 Braille Institute of America, Inc.
+* Source Sans 3: Copyright © 2010-2020 Adobe (<http://www.adobe.com/>), with Reserved Font Name "Source".
+
+Todas se distribuyen bajo la misma licencia, cuyo texto completo va abajo junto al aviso de IBM Plex Sans.
 
 ---
 

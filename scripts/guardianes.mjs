@@ -35,6 +35,7 @@ const GUARDIANES = [
   ['check-docs'],
   ['check-sin-python'],
   ['generar-paletas', '--check'],
+  ['generar-temas', '--check'],
   ['check-ui'],
   ['check-i18n'],
   ['check-error-contract'],

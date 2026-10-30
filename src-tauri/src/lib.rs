@@ -18,6 +18,7 @@ pub mod net;
 pub mod paths;
 pub mod playlists;
 pub mod portadas;
+pub mod preferencias;
 pub mod reproductor;
 pub mod secrets;
 pub mod security;
@@ -212,7 +213,9 @@ pub fn run() {
             comandos::anclar_playlist,
             comandos::letra_de_pista,
             comandos::ambiente_de_pista,
-            comandos::abrir_minirreproductor
+            comandos::abrir_minirreproductor,
+            comandos::apariencia,
+            comandos::guardar_preferencia
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");
