@@ -25,7 +25,9 @@ import type {
   ConsultaArtistas,
   ConsultaPistas,
   ConsultaPlaylists,
+  DatosAlbum,
   DatosCompletados,
+  DatosPista,
   Emparejar,
   EstadoMovil,
   InformeDeSalud,
@@ -62,7 +64,9 @@ export type {
   ConsultaArtistas,
   ConsultaPistas,
   ConsultaPlaylists,
+  DatosAlbum,
   DatosCompletados,
+  DatosPista,
   Emparejar,
   EstadoMovil,
   InformeDeSalud,
@@ -323,6 +327,26 @@ export function carpetaMusica(): Promise<string | null> {
  */
 export function completarDatos(pista: number): Promise<DatosCompletados> {
   return call<DatosCompletados>('completar_datos', { pista });
+}
+
+// --- Editar metadatos --------------------------------------------------------------
+
+export function datosPista(pista: number): Promise<DatosPista> {
+  return call<DatosPista>('datos_pista', { pista });
+}
+
+/** Guarda en la base y, si se puede, en el archivo. La pista conserva su id. */
+export function editarPista(pista: number, datos: DatosPista): Promise<void> {
+  return call<void>('editar_pista', { pista, datos });
+}
+
+export function datosAlbum(album: number): Promise<DatosAlbum> {
+  return call<DatosAlbum>('datos_album', { album });
+}
+
+/** Devuelve el id del álbum resultante: otro solo si se juntó con uno que ya existía. */
+export function editarAlbum(album: number, datos: DatosAlbum): Promise<number> {
+  return call<number>('editar_album', { album, datos });
 }
 
 // --- Privacidad e inteligencia artificial ---------------------------------------

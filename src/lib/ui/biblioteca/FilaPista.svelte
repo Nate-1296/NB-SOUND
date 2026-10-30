@@ -3,8 +3,9 @@
   Una canción en una lista, con la disposición de la V1 (`VistaBiblioteca.qml`):
   número, portada, título con artista, álbum y año debajo, álbum, duración, la
   estrella, el menú y las acciones Reproducir, Añadir a cola, Abrir álbum y Abrir
-  artista. Si está sin verificar, también "Completar datos" (F4.2.8), cuyo
-  resultado ocupa el subtítulo hasta que la lista se recarga.
+  artista. "Editar datos" (F4.2.5) abre su diálogo, que se carga aparte. Si está
+  sin verificar, también "Completar datos" (F4.2.8), cuyo resultado ocupa el
+  subtítulo hasta que la lista se recarga.
 
   Durante el desplazamiento rápido no pide la portada (F0.4.7): pinta el hueco y
   la pide al frenar.
@@ -26,8 +27,8 @@
     onreproducir: () => void;
     onanadir: () => void;
     onfavorita: () => void;
-    /** Se completó algo: la página recarga la lista para mostrarlo. */
-    oncompletada?: () => void;
+    /** Sus datos cambiaron: la página recarga la lista para mostrarlo. */
+    oncambiada?: () => void;
   }
 
   let {
@@ -38,7 +39,7 @@
     onreproducir,
     onanadir,
     onfavorita,
-    oncompletada
+    oncambiada
   }: Props = $props();
 
   const t = textos.biblioteca;
@@ -59,6 +60,7 @@
   function cerrarMenu() {
     menu?.hidePopover();
   }
+  let editando = $state(false);
   let completando = $state(false);
   let resultado = $state<string | null>(null);
   async function completar() {
@@ -67,7 +69,7 @@
     try {
       const r = await completarDatos(pista.id);
       resultado = t.completado(r);
-      if (r.identificada || r.portada || r.letra) oncompletada?.();
+      if (r.identificada || r.portada || r.letra) oncambiada?.();
     } catch (error) {
       resultado =
         error instanceof NsError && error.code === 'FILE_NOT_FOUND'
@@ -148,6 +150,28 @@
     <button type="button" class="boton" onclick={onanadir}>
       <Icon nombre="reproducir" tamano={14} />{t.anadirACola}
     </button>
+    <button
+      type="button"
+      class="icono"
+      aria-label={t.editarDatos}
+      title={t.editarDatos}
+      onclick={() => (editando = true)}
+    >
+      <Icon nombre="editar" tamano={18} />
+    </button>
+    {#if editando}
+      {#await import('../edicion/DialogoEditar.svelte') then m}
+        <m.default
+          tipo="pista"
+          id={pista.id}
+          oncerrar={() => (editando = false)}
+          onguardado={() => {
+            editando = false;
+            oncambiada?.();
+          }}
+        />
+      {/await}
+    {/if}
     {#if !pista.verificada}
       <button type="button" class="boton" disabled={completando} onclick={completar}>
         {t.completarDatos}

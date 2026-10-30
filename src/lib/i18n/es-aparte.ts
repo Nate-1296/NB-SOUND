@@ -6,6 +6,25 @@
  * solo los importan módulos que ya se cargan a demanda, y con ellos se cargan.
  */
 export const esAparte = {
+  edicion: {
+    tituloPista: 'Editar datos de la canción',
+    tituloAlbum: 'Editar datos del álbum',
+    ayuda:
+      'Se guardan en tu biblioteca y, si se puede, en el archivo. Las playlists y el teléfono la siguen reconociendo.',
+    titulo: 'Título',
+    artista: 'Artista',
+    album: 'Álbum',
+    albumAyuda: 'Vacío si no es de ningún álbum.',
+    numero: 'Número de pista',
+    anio: 'Año',
+    genero: 'Género',
+    guardar: 'Guardar',
+    cancelar: 'Cancelar',
+    invalido:
+      'Revisa los datos: el título y el artista no pueden quedar vacíos y el año va de 1000 a 9999.',
+    sinArchivo: 'No se encuentra el archivo de esta canción.',
+    fallo: 'No se pudo guardar. Vuelve a intentarlo.'
+  },
   privacidad: {
     privacidadAyuda:
       'NB Sound funciona sin conexión. Cada servicio solo se usa si lo activas, y solo recibe lo que se indica.',

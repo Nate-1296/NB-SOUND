@@ -114,6 +114,7 @@ export const es = {
     masAcciones: 'Más acciones',
     sinVerificarInsignia: 'Sin verificar',
     completarDatos: 'Completar datos',
+    editarDatos: 'Editar datos',
     completando: 'Buscando sus datos',
     completado: (r: { identificada: boolean; portada: boolean; letra: boolean }) => {
       const nuevas = [r.portada && 'la portada', r.letra && 'la letra'].filter(Boolean);

@@ -735,6 +735,61 @@ pub async fn por_revisar_descartar(
 }
 
 /// Vuelve a buscarlo: a la cola de importación.
+// --- Editar metadatos (F4.2.5) -------------------------------------------------------
+
+#[tauri::command]
+pub async fn datos_pista(
+    estado: tauri::State<'_, Estado>,
+    pista: i64,
+) -> NsResult<crate::catalogo::edicion::DatosPista> {
+    en_segundo_plano(&estado, move |db| {
+        crate::catalogo::edicion::datos_pista(db, pista)
+    })
+    .await
+}
+
+/// Guarda los datos de una pista en la base y, si se puede, en su archivo.
+#[tauri::command]
+pub async fn editar_pista(
+    estado: tauri::State<'_, Estado>,
+    pista: i64,
+    datos: crate::catalogo::edicion::DatosPista,
+) -> NsResult<()> {
+    let importador = estado.importador.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        importador.con_entorno(|e| crate::catalogo::edicion::editar_pista(e, pista, &datos))
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
+#[tauri::command]
+pub async fn datos_album(
+    estado: tauri::State<'_, Estado>,
+    album: i64,
+) -> NsResult<crate::catalogo::edicion::DatosAlbum> {
+    en_segundo_plano(&estado, move |db| {
+        crate::catalogo::edicion::datos_album(db, album)
+    })
+    .await
+}
+
+/// Guarda los datos de un álbum y de sus pistas. Devuelve el id del álbum
+/// resultante, que cambia solo si se juntó con otro que ya existía.
+#[tauri::command]
+pub async fn editar_album(
+    estado: tauri::State<'_, Estado>,
+    album: i64,
+    datos: crate::catalogo::edicion::DatosAlbum,
+) -> NsResult<i64> {
+    let importador = estado.importador.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        importador.con_entorno(|e| crate::catalogo::edicion::editar_album(e, album, &datos))
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
 /// "Completar datos" de una pista sin verificar (F4.2.8): identificarla de nuevo
 /// y buscarle portada y letra, sin cambiar su id.
 #[tauri::command]

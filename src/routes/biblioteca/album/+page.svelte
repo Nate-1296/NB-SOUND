@@ -1,8 +1,10 @@
 <!--
   El detalle de un álbum (`VistaDetalleAlbum.qml` de la V1): la portada grande,
-  título, artista, año y duración, Reproducir y Aleatorio, y sus canciones en orden.
+  título, artista, año y duración, Reproducir, Aleatorio y Editar datos (F4.2.5),
+  y sus canciones en orden.
 -->
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import {
     type AlbumResumen,
@@ -24,6 +26,9 @@
 
   let album = $state<AlbumResumen | null | undefined>(undefined);
   let pistas = $state<PistaResumen[]>([]);
+  let editando = $state(false);
+  // Editar el álbum o una de sus pistas los cambia en la base: se vuelven a pedir.
+  let recargas = $state(0);
 
   const consulta = $derived<ConsultaPistas>({
     texto: null,
@@ -36,6 +41,7 @@
 
   $effect(() => {
     const c = consulta;
+    void recargas;
     if (!Number.isFinite(id) || id <= 0) {
       album = null;
       return;
@@ -93,6 +99,9 @@
           <button type="button" class="boton" onclick={aleatorio}>
             <Icon nombre="aleatorio" tamano={16} />{t.album.aleatorio}
           </button>
+          <button type="button" class="boton" onclick={() => (editando = true)}>
+            <Icon nombre="editar" tamano={16} />{t.editarDatos}
+          </button>
         </div>
       </div>
     </header>
@@ -108,10 +117,26 @@
             onanadir={() =>
               reproductor.orden({ tipo: 'agregar', ids: [p.id], justoDespues: false })}
             onfavorita={() => alternarFavorita(i)}
+            oncambiada={() => recargas++}
           />
         </li>
       {/each}
     </ul>
+  {/if}
+  {#if editando}
+    {#await import('$ui/edicion/DialogoEditar.svelte') then m}
+      <m.default
+        tipo="album"
+        {id}
+        oncerrar={() => (editando = false)}
+        onguardado={(nuevo) => {
+          editando = false;
+          // Si se juntó con otro álbum, este ya no existe: se va al resultante.
+          if (nuevo !== id) void goto(`/biblioteca/album?id=${nuevo}`);
+          else recargas++;
+        }}
+      />
+    {/await}
   {/if}
 </section>
 

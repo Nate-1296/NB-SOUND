@@ -12,17 +12,11 @@
 
 use std::path::{Path, PathBuf};
 
-use rusqlite::{params, OptionalExtension};
 use serde::Serialize;
 use ts_rs::TS;
 
-use super::canalizacion::{
-    album_id, alta_de_candidato, artista_id, bd, completar, identificar_y_decidir, validar, Alta,
-    Entorno,
-};
-use super::duplicados::huella_de_archivo;
-use super::etiquetas::{self, Escritura};
-use crate::db;
+use super::canalizacion::{alta_de_candidato, completar, identificar_y_decidir, validar, Entorno};
+use super::edicion;
 use crate::error::{NsError, NsResult};
 use crate::net::Servicio;
 
@@ -36,52 +30,6 @@ pub struct DatosCompletados {
     pub identificada: bool,
     pub portada: bool,
     pub letra: bool,
-}
-
-struct Fila {
-    ruta: String,
-    titulo: String,
-    artista: String,
-    album: String,
-    artista_id: Option<i64>,
-    album_id: Option<i64>,
-    numero: Option<u32>,
-    anio: Option<i32>,
-    isrc: Option<String>,
-    mbid_grabacion: Option<String>,
-    mbid_lanzamiento: Option<String>,
-    tipo: Option<String>,
-    verificada: bool,
-}
-
-fn leer_fila(e: &Entorno<'_>, pista: i64) -> NsResult<Fila> {
-    e.db.conexion()?
-        .query_row(
-            "SELECT ruta, titulo, artista_nombre, album_titulo, artista_id, album_id, numero, anio,
-                    isrc, mbid_grabacion, mbid_lanzamiento, tipo_lanzamiento, verificada
-             FROM pistas WHERE id = ?1",
-            [pista],
-            |f| {
-                Ok(Fila {
-                    ruta: f.get(0)?,
-                    titulo: f.get(1)?,
-                    artista: f.get(2)?,
-                    album: f.get(3)?,
-                    artista_id: f.get(4)?,
-                    album_id: f.get(5)?,
-                    numero: f.get(6)?,
-                    anio: f.get(7)?,
-                    isrc: f.get(8)?,
-                    mbid_grabacion: f.get(9)?,
-                    mbid_lanzamiento: f.get(10)?,
-                    tipo: f.get(11)?,
-                    verificada: f.get(12)?,
-                })
-            },
-        )
-        .optional()
-        .map_err(|_| NsError::StorageFailure)?
-        .ok_or(NsError::InvalidInput)
 }
 
 /// Lo que ya tiene: portada (suya o de su álbum) y letra.
@@ -105,99 +53,6 @@ fn tiene(e: &Entorno<'_>, pista: i64) -> NsResult<(bool, bool)> {
     Ok((portada.is_some(), letra))
 }
 
-fn alta_de_fila(f: &Fila) -> Alta {
-    Alta {
-        titulo: f.titulo.clone(),
-        artista: f.artista.clone(),
-        album: f.album.clone(),
-        tipo: f.tipo.clone().unwrap_or_default(),
-        numero: f.numero,
-        anio: f.anio,
-        isrc: f.isrc.clone(),
-        mbid_grabacion: f.mbid_grabacion.clone(),
-        mbid_lanzamiento: f.mbid_lanzamiento.clone(),
-        verificada: f.verificada,
-        ..Alta::default()
-    }
-}
-
-/// Pone los datos identificados en la misma fila y borra el álbum y el artista
-/// que se queden sin nada. Devuelve los ids nuevos de artista y álbum.
-fn reasignar(
-    e: &Entorno<'_>,
-    pista: i64,
-    anterior: &Fila,
-    a: &Alta,
-    archivo: &Path,
-) -> NsResult<(i64, Option<i64>)> {
-    // Las etiquetas nuevas cambian el principio del archivo, y con él la huella
-    // que comprueba el teléfono: se vuelve a medir después de escribir.
-    let sha256 = huella_de_archivo(archivo)?;
-    let tamano = std::fs::metadata(archivo).map(|m| m.len()).unwrap_or(0);
-    let carpeta = Path::new(&anterior.ruta)
-        .parent()
-        .map(|p| p.to_string_lossy().into_owned())
-        .filter(|p| !p.is_empty());
-    let mut conn = e.db.conexion()?;
-    let tx = db::transaccion_de_escritura(&mut conn)?;
-    let artista = artista_id(&tx, &a.artista)?;
-    let album = album_id(&tx, artista, a, carpeta.as_deref())?;
-    let artista_nombre: String = bd(tx.query_row(
-        "SELECT nombre FROM artistas WHERE id = ?1",
-        [artista],
-        |f| f.get(0),
-    ))?;
-    let album_titulo: String = match album {
-        Some(id) => bd(
-            tx.query_row("SELECT titulo FROM albumes WHERE id = ?1", [id], |f| {
-                f.get(0)
-            }),
-        )?,
-        None => String::new(),
-    };
-    bd(tx.execute(
-        "UPDATE pistas SET titulo = ?1, artista_id = ?2, artista_nombre = ?3, album_id = ?4,
-             album_titulo = ?5, numero = ?6, anio = ?7, isrc = ?8, mbid_grabacion = ?9,
-             mbid_lanzamiento = ?10, tipo_lanzamiento = ?11, fuentes_etiquetado = ?12,
-             sha256 = ?13, tamano = ?14, verificada = 1
-         WHERE id = ?15",
-        params![
-            a.titulo.trim(),
-            artista,
-            artista_nombre,
-            album,
-            album_titulo,
-            a.numero.filter(|n| *n > 0),
-            a.anio.filter(|y| (1000..=9999).contains(y)),
-            a.isrc,
-            a.mbid_grabacion,
-            a.mbid_lanzamiento,
-            Some(a.tipo.clone()).filter(|x| !x.is_empty()),
-            serde_json::to_string(&a.fuentes).ok(),
-            sha256,
-            tamano as i64,
-            pista,
-        ],
-    ))?;
-    if let Some(viejo) = anterior.album_id.filter(|v| Some(*v) != album) {
-        bd(tx.execute(
-            "DELETE FROM albumes WHERE id = ?1
-             AND NOT EXISTS (SELECT 1 FROM pistas WHERE album_id = ?1)",
-            [viejo],
-        ))?;
-    }
-    if let Some(viejo) = anterior.artista_id.filter(|v| *v != artista) {
-        bd(tx.execute(
-            "DELETE FROM artistas WHERE id = ?1
-             AND NOT EXISTS (SELECT 1 FROM pistas WHERE artista_id = ?1)
-             AND NOT EXISTS (SELECT 1 FROM albumes WHERE artista_id = ?1)",
-            [viejo],
-        ))?;
-    }
-    bd(tx.commit())?;
-    Ok((artista, album))
-}
-
 /// Completa una pista. Una pista ya verificada no se vuelve a identificar: solo
 /// se le busca lo que le falte.
 ///
@@ -208,7 +63,7 @@ fn reasignar(
 /// - [`NsError::AudioCorrupted`] si el archivo no se puede leer.
 /// - [`NsError::StorageFailure`] si la base falla.
 pub fn completar_datos(e: &Entorno<'_>, pista: i64) -> NsResult<DatosCompletados> {
-    let fila = leer_fila(e, pista)?;
+    let fila = edicion::leer_fila(e.db, pista)?;
     let archivo: PathBuf = if Path::new(&fila.ruta).is_absolute() {
         PathBuf::from(&fila.ruta)
     } else {
@@ -219,7 +74,7 @@ pub fn completar_datos(e: &Entorno<'_>, pista: i64) -> NsResult<DatosCompletados
     }
     let (tecnico, cruda) = validar(&archivo).map_err(|_| NsError::AudioCorrupted)?;
     let antes = tiene(e, pista)?;
-    let mut alta = alta_de_fila(&fila);
+    let mut alta = edicion::alta_de_fila(&fila);
     let mut ids = (fila.artista_id, fila.album_id);
     let mut identificada = false;
     let con_red = e
@@ -245,29 +100,9 @@ pub fn completar_datos(e: &Entorno<'_>, pista: i64) -> NsResult<DatosCompletados
                 }
                 fuentes.push("musicbrainz");
                 alta = alta_de_candidato(c, &i.norm, fuentes);
-                // Si el archivo no admite escritura, los datos quedan en la
-                // biblioteca igualmente: es lo que ve y sincroniza la aplicación.
-                if etiquetas::escribir(
-                    &archivo,
-                    &Escritura {
-                        titulo: Some(alta.titulo.clone()),
-                        artista: Some(alta.artista.clone()),
-                        album: Some(alta.album.clone()).filter(|x| !x.is_empty()),
-                        numero: alta.numero,
-                        total: alta.total,
-                        anio: alta.anio,
-                        isrc: alta.isrc.clone(),
-                        mbid_grabacion: alta.mbid_grabacion.clone(),
-                        mbid_lanzamiento: alta.mbid_lanzamiento.clone(),
-                        mbid_grupo: alta.mbid_grupo.clone(),
-                        tipo_lanzamiento: Some(alta.tipo.clone()).filter(|x| !x.is_empty()),
-                    },
-                )
-                .is_err()
-                {
-                    tracing::warn!("no se pudieron escribir las etiquetas al completar datos");
-                }
-                let (artista, album) = reasignar(e, pista, &fila, &alta, &archivo)?;
+                alta.genero = fila.genero.clone();
+                edicion::escribir_etiquetas(&archivo, &alta);
+                let (artista, album) = edicion::reasignar(e, pista, &fila, &alta, &archivo)?;
                 ids = (Some(artista), album);
                 identificada = true;
             }
@@ -297,8 +132,11 @@ mod tests {
 
     use super::*;
     use crate::audio::pruebas::wav;
+    use crate::catalogo::canalizacion::Alta;
     use crate::catalogo::canalizacion::{procesar, Resultado};
+    use crate::catalogo::duplicados::huella_de_archivo;
     use crate::catalogo::duplicados::Gestor;
+    use crate::catalogo::etiquetas::{self, Escritura};
     use crate::db::BaseDeDatos;
     use crate::net::{PoliticaDeRed, Red};
     use crate::paths::Rutas;
@@ -439,7 +277,7 @@ mod tests {
                      VALUES (7, 'rayando', 1, 'mana', 5, 'sin album', 'x/pista.mp3', 0);",
             )
             .unwrap();
-        let fila = leer_fila(&e, 7).unwrap();
+        let fila = edicion::leer_fila(&db, 7).unwrap();
         let alta = Alta {
             titulo: "Rayando el sol".into(),
             artista: "Maná".into(),
@@ -450,7 +288,7 @@ mod tests {
             fuentes: vec!["tag_local", "musicbrainz"],
             ..Alta::default()
         };
-        let (artista, album) = reasignar(&e, 7, &fila, &alta, &archivo).unwrap();
+        let (artista, album) = edicion::reasignar(&e, 7, &fila, &alta, &archivo).unwrap();
         let conn = db.conexion().unwrap();
         let (titulo, a, al, v, sha): (String, i64, i64, bool, String) = conn
             .query_row(
