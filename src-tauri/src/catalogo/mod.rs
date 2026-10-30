@@ -10,6 +10,7 @@ pub mod duplicados;
 pub mod emparejador;
 pub mod etapas;
 pub mod etiquetas;
+pub mod letras_red;
 pub mod modelo;
 pub mod musicbrainz;
 pub mod normalizacion;

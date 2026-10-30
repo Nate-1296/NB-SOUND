@@ -22,7 +22,7 @@
 | F4.1.8 Duplicados exactos y semánticos, con su política | Hecha: los tres ejes de la V1 (`catalogo/duplicados.rs`), con la huella de 512 KB al principio y al final que comprueba el teléfono; precargados con la biblioteca |
 | F4.1.9 Escritura: organizar en la carpeta de música, transcodificar con `ffmpeg` | Pendiente |
 | F4.1.10 Portadas e imágenes de artista (las seis fuentes de la V1) | Pendiente |
-| F4.1.11 Letras (LRCLIB y lyrics.ovh) | Pendiente |
+| F4.1.11 Letras (LRCLIB y lyrics.ovh) | Hecha: `catalogo/letras_red.rs`, con el orden, la puntuación de filas y el trato del 429 de la V1 |
 | F4.1.12 Rasgos básicos y LUFS al importar | Pendiente |
 | F4.1.13 Recuperación tras un cierre a medias (`core/import_recovery_service.py`) | Pendiente |
 | F4.2.1 Arrastrar y soltar en toda la ventana; "Añadir música" | Pendiente |
