@@ -44,6 +44,10 @@ sha2 = "0.10.9"
 # versión y variante que NB Books: la feature `v1` elige Keychain, Credential
 # Locker o Secret Service según la plataforma, en Rust puro y sin libdbus.
 keyring = { version = "4.2.0", default-features = false, features = ["v1"] }
+# El motor de audio (ADR-003): Symphonia decodifica y Kira mezcla y saca el
+# sonido por cpal. Las mismas versiones y formatos que midió F0.4.1.
+kira = { version = "0.12.6", default-features = false, features = ["cpal"] }
+symphonia = { version = "0.6.1", features = ["mp3", "aac", "alac", "flac", "vorbis", "pcm", "wav", "isomp4", "ogg"] }
 # Cliente HTTP síncrono con rustls: el mismo que NB Books. Solo `net.rs` lo usa
 # (lo vigila `scripts/check-network.mjs`).
 ureq = { version = "3.4.0", default-features = false, features = ["rustls", "platform-verifier"] }

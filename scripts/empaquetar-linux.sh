@@ -24,7 +24,7 @@ podman run --rm \
   "$IMAGEN" bash -euo pipefail -c '
     apt-get update -qq
     apt-get install -y -qq curl ca-certificates build-essential pkg-config file xz-utils \
-      libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev patchelf >/dev/null
+      libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libasound2-dev patchelf >/dev/null
     if ! command -v node >/dev/null; then
       curl -fsSL https://deb.nodesource.com/setup_22.x | bash - >/dev/null
       apt-get install -y -qq nodejs >/dev/null

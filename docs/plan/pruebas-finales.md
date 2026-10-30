@@ -38,3 +38,11 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] El teléfono emparejado con la V1 se conecta a la V2 sin volver a emparejarse (la huella y los tokens se
       conservan; necesita la Fase 3).
 - [ ] Una segunda apertura no vuelve a importar.
+
+## Fase 2
+
+- [ ] Suena por la salida por defecto en Linux (PipeWire y PulseAudio), Windows y macOS, y sigue sonando al
+      cambiar de dispositivo (auriculares que se conectan) con la tasa nueva.
+- [ ] Un álbum en MP3 y otro en FLAC se oyen sin hueco entre pistas.
+- [ ] Mover la barra de posición cae donde se suelta; pausar y reanudar no hace clic.
+- [ ] Las 18 preselecciones del ecualizador se oyen como en la V1 y ninguna distorsiona al volumen máximo.
