@@ -56,3 +56,6 @@ Aprobadas por Nathan antes de añadirlas:
   Reducirlas en el webview costaría memoria y tiempo en cada desplazamiento.
 * **`tauri-plugin-global-shortcut`** (plugin oficial de Tauri): las teclas multimedia y los atajos globales de
   F2.1.6. La bandeja usa la función `tray-icon` del propio Tauri, sin crate nuevo.
+  **Al final no se añadió:** las teclas multimedia ya llegan a todo el sistema por MPRIS y SMTC (F2.1.5), y
+  registrarlas además como atajo global las haría actuar dos veces. Los atajos de la V1 eran de la ventana
+  (`Principal.qml`), y así se portan.

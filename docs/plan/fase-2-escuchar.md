@@ -15,7 +15,7 @@
 | F2.1.3 Ecualizador con las 18 preselecciones y preamplificación con margen | Hecha |
 | F2.1.4 Normalización de volumen por LUFS | Hecha: medida y ganancia; medir la biblioteca en segundo plano va con F2.1.7 |
 | F2.1.5 Controles del sistema: MPRIS, SMTC y macOS | Hecha: lo de Windows y macOS solo se compila en el CI |
-| F2.1.6 Atajos globales, bandeja y cierre limpio | Pendiente |
+| F2.1.6 Atajos globales, bandeja y cierre limpio | Hecha: los atajos son los de la ventana de la V1; las teclas multimedia, por F2.1.5 |
 | F2.1.7 Servicio de reproducción: cola, motor, sesión guardada, historial y avisos al puente | Hecha |
 | F2.2.1 Carcasa con la disposición de la V1: barra lateral, barra superior con búsqueda, barra de reproducción | Hecha |
 | F2.2.2 Inicio | Hecha: Sorpréndeme llega con las recomendaciones (F5.3.3) |

@@ -10,6 +10,8 @@
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
 
+  import { accionDeTecla, esCampoDeTexto } from '$core/atajos';
+  import { abrirMinirreproductor } from '$core/ipc';
   import { reproductor } from '$core/reproductor.svelte';
 
   import { clasificarAncho } from './anchos';
@@ -30,7 +32,43 @@
   onMount(() => {
     void reproductor.arrancar();
   });
+
+  function alPulsar(e: KeyboardEvent) {
+    const accion = accionDeTecla({
+      key: e.key,
+      ctrlKey: e.ctrlKey,
+      metaKey: e.metaKey,
+      altKey: e.altKey,
+      escribiendo: esCampoDeTexto(document.activeElement)
+    });
+    if (!accion) return;
+    // Un botón con el foco ya responde al espacio: no se toca dos veces.
+    if (accion === 'pausarReanudar' && document.activeElement instanceof HTMLButtonElement) return;
+    e.preventDefault();
+    const i = reproductor.instantanea;
+    const r = reproductor;
+    const acciones: Record<typeof accion, () => unknown> = {
+      pausarReanudar: r.pausarReanudar,
+      retroceder: () => r.buscar(Math.max(0, r.posicion - 10)),
+      avanzar: () => r.buscar(r.posicion + 10),
+      anterior: r.anterior,
+      siguiente: r.siguiente,
+      aleatorio: r.alternarAleatorio,
+      repeticion: r.rotarRepeticion,
+      karaoke: () => i.karaokeDisponible && r.alternarKaraoke(),
+      subirVolumen: () => r.volumen(Math.min(1, i.volumen + 0.05)),
+      bajarVolumen: () => r.volumen(Math.max(0, i.volumen - 0.05)),
+      letras: () => window.dispatchEvent(new CustomEvent('ns:vista', { detail: { letras: true } })),
+      ampliada: () =>
+        window.dispatchEvent(new CustomEvent('ns:vista', { detail: { letras: false } })),
+      cola: () => window.dispatchEvent(new CustomEvent('ns:cola')),
+      mini: abrirMinirreproductor
+    };
+    void acciones[accion]();
+  }
 </script>
+
+<svelte:window onkeydown={alPulsar} />
 
 <div class="carcasa" data-ancho={clase} bind:clientWidth={ancho}>
   <div class="lateral"><NavLateral {pendientes} /></div>

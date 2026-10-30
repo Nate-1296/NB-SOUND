@@ -18,7 +18,7 @@ Regenerar: `node scripts/generate-notices.mjs`
 Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
 (ADR-010).
 
-## Componentes de Rust (608)
+## Componentes de Rust (599)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -176,7 +176,6 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `gdkx11` | 0.18.2 | MIT | https://github.com/gtk-rs/gtk3-rs |
 | `gdkx11-sys` | 0.18.2 | MIT | https://github.com/gtk-rs/gtk3-rs |
 | `generic-array` | 0.14.7 | MIT | https://github.com/fizyk20/generic-array.git |
-| `gethostname` | 1.1.0 | Apache-2.0 | https://codeberg.org/swsnr/gethostname.rs.git |
 | `getrandom` | 0.2.17 | MIT OR Apache-2.0 | https://github.com/rust-random/getrandom |
 | `getrandom` | 0.3.4 | MIT OR Apache-2.0 | https://github.com/rust-random/getrandom |
 | `getrandom` | 0.4.3 | MIT OR Apache-2.0 | https://github.com/rust-random/getrandom |
@@ -187,7 +186,6 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `glib-macros` | 0.18.5 | MIT | https://github.com/gtk-rs/gtk-rs-core |
 | `glib-sys` | 0.18.1 | MIT | https://github.com/gtk-rs/gtk-rs-core |
 | `glob` | 0.3.4 | MIT OR Apache-2.0 | https://github.com/rust-lang/glob |
-| `global-hotkey` | 0.8.0 | Apache-2.0 OR MIT | https://github.com/tauri-apps/global-hotkey |
 | `gobject-sys` | 0.18.0 | MIT | https://github.com/gtk-rs/gtk-rs-core |
 | `gtk` | 0.18.2 | MIT | https://github.com/gtk-rs/gtk3-rs |
 | `gtk-sys` | 0.18.2 | MIT | https://github.com/gtk-rs/gtk3-rs |
@@ -246,7 +244,6 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `js-sys` | 0.3.106 | MIT OR Apache-2.0 | https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/js-sys |
 | `json-patch` | 4.2.0 | MIT/Apache-2.0 | https://github.com/idubrov/json-patch |
 | `jsonptr` | 0.7.1 | MIT OR Apache-2.0 | https://github.com/chanced/jsonptr |
-| `keyboard-types` | 0.7.0 | MIT OR Apache-2.0 | https://github.com/pyfisch/keyboard-types |
 | `keyboard-types` | 0.8.3 | MIT OR Apache-2.0 | https://github.com/rust-windowing/keyboard-types |
 | `keyring` | 4.2.0 | MIT OR Apache-2.0 | https://github.com/open-source-cooperative/keyring-rs |
 | `keyring-core` | 1.0.1 | MIT OR Apache-2.0 | https://github.com/open-source-cooperative/keyring-core.git |
@@ -469,8 +466,6 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `tauri-build` | 2.7.4 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
 | `tauri-codegen` | 2.7.4 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
 | `tauri-macros` | 2.7.4 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
-| `tauri-plugin` | 2.7.2 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
-| `tauri-plugin-global-shortcut` | 2.4.1 | Apache-2.0 OR MIT | https://github.com/tauri-apps/plugins-workspace |
 | `tauri-runtime` | 2.12.2 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
 | `tauri-runtime-wry` | 2.12.3 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
 | `tauri-utils` | 2.10.2 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
@@ -589,7 +584,6 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `windows-strings` | 0.5.1 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
 | `windows-sys` | 0.45.0 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
 | `windows-sys` | 0.52.0 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
-| `windows-sys` | 0.59.0 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
 | `windows-sys` | 0.61.2 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
 | `windows-targets` | 0.42.2 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
 | `windows-targets` | 0.52.6 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
@@ -603,9 +597,6 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `wry` | 0.57.1 | Apache-2.0 OR MIT | https://github.com/tauri-apps/wry |
 | `x11` | 2.21.0 | MIT | https://github.com/AltF02/x11-rs.git |
 | `x11-dl` | 2.21.0 | MIT | https://github.com/AltF02/x11-rs.git |
-| `x11rb` | 0.13.2 | MIT OR Apache-2.0 | https://github.com/psychon/x11rb |
-| `x11rb-protocol` | 0.13.2 | MIT OR Apache-2.0 | https://github.com/psychon/x11rb |
-| `xkeysym` | 0.2.1 | MIT OR Apache-2.0 OR Zlib | https://github.com/notgull/xkeysym |
 | `yoke` | 0.8.4 | Unicode-3.0 | https://github.com/unicode-org/icu4x |
 | `yoke-derive` | 0.8.4 | Unicode-3.0 | https://github.com/unicode-org/icu4x |
 | `zbus` | 5.19.0 | MIT | https://github.com/z-galaxy/zbus/ |

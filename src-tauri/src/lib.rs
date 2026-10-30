@@ -6,6 +6,7 @@
 //! (lo vigila `scripts/check-comandos.mjs`).
 
 pub mod audio;
+pub mod bandeja;
 pub mod biblioteca;
 pub mod cola;
 pub mod comandos;
@@ -165,6 +166,7 @@ pub fn run() {
                     ) {
                         let _ = controles.set(c);
                     }
+                    bandeja::poner(app.handle(), b.clone());
                     Some(b)
                 }
                 Err(error) => {

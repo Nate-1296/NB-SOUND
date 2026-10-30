@@ -33,13 +33,14 @@
   // La cola, en la capa superior sobre la barra.
   let capaCola: HTMLDivElement | undefined = $state();
   let colaAbierta = $state(false);
-  function alternarCola(e: MouseEvent) {
-    if (!capaCola) return;
+  let botonCola: HTMLButtonElement | undefined = $state();
+  function alternarCola() {
+    if (!capaCola || !botonCola) return;
     if (colaAbierta) {
       capaCola.hidePopover();
       return;
     }
-    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const r = botonCola.getBoundingClientRect();
     capaCola.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
     capaCola.style.bottom = `${window.innerHeight - r.top + 8}px`;
     capaCola.showPopover();
@@ -55,6 +56,19 @@
     }
     void goto(letras ? '/reproduciendo?letras' : '/reproduciendo', { replaceState: ruta });
   }
+
+  // Los atajos de la carcasa (`atajos.ts`) piden la cola y la vista ampliada con
+  // estos eventos: la barra es la dueña de las dos.
+  $effect(() => {
+    const cola = () => alternarCola();
+    const vista = (e: Event) => abrirVista((e as CustomEvent<{ letras: boolean }>).detail.letras);
+    window.addEventListener('ns:cola', cola);
+    window.addEventListener('ns:vista', vista);
+    return () => {
+      window.removeEventListener('ns:cola', cola);
+      window.removeEventListener('ns:vista', vista);
+    };
+  });
 
   function soltar(e: Event) {
     const valor = Number((e.currentTarget as HTMLInputElement).value);
@@ -189,6 +203,7 @@
     </button>
     <button
       type="button"
+      bind:this={botonCola}
       class="control cola conmutador"
       class:activo={colaAbierta}
       aria-label={t.colaCon(i.cola.length)}
