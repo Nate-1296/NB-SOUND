@@ -68,11 +68,17 @@ Una iteración está terminada cuando:
 
 ### 5.1 La puerta de empaquetado
 
-**Ninguna fase se cierra sin comprobar que la aplicación se empaqueta e instala.** Se cruza al final de cada fase:
+> **Decisión de Nathan (2026-10-30):** las puertas de cada fase y todo lo que solo se puede comprobar a mano o en el
+> entorno real **se acumulan** en [pruebas finales](./pruebas-finales.md) y se ejecutan juntas al terminar la Fase 8,
+> en la máquina de Nathan. Hasta entonces, una fase se cierra con sus pruebas automáticas en verde en las tres
+> plataformas del CI; lo que queda por comprobar a mano se apunta en ese documento al cerrar cada iteración.
+
+**Ninguna versión se publica sin comprobar que la aplicación se empaqueta e instala:**
 
 1. El empaquetado produce los instaladores (Linux siempre; Windows y macOS cuando haya CI o máquina, y si no, se
    dice explícitamente qué quedó sin comprobar).
-2. Todo viaja dentro: motor, decodificadores, `ffmpeg`, la huella acústica, ONNX Runtime, fuentes e iconos.
+2. Todo viaja dentro: motor, decodificadores, la huella acústica, ONNX Runtime, fuentes e iconos (`ffmpeg` no, por
+   la enmienda de ADR-006).
 3. Instala y arranca en una **máquina limpia** sin instalar nada más (en Linux, un contenedor o una máquina virtual
    sin VLC, sin Python y sin `ffmpeg`).
 4. Desinstalar no se lleva la biblioteca del usuario.

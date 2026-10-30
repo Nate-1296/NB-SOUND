@@ -1,0 +1,40 @@
+# Pruebas finales en el entorno real
+
+> **Estado:** Vigente desde el 2026-10-30. Decisión de Nathan: las puertas de empaquetado y todo lo que solo se
+> comprueba a mano se acumulan aquí y se ejecutan juntas al terminar la Fase 8 ([plan](./README.md), sección 5.1).
+> Cada iteración que deja algo sin comprobar a mano lo apunta aquí en el mismo commit.
+
+## Cómo se hará
+
+1. Se compilan los instaladores (Linux en el contenedor de Ubuntu 22.04; Windows y macOS desde el CI).
+2. Se prueba primero en máquina limpia (contenedor o máquina virtual): instala, arranca, no pide nada de fuera.
+3. En la máquina de Nathan:
+   * se desinstala NB Sound V1;
+   * se parte de la copia de seguridad de la V1 que está en `~/Música/copia_seguridad/`
+     (`nb_sound_20261029_112230.nbsound-backup`, 4,2 GB: la base hecha con `VACUUM INTO`, las portadas, las
+     imágenes de artista y los manifiestos; **no** trae el audio, que sigue en `~/Música/biblioteca/`, ni los
+     instrumentales, ni la identidad del servidor móvil, ni las claves);
+   * se instala la V2, se importa y se recorre la lista de abajo.
+4. Lo que falle se corrige con su prueba de regresión antes de publicar.
+
+Durante esta prueba, y solo durante ella, la V2 escribe en el entorno real de Nathan con su permiso: el llavero, las
+carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de la V1 siguen siendo de solo lectura.
+
+## Fase 0
+
+- [ ] El `.deb` y la AppImage arrancan en Ubuntu 22.04, Ubuntu 24.04 y Debian 12 limpios (ya comprobado el
+      2026-10-30 con la Fase 0; se repite con la aplicación completa).
+- [ ] Los instaladores de Windows y macOS instalan y arrancan en una máquina real.
+- [ ] `fpcalc` instalado en `/usr/bin` por el `.deb` no choca con el paquete `chromaprint` (F7.2.1).
+
+## Fase 1
+
+- [ ] La V2 instalada encuentra la V1 (o su copia de seguridad, ver P12) y la importa en segundo plano sin retrasar
+      la ventana.
+- [ ] Las cifras del informe cuadran con las de `docs/engineering/migracion-v1.md` (pistas, álbumes, playlists con su
+      orden, historial, teléfonos).
+- [ ] La clave de servicio que tenía la V1 aparece en el llavero del sistema bajo "NB Sound" y en ningún archivo de
+      la V2.
+- [ ] El teléfono emparejado con la V1 se conecta a la V2 sin volver a emparejarse (la huella y los tokens se
+      conservan; necesita la Fase 3).
+- [ ] Una segunda apertura no vuelve a importar.
