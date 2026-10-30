@@ -36,7 +36,7 @@ Base: NB Sound v1.1.16. Unas 111.000 líneas: 60.000 de Python de aplicación (`
 | Auditoría de la biblioteca | `core/audit.py` | Se rediseña: comprobación en segundo plano; lo que necesite al usuario va a Por revisar | F4.2.4 |
 | Copia de seguridad y restauración | `servicios/backup.py` | Se porta | F4.2.6 |
 | Rasgos básicos (librosa) | `core/audio_features.py` | Se porta a Rust; tonalidad con modo | F0.4.4, F4.1.12 |
-| Análisis profundo (Essentia) | `core/audio_intelligence_*.py` | Se porta a ONNX como agregado | F0.4.3, F5.3 |
+| Análisis profundo (Essentia) | `core/audio_intelligence_*.py` | Se porta a ONNX como agregado: MusiCNN y sus siete cabezas. **Se eliminan** VGGish y EffNet/Discogs400: la V1 los calculaba o los tenía preparados y nada los usaba | F0.4.3, F5.3 |
 | Descubrimiento musical por lenguaje natural | `core/music_discovery_service.py` | Se porta | F5.3.3 |
 | Karaoke (Demucs) | `servicios/karaoke/` | Se porta a ONNX como agregado | F0.4.2, F5.2 |
 | Preparar Karaoke (vista) | `VistaKaraoke.qml` | **Se elimina**: el micrófono del reproductor y "Listas para cantar" | F5.2 |

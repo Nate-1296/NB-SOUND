@@ -6,7 +6,7 @@
 | Id | Fecha | Pregunta | Qué la cierra | Estado |
 |---|---|---|---|---|
 | P1 | 2026-10-29 | ¿Kira da la precisión de muestra que piden el karaoke y la cola sin cortes, o hace falta un motor propio sobre `cpal`? | F0.4.1 | Cerrada: sí, con una fuente propia para la cola y el karaoke ([informe](../../audit/2026-10-29-prototipo-motor-audio.md)) |
-| P2 | 2026-10-29 | ¿Se alcanza paridad del preprocesado mel de MusiCNN, VGGish y EffNet en Rust? | F0.4.3 | Abierta |
+| P2 | 2026-10-29 | ¿Se alcanza paridad del preprocesado mel de MusiCNN, VGGish y EffNet en Rust? | F0.4.3 | Cerrada: sí, en las 407 pistas, replicando el remuestreo lineal de la V1 ([informe](../../audit/2026-10-29-prototipo-analisis.md)) |
 | P3 | 2026-10-29 | Si NB Sound llegara a ser comercial, ¿se licencian los modelos del MTG o se sustituyen? La propia web del MTG dice CC BY-NC-SA en una página y CC BY-NC-ND en otra | Decisión de Nathan, solo si cambia el modelo de negocio | Abierta, no bloquea |
 | P4 | 2026-10-29 | ¿Repositorio público de distribución en GitHub o Hugging Face para los agregados? | F0.1.5 | Abierta |
 | P5 | 2026-10-29 | ¿`rusty-chromaprint` produce la huella comprimida idéntica a la de `fpcalc`? | F0.4.6 | Cerrada: no; 0 de 66 idénticas. Se empaqueta `fpcalc` |

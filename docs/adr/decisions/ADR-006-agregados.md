@@ -24,7 +24,7 @@ con el móvil.
 | Agregado | Contenido | Habilita |
 |---|---|---|
 | Karaoke | `htdemucs` en ONNX (166 MB en fp16) | Modo karaoke en el reproductor, stems para el móvil, mezcla armónica del DJ |
-| Análisis musical | Los 12 modelos de Essentia convertidos a ONNX | Estados de ánimo, género, bailabilidad, listas inteligentes, DJ semántico |
+| Análisis musical | MusiCNN y sus siete cabezas de Essentia en ONNX (unos 4 MB; F0.4.3 retiró VGGish y EffNet, que la V1 calculaba sin usar) | Estados de ánimo, bailabilidad, valencia y activación, etiquetas, listas inteligentes, DJ semántico |
 | Comprensión de texto del DJ | `all-MiniLM-L6-v2` en ONNX | Pedidos al DJ en lenguaje natural |
 | Aceleración por GPU | Proveedor de ejecución de ONNX Runtime para la GPU detectada (CUDA, DirectML o CoreML) | Karaoke y análisis varias veces más rápidos |
 

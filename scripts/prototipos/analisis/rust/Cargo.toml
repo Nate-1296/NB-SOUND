@@ -1,0 +1,15 @@
+[package]
+name = "prototipo-analisis"
+version = "0.0.0"
+edition = "2021"
+publish = false
+license = "GPL-3.0-or-later"
+
+[dependencies]
+rustfft = "6"
+ndarray = "0.17"
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["load-dynamic", "ndarray"] }
+serde_json = "1"
+rubato = "0.16"
+rusqlite = { version = "0.37", features = ["bundled"] }
+symphonia = { version = "0.6", features = ["mp3", "aac", "alac", "flac", "vorbis", "pcm", "wav", "isomp4", "ogg"] }

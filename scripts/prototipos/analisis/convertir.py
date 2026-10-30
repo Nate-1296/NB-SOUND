@@ -5,7 +5,7 @@ Herramienta de desarrollo (ver check-sin-python). Entorno propio:
     cd scripts/prototipos/analisis
     uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python \
         tensorflow-cpu tf2onnx onnxruntime==1.31.1 numpy
-    .venv/bin/python convertir.py <carpeta-pb> <carpeta-salida>
+    .venv/bin/python convertir.py <carpeta-pb> <carpeta-salida> [modelo...]
 
 Para cada `.pb` lee su `.json` (entradas y salidas que declara Essentia), lo
 convierte con tf2onnx y ejecuta el original en TensorFlow y el convertido en ONNX
@@ -44,9 +44,10 @@ def main() -> None:
     origen, destino = Path(sys.argv[1]), Path(sys.argv[2])
     destino.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(1145)
+    solo = set(sys.argv[3:])
     for meta_ruta in sorted(origen.glob("*.json")):
         pb = meta_ruta.with_suffix(".pb")
-        if not pb.exists():
+        if not pb.exists() or (solo and pb.stem not in solo):
             continue
         meta = json.loads(meta_ruta.read_text())
         esquema = meta["schema"]
@@ -62,9 +63,7 @@ def main() -> None:
         onnx_ruta = destino / f"{pb.stem}.onnx"
         onnx_ruta.write_bytes(modelo.SerializeToString())
 
-        forma = forma_con_lote(esquema["inputs"][0]["shape"])
-        if forma[0] in (None, -1):
-            forma[0] = 1
+        forma = [d if isinstance(d, int) and d > 0 else 1 for d in forma_con_lote(esquema["inputs"][0]["shape"])]
         x = rng.standard_normal(forma).astype(np.float32)
         if "musicnn" in pb.stem and len(esquema["inputs"][0]["shape"]) == 1:
             x = np.abs(x)
@@ -75,7 +74,8 @@ def main() -> None:
 
         sesion_onnx = ort.InferenceSession(str(onnx_ruta))
         nombre_entrada = sesion_onnx.get_inputs()[0].name
-        obtenido = sesion_onnx.run(None, {nombre_entrada: x})
+        # Las salidas se piden por nombre: tf2onnx no garantiza el orden.
+        obtenido = sesion_onnx.run(salidas_tf, {nombre_entrada: x})
         difs = [float(np.max(np.abs(a - b))) for a, b in zip(ref, obtenido)]
         print(
             f"{pb.stem:42} entrada {forma}  {onnx_ruta.stat().st_size / 1e6:6.1f} MB  "
