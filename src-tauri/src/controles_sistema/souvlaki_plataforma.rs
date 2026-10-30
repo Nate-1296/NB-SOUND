@@ -13,7 +13,9 @@ use souvlaki::{
     MediaControlEvent, MediaControls, MediaMetadata, MediaPlayback, MediaPosition, PlatformConfig,
     SeekDirection,
 };
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
+#[cfg(target_os = "windows")]
+use tauri::Manager;
 
 use super::{metadatos, Metadatos};
 use crate::db::BaseDeDatos;
@@ -37,7 +39,7 @@ impl Controles {
         #[cfg(target_os = "windows")]
         let hwnd = {
             let ventana = app.get_webview_window("main")?;
-            Some(ventana.hwnd().ok()?.0 as *mut std::ffi::c_void)
+            Some(ventana.hwnd().ok()?.0)
         };
         #[cfg(not(target_os = "windows"))]
         let hwnd = None;
