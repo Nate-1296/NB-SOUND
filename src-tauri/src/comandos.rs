@@ -499,3 +499,8 @@ pub async fn carpeta_musica(estado: tauri::State<'_, Estado>) -> NsResult<Option
 pub async fn inicio(estado: tauri::State<'_, Estado>) -> NsResult<crate::inicio::Inicio> {
     en_segundo_plano(&estado, crate::inicio::resumen).await
 }
+
+#[tauri::command]
+pub async fn perfil(estado: tauri::State<'_, Estado>) -> NsResult<crate::perfil::Perfil> {
+    en_segundo_plano(&estado, crate::perfil::perfil).await
+}

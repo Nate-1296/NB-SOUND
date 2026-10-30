@@ -238,6 +238,36 @@ export const es = {
     vaciaSub:
       'NB Sound usará tus archivos locales para mostrar recientes, favoritos y música para retomar sin depender de servicios externos.'
   },
+  tuMusica: {
+    identidad: 'Tu identidad musical',
+    anonimo: 'Tu música',
+    resumen: (r: number, d: number, b: number) =>
+      `${r.toLocaleString('es')} reproducciones · ${d.toLocaleString('es')} pistas distintas de ${b.toLocaleString('es')} en biblioteca.`,
+    anioFavorito: (a: number) => `Año favorito: ${a}`,
+    horaPico: (h: string) => `Hora pico: ${h}`,
+    diasActivos: (n: number) => (n === 1 ? '1 día activo este mes' : `${n} días activos este mes`),
+    esencia: 'Reproducir tu esencia',
+    actualizar: 'Actualizar',
+    actividad: 'Tu actividad',
+    actividadSub: 'Lo que tu historial local dice de ti.',
+    escuchadas: 'Pistas escuchadas',
+    artistas: 'Artistas distintos',
+    albumes: 'Álbumes distintos',
+    tiempo: 'Tiempo escuchado',
+    animo: 'Mood del día',
+    sinEscuchasHoy: 'Todavía no has escuchado nada hoy.',
+    escuchasHoy: (n: number) =>
+      n === 1 ? '1 pista reproducida hoy.' : `${n} pistas reproducidas hoy.`,
+    mes: 'Actividad del mes',
+    leyenda: { nada: 'Sin escuchas', poco: '1–5', medio: '6–15', mucho: '16+' },
+    dia: (d: number, n: number) => `Día ${d}: ${n === 1 ? '1 escucha' : `${n} escuchas`}`,
+    querido: 'Lo que más has querido',
+    queridoSub: 'Tus tops según el historial. Álbum o artista llevan a su vista en la biblioteca.',
+    topCanciones: 'Top canciones',
+    topAlbumes: 'Top álbumes',
+    topArtistas: 'Top artistas',
+    vacio: 'Escucha música y aquí aparecerá lo que tu historial dice de ti.'
+  },
   cola: {
     titulo: 'Cola de reproducción',
     vaciar: 'Vaciar',

@@ -32,6 +32,7 @@ import type {
   PaginaAlbumes,
   PaginaArtistas,
   PaginaPistas,
+  Perfil,
   PistaResumen,
   PlaylistResumen,
   PreseleccionEcualizador
@@ -42,6 +43,7 @@ export type {
   AlbumResumen,
   Ambiente,
   Apariencia,
+  ArtistaDelDia,
   ArtistaResumen,
   AvisoReproductor,
   Categoria,
@@ -62,6 +64,7 @@ export type {
   PaginaAlbumes,
   PaginaArtistas,
   PaginaPistas,
+  Perfil,
   PistaEscuchada,
   PistaResumen,
   PlaylistResumen,
@@ -141,6 +144,12 @@ export type ClaseDePortada = 'pista' | 'album' | 'artista';
  * La URL de una portada. El runtime la sirve por su esquema propio: en Windows,
  * WebView2 lo expone como `http://portada.localhost`.
  */
+/** La foto de perfil que trajo la V1, si hay. */
+export function urlFotoPerfil(): string {
+  const windows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');
+  return windows ? 'http://portada.localhost/perfil' : 'portada://localhost/perfil';
+}
+
 export function urlPortada(clase: ClaseDePortada, id: number, tamano: number): string {
   const ruta = `${clase}/${id}/${tamano}`;
   const windows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');
@@ -290,4 +299,9 @@ export function carpetaMusica(): Promise<string | null> {
 /** Todo lo que muestra Inicio, en una sola petición. */
 export function inicio(): Promise<Inicio> {
   return call<Inicio>('inicio');
+}
+
+/** Lo que el historial dice del usuario (Tu música). */
+export function perfil(): Promise<Perfil> {
+  return call<Perfil>('perfil');
 }

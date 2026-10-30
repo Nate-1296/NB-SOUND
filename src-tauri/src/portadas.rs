@@ -190,6 +190,37 @@ pub fn servir(db: &BaseDeDatos, rutas: &Rutas, p: Peticion) -> NsResult<(Vec<u8>
     Ok((bytes, "image/jpeg"))
 }
 
+/// La foto de perfil (`portada://localhost/perfil`), que el importador copió de la
+/// V1 a `datos/perfil`. Es una sola y pequeña: se sirve tal cual.
+///
+/// # Errors
+///
+/// [`NsError::FileNotFound`] si no hay foto.
+pub fn servir_perfil(db: &BaseDeDatos, rutas: &Rutas) -> NsResult<(Vec<u8>, &'static str)> {
+    let valor: Option<String> = db
+        .conexion()?
+        .query_row(
+            "SELECT valor FROM preferencias WHERE clave = 'foto_perfil'",
+            [],
+            |f| f.get(0),
+        )
+        .optional()
+        .map_err(|_| NsError::StorageFailure)?;
+    let relativa = valor
+        .and_then(|v| serde_json::from_str::<String>(&v).ok())
+        .ok_or(NsError::FileNotFound)?;
+    // La ruta viene de la base, pero se comprueba igual que no sale de su carpeta.
+    let carpeta = rutas.datos.join("perfil");
+    let ruta = crate::security::resolve_within(&carpeta, std::path::Path::new(&relativa))?;
+    let bytes = std::fs::read(&ruta).map_err(|_| NsError::FileNotFound)?;
+    let mime = if relativa.ends_with(".png") {
+        "image/png"
+    } else {
+        "image/jpeg"
+    };
+    Ok((bytes, mime))
+}
+
 /// Dónde está en la caché la miniatura de una petición, si ya se generó. Lo usan
 /// los controles del sistema, que necesitan un archivo y no unos bytes.
 pub fn ruta_en_cache(db: &BaseDeDatos, rutas: &Rutas, p: Peticion) -> Option<PathBuf> {

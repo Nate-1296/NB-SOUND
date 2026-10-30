@@ -19,6 +19,7 @@ pub mod inicio;
 pub mod letras;
 pub mod net;
 pub mod paths;
+pub mod perfil;
 pub mod playlists;
 pub mod portadas;
 pub mod preferencias;
@@ -184,10 +185,14 @@ pub fn run() {
             let ruta = peticion.uri().path().to_owned();
             // Reducir una portada es trabajo de CPU: fuera del hilo de la ventana.
             tauri::async_runtime::spawn_blocking(move || {
-                let respuesta = match portadas::interpretar(&ruta)
-                    .ok_or(error::NsError::PathNotAllowed)
-                    .and_then(|p| portadas::servir(&db, &rutas, p))
-                {
+                let servida = if ruta == "/perfil" {
+                    portadas::servir_perfil(&db, &rutas)
+                } else {
+                    portadas::interpretar(&ruta)
+                        .ok_or(error::NsError::PathNotAllowed)
+                        .and_then(|p| portadas::servir(&db, &rutas, p))
+                };
+                let respuesta = match servida {
                     Ok((bytes, mime)) => tauri::http::Response::builder()
                         .header("Content-Type", mime)
                         .header("Cache-Control", "max-age=31536000, immutable")
@@ -243,7 +248,8 @@ pub fn run() {
             comandos::ecualizador,
             comandos::preselecciones_ecualizador,
             comandos::carpeta_musica,
-            comandos::inicio
+            comandos::inicio,
+            comandos::perfil
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

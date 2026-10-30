@@ -24,7 +24,7 @@
 | F2.2.5 Búsqueda global y `Ctrl+K` | Hecha |
 | F2.2.6 Reproducción expandida, letras sincronizadas y minirreproductor | Hecha |
 | F2.2.7 Los 63 temas de la V1 completos, la tipografía elegible y el color por portada como opción | Hecha: el selector, en Ajustes (F2.2.9) |
-| F2.2.8 Tu música (identidad, ánimo del día, actividad) con los datos ya migrados | Pendiente |
+| F2.2.8 Tu música (identidad, ánimo del día, actividad) con los datos ya migrados | Hecha: el resumen anual llega con las recomendaciones (F5.3.3) |
 | F2.2.9 Ajustes: Biblioteca, Reproducción, Apariencia, Acerca de | Hecha |
 
 ## Criterios
