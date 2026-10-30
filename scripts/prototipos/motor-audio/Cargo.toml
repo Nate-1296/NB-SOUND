@@ -1,0 +1,13 @@
+[package]
+name = "prototipo-motor-audio"
+version = "0.0.0"
+edition = "2021"
+publish = false
+license = "GPL-3.0-or-later"
+
+[dependencies]
+kira = { version = "0.12", default-features = false, features = ["cpal"] }
+symphonia = { version = "0.6", features = ["mp3", "aac", "alac", "flac", "vorbis", "pcm", "wav", "isomp4", "ogg"] }
+
+[profile.release]
+debug = 1

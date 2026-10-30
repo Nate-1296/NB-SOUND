@@ -16,7 +16,9 @@
       "!**/src/lib/bindings",
       "!**/test-results",
       "!**/playwright-report",
-      "!**/legado"
+      "!**/legado",
+      "!**/src-tauri/binarios",
+      "!**/scripts/prototipos"
     ]
   },
   "formatter": {

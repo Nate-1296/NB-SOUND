@@ -17,7 +17,7 @@ conservar **por qué** se tomó.
 |---|---|---|
 | [001](./decisions/ADR-001-pila-tecnologica.md) | Pila tecnológica de la V2, la misma que NB Books | Aceptado |
 | [002](./decisions/ADR-002-sin-python.md) | Ningún intérprete de Python en tiempo de ejecución | Aceptado, sujeto a F0.4.2–F0.4.4 |
-| [003](./decisions/ADR-003-motor-de-audio.md) | Motor de audio embebido en Rust: Symphonia y Kira | Aceptado, sujeto a F0.4.1 |
+| [003](./decisions/ADR-003-motor-de-audio.md) | Motor de audio embebido en Rust: Symphonia y Kira | Aceptado, confirmado por F0.4.1 |
 | [004](./decisions/ADR-004-datos.md) | Rust es dueño de los datos; la V1 se migra sin pérdida | Aceptado |
 | [005](./decisions/ADR-005-contrato-movil.md) | El contrato con NB Sound Mobile queda congelado | Aceptado |
 | [006](./decisions/ADR-006-agregados.md) | Agregados que se instalan con un clic | Aceptado |

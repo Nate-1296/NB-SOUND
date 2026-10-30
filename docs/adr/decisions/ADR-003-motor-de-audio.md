@@ -1,7 +1,7 @@
 # ADR-003: Motor de audio embebido en Rust
 
 **Fecha:** 2026-10-29
-**Estado:** Aceptado, sujeto a verificación por F0.4.1
+**Estado:** Aceptado. Confirmado por F0.4.1 el 2026-10-29, con tres ajustes ([informe](../../audit/2026-10-29-prototipo-motor-audio.md))
 
 ## Contexto
 
@@ -36,6 +36,13 @@ Lo que el motor tiene que cubrir, sacado del código de la V1:
 * **Mezcla:** Kira 0.12 (MIT/Apache-2.0): pistas de mezcla con efectos (`eq_filter`, `filter`, `volume_control`),
   transiciones con curvas, reloj para arrancar sonidos en un instante exacto y sonidos en streaming. El EQ de 10
   bandas son diez `eq_filter` en serie sobre la pista maestra.
+* **La cola y el karaoke son una fuente propia** (un `Sound` de Kira), no sonidos programados en el reloj de Kira:
+  F0.4.1 midió que arrancar pistas con `StartTime::ClockTime` no es exacto. La fuente entrega una pista y la
+  siguiente en el mismo bloque, y lee original e instrumental con el mismo índice.
+* **Margen antes de la salida:** Kira recorta a ±1,0 y los MP3 del corpus llegan a 1,104 tras decodificar. El
+  motor deja margen y pone un limitador suave de pico al final de la pista maestra.
+* **Ecualizador corregido:** las ganancias que reciben los diez filtros se calculan para que la respuesta en cada
+  centro sea la de la tabla de la V1; aplicada tal cual, la tabla se desvía hasta 7,2 dB.
 * **Controles del sistema:** `mpris-server` 0.11 (MPL-2.0) en Linux; `souvlaki` 0.9 (MIT) en Windows (SMTC) y
   macOS (`MPNowPlayingInfoCenter`).
 * **Sonoridad:** `ebur128` (MIT) calcula LUFS al importar; la ganancia se aplica al decodificar.

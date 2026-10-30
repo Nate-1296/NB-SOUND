@@ -105,7 +105,7 @@ for (const entrada of entradas) {
   }
   rmSync(tmp, { recursive: true, force: true });
   sellos[entrada.nombre] = entrada.sha256;
-  writeFileSync(sello, JSON.stringify(sellos, null, 2));
+  writeFileSync(sello, `${JSON.stringify(sellos, null, 2)}\n`);
   console.log(`Binarios: ${entrada.nombre} listo`);
 }
 

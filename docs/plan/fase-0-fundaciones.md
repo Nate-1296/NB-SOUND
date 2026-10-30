@@ -15,7 +15,7 @@
 |---|---|---|
 | F0.1.1 Constitución, ADR y plan | Hecha | 2026-10-29 |
 | F0.1.2 Contrato de trabajo (`CLAUDE.md`) | Hecha | 2026-10-29 |
-| F0.1.3 Mover la V1 a `legado/` | Hecha | 2026-10-29. Las pruebas de la V1 corren desde `legado/`; ver la nota de abajo |
+| F0.1.3 Mover la V1 a `legado/` | Hecha | 2026-10-29. Desde `legado/`, archivo por archivo: 1.207 pruebas pasan y 5 fallan, las cinco por desajustes previos de la V1 (versión de `pyproject.toml` distinta de `infra/version.py`, una prueba de MPRIS desfasada, dos de Ajustes que dependen del `.env` local y una de karaoke). El modo con `pytest-forked` no funciona en este entorno: cada prueba sale con estado 3 |
 | F0.1.4 Documentación de la V1 archivada en `docs/v1/` | Hecha | 2026-10-29 |
 | F0.1.5 Repositorio público de distribución para agregados | Pendiente | |
 | F0.2.1 Esqueleto Tauri 2 + SvelteKit 2 + Svelte 5 + m3-svelte | Hecha | Carcasa con los siete destinos, Por revisar condicional y reproductor inerte |
@@ -29,7 +29,7 @@
 | F0.3.2 Integración continua en tres plataformas | Pendiente | |
 | F0.3.3 Binarios empaquetados con hash fijado | Parcial | Linux y Windows fijados (`fpcalc` 1.6.2, ONNX Runtime 1.31.1); macOS pendiente de CI. `ffmpeg` sale del instalador (enmienda de ADR-006) |
 | F0.3.4 Primera puerta de empaquetado | Pendiente | |
-| F0.4.1 Prototipo del motor de audio | Pendiente | Decide ADR-003 |
+| F0.4.1 Prototipo del motor de audio | Hecha | ADR-003 confirmado con tres ajustes; ver el [informe](../audit/2026-10-29-prototipo-motor-audio.md) |
 | F0.4.2 Prototipo de karaoke en ONNX | Pendiente | Decide ADR-002 (karaoke) |
 | F0.4.3 Prototipo de análisis en ONNX | Pendiente | Decide ADR-002 (análisis) |
 | F0.4.4 Prototipo de rasgos básicos en Rust | Pendiente | Decide ADR-002 (rasgos) |
