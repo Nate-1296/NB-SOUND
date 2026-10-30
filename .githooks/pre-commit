@@ -36,6 +36,10 @@ if echo "$staged" | grep -q '^src-tauri/.*\.rs$'; then
   node scripts/check-plataforma.mjs || fail "Hay código de una sola plataforma sin su condición."
   if [ -d src-tauri/src/db ]; then
     node scripts/check-transacciones.mjs || fail "Hay una transacción de escritura abierta en diferido."
+  fi
+  # Mismo criterio que scripts/guardianes.mjs: solo hay listas que vigilar cuando
+  # un archivo con comandos devuelve un Vec que no son bytes.
+  if grep -rlE '#\[(tauri::)?command' src-tauri/src | xargs -r grep -qP 'NsResult<Vec<(?!u8>)'; then
     node scripts/check-listas.mjs || fail "Hay un comando que devuelve una lista sin acotar."
   fi
 fi

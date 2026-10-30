@@ -18,7 +18,7 @@ Regenerar: `node scripts/generate-notices.mjs`
 Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
 (ADR-010).
 
-## Componentes de Rust (454)
+## Componentes de Rust (474)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -58,6 +58,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `cfb` | 0.14.0 | MIT | https://github.com/mdsteele/rust-cfb |
 | `cfg-expr` | 0.15.8 | MIT OR Apache-2.0 | https://github.com/EmbarkStudios/cfg-expr |
 | `cfg-if` | 1.0.5 | MIT OR Apache-2.0 | https://github.com/rust-lang/cfg-if |
+| `chacha20` | 0.10.2 | MIT OR Apache-2.0 | https://github.com/RustCrypto/stream-ciphers |
 | `chrono` | 0.4.45 | MIT OR Apache-2.0 | https://github.com/chronotope/chrono |
 | `combine` | 4.6.9 | MIT | https://github.com/Marwes/combine |
 | `cookie` | 0.18.2 | MIT OR Apache-2.0 | https://github.com/SergioBenitez/cookie-rs |
@@ -66,6 +67,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `core-graphics` | 0.25.0 | MIT OR Apache-2.0 | https://github.com/servo/core-foundation-rs |
 | `core-graphics-types` | 0.2.0 | MIT OR Apache-2.0 | https://github.com/servo/core-foundation-rs |
 | `cpufeatures` | 0.2.17 | MIT OR Apache-2.0 | https://github.com/RustCrypto/utils |
+| `cpufeatures` | 0.3.1 | MIT OR Apache-2.0 | https://github.com/RustCrypto/utils |
 | `crc32fast` | 1.5.3 | MIT OR Apache-2.0 | https://github.com/srijs/rust-crc32fast |
 | `crossbeam-channel` | 0.5.17 | MIT OR Apache-2.0 | https://github.com/crossbeam-rs/crossbeam |
 | `crossbeam-utils` | 0.8.23 | MIT OR Apache-2.0 | https://github.com/crossbeam-rs/crossbeam |
@@ -100,6 +102,8 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `embed-resource` | 3.0.12 | MIT | https://github.com/nabijaczleweli/rust-embed-resource |
 | `equivalent` | 1.0.3 | Apache-2.0 OR MIT | https://github.com/indexmap-rs/equivalent |
 | `erased-serde` | 0.4.11 | MIT OR Apache-2.0 | https://github.com/dtolnay/erased-serde |
+| `fallible-iterator` | 0.3.0 | MIT/Apache-2.0 | https://github.com/sfackler/rust-fallible-iterator |
+| `fallible-streaming-iterator` | 0.1.9 | MIT/Apache-2.0 | https://github.com/sfackler/fallible-streaming-iterator |
 | `fastrand` | 2.5.0 | Apache-2.0 OR MIT | https://github.com/smol-rs/fastrand |
 | `fdeflate` | 0.3.7 | MIT OR Apache-2.0 | https://github.com/image-rs/fdeflate |
 | `field-offset` | 0.3.6 | MIT OR Apache-2.0 | https://github.com/Diggsey/rust-field-offset |
@@ -141,7 +145,9 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `gtk-sys` | 0.18.2 | MIT | https://github.com/gtk-rs/gtk3-rs |
 | `gtk3-macros` | 0.18.2 | MIT | https://github.com/gtk-rs/gtk3-rs |
 | `hashbrown` | 0.12.3 | MIT OR Apache-2.0 | https://github.com/rust-lang/hashbrown |
+| `hashbrown` | 0.16.1 | MIT OR Apache-2.0 | https://github.com/rust-lang/hashbrown |
 | `hashbrown` | 0.17.1 | MIT OR Apache-2.0 | https://github.com/rust-lang/hashbrown |
+| `hashlink` | 0.12.2 | MIT OR Apache-2.0 | https://github.com/djc/hashlink |
 | `heck` | 0.4.1 | MIT OR Apache-2.0 | https://github.com/withoutboats/heck |
 | `heck` | 0.5.0 | MIT OR Apache-2.0 | https://github.com/withoutboats/heck |
 | `hex` | 0.4.3 | MIT OR Apache-2.0 | https://github.com/KokaKiwi/rust-hex |
@@ -194,8 +200,10 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `libdbus-sys` | 0.2.7 | Apache-2.0/MIT | https://github.com/diwic/dbus-rs |
 | `libloading` | 0.7.4 | ISC | https://github.com/nagisa/rust_libloading/ |
 | `libredox` | 0.1.25 | MIT | https://gitlab.redox-os.org/redox-os/libredox.git |
+| `libsqlite3-sys` | 0.38.2 | MIT | https://github.com/rusqlite/rusqlite |
 | `litemap` | 0.8.3 | Unicode-3.0 | https://github.com/unicode-org/icu4x |
 | `lock_api` | 0.4.14 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
+| `lock_api` | 0.5.0 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
 | `log` | 0.4.34 | MIT OR Apache-2.0 | https://github.com/rust-lang/log |
 | `markup5ever` | 0.39.0 | MIT OR Apache-2.0 | https://github.com/servo/html5ever |
 | `matchers` | 0.2.0 | MIT | https://github.com/hawkw/matchers |
@@ -238,7 +246,9 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `pango` | 0.18.3 | MIT | https://github.com/gtk-rs/gtk-rs-core |
 | `pango-sys` | 0.18.0 | MIT | https://github.com/gtk-rs/gtk-rs-core |
 | `parking_lot` | 0.12.5 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
+| `parking_lot` | 0.13.0 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
 | `parking_lot_core` | 0.9.12 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
+| `parking_lot_core` | 0.10.0 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
 | `percent-encoding` | 2.3.2 | MIT OR Apache-2.0 | https://github.com/servo/rust-url/ |
 | `phf` | 0.13.1 | MIT | https://github.com/rust-phf/rust-phf |
 | `phf_codegen` | 0.13.1 | MIT | https://github.com/rust-phf/rust-phf |
@@ -264,8 +274,13 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `quote` | 1.0.47 | MIT OR Apache-2.0 | https://github.com/dtolnay/quote |
 | `r-efi` | 5.3.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later | https://github.com/r-efi/r-efi |
 | `r-efi` | 6.0.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later | https://github.com/r-efi/r-efi |
+| `r2d2` | 0.8.10 | MIT/Apache-2.0 | https://github.com/sfackler/r2d2 |
+| `r2d2_sqlite` | 0.35.0 | MIT | https://github.com/ivanceras/r2d2-sqlite |
+| `rand` | 0.10.3 | MIT OR Apache-2.0 | https://github.com/rust-random/rand |
+| `rand_core` | 0.10.1 | MIT OR Apache-2.0 | https://github.com/rust-random/rand_core |
 | `raw-window-handle` | 0.6.2 | MIT OR Apache-2.0 OR Zlib | https://github.com/rust-windowing/raw-window-handle |
 | `redox_syscall` | 0.5.18 | MIT | https://gitlab.redox-os.org/redox-os/syscall |
+| `redox_syscall` | 0.9.5 | MIT | https://gitlab.redox-os.org/redox-os/kernel |
 | `redox_users` | 0.5.3 | MIT | https://gitlab.redox-os.org/redox-os/users |
 | `ref-cast` | 1.0.27 | MIT OR Apache-2.0 | https://github.com/dtolnay/ref-cast |
 | `ref-cast-impl` | 1.0.27 | MIT OR Apache-2.0 | https://github.com/dtolnay/ref-cast |
@@ -274,6 +289,8 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `regex-syntax` | 0.8.11 | MIT OR Apache-2.0 | https://github.com/rust-lang/regex |
 | `reqwest` | 0.13.5 | MIT OR Apache-2.0 | https://github.com/seanmonstar/reqwest |
 | `ring` | 0.17.14 | Apache-2.0 AND ISC | https://github.com/briansmith/ring |
+| `rsqlite-vfs` | 0.1.1 | MIT |  |
+| `rusqlite` | 0.40.2 | MIT | https://github.com/rusqlite/rusqlite |
 | `rustc_version` | 0.4.1 | MIT OR Apache-2.0 | https://github.com/djc/rustc-version-rs |
 | `rustc-hash` | 2.1.3 | Apache-2.0 OR MIT | https://github.com/rust-lang/rustc-hash |
 | `rustls` | 0.23.46 | Apache-2.0 OR ISC OR MIT | https://github.com/rustls/rustls |
@@ -285,6 +302,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `rustversion` | 1.0.23 | MIT OR Apache-2.0 | https://github.com/dtolnay/rustversion |
 | `same-file` | 1.0.6 | Unlicense/MIT | https://github.com/BurntSushi/same-file |
 | `schannel` | 0.1.30 | MIT | https://github.com/steffengy/schannel-rs |
+| `scheduled-thread-pool` | 0.2.8 | MIT/Apache-2.0 | https://github.com/sfackler/scheduled-thread-pool |
 | `schemars` | 0.8.22 | MIT | https://github.com/GREsau/schemars |
 | `schemars` | 0.9.0 | MIT | https://github.com/GREsau/schemars |
 | `schemars` | 1.2.3 | MIT | https://github.com/GREsau/schemars |
@@ -321,6 +339,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `softbuffer` | 0.4.8 | MIT OR Apache-2.0 | https://github.com/rust-windowing/softbuffer |
 | `soup3` | 0.5.0 | MIT | https://gitlab.gnome.org/World/Rust/soup3-rs |
 | `soup3-sys` | 0.5.0 | MIT | https://gitlab.gnome.org/World/Rust/soup3-rs |
+| `sqlite-wasm-rs` | 0.5.5 | MIT | https://github.com/Spxg/sqlite-wasm-rs |
 | `stable_deref_trait` | 1.2.1 | MIT OR Apache-2.0 | https://github.com/storyyeller/stable_deref_trait |
 | `static_vcruntime` | 3.0.0 | MIT OR Apache-2.0 OR Zlib | https://github.com/ChrisDenton/static_vcruntime |
 | `string_cache` | 0.9.0 | MIT OR Apache-2.0 | https://github.com/servo/string-cache |
@@ -397,6 +416,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `utf8-zero` | 0.8.1 | MIT OR Apache-2.0 | https://github.com/algesten/utf8-zero |
 | `uuid` | 1.29.0 | Apache-2.0 OR MIT | https://github.com/uuid-rs/uuid |
 | `valuable` | 0.1.1 | MIT | https://github.com/tokio-rs/valuable |
+| `vcpkg` | 0.2.15 | MIT/Apache-2.0 | https://github.com/mcgoo/vcpkg-rs |
 | `version_check` | 0.9.5 | MIT/Apache-2.0 | https://github.com/SergioBenitez/version_check |
 | `version-compare` | 0.2.1 | MIT | https://gitlab.com/timvisee/version-compare |
 | `vswhom` | 0.1.0 | MIT | https://github.com/nabijaczleweli/vswhom.rs |

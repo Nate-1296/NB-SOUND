@@ -6,6 +6,7 @@
 //! (lo vigila `scripts/check-comandos.mjs`).
 
 pub mod comandos;
+pub mod db;
 pub mod error;
 pub mod net;
 pub mod paths;
