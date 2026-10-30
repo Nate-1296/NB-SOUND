@@ -8,7 +8,7 @@ Las de la cola viven en `src-tauri/src/cola/pruebas.rs` con el nombre de la orig
 las vistas (`qml_*`) se traducen a recorridos de Playwright cuando existe la vista: lo que verificaban era la
 disposición de QML, y su equivalente es la vista de la V2, no un archivo de QML.
 
-Traducidas: **31 de 112**.
+Traducidas: **37 de 112**.
 
 | Prueba de la V1 | Estado | Dónde vive en la V2 |
 |---|---|---|
@@ -24,13 +24,13 @@ Traducidas: **31 de 112**.
 | `modelo_biblioteca_abre_album_por_metadata_sin_id` | Pendiente | F2.2.3, Biblioteca |
 | `modelo_biblioteca_abre_artista_por_metadata_sin_id` | Pendiente | F2.2.3, Biblioteca |
 | `modelo_biblioteca_no_abre_metadata_ambigua` | Pendiente | F2.2.3, Biblioteca |
-| `biblioteca_grupos_albums_disponibles_oculta_vacios_y_clasifica_otros` | Pendiente | F2.2.3, Biblioteca |
-| `listar_pistas_sin_limite_de_500_y_con_filtros_reales` | Pendiente | F2.2.3, Biblioteca |
-| `biblioteca_busqueda_albumes_artistas_por_metadata_cruzada_con_conteos_completos` | Pendiente | F2.2.3, Biblioteca |
-| `biblioteca_ordenes_directos_e_inversos` | Pendiente | F2.2.3, Biblioteca |
-| `detalle_artista_expone_todas_las_pistas_y_destacadas` | Pendiente | F2.2.3, Biblioteca |
+| `biblioteca_grupos_albums_disponibles_oculta_vacios_y_clasifica_otros` | Hecha | `src-tauri/src/biblioteca.rs`: `los_albumes_vacios_no_se_listan_y_cada_uno_trae_sus_cifras` |
+| `listar_pistas_sin_limite_de_500_y_con_filtros_reales` | Hecha | `src-tauri/src/biblioteca.rs`: `los_filtros_se_combinan`, `un_tramo_empieza_donde_se_pide_y_el_total_no_cambia` |
+| `biblioteca_busqueda_albumes_artistas_por_metadata_cruzada_con_conteos_completos` | Hecha | `src-tauri/src/biblioteca.rs`: `buscar_albumes_y_artistas_no_necesita_tildes` |
+| `biblioteca_ordenes_directos_e_inversos` | Hecha | `src-tauri/src/biblioteca.rs`: `cada_orden_de_la_v1_ordena_y_su_inverso_lo_invierte` |
+| `detalle_artista_expone_todas_las_pistas_y_destacadas` | Hecha | `src-tauri/src/biblioteca.rs`: `un_album_o_artista_sin_canciones_visibles_no_existe_para_la_interfaz`, y la vista lista todas en la ventana virtual |
 | `modelo_biblioteca_persiste_estado_y_carga_pistas_filtradas` | Pendiente | F2.2.3, Biblioteca |
-| `modelo_biblioteca_toggle_favorita_y_filtro_reflejan_estado` | Pendiente | F2.2.3, Biblioteca |
+| `modelo_biblioteca_toggle_favorita_y_filtro_reflejan_estado` | Hecha | `src-tauri/src/biblioteca.rs`: `desmarcar_una_favorita_tambien_guarda_la_hora_y_sube_la_version`, `los_filtros_se_combinan` |
 | `modelo_biblioteca_favorita_refleja_lista_album_y_artista` | Pendiente | F2.2.3, Biblioteca |
 | `siguiente_sin_cola_detiene_y_play_reanuda_pista_activa` | Hecha | `src-tauri/src/cola/pruebas.rs` |
 | `anterior_en_repetir_todo_envuelve_al_final_de_la_cola` | Hecha | `src-tauri/src/cola/pruebas.rs` |

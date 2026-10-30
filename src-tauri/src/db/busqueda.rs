@@ -16,7 +16,7 @@ const MAX_PALABRAS: usize = 8;
 /// Convierte lo que escribió el usuario en una consulta FTS5 segura: cada palabra
 /// entre comillas y como prefijo, todas obligatorias. `None` si no queda nada que
 /// buscar.
-fn consulta(texto: &str) -> Option<String> {
+pub fn consulta(texto: &str) -> Option<String> {
     let palabras: Vec<String> = texto
         .split(|c: char| !c.is_alphanumeric())
         .filter(|p| !p.is_empty())

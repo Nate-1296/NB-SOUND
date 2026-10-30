@@ -19,7 +19,7 @@
 | F2.1.7 Servicio de reproducción: cola, motor, sesión guardada, historial y avisos al puente | Hecha |
 | F2.2.1 Carcasa con la disposición de la V1: barra lateral, barra superior con búsqueda, barra de reproducción | Hecha |
 | F2.2.2 Inicio | Pendiente |
-| F2.2.3 Biblioteca: canciones, álbumes, artistas y sus detalles | Pendiente |
+| F2.2.3 Biblioteca: canciones, álbumes, artistas y sus detalles | Hecha |
 | F2.2.4 Playlists manuales (crear, ordenar, añadir desde cualquier sitio) | Pendiente |
 | F2.2.5 Búsqueda global y `Ctrl+K` | Pendiente |
 | F2.2.6 Reproducción expandida, letras sincronizadas y minirreproductor | Pendiente |

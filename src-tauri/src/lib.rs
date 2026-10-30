@@ -178,7 +178,14 @@ pub fn run() {
             comandos::salud,
             comandos::reproductor_estado,
             comandos::reproductor_orden,
-            comandos::pistas_resumen
+            comandos::pistas_resumen,
+            comandos::biblioteca_pistas,
+            comandos::biblioteca_albumes,
+            comandos::biblioteca_artistas,
+            comandos::reproducir_lista,
+            comandos::fijar_favorita,
+            comandos::biblioteca_album,
+            comandos::biblioteca_artista
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

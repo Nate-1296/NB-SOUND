@@ -152,3 +152,103 @@ pub async fn pistas_resumen(
         .await
         .map_err(|_| NsError::Internal)?
 }
+
+// --- Biblioteca ------------------------------------------------------------------
+
+/// Ejecuta una consulta de solo lectura fuera del hilo de la ventana.
+async fn en_segundo_plano<T: Send + 'static>(
+    estado: &tauri::State<'_, Estado>,
+    trabajo: impl FnOnce(&crate::db::BaseDeDatos) -> NsResult<T> + Send + 'static,
+) -> NsResult<T> {
+    let db = estado.db.clone();
+    tauri::async_runtime::spawn_blocking(move || trabajo(&db))
+        .await
+        .map_err(|_| NsError::Internal)?
+}
+
+#[tauri::command]
+pub async fn biblioteca_pistas(
+    estado: tauri::State<'_, Estado>,
+    consulta: biblioteca::ConsultaPistas,
+    desde: u32,
+    limite: u32,
+) -> NsResult<biblioteca::PaginaPistas> {
+    en_segundo_plano(&estado, move |db| {
+        biblioteca::pistas(db, &consulta, desde, limite)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn biblioteca_albumes(
+    estado: tauri::State<'_, Estado>,
+    consulta: biblioteca::ConsultaAlbumes,
+    desde: u32,
+    limite: u32,
+) -> NsResult<biblioteca::PaginaAlbumes> {
+    en_segundo_plano(&estado, move |db| {
+        biblioteca::albumes(db, &consulta, desde, limite)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn biblioteca_artistas(
+    estado: tauri::State<'_, Estado>,
+    consulta: biblioteca::ConsultaArtistas,
+    desde: u32,
+    limite: u32,
+) -> NsResult<biblioteca::PaginaArtistas> {
+    en_segundo_plano(&estado, move |db| {
+        biblioteca::artistas(db, &consulta, desde, limite)
+    })
+    .await
+}
+
+/// Reproduce una lista desde la canción elegida: la cola es la lista, recortada a
+/// su alrededor si es enorme.
+#[tauri::command]
+pub async fn reproducir_lista(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    consulta: biblioteca::ConsultaPistas,
+    indice: u32,
+) -> NsResult<()> {
+    let (ids, desde) = en_segundo_plano(&estado, move |db| {
+        biblioteca::ids_para_cola(db, &consulta, indice)
+    })
+    .await?;
+    reproductor(&app)?.enviar(Orden::ReproducirPistas {
+        ids,
+        desde: desde as usize,
+    });
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn fijar_favorita(
+    estado: tauri::State<'_, Estado>,
+    pista_id: i64,
+    favorita: bool,
+) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| {
+        biblioteca::fijar_favorita(db, pista_id, favorita)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn biblioteca_album(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+) -> NsResult<Option<biblioteca::AlbumResumen>> {
+    en_segundo_plano(&estado, move |db| biblioteca::album(db, id)).await
+}
+
+#[tauri::command]
+pub async fn biblioteca_artista(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+) -> NsResult<Option<biblioteca::ArtistaResumen>> {
+    en_segundo_plano(&estado, move |db| biblioteca::artista(db, id)).await
+}

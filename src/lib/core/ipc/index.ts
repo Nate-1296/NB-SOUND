@@ -13,18 +13,37 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
 import type {
+  AlbumResumen,
+  ArtistaResumen,
   AvisoReproductor,
+  ConsultaAlbumes,
+  ConsultaArtistas,
+  ConsultaPistas,
   InformeDeSalud,
   Instantanea,
   OrdenReproductor,
+  PaginaAlbumes,
+  PaginaArtistas,
+  PaginaPistas,
   PistaResumen
 } from '$lib/bindings';
 
 export type {
+  AlbumResumen,
+  ArtistaResumen,
   AvisoReproductor,
+  ConsultaAlbumes,
+  ConsultaArtistas,
+  ConsultaPistas,
   InformeDeSalud,
   Instantanea,
+  OrdenAlbumes,
+  OrdenArtistas,
+  OrdenPistas,
   OrdenReproductor,
+  PaginaAlbumes,
+  PaginaArtistas,
+  PaginaPistas,
   PistaResumen
 } from '$lib/bindings';
 
@@ -105,4 +124,48 @@ export function urlPortada(clase: ClaseDePortada, id: number, tamano: number): s
   const ruta = `${clase}/${id}/${tamano}`;
   const windows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');
   return windows ? `http://portada.localhost/${ruta}` : `portada://localhost/${ruta}`;
+}
+
+// --- Biblioteca ------------------------------------------------------------------
+
+/** Un tramo de canciones (como mucho 500) y el total que cumple la consulta. */
+export function bibliotecaPistas(
+  consulta: ConsultaPistas,
+  desde: number,
+  limite: number
+): Promise<PaginaPistas> {
+  return call<PaginaPistas>('biblioteca_pistas', { consulta, desde, limite });
+}
+
+export function bibliotecaAlbumes(
+  consulta: ConsultaAlbumes,
+  desde: number,
+  limite: number
+): Promise<PaginaAlbumes> {
+  return call<PaginaAlbumes>('biblioteca_albumes', { consulta, desde, limite });
+}
+
+export function bibliotecaArtistas(
+  consulta: ConsultaArtistas,
+  desde: number,
+  limite: number
+): Promise<PaginaArtistas> {
+  return call<PaginaArtistas>('biblioteca_artistas', { consulta, desde, limite });
+}
+
+/** Reproduce la lista desde la canción en `indice`. */
+export function reproducirLista(consulta: ConsultaPistas, indice: number): Promise<void> {
+  return call<void>('reproducir_lista', { consulta, indice });
+}
+
+export function fijarFavorita(pistaId: number, favorita: boolean): Promise<void> {
+  return call<void>('fijar_favorita', { pistaId, favorita });
+}
+
+export function bibliotecaAlbum(id: number): Promise<AlbumResumen | null> {
+  return call<AlbumResumen | null>('biblioteca_album', { id });
+}
+
+export function bibliotecaArtista(id: number): Promise<ArtistaResumen | null> {
+  return call<ArtistaResumen | null>('biblioteca_artista', { id });
 }
