@@ -1,5 +1,5 @@
 {
-  "$comentario": "Binarios que viajan dentro del instalador (ADR-006). Cada archivo con su SHA-256 fijado: si upstream lo cambia, la descarga se rechaza. ffmpeg no está: ver la enmienda de ADR-006. Ver scripts/fetch-binarios.mjs.",
+  "$comentario": "Binarios que viajan dentro del instalador (ADR-006). Cada archivo con su SHA-256 fijado: si upstream lo cambia, la descarga se rechaza. ffmpeg no está: ver la enmienda de ADR-006. Ver scripts/fetch-binarios.mjs. macOS solo en Apple Silicon: ONNX Runtime 1.31 ya no publica binario para Mac con Intel.",
   "linux-x86_64": [
     {
       "nombre": "fpcalc",
@@ -33,6 +33,24 @@
       "sha256": "5869e26bb25314375f2d5ef1877e3ea06b1543d6c710e6e4a1ec2f7177ab4b2c",
       "extraer": {
         "onnxruntime-win-x64-1.31.1/lib/onnxruntime.dll": "onnxruntime.dll"
+      }
+    }
+  ],
+  "macos-aarch64": [
+    {
+      "nombre": "fpcalc",
+      "url": "https://github.com/acoustid/chromaprint/releases/download/v1.6.2/chromaprint-fpcalc-1.6.2-macos-universal.tar.gz",
+      "sha256": "53d9368f96017fb288d74f6ed4d928f7bbbfb2ff81e69b4ef67b6ceeb217d9b2",
+      "extraer": {
+        "chromaprint-fpcalc-1.6.2-macos-universal/fpcalc": "fpcalc"
+      }
+    },
+    {
+      "nombre": "onnxruntime",
+      "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.1/onnxruntime-osx-arm64-1.31.1.tgz",
+      "sha256": "2e1344a1926ee50eb25b38153cb6992c3567515aef0e677a1a520a1798896d6f",
+      "extraer": {
+        "onnxruntime-osx-arm64-1.31.1/lib/libonnxruntime.1.31.1.dylib": "libonnxruntime.dylib"
       }
     }
   ]

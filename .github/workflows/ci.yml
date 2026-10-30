@@ -91,9 +91,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-      # macOS aún no tiene manifiesto de binarios (F0.3.3, Parcial).
       - name: Binarios del instalador
-        if: runner.os != 'macOS'
         run: node scripts/fetch-binarios.mjs
       - name: Formato
         working-directory: src-tauri
