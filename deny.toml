@@ -16,6 +16,9 @@ ignore = [
   "RUSTSEC-2026-0370", # zvariant
   "RUSTSEC-2026-0371", # zbus_names
   "RUSTSEC-2026-0372", # zvariant_derive
+  # `paste` está archivado, no roto: es una macro de compilación que no llega al
+  # binario. La trae `lofty` 0.25 (ADR-002). Revisado el 2026-10-30.
+  "RUSTSEC-2024-0436", # paste
 ]
 
 [licenses]

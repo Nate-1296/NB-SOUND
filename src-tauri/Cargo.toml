@@ -74,6 +74,8 @@ qrcode = { version = "0.14.1", default-features = false }
 # regulares. `regex` ya estaba en el árbol por tracing-subscriber.
 unicode-normalization = "0.1.26"
 regex = "1.13.1"
+# Las etiquetas de todos los formatos que importa la V2 (ADR-002).
+lofty = "0.25.5"
 
 # Controles del sistema (ADR-003, F2.1.5): MPRIS en Linux, con aleatorio y
 # repetición en los dos sentidos; SMTC en Windows y el centro de reproducción en

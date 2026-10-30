@@ -5,4 +5,5 @@
 //! pieza, con sus pruebas, antes de rediseñar nada del algoritmo (regla de la
 //! fase).
 
+pub mod etiquetas;
 pub mod texto;

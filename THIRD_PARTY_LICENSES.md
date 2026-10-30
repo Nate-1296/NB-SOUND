@@ -18,7 +18,7 @@ Regenerar: `node scripts/generate-notices.mjs`
 Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
 (ADR-010).
 
-## Componentes de Rust (636)
+## Componentes de Rust (640)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -271,6 +271,8 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `litemap` | 0.8.3 | Unicode-3.0 | https://github.com/unicode-org/icu4x |
 | `lock_api` | 0.4.14 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
 | `lock_api` | 0.5.0 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
+| `lofty` | 0.25.5 | MIT OR Apache-2.0 | https://github.com/Serial-ATA/lofty-rs |
+| `lofty_attr` | 0.13.0 | MIT OR Apache-2.0 | https://github.com/Serial-ATA/lofty-rs |
 | `log` | 0.4.34 | MIT OR Apache-2.0 | https://github.com/rust-lang/log |
 | `mach2` | 0.6.0 | BSD-2-Clause OR MIT OR Apache-2.0 | https://github.com/JohnTitor/mach2 |
 | `malloc_buf` | 0.0.6 | MIT | https://github.com/SSheldon/malloc_buf |
@@ -328,6 +330,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `objc2-ui-kit` | 0.3.2 | Zlib OR Apache-2.0 OR MIT | https://github.com/madsmtm/objc2 |
 | `objc2-user-notifications` | 0.3.2 | Zlib OR Apache-2.0 OR MIT | https://github.com/madsmtm/objc2 |
 | `objc2-web-kit` | 0.3.2 | Zlib OR Apache-2.0 OR MIT | https://github.com/madsmtm/objc2 |
+| `ogg_pager` | 0.8.0 | MIT OR Apache-2.0 | https://github.com/Serial-ATA/lofty-rs |
 | `oid-registry` | 0.8.1 | MIT OR Apache-2.0 | https://github.com/rusticata/oid-registry.git |
 | `once_cell` | 1.21.4 | MIT OR Apache-2.0 | https://github.com/matklad/once_cell |
 | `openssl-probe` | 0.2.2 | MIT OR Apache-2.0 | https://github.com/rustls/openssl-probe |
@@ -340,6 +343,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `parking_lot` | 0.13.0 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
 | `parking_lot_core` | 0.9.12 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
 | `parking_lot_core` | 0.10.0 | MIT OR Apache-2.0 | https://github.com/Amanieu/parking_lot |
+| `paste` | 1.0.15 | MIT OR Apache-2.0 | https://github.com/dtolnay/paste |
 | `pastey` | 0.2.3 | MIT OR Apache-2.0 | https://github.com/as1100k/pastey |
 | `pem` | 4.0.0 | MIT | https://github.com/jcreekmore/pem-rs.git |
 | `percent-encoding` | 2.3.2 | MIT OR Apache-2.0 | https://github.com/servo/rust-url/ |
