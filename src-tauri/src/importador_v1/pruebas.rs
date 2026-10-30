@@ -83,7 +83,7 @@ fn escenario(nombre: &str) -> Escenario {
     let v1 = Connection::open(&base_v1).unwrap();
     v1.execute_batch(ESQUEMA_V1).unwrap();
     v1.execute_batch("PRAGMA journal_mode = WAL;").unwrap();
-    let musica_con_barra = format!("{}/", s(&musica));
+    let musica_con_barra = format!("{}{}", s(&musica), std::path::MAIN_SEPARATOR);
     v1.execute_batch(&format!(
         "INSERT INTO config_ui (clave, valor) VALUES
             ('dir_biblioteca', '{musica}'), ('dir_assets', '{assets}'),
