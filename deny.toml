@@ -10,6 +10,12 @@ yanked = "deny"
 # que acepta NB Books no aparecen en este árbol.
 ignore = [
   "RUSTSEC-2024-0370", # proc-macro-error
+  # `zvariant`, `zvariant_derive` y `zbus_names` no tienen fallo: se fundieron en
+  # zbus 6 y dejaron de publicarse sueltos. Llegan por `keyring` 4.2 (ADR-009),
+  # que aún depende de zbus 5. Revisado el 2026-10-30; se quitan al subir keyring.
+  "RUSTSEC-2026-0370", # zvariant
+  "RUSTSEC-2026-0371", # zbus_names
+  "RUSTSEC-2026-0372", # zvariant_derive
 ]
 
 [licenses]

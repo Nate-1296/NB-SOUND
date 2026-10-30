@@ -21,7 +21,7 @@
 | F1.2.1 Inventario columna a columna de las 30 tablas de la V1 y de lo que guarda fuera de la base | Hecha |
 | F1.2.2 Importador de solo lectura | Hecha |
 | F1.2.3 Migración de la identidad del servidor móvil (certificado, clave, tokens) | Hecha |
-| F1.2.4 Migración del `.env` (rutas y claves al llavero) | Pendiente |
+| F1.2.4 Migración del `.env` (rutas y claves al llavero) | Hecha |
 | F1.2.5 Informe y prueba de conservación sobre la base real | Hecha |
 | F1.3.1 Búsqueda de texto completo (FTS5) sobre títulos, artistas, álbumes y letras | Hecha |
 

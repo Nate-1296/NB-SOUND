@@ -13,6 +13,7 @@
 //!    un fallo no duplica nada.
 
 pub mod archivos;
+pub mod claves;
 mod copia;
 mod manifiestos;
 
@@ -43,6 +44,11 @@ pub struct Informe {
     pub archivos_ausentes: u64,
     /// Líneas de los manifiestos de la V1 que no se pudieron leer.
     pub lineas_ilegibles: u64,
+    /// Claves de servicio que pasaron al llavero.
+    pub claves_al_llavero: u32,
+    /// Claves que no se pudieron guardar porque el sistema no tiene llavero. No
+    /// se guardan en ningún otro sitio: el usuario tendrá que volver a pegarlas.
+    pub claves_no_migradas: u32,
 }
 
 /// Clave de `instalacion` que marca la importación hecha.
@@ -89,6 +95,25 @@ fn configuracion(v1: &Connection) -> NsResult<HashMap<String, String>> {
     let filas = bd(
         sentencia.query_map([], |f| Ok((f.get::<_, String>(0)?, f.get::<_, String>(1)?))),
         "configuración",
+    )?;
+    filas
+        .collect::<rusqlite::Result<_>>()
+        .map_err(|_| NsError::StorageFailure)
+}
+
+/// Solo las claves de servicio de `config_ui`, que van al llavero y a ningún
+/// otro sitio.
+fn claves_de_servicio(v1: &Connection) -> NsResult<HashMap<String, String>> {
+    let mut sentencia = bd(
+        v1.prepare(
+            "SELECT clave, valor FROM config_ui
+             WHERE valor IS NOT NULL AND clave LIKE '%\\_key' ESCAPE '\\'",
+        ),
+        "claves",
+    )?;
+    let filas = bd(
+        sentencia.query_map([], |f| Ok((f.get::<_, String>(0)?, f.get::<_, String>(1)?))),
+        "claves",
     )?;
     filas
         .collect::<rusqlite::Result<_>>()
@@ -424,7 +449,13 @@ fn preferencias(
 /// - [`NsError::FileNotFound`] si no existe la base de la V1.
 /// - [`NsError::StorageFailure`] si falla la lectura, una copia o la escritura.
 ///   La base de la V2 queda como estaba.
-pub fn importar(base_v1: &Path, db: &BaseDeDatos, rutas: &Rutas) -> NsResult<Option<Informe>> {
+pub fn importar(
+    base_v1: &Path,
+    env_v1: Option<&Path>,
+    db: &BaseDeDatos,
+    rutas: &Rutas,
+    llavero: &dyn claves::Llavero,
+) -> NsResult<Option<Informe>> {
     if !base_v1.is_file() {
         return Err(NsError::FileNotFound);
     }
@@ -446,7 +477,7 @@ pub fn importar(base_v1: &Path, db: &BaseDeDatos, rutas: &Rutas) -> NsResult<Opt
 
     let uri = uri_solo_lectura(base_v1);
     let mut informe = Informe::default();
-    let (config, preparado) = {
+    let (config, claves_v1, preparado) = {
         let v1 = bd(
             Connection::open_with_flags(
                 &uri,
@@ -457,8 +488,9 @@ pub fn importar(base_v1: &Path, db: &BaseDeDatos, rutas: &Rutas) -> NsResult<Opt
             "abrir la V1",
         )?;
         let config = configuracion(&v1)?;
+        let claves_v1 = claves_de_servicio(&v1)?;
         let preparado = preparar(&v1, &config, rutas, &mut informe)?;
-        (config, preparado)
+        (config, claves_v1, preparado)
     };
 
     let mut conn = db.conexion()?;
@@ -470,6 +502,12 @@ pub fn importar(base_v1: &Path, db: &BaseDeDatos, rutas: &Rutas) -> NsResult<Opt
     // Se suelta pase lo que pase: la conexión vuelve al pool.
     let _ = conn.execute("DETACH DATABASE v1", []);
     resultado?;
+
+    // Después de confirmar: si el llavero falla, la biblioteca ya está importada,
+    // y las claves siguen en la V1, que no se ha tocado.
+    let claves = claves::migrar(&claves_v1, env_v1, llavero);
+    informe.claves_al_llavero = claves.migradas;
+    informe.claves_no_migradas = claves.no_migradas;
 
     tracing::info!(
         pistas = informe.filas.get("pistas").copied().unwrap_or(0),

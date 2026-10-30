@@ -12,6 +12,7 @@ pub mod identidad_movil;
 pub mod importador_v1;
 pub mod net;
 pub mod paths;
+pub mod secrets;
 pub mod security;
 pub mod telemetry;
 

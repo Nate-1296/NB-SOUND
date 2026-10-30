@@ -344,6 +344,8 @@ F1.2.5 no se da por buena si no cuadran, sobre la instalación real:
 * Fuera de la base: 2.332 letras, 1.805 portadas distintas (las de 1.409 álbumes y 434 artistas), 115
   instrumentales listos y 56 pistas que esperaban en cola, pendientes.
 * Análisis: 2.396 pistas con rasgos, 407 con análisis profundo y 16.572 etiquetas de ambiente.
-* **La base de la V2 pesa 18,2 MB**, frente a los 464 MB de la V1 y al tope de 40 MB. El hash de la base de la V1 no
-  cambia.
+* **La base de la V2 pesa 26,2 MB** con el índice de búsqueda (18,2 MB sin él), frente a los 464 MB de la V1 y al
+  tope de 40 MB. El hash de la base de la V1 no cambia.
+* La huella del servidor móvil es la misma, y la clave de servicio que había pasa al llavero (la prueba la cuenta sin
+  escribir en el llavero de quien la ejecuta).
 * La importación tarda 42 s, casi todo en copiar 4 GB de portadas e instrumentales.

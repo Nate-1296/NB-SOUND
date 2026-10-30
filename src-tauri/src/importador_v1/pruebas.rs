@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 
 use rusqlite::Connection;
 
+use super::claves::pruebas::LlaveroDePrueba;
 use super::{archivos, importar, Informe};
 use crate::db::BaseDeDatos;
 use crate::paths::Rutas;
@@ -163,7 +164,7 @@ fn escenario(nombre: &str) -> Escenario {
 
 fn importar_escenario(e: &Escenario) -> (BaseDeDatos, Informe) {
     let db = BaseDeDatos::abrir(&e.rutas.base_de_datos()).unwrap();
-    let informe = importar(&e.base_v1, &db, &e.rutas)
+    let informe = importar(&e.base_v1, None, &db, &e.rutas, &LlaveroDePrueba::default())
         .expect("importa")
         .expect("primera vez");
     (db, informe)
@@ -377,7 +378,16 @@ fn los_tokens_de_los_telefonos_se_guardan_como_hash() {
 #[test]
 fn ninguna_clave_de_servicio_entra_en_la_base() {
     let e = escenario("claves");
-    let (db, _) = importar_escenario(&e);
+    let db = BaseDeDatos::abrir(&e.rutas.base_de_datos()).unwrap();
+    let llavero = LlaveroDePrueba::default();
+    let informe = importar(&e.base_v1, None, &db, &e.rutas, &llavero)
+        .unwrap()
+        .unwrap();
+    assert_eq!(informe.claves_al_llavero, 1);
+    assert_eq!(
+        llavero.guardado.borrow()["ia@api.openai.com"],
+        "sk-que-no-debe-salir"
+    );
     drop(db);
     let mut contenido = std::fs::read(e.rutas.base_de_datos()).unwrap();
     if let Ok(wal) = std::fs::read(format!("{}-wal", e.rutas.base_de_datos().display())) {
@@ -446,7 +456,10 @@ fn por_revisar_trae_solo_lo_pendiente_que_existe() {
 fn importar_dos_veces_no_hace_nada_la_segunda() {
     let e = escenario("dos-veces");
     let (db, _) = importar_escenario(&e);
-    assert_eq!(importar(&e.base_v1, &db, &e.rutas), Ok(None));
+    assert_eq!(
+        importar(&e.base_v1, None, &db, &e.rutas, &LlaveroDePrueba::default()),
+        Ok(None)
+    );
     assert_eq!(valor::<i64>(&db, "SELECT count(*) FROM pistas"), 2);
 }
 
@@ -455,7 +468,13 @@ fn sin_base_de_la_v1_no_hay_nada_que_importar() {
     let e = escenario("sin-v1");
     let db = BaseDeDatos::abrir(&e.rutas.base_de_datos()).unwrap();
     assert_eq!(
-        importar(&e.dir.join("no-existe.sqlite3"), &db, &e.rutas),
+        importar(
+            &e.dir.join("no-existe.sqlite3"),
+            None,
+            &db,
+            &e.rutas,
+            &LlaveroDePrueba::default()
+        ),
         Err(crate::error::NsError::FileNotFound)
     );
 }

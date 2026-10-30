@@ -14,10 +14,23 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use nb_sound_lib::db::BaseDeDatos;
+use nb_sound_lib::error::NsResult;
 use nb_sound_lib::identidad_movil;
+use nb_sound_lib::importador_v1::claves::Llavero;
 use nb_sound_lib::importador_v1::{archivos, importar};
 use nb_sound_lib::paths::{Rutas, RutasV1};
 use rusqlite::{Connection, OpenFlags};
+
+/// Cuenta las claves sin guardarlas: la prueba no escribe en el llavero de
+/// quien la ejecuta.
+struct LlaveroQueCuenta(std::cell::Cell<u32>);
+
+impl Llavero for LlaveroQueCuenta {
+    fn guardar(&self, _cuenta: &str, _secreto: &str) -> NsResult<()> {
+        self.0.set(self.0.get() + 1);
+        Ok(())
+    }
+}
 
 fn v1_en_solo_lectura(ruta: &std::path::Path) -> Connection {
     Connection::open_with_flags(ruta, OpenFlags::SQLITE_OPEN_READ_ONLY).unwrap()
@@ -59,7 +72,12 @@ fn la_instalacion_real_se_importa_sin_perder_nada() {
 
     let inicio = std::time::Instant::now();
     let db = BaseDeDatos::abrir(&rutas.base_de_datos()).unwrap();
-    let informe = importar(&base_v1, &db, &rutas).unwrap().unwrap();
+    let env_v1 = RutasV1::estandar().map(|r| r.config.join(".env"));
+    let llavero = LlaveroQueCuenta(std::cell::Cell::new(0));
+    let informe = importar(&base_v1, env_v1.as_deref(), &db, &rutas, &llavero)
+        .unwrap()
+        .unwrap();
+    assert_eq!(informe.claves_al_llavero, llavero.0.get());
     eprintln!("importada en {:.1} s", inicio.elapsed().as_secs_f64());
     eprintln!("{}", serde_json::to_string_pretty(&informe).unwrap());
 
