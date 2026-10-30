@@ -89,6 +89,18 @@ fn renderizar_todo(m: &mut Motor<Offline>) -> Vec<f32> {
     salida
 }
 
+/// Recoge eventos hasta que se cumple `listo` o pasan 5 s: el vigía los cuenta
+/// desde otro hilo, y en una máquina cargada puede ir por detrás.
+fn esperar_eventos(m: &Motor<Offline>, listo: impl Fn(&[EventoMotor]) -> bool) -> Vec<EventoMotor> {
+    let mut eventos = Vec::new();
+    let limite = Instant::now() + Duration::from_secs(5);
+    while !listo(&eventos) && Instant::now() < limite {
+        eventos.extend(m.eventos());
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    eventos
+}
+
 fn temporal(nombre: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("ns-motor-{nombre}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
@@ -173,7 +185,7 @@ fn dos_pistas_suenan_una_tras_otra_sin_un_solo_frame_de_hueco() {
         .filter(|(x, y)| x.to_bits() != y.to_bits())
         .count();
     assert_eq!(distintas, 0, "la salida es A y luego B, bit a bit");
-    let eventos: Vec<_> = m.eventos().collect();
+    let eventos = esperar_eventos(&m, |e| e.contains(&EventoMotor::ColaTerminada));
     assert!(eventos.contains(&EventoMotor::PistaEmpieza { ficha: 1 }));
     assert!(eventos.contains(&EventoMotor::PistaEmpieza { ficha: 2 }));
     let _ = std::fs::remove_dir_all(dir);
@@ -328,12 +340,35 @@ fn una_pista_que_no_existe_se_salta_y_lo_dice() {
         &b[..100],
         "suena la siguiente"
     );
-    std::thread::sleep(Duration::from_millis(50));
-    let eventos: Vec<_> = m.eventos().collect();
+    let eventos = esperar_eventos(&m, |e| e.contains(&EventoMotor::ColaTerminada));
     assert!(eventos.contains(&EventoMotor::PistaIlegible {
         ficha: 1,
         error: crate::error::NsError::FileNotFound
     }));
     assert!(eventos.contains(&EventoMotor::ColaTerminada));
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// Regresión del CI de macOS (2026-10-30): con una sola marca, dos pistas que
+/// empezaban dentro del mismo intervalo del vigía se contaban como una, y el
+/// servicio creía que sonaba otra.
+#[test]
+fn dos_pistas_que_empiezan_en_el_mismo_bloque_se_cuentan_las_dos() {
+    let dir = temporal("sucesos");
+    let _ = wav(&dir.join("a.wav"), 44_100, 300, ruido(8));
+    let _ = wav(&dir.join("b.wav"), 44_100, 300, ruido(9));
+    let mut m = motor(44_100);
+    m.reproducir(pista(1, &dir.join("a.wav")), 0.0);
+    m.siguiente(Some(pista(2, &dir.join("b.wav"))));
+    let _ = renderizar_todo(&mut m);
+    let eventos = esperar_eventos(&m, |e| e.contains(&EventoMotor::ColaTerminada));
+    let inicios: Vec<_> = eventos
+        .iter()
+        .filter_map(|e| match e {
+            EventoMotor::PistaEmpieza { ficha } => Some(*ficha),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(inicios, [1, 2]);
     let _ = std::fs::remove_dir_all(dir);
 }

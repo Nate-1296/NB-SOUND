@@ -257,3 +257,22 @@ fn recargar_trae_la_sesion_que_dejo_el_importador_si_no_suena_nada() {
     assert_eq!(s.instantanea().cola, [2, 1]);
     assert_eq!(s.instantanea().volumen, 0.25);
 }
+
+#[test]
+fn una_cola_de_pistas_muy_cortas_suena_entera_sin_saltarse_ninguna() {
+    let pistas: Vec<(i64, usize)> = (1..=6).map(|id| (id, 900)).collect();
+    let e = escenario("cortas", &pistas);
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    s.atender(Orden::ReproducirPistas {
+        ids: (1..=6).collect(),
+        desde: 0,
+    });
+    correr(&mut s, |s| s.instantanea().estado == "finalizada");
+    assert_eq!(s.instantanea().pista_id, Some(6));
+    assert_eq!(cuenta(&e.db, "SELECT count(*) FROM historial"), 6);
+    assert_eq!(
+        cuenta(&e.db, "SELECT count(DISTINCT pista_id) FROM historial"),
+        6
+    );
+}

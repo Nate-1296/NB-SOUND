@@ -231,6 +231,7 @@ impl<B: Backend> Motor<B> {
     pub fn detener(&mut self) {
         let generacion = self.nueva_generacion();
         let _ = self.ordenes.send(Orden::Detener { generacion });
+        // La próxima pista que empiece es nueva aunque sea la misma ficha.
         self.compartido.pista.store(0, Ordering::Relaxed);
         self.compartido.frame.store(0, Ordering::Relaxed);
     }
@@ -304,32 +305,26 @@ impl<B: Backend> Drop for Motor<B> {
     }
 }
 
-/// Mira lo que suena y lo cuenta como eventos: el hilo de audio no puede mandar
-/// mensajes, solo dejar marcas.
+/// Cuenta como eventos lo que el hilo de audio apunta: él no puede mandar
+/// mensajes, solo dejar marcas sin cerrojos.
 fn vigilar(compartido: Arc<Compartido>, eventos: Sender<EventoMotor>) -> NsResult<()> {
     std::thread::Builder::new()
         .name("audio-vigia".into())
         .spawn(move || {
-            let mut ficha = 0u64;
-            let mut terminado = false;
+            let mut leidos = 0u64;
             while !compartido.cerrado.load(Ordering::Acquire) {
-                let ahora = compartido.pista.load(Ordering::Relaxed);
-                if ahora != ficha {
-                    ficha = ahora;
-                    if ficha != 0 && eventos.send(EventoMotor::PistaEmpieza { ficha }).is_err() {
-                        return;
-                    }
-                }
-                let fin = compartido.terminado.load(Ordering::Acquire);
-                if fin && !terminado && eventos.send(EventoMotor::ColaTerminada).is_err() {
+                let mut vivo = true;
+                compartido.leer_sucesos(&mut leidos, &mut |suceso| {
+                    let evento = if suceso == fuente::FIN {
+                        EventoMotor::ColaTerminada
+                    } else {
+                        EventoMotor::PistaEmpieza { ficha: suceso }
+                    };
+                    vivo &= eventos.send(evento).is_ok();
+                });
+                if !vivo {
                     return;
                 }
-                if fin && !terminado {
-                    // La próxima pista que empiece, aunque sea la misma, es nueva.
-                    ficha = 0;
-                    compartido.pista.store(0, Ordering::Relaxed);
-                }
-                terminado = fin;
                 std::thread::sleep(Duration::from_millis(15));
             }
         })

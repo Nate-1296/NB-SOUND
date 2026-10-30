@@ -59,9 +59,39 @@ pub struct Compartido {
     /// La generación del último bloque entregado. Las pruebas la usan para
     /// esperar a que haya datos de la vigente.
     pub entregada: AtomicU64,
+    /// Lo que pasa en el hilo de audio, en orden: la ficha de cada pista que
+    /// empieza, o [`FIN`]. Un anillo sin cerrojos que el vigía lee: con una sola
+    /// marca, una pista que empezara y acabara entre dos lecturas se perdería, y
+    /// el servicio creería que suena otra.
+    sucesos: [AtomicU64; SUCESOS],
+    escritos: AtomicU64,
 }
 
+/// Capacidad del anillo de sucesos. Hacen falta 32 pistas empezadas entre dos
+/// lecturas del vigía (15 ms) para desbordarlo.
+const SUCESOS: usize = 32;
+/// La cola se acabó.
+pub const FIN: u64 = u64::MAX;
+
 impl Compartido {
+    /// Solo lo llama el hilo de audio: un único escritor.
+    fn apuntar(&self, suceso: u64) {
+        let n = self.escritos.load(Ordering::Relaxed);
+        self.sucesos[n as usize % SUCESOS].store(suceso, Ordering::Relaxed);
+        self.escritos.store(n + 1, Ordering::Release);
+    }
+
+    /// Los sucesos desde `leidos`, que avanza.
+    pub fn leer_sucesos(&self, leidos: &mut u64, cada: &mut impl FnMut(u64)) {
+        let escritos = self.escritos.load(Ordering::Acquire);
+        // Si el anillo dio la vuelta, lo más viejo se perdió: se salta a lo vigente.
+        *leidos = (*leidos).max(escritos.saturating_sub(SUCESOS as u64));
+        while *leidos < escritos {
+            cada(self.sucesos[*leidos as usize % SUCESOS].load(Ordering::Relaxed));
+            *leidos += 1;
+        }
+    }
+
     pub fn karaoke(&self, activo: bool) {
         let v: f32 = if activo { 1.0 } else { 0.0 };
         self.mezcla.store(v.to_bits(), Ordering::Relaxed);
@@ -152,10 +182,13 @@ impl Fuente {
             }
             if bloque.fin {
                 self.compartido.terminado.store(true, Ordering::Release);
+                self.compartido.apuntar(FIN);
                 self.devolver(bloque);
                 return None;
             }
-            self.compartido.pista.store(bloque.pista, Ordering::Relaxed);
+            if self.compartido.pista.swap(bloque.pista, Ordering::Relaxed) != bloque.pista {
+                self.compartido.apuntar(bloque.pista);
+            }
             self.compartido.tasa.store(bloque.tasa, Ordering::Relaxed);
             self.indice = 0;
             self.actual = Some(bloque);

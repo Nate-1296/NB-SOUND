@@ -51,3 +51,4 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
       reproducir.
 - [ ] Cerrar la ventana mientras suena no deja audio sonando ni procesos vivos.
 - [ ] La primera vez, con la V1 importándose en segundo plano, el reproductor recoge la cola de la V1 al terminar.
+- [ ] La carcasa, la barra lateral y la barra de reproducción se comparan con las capturas de la V1 (`legado/assets/screens/`) y con la V1 abierta al lado.

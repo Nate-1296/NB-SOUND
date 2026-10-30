@@ -17,7 +17,7 @@
 | F2.1.5 Controles del sistema: MPRIS, SMTC y macOS | Pendiente |
 | F2.1.6 Atajos globales, bandeja y cierre limpio | Pendiente |
 | F2.1.7 Servicio de reproducción: cola, motor, sesión guardada, historial y avisos al puente | Hecha |
-| F2.2.1 Carcasa con la disposición de la V1: barra lateral, barra superior con búsqueda, barra de reproducción | Pendiente |
+| F2.2.1 Carcasa con la disposición de la V1: barra lateral, barra superior con búsqueda, barra de reproducción | Hecha |
 | F2.2.2 Inicio | Pendiente |
 | F2.2.3 Biblioteca: canciones, álbumes, artistas y sus detalles | Pendiente |
 | F2.2.4 Playlists manuales (crear, ordenar, añadir desde cualquier sitio) | Pendiente |
