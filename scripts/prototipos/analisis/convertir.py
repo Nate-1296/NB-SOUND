@@ -43,7 +43,7 @@ def forma_con_lote(forma: list[int]) -> list[int]:
 def main() -> None:
     origen, destino = Path(sys.argv[1]), Path(sys.argv[2])
     destino.mkdir(parents=True, exist_ok=True)
-    rng = np.random.default_rng(1145)
+    rng = np.random.default_rng(2026)
     solo = set(sys.argv[3:])
     for meta_ruta in sorted(origen.glob("*.json")):
         pb = meta_ruta.with_suffix(".pb")
