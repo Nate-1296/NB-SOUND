@@ -20,6 +20,7 @@ const GUARDIANES = [
   ['check-sin-python'],
   ['generar-paletas', '--check'],
   ['check-ui'],
+  ['check-i18n'],
   ['check-error-contract'],
   ['check-bindings'],
   ['check-puente'],

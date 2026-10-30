@@ -80,3 +80,6 @@ Thumbs.db
 *~
 .idea/
 .directory
+
+# Entornos de las herramientas de prototipo (scripts/prototipos/)
+.venv/

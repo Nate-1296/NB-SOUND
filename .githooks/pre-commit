@@ -19,6 +19,7 @@ if echo "$v2" | grep -qE '\.(svelte|css)$'; then
   echo "$v2" | grep -E '\.(svelte|css)$' | grep -v '^src/paletas.css$' | xargs -r pnpm exec prettier --check \
     || fail "Prettier encontró problemas de formato. Ejecuta: pnpm format"
   node scripts/check-ui.mjs || fail "El sistema de diseño rechaza un componente (ADR-008)."
+  node scripts/check-i18n.mjs || fail "Hay texto de la interfaz fuera de src/lib/i18n."
   node scripts/generar-paletas.mjs --check || fail "src/paletas.css no está al día. Ejecuta: pnpm paletas"
 fi
 
