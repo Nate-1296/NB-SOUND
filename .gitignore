@@ -83,3 +83,4 @@ Thumbs.db
 
 # Entornos de las herramientas de prototipo (scripts/prototipos/)
 .venv/
+scripts/prototipos/lista/dist/
