@@ -14,7 +14,7 @@
 |---|---|
 | F4.1.1 Lectura y escritura de etiquetas con `lofty` (ID3v2, Vorbis, MP4) | Hecha: `catalogo/etiquetas.rs`; en 400 MP3 del corpus real lee los siete campos de la V1 igual que `mutagen` y la duración con menos de 0,1 s de diferencia. Escribe sobre una copia y la coloca al terminar |
 | F4.1.2 Normalización de texto y nombres (`core/normalizer.py`, `utils/text.py`, `utils/diccionarios.py`) | Parcial: `utils/text.py` portado (`catalogo/texto.rs`), idéntico a la V1 en las 5.531 frases del corpus real; `normalizer.py` va con la canalización. `diccionarios.py` son los saludos de Inicio, ya portados en F2.2.2 |
-| F4.1.3 Huella y AcoustID | Pendiente |
+| F4.1.3 Huella y AcoustID | Hecha: `catalogo/acoustid.rs`, con el `fpcalc` empaquetado y el umbral y los reintentos de la V1; la caché de consultas va con la canalización |
 | F4.1.4 MusicBrainz, discografía y Cover Art Archive | Pendiente |
 | F4.1.5 Shazam (`shazamio-core`) e iTunes | Pendiente |
 | F4.1.6 Puntuación y emparejamiento: primera, segunda y tercera etapa | Pendiente |
