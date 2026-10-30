@@ -9,6 +9,7 @@
  */
 
 export type { AlbumResumen } from './AlbumResumen';
+export type { Ambiente } from './Ambiente';
 export type { ArtistaResumen } from './ArtistaResumen';
 export type { AvisoReproductor } from './AvisoReproductor';
 export type { Categoria } from './Categoria';
@@ -18,6 +19,8 @@ export type { ConsultaPistas } from './ConsultaPistas';
 export type { ConsultaPlaylists } from './ConsultaPlaylists';
 export type { InformeDeSalud } from './InformeDeSalud';
 export type { Instantanea } from './Instantanea';
+export type { Letra } from './Letra';
+export type { LineaLetra } from './LineaLetra';
 export type { NsErrorPayload } from './NsErrorPayload';
 export type { OrdenAlbumes } from './OrdenAlbumes';
 export type { OrdenArtistas } from './OrdenArtistas';

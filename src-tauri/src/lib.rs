@@ -13,6 +13,7 @@ pub mod db;
 pub mod error;
 pub mod identidad_movil;
 pub mod importador_v1;
+pub mod letras;
 pub mod net;
 pub mod paths;
 pub mod playlists;
@@ -175,6 +176,17 @@ pub fn run() {
                 }
             });
         })
+        // Cerrar la ventana principal cierra la aplicación aunque el
+        // minirreproductor siga abierto: si no, la música seguiría sonando sin
+        // ventana desde la que pararla.
+        .on_window_event(|ventana, evento| {
+            if ventana.label() == "main"
+                && matches!(evento, tauri::WindowEvent::CloseRequested { .. })
+            {
+                use tauri::Manager;
+                ventana.app_handle().exit(0);
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             comandos::salud,
             comandos::reproductor_estado,
@@ -197,7 +209,10 @@ pub fn run() {
             comandos::agregar_a_playlist,
             comandos::quitar_de_playlist,
             comandos::mover_en_playlist,
-            comandos::anclar_playlist
+            comandos::anclar_playlist,
+            comandos::letra_de_pista,
+            comandos::ambiente_de_pista,
+            comandos::abrir_minirreproductor
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

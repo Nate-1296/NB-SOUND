@@ -4,6 +4,7 @@
   import '../fuentes.css';
   import '../app.css';
 
+  import { page } from '$app/state';
   import AppShell from '$ui/AppShell.svelte';
   import { APARIENCIA_DE_FABRICA, aplicarApariencia, elSistemaPrefiereOscuro } from '$ui/tema';
 
@@ -20,6 +21,11 @@
   });
 </script>
 
-<AppShell>
+<!-- El minirreproductor es otra ventana: sin carcasa. -->
+{#if page.url.pathname === '/mini'}
   {@render children()}
-</AppShell>
+{:else}
+  <AppShell>
+    {@render children()}
+  </AppShell>
+{/if}

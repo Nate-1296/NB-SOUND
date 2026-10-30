@@ -54,3 +54,4 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] La carcasa, la barra lateral y la barra de reproducción se comparan con las capturas de la V1 (`legado/assets/screens/`) y con la V1 abierta al lado.
 - [ ] La biblioteca real (2.397 canciones, 1.421 álbumes) se desplaza sin tirones en WebKitGTK, con las portadas apareciendo al frenar; buscar, filtrar, ordenar y abrir álbum y artista funcionan como en la V1.
 - [ ] Las playlists de la V1 aparecen con sus categorías, mosaicos y orden; crear, renombrar, ordenar, quitar, borrar y añadir desde cualquier canción funcionan, y el móvil recibe los cambios y «Me gusta» al marcar favoritas.
+- [ ] La vista de reproducción toma el color de la portada; las letras sincronizadas siguen a la canción y llevan al segundo pulsado; el panel de la cola reordena con el ratón y con Alt+flechas; el minirreproductor flota encima y cerrar la ventana principal cierra todo.

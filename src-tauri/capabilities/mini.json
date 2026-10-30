@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "minirreproductor",
+  "description": "El minirreproductor flotante: sin bordes, así que necesita arrastrarse desde su zona de arrastre y cerrarse desde su propio botón.",
+  "windows": ["mini"],
+  "permissions": ["core:default", "core:window:allow-start-dragging", "core:window:allow-close"]
+}

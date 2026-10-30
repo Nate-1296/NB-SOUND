@@ -89,3 +89,19 @@ export async function aplicarApariencia(
     raiz.style.setProperty(nombre, valor);
   }
 }
+
+/**
+ * La semilla, en hexadecimal, de un color HSL de 0 a 1: el del fondo de la vista
+ * de reproducción, que se aplica como paleta de Material sobre esa vista.
+ */
+export function semillaDesdeHsl(h: number, s: number, l: number): string {
+  const a = s * Math.min(l, 1 - l);
+  const canal = (n: number) => {
+    const k = (n + h * 12) % 12;
+    const v = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return Math.round(v * 255)
+      .toString(16)
+      .padStart(2, '0');
+  };
+  return `#${canal(0)}${canal(8)}${canal(4)}`;
+}

@@ -11,9 +11,11 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 import type {
   AlbumResumen,
+  Ambiente,
   ArtistaResumen,
   AvisoReproductor,
   ConsultaAlbumes,
@@ -22,6 +24,7 @@ import type {
   ConsultaPlaylists,
   InformeDeSalud,
   Instantanea,
+  Letra,
   OrdenReproductor,
   PaginaAlbumes,
   PaginaArtistas,
@@ -32,6 +35,7 @@ import type {
 
 export type {
   AlbumResumen,
+  Ambiente,
   ArtistaResumen,
   AvisoReproductor,
   Categoria,
@@ -41,6 +45,8 @@ export type {
   ConsultaPlaylists,
   InformeDeSalud,
   Instantanea,
+  Letra,
+  LineaLetra,
   OrdenAlbumes,
   OrdenArtistas,
   OrdenPistas,
@@ -225,4 +231,26 @@ export function moverEnPlaylist(id: number, desde: number, hasta: number): Promi
 
 export function anclarPlaylist(id: number, anclada: boolean): Promise<void> {
   return call<void>('anclar_playlist', { id, anclada });
+}
+
+// --- Vista de reproducción ------------------------------------------------------
+
+/** La letra ya normalizada: sincronizada, plana o ninguna. */
+export function letraDePista(pistaId: number): Promise<Letra> {
+  return call<Letra>('letra_de_pista', { pistaId });
+}
+
+/** El color del fondo de la vista de reproducción, en HSL de 0 a 1. */
+export function ambienteDePista(pistaId: number): Promise<Ambiente> {
+  return call<Ambiente>('ambiente_de_pista', { pistaId });
+}
+
+/** Abre el minirreproductor flotante, o lo trae delante. */
+export function abrirMinirreproductor(): Promise<void> {
+  return call<void>('abrir_minirreproductor');
+}
+
+/** Cierra la ventana desde la que se llama (el minirreproductor). */
+export function cerrarEstaVentana(): Promise<void> {
+  return getCurrentWindow().close();
 }

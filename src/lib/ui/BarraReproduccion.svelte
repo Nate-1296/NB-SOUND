@@ -6,11 +6,14 @@
   volumen. El micrófono del karaoke vive aquí y no en una vista propia (ADR-007).
 -->
 <script lang="ts">
-  import { urlPortada } from '$core/ipc';
+  import { goto } from '$app/navigation';
+  import { page } from '$app/state';
+  import { abrirMinirreproductor, urlPortada } from '$core/ipc';
   import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
 
   import Icon from './Icon.svelte';
+  import PanelCola from './PanelCola.svelte';
 
   const t = textos.reproductor;
   const i = $derived(reproductor.instantanea);
@@ -26,6 +29,32 @@
     void i.pistaId;
     portadaRota = false;
   });
+
+  // La cola, en la capa superior sobre la barra.
+  let capaCola: HTMLDivElement | undefined = $state();
+  let colaAbierta = $state(false);
+  function alternarCola(e: MouseEvent) {
+    if (!capaCola) return;
+    if (colaAbierta) {
+      capaCola.hidePopover();
+      return;
+    }
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    capaCola.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
+    capaCola.style.bottom = `${window.innerHeight - r.top + 8}px`;
+    capaCola.showPopover();
+  }
+
+  /** Letras y pantalla completa abren la vista de reproducción; otra vez, vuelven. */
+  function abrirVista(letras: boolean) {
+    const ruta = page.url.pathname === '/reproduciendo';
+    const tieneLetras = page.url.searchParams.has('letras');
+    if (ruta && tieneLetras === letras) {
+      history.back();
+      return;
+    }
+    void goto(letras ? '/reproduciendo?letras' : '/reproduciendo', { replaceState: ruta });
+  }
 
   function soltar(e: Event) {
     const valor = Number((e.currentTarget as HTMLInputElement).value);
@@ -138,9 +167,11 @@
     <button
       type="button"
       class="control"
+      class:activo={page.url.pathname === '/reproduciendo' && page.url.searchParams.has('letras')}
       aria-label={t.letras}
       title={t.letras}
       disabled={!hayPista}
+      onclick={() => abrirVista(true)}
     >
       <Icon nombre="letras" tamano={20} />
     </button>
@@ -156,10 +187,26 @@
     >
       <Icon nombre="microfono" tamano={20} />
     </button>
-    <button type="button" class="control cola" aria-label={t.colaCon(i.cola.length)} title={t.cola}>
+    <button
+      type="button"
+      class="control cola conmutador"
+      class:activo={colaAbierta}
+      aria-label={t.colaCon(i.cola.length)}
+      aria-expanded={colaAbierta}
+      title={t.cola}
+      onclick={alternarCola}
+    >
       <Icon nombre="cola" tamano={20} />
       {#if i.cola.length > 0}<span class="cuenta">{i.cola.length}</span>{/if}
     </button>
+    <div
+      class="capa-cola"
+      popover="auto"
+      bind:this={capaCola}
+      ontoggle={(e) => (colaAbierta = e.newState === 'open')}
+    >
+      {#if colaAbierta}<PanelCola />{/if}
+    </div>
     <div class="volumen">
       <button
         type="button"
@@ -185,9 +232,21 @@
     <button
       type="button"
       class="control"
+      aria-label={t.mini}
+      title={t.mini}
+      disabled={!hayPista}
+      onclick={abrirMinirreproductor}
+    >
+      <Icon nombre="minirreproductor" tamano={20} />
+    </button>
+    <button
+      type="button"
+      class="control"
+      class:activo={page.url.pathname === '/reproduciendo' && !page.url.searchParams.has('letras')}
       aria-label={t.expandir}
       title={t.expandir}
       disabled={!hayPista}
+      onclick={() => abrirVista(false)}
     >
       <Icon nombre="expandir" tamano={20} />
     </button>
@@ -323,6 +382,15 @@
     background: var(--m3c-primary);
     color: var(--m3c-on-primary);
     filter: brightness(1.08);
+  }
+
+  .capa-cola {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
   }
 
   .cola {

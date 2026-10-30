@@ -60,6 +60,8 @@ export const es = {
     silenciar: 'Silenciar',
     quitarSilencio: 'Quitar silencio',
     expandir: 'Reproducción a pantalla completa',
+    mini: 'Minirreproductor',
+    cerrarMini: 'Cerrar el minirreproductor',
     progreso: 'Progreso de la canción',
     repeticion: {
       ninguno: 'Repetir',
@@ -123,6 +125,27 @@ export const es = {
         `${albumes === 1 ? '1 álbum' : `${albumes} álbumes`} · ${pistas === 1 ? '1 pista' : `${pistas} pistas`}`,
       noEncontrado: 'Este artista ya no está en la biblioteca.'
     }
+  },
+  cola: {
+    titulo: 'Cola de reproducción',
+    vaciar: 'Vaciar',
+    vacia: 'La cola está vacía. Reproduce algo o añádelo desde tu biblioteca.',
+    sonando: 'Sonando',
+    pausada: 'Pausada',
+    reproducir: (t: string) => `Reproducir ${t}`,
+    quitar: (t: string) => `Quitar ${t} de la cola`,
+    moverConTeclado: 'Alt+Arriba y Alt+Abajo para mover'
+  },
+  reproduciendo: {
+    titulo: 'Reproduciendo',
+    volver: 'Volver',
+    album: (a: string) => `Álbum · ${a}`,
+    anio: (a: number) => `Año · ${a}`,
+    duracion: (d: string) => `Duración · ${d}`,
+    letras: 'Letras',
+    sinLetra: 'Esta canción no tiene letra guardada.',
+    nadaSonando: 'No suena nada. Elige una canción en tu biblioteca.',
+    irA: (t: string) => `Ir a ${t}`
   },
   playlists: {
     titulo: 'Playlists',

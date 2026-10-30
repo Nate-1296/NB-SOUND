@@ -368,3 +368,59 @@ pub async fn anclar_playlist(
 ) -> NsResult<()> {
     en_segundo_plano(&estado, move |db| playlists::anclar(db, id, anclada)).await
 }
+
+// --- Vista de reproducción ------------------------------------------------------
+
+#[tauri::command]
+pub async fn letra_de_pista(
+    estado: tauri::State<'_, Estado>,
+    pista_id: i64,
+) -> NsResult<crate::letras::Letra> {
+    en_segundo_plano(&estado, move |db| crate::letras::de_pista(db, pista_id)).await
+}
+
+/// El color del fondo de la vista de reproducción: el de la portada o, sin ella,
+/// uno estable por pista.
+#[tauri::command]
+pub async fn ambiente_de_pista(
+    estado: tauri::State<'_, Estado>,
+    pista_id: i64,
+) -> NsResult<crate::letras::Ambiente> {
+    let rutas = estado.rutas.clone();
+    en_segundo_plano(&estado, move |db| {
+        let peticion = crate::portadas::Peticion {
+            clase: crate::portadas::Clase::Pista,
+            id: pista_id,
+            tamano: Some(64),
+        };
+        let desde_portada = crate::portadas::servir(db, &rutas, peticion)
+            .ok()
+            .and_then(|(bytes, _)| image::load_from_memory(&bytes).ok())
+            .and_then(|imagen| crate::letras::ambiente_de_imagen(&imagen));
+        Ok(desde_portada
+            .unwrap_or_else(|| crate::letras::ambiente_de_semilla(&format!("pista:{pista_id}"))))
+    })
+    .await
+}
+
+/// Abre el minirreproductor flotante, o lo trae delante si ya está abierto.
+#[tauri::command]
+pub async fn abrir_minirreproductor(app: AppHandle) -> NsResult<()> {
+    if let Some(v) = app.get_webview_window("mini") {
+        let _ = v.set_focus();
+        return Ok(());
+    }
+    tauri::WebviewWindowBuilder::new(&app, "mini", tauri::WebviewUrl::App("mini".into()))
+        .title("NB Sound")
+        .inner_size(400.0, 112.0)
+        .resizable(false)
+        .always_on_top(true)
+        .decorations(false)
+        .skip_taskbar(true)
+        .build()
+        .map(|_| ())
+        .map_err(|_| {
+            tracing::error!("no se pudo abrir el minirreproductor");
+            NsError::Internal
+        })
+}

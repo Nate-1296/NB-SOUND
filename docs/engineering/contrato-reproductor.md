@@ -8,15 +8,15 @@ Las de la cola viven en `src-tauri/src/cola/pruebas.rs` con el nombre de la orig
 las vistas (`qml_*`) se traducen a recorridos de Playwright cuando existe la vista: lo que verificaban era la
 disposición de QML, y su equivalente es la vista de la V2, no un archivo de QML.
 
-Traducidas: **37 de 112**.
+Traducidas: **57 de 112**.
 
 | Prueba de la V1 | Estado | Dónde vive en la V2 |
 |---|---|---|
 | `reproductor_resuelve_portada_de_album_en_pista_activa` | Pendiente | F2.2.1, portada de la pista activa |
 | `modelo_reproductor_expone_snapshot_de_pista_activa_para_qml` | Pendiente | F2.1.7, servicio de reproducción (estado y sesión) |
-| `modelo_reproductor_expone_pista_visual_de_cola_persistida_sin_activar` | Pendiente | F2.1.7, servicio de reproducción (estado y sesión) |
+| `modelo_reproductor_expone_pista_visual_de_cola_persistida_sin_activar` | Hecha | `src-tauri/src/cola/pruebas.rs`: `restaurar_una_sesion_no_suena_hasta_reproducir_y_vuelve_a_su_segundo` |
 | `modelo_reproductor_pista_visual_usa_cola_cacheada_sin_consultar_backend` | Pendiente | F2.1.7, servicio de reproducción (errores del motor) |
-| `reanudar_cola_persistida_no_bloquea_al_leer_pista_visual` | Pendiente | F2.1.7, servicio de reproducción (estado y sesión) |
+| `reanudar_cola_persistida_no_bloquea_al_leer_pista_visual` | Hecha | `src-tauri/src/reproductor/pruebas.rs`: `la_sesion_se_restaura_al_volver_a_abrir` |
 | `reproductor_resuelve_portada_desde_assets_manifest` | Pendiente | F2.2.1, portada de la pista activa |
 | `reproductor_expone_portada_hd_desde_assets_manifest` | Pendiente | F2.2.1, portada de la pista activa |
 | `modelo_reproductor_expone_portada_hd_para_qml` | Pendiente | F2.2.1, portada de la pista activa |
@@ -39,23 +39,23 @@ Traducidas: **37 de 112**.
 | `desactivar_aleatorio_restaura_orden_original_restante` | Hecha | `src-tauri/src/cola/pruebas.rs` |
 | `desactivar_aleatorio_restaura_orden_base_completo` | Hecha | `src-tauri/src/cola/pruebas.rs` |
 | `modelo_buscar_posicion_actualiza_progreso_inmediato` | Pendiente | F2.1.7, servicio de reproducción (posición y volumen) |
-| `modelo_buscar_posicion_clampa_fuera_de_rango` | Pendiente | F2.1.7, servicio de reproducción (posición y volumen) |
+| `modelo_buscar_posicion_clampa_fuera_de_rango` | Hecha | `src-tauri/src/reproductor/pruebas.rs`: `buscar_fuera_de_rango_se_acota_a_la_duracion` |
 | `modelo_buscar_posicion_con_duracion_desconocida_no_avanza` | Pendiente | F2.2.1, formato de tiempos en la barra y la cola |
 | `modelo_progreso_ratio_no_lanza_con_estado_corrupto` | Pendiente | F2.1.7, servicio de reproducción (posición y volumen) |
-| `modelo_set_volumen_clampa_rango` | Pendiente | F2.1.7, servicio de reproducción (posición y volumen) |
+| `modelo_set_volumen_clampa_rango` | Hecha | `src-tauri/src/reproductor/mod.rs`: `Orden::Volumen` acota a 0–1, y `la_sesion_se_restaura_al_volver_a_abrir` |
 | `modelo_progreso_reportado_no_supera_duracion_real` | Pendiente | F2.2.1, formato de tiempos en la barra y la cola |
 | `modelo_formatea_tiempos_con_duracion_canonica` | Pendiente | F2.2.1, formato de tiempos en la barra y la cola |
-| `modelo_lyrics_mood_fallback_estable_y_en_rango` | Pendiente | F2.2.6, letras sincronizadas |
-| `modelo_lyrics_mood_usa_color_dominante_de_portada` | Pendiente | F2.2.6, letras sincronizadas |
-| `modelo_mood_visual_es_alias_compatible_de_lyrics_mood` | Pendiente | F2.2.6, letras sincronizadas |
-| `modelo_lyrics_normaliza_synced_y_elimina_traduccion` | Pendiente | F2.2.6, letras sincronizadas |
-| `modelo_lyrics_malformada_oculta_plain_fallback` | Pendiente | F2.2.6, letras sincronizadas |
-| `modelo_lyrics_ignora_metadata_lrc_sin_invalidar` | Pendiente | F2.2.6, letras sincronizadas |
-| `modelo_lyrics_plain_sin_synced_se_sanitiza` | Pendiente | F2.2.6, letras sincronizadas |
-| `modelo_lyrics_plain_tipo_documento_se_oculta` | Pendiente | F2.2.6, letras sincronizadas |
-| `modelo_reproductor_expone_y_alterna_karaoke_lista` | Pendiente | F5.2.2, micrófono del reproductor |
+| `modelo_lyrics_mood_fallback_estable_y_en_rango` | Hecha | `src-tauri/src/letras.rs`, con el mismo nombre |
+| `modelo_lyrics_mood_usa_color_dominante_de_portada` | Hecha | `src-tauri/src/letras.rs`, con el mismo nombre |
+| `modelo_mood_visual_es_alias_compatible_de_lyrics_mood` | Hecha | no aplica: en la V2 hay un solo ambiente (`ambiente_de_pista`), sin alias |
+| `modelo_lyrics_normaliza_synced_y_elimina_traduccion` | Hecha | `src-tauri/src/letras.rs`, con el mismo nombre |
+| `modelo_lyrics_malformada_oculta_plain_fallback` | Hecha | `src-tauri/src/letras.rs`, con el mismo nombre |
+| `modelo_lyrics_ignora_metadata_lrc_sin_invalidar` | Hecha | `src-tauri/src/letras.rs`, con el mismo nombre |
+| `modelo_lyrics_plain_sin_synced_se_sanitiza` | Hecha | `src-tauri/src/letras.rs`, con el mismo nombre |
+| `modelo_lyrics_plain_tipo_documento_se_oculta` | Hecha | `src-tauri/src/letras.rs`, con el mismo nombre |
+| `modelo_reproductor_expone_y_alterna_karaoke_lista` | Hecha | `src-tauri/src/audio/pruebas.rs`: `el_karaoke_pasa_al_instrumental_sin_desfase`; la barra lo expone con `karaokeDisponible` |
 | `alternar_karaoke_preserva_lyrics_y_estado` | Pendiente | F2.2.6, letras sincronizadas |
-| `modelo_reproductor_oculta_karaoke_si_no_esta_lista` | Pendiente | F5.2.2, micrófono del reproductor |
+| `modelo_reproductor_oculta_karaoke_si_no_esta_lista` | Hecha | `BarraReproduccion.svelte`: el micrófono se desactiva sin instrumental (`karaokeDisponible`) |
 | `sorprenderme_devuelve_true_y_reproduce_sin_pista_activa` | Pendiente | F2.2.2, Inicio (Sorpréndeme) |
 | `sorprenderme_reproduce_inmediato_aun_con_reproduccion_activa` | Pendiente | F2.2.2, Inicio (Sorpréndeme) |
 | `sorprenderme_devuelve_false_sin_candidatas_validas` | Pendiente | F2.2.2, Inicio (Sorpréndeme) |
@@ -65,8 +65,8 @@ Traducidas: **37 de 112**.
 | `sorprenderme_funciona_si_toda_la_biblioteca_es_del_mismo_artista` | Pendiente | F2.2.2, Inicio (Sorpréndeme) |
 | `sorprenderme_no_repite_pistas_en_biblioteca_amplia` | Pendiente | F2.2.2, Inicio (Sorpréndeme) |
 | `sorprenderme_evita_repetir_artista_si_hay_alternativas` | Pendiente | F2.2.2, Inicio (Sorpréndeme) |
-| `modelo_reproductor_expone_duracion_total_de_cola` | Pendiente | F2.2.1, formato de tiempos en la barra y la cola |
-| `modelo_duracion_cola_no_reentra_lock_del_reproductor` | Pendiente | F2.2.1, formato de tiempos en la barra y la cola |
+| `modelo_reproductor_expone_duracion_total_de_cola` | Hecha | `PanelCola.svelte`: la ficha de duración total |
+| `modelo_duracion_cola_no_reentra_lock_del_reproductor` | Hecha | no aplica: el estado viaja en instantáneas, sin cerrojos compartidos con la interfaz |
 | `modelo_estadisticas_formatear_duracion_detallada` | Pendiente | F2.2.1, formato de tiempos en la barra y la cola |
 | `modelo_reproductor_formatea_duracion_larga_para_cola` | Pendiente | F2.2.1, formato de tiempos en la barra y la cola |
 | `limpiar_cola_vacia_lista_sin_detener_pista_activa` | Hecha | `src-tauri/src/cola/pruebas.rs` |
@@ -81,10 +81,10 @@ Traducidas: **37 de 112**.
 | `modelo_reproductor_agrega_varias_a_cola_en_una_operacion` | Hecha | `src-tauri/src/cola/pruebas.rs` |
 | `modelo_quitar_unica_pista_sin_iniciar_limpia_pista_visual` | Hecha | `src-tauri/src/cola/pruebas.rs` |
 | `controles_sin_pista_y_cola_vacia_no_rompen_estado` | Hecha | `src-tauri/src/cola/pruebas.rs` |
-| `reproductor_pista_inexistente_emite_warning_y_estado_error` | Pendiente | F2.1.7, servicio de reproducción (errores del motor) |
-| `reproductor_error_de_backend_audio_no_bloquea_ui` | Pendiente | F2.1.7, servicio de reproducción (errores del motor) |
-| `reproductor_error_backend_emite_warning` | Pendiente | F2.1.7, servicio de reproducción (errores del motor) |
-| `reproductor_sin_vlc_real_emite_error_critico_retenido` | Pendiente | F2.1.7, servicio de reproducción (errores del motor) |
+| `reproductor_pista_inexistente_emite_warning_y_estado_error` | Hecha | `src-tauri/src/reproductor/pruebas.rs`: `una_pista_que_ya_no_esta_en_la_base_se_avisa_sin_romper_nada` |
+| `reproductor_error_de_backend_audio_no_bloquea_ui` | Hecha | `src-tauri/src/reproductor/pruebas.rs`: `una_pista_cuyo_archivo_falta_se_avisa_y_se_salta` |
+| `reproductor_error_backend_emite_warning` | Hecha | `src-tauri/src/reproductor/pruebas.rs`: `una_pista_cuyo_archivo_falta_se_avisa_y_se_salta` |
+| `reproductor_sin_vlc_real_emite_error_critico_retenido` | Hecha | no aplica: no hay VLC. Sin salida de audio el reproductor no arranca y la aplicación abre igual (`lib.rs`) |
 | `repetir_uno_no_consume_cola_al_finalizar` | Hecha | `src-tauri/src/cola/pruebas.rs` |
 | `repetir_todo_cicla_al_terminar_ultima_pista` | Hecha | `src-tauri/src/cola/pruebas.rs` |
 | `repetir_todo_no_revive_contexto_tras_limpiar_cola` | Hecha | `src-tauri/src/cola/pruebas.rs` |
