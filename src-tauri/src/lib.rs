@@ -200,6 +200,7 @@ pub fn run() {
         movil: Arc::clone(&servidor_movil),
         importador: importador.clone(),
     };
+    let importador_setup = importador.clone();
 
     let aplicacion = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -249,6 +250,15 @@ pub fn run() {
                 Arc::clone(&servidor_movil),
             );
             medicion::arrancar(db.clone());
+            // La carpeta de música vigilada (F4.2.2). Si aún no hay ninguna, empieza
+            // a vigilarse en el próximo arranque, cuando la primera importación la fije.
+            if let Ok(Some(m)) = db
+                .conexion()
+                .map_err(|_| ())
+                .and_then(|c| reproductor::carpeta_musica(&c).map_err(|_| ()))
+            {
+                catalogo::vigilancia::vigilar(db.clone(), m, importador_setup.clone());
+            }
             let (d, s) = (db.clone(), Arc::clone(&servidor_movil));
             let _ = std::thread::Builder::new()
                 .name("encender-movil".into())

@@ -21,3 +21,4 @@ pub mod por_revisar;
 pub mod portadas_red;
 pub mod shazam;
 pub mod texto;
+pub mod vigilancia;

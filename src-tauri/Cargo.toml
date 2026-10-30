@@ -87,6 +87,8 @@ rubato = "0.16.2"
 # Descartar desde Por revisar manda a la papelera del sistema, nunca borra del
 # todo (enmienda de ADR-007; ADR-002).
 trash = "5.2.9"
+# La carpeta de música vigilada (F4.2.2; ADR-002).
+notify = "8.2.1"
 
 # Controles del sistema (ADR-003, F2.1.5): MPRIS en Linux, con aleatorio y
 # repetición en los dos sentidos; SMTC en Windows y el centro de reproducción en
