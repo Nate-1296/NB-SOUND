@@ -121,11 +121,16 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn rechaza_un_enlace_simbolico_que_escapa_del_ambito() {
+        // El objetivo se crea fuera del ámbito en vez de apuntar a `/etc/hostname`,
+        // que no existe en macOS: allí la prueba daba "no encontrado" y no probaba
+        // nada (lo destapó el CI el 2026-10-29).
         let tmp = Temporal::nuevo("enlace");
+        let fuera = Temporal::nuevo("enlace-destino");
+        std::fs::write(fuera.0.join("secreto.txt"), b"x").expect("archivo fuera");
         let enlace = tmp.0.join("fuga");
-        std::os::unix::fs::symlink("/etc", &enlace).expect("enlace");
+        std::os::unix::fs::symlink(&fuera.0, &enlace).expect("enlace");
 
-        let resultado = resolve_within(&tmp.0, Path::new("fuga/hostname"));
+        let resultado = resolve_within(&tmp.0, Path::new("fuga/secreto.txt"));
         assert!(matches!(resultado, Err(NsError::PathNotAllowed)));
     }
 
