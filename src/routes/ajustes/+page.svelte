@@ -1,8 +1,8 @@
 <!--
   Ajustes, rediseñado (ADR-007): una sola página con sus secciones en orden y un
   índice para saltar entre ellas. Hay Biblioteca, Reproducción, Apariencia,
-  Dispositivos y Acerca de; Agregados, Privacidad e Inteligencia artificial
-  llegan con sus fases. Todo cambio se guarda al momento, sin botón de
+  Dispositivos, Privacidad y servicios en línea, Inteligencia artificial y
+  Acerca de; Agregados llega con la Fase 5. Todo cambio se guarda al momento, sin botón de
   guardar.
 -->
 <script lang="ts">
@@ -85,6 +85,8 @@
     <a href="#reproduccion">{t.reproduccion}</a>
     <a href="#apariencia">{t.apariencia}</a>
     <a href="#dispositivos">{t.dispositivos}</a>
+    <a href="#privacidad">{t.privacidad}</a>
+    <a href="#ia">{t.ia}</a>
     <a href="#acerca">{t.acercaDe}</a>
   </nav>
 
@@ -235,6 +237,9 @@
     </section>
 
     <SeccionDispositivos />
+    {#await import('$ui/privacidad/SeccionesPrivacidad.svelte') then m}
+      <m.default />
+    {/await}
 
     <section id="acerca" aria-labelledby="t-acerca">
       <h2 id="t-acerca">{t.acercaDe}</h2>

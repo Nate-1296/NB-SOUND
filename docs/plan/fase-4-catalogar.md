@@ -31,7 +31,7 @@
 | F4.2.4 Por revisar: lista con el motivo en lenguaje llano, comparador lado a lado y acciones | Hecha: motivos de la enmienda de ADR-007, candidatos al lado del archivo, importar tal como está avisando de lo que faltará, buscar de nuevo, descartar a la papelera y acciones en lote. Una prueba recorre todas las causas internas |
 | F4.2.5 Editar metadatos de una pista o un álbum | Pendiente |
 | F4.2.6 Copia de seguridad y restauración (`servicios/backup.py`) | Pendiente |
-| F4.2.7 Ajustes > Privacidad y servicios en línea; Inteligencia artificial | Pendiente |
+| F4.2.7 Ajustes > Privacidad y servicios en línea; Inteligencia artificial | Hecha: `privacidad.rs`; el interruptor general y uno por servicio con lo que envía, aplicados a la puerta en el acto; proveedor (Anthropic u OpenAI) y modelo como preferencias, la clave en el llavero sin volver nunca a la interfaz. Las dos secciones se cargan aparte del arranque |
 | F4.2.8 Importar tal como está: pistas sin verificar, su filtro y "Completar datos" | Pendiente |
 
 ## Criterios

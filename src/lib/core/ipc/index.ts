@@ -15,6 +15,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 
 import type {
   AjustesEcualizador,
+  AjustesIa,
   AlbumResumen,
   Ambiente,
   Apariencia,
@@ -38,13 +39,16 @@ import type {
   Perfil,
   PistaResumen,
   PlaylistResumen,
+  PoliticaDeRed,
   PreseleccionEcualizador,
   ProgresoImportacion,
+  ProveedorIa,
   Telefono
 } from '$lib/bindings';
 
 export type {
   AjustesEcualizador,
+  AjustesIa,
   AlbumResumen,
   Ambiente,
   Apariencia,
@@ -77,9 +81,12 @@ export type {
   PistaEscuchada,
   PistaResumen,
   PlaylistResumen,
+  PoliticaDeRed,
   PreseleccionEcualizador,
   ProgresoImportacion,
+  ProveedorIa,
   Qr,
+  Servicio,
   Telefono
 } from '$lib/bindings';
 
@@ -306,6 +313,35 @@ export function preseleccionesEcualizador(): Promise<PreseleccionEcualizador[]> 
 
 export function carpetaMusica(): Promise<string | null> {
   return call<string | null>('carpeta_musica');
+}
+
+// --- Privacidad e inteligencia artificial ---------------------------------------
+
+/** Lo que la puerta de red deja salir ahora mismo. */
+export function politicaRed(): Promise<PoliticaDeRed> {
+  return call<PoliticaDeRed>('politica_red');
+}
+
+export function cambiarPoliticaRed(politica: PoliticaDeRed): Promise<void> {
+  return call<void>('cambiar_politica_red', { politica });
+}
+
+export function ajustesIa(): Promise<AjustesIa> {
+  return call<AjustesIa>('ajustes_ia');
+}
+
+/** Un modelo vacío vuelve al de fábrica del proveedor. */
+export function guardarAjustesIa(proveedor: ProveedorIa, modelo: string): Promise<AjustesIa> {
+  return call<AjustesIa>('guardar_ajustes_ia', { proveedor, modelo });
+}
+
+/** La clave va al llavero del sistema y no vuelve: la respuesta solo dice si hay una. */
+export function guardarClaveIa(clave: string): Promise<AjustesIa> {
+  return call<AjustesIa>('guardar_clave_ia', { clave });
+}
+
+export function borrarClaveIa(): Promise<AjustesIa> {
+  return call<AjustesIa>('borrar_clave_ia');
 }
 
 /** Todo lo que muestra Inicio, en una sola petición. */

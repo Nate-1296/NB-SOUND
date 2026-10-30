@@ -495,6 +495,73 @@ pub async fn carpeta_musica(estado: tauri::State<'_, Estado>) -> NsResult<Option
     .await
 }
 
+// --- Privacidad e inteligencia artificial (F4.2.7) ---------------------------------
+
+/// La política de red que cumple la puerta ahora mismo.
+#[tauri::command]
+pub async fn politica_red(estado: tauri::State<'_, Estado>) -> NsResult<crate::net::PoliticaDeRed> {
+    Ok(estado.red.politica())
+}
+
+/// Cambia el interruptor general o el de un servicio; rige desde la siguiente
+/// petición.
+#[tauri::command]
+pub async fn cambiar_politica_red(
+    estado: tauri::State<'_, Estado>,
+    politica: crate::net::PoliticaDeRed,
+) -> NsResult<()> {
+    let red = std::sync::Arc::clone(&estado.red);
+    en_segundo_plano(&estado, move |db| {
+        crate::privacidad::cambiar_politica(db, &red, politica)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn ajustes_ia(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::privacidad::AjustesIa> {
+    en_segundo_plano(&estado, crate::privacidad::ajustes_ia).await
+}
+
+#[tauri::command]
+pub async fn guardar_ajustes_ia(
+    estado: tauri::State<'_, Estado>,
+    proveedor: crate::privacidad::ProveedorIa,
+    modelo: String,
+) -> NsResult<crate::privacidad::AjustesIa> {
+    en_segundo_plano(&estado, move |db| {
+        crate::privacidad::guardar_ia(db, proveedor, &modelo)?;
+        crate::privacidad::ajustes_ia(db)
+    })
+    .await
+}
+
+/// Guarda la clave del proveedor en el llavero. Devuelve los ajustes, que solo
+/// dicen si hay clave: la clave no vuelve.
+#[tauri::command]
+pub async fn guardar_clave_ia(
+    estado: tauri::State<'_, Estado>,
+    clave: String,
+) -> NsResult<crate::privacidad::AjustesIa> {
+    en_segundo_plano(&estado, move |db| {
+        crate::privacidad::guardar_clave_ia(db, &clave)?;
+        crate::privacidad::ajustes_ia(db)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn borrar_clave_ia(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::privacidad::AjustesIa> {
+    en_segundo_plano(&estado, |db| {
+        crate::privacidad::borrar_clave_ia(db)?;
+        crate::privacidad::ajustes_ia(db)
+    })
+    .await
+}
+
 #[tauri::command]
 pub async fn inicio(estado: tauri::State<'_, Estado>) -> NsResult<crate::inicio::Inicio> {
     en_segundo_plano(&estado, crate::inicio::resumen).await

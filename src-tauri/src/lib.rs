@@ -26,6 +26,7 @@ pub mod perfil;
 pub mod playlists;
 pub mod portadas;
 pub mod preferencias;
+pub mod privacidad;
 pub mod reproductor;
 pub mod secrets;
 pub mod security;
@@ -343,6 +344,12 @@ pub fn run() {
             comandos::ecualizador,
             comandos::preselecciones_ecualizador,
             comandos::carpeta_musica,
+            comandos::politica_red,
+            comandos::cambiar_politica_red,
+            comandos::ajustes_ia,
+            comandos::guardar_ajustes_ia,
+            comandos::guardar_clave_ia,
+            comandos::borrar_clave_ia,
             comandos::inicio,
             comandos::perfil,
             comandos::movil_estado,

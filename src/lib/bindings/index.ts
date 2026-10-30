@@ -9,6 +9,7 @@
  */
 
 export type { AjustesEcualizador } from './AjustesEcualizador';
+export type { AjustesIa } from './AjustesIa';
 export type { AlbumResumen } from './AlbumResumen';
 export type { Ambiente } from './Ambiente';
 export type { Apariencia } from './Apariencia';
@@ -46,6 +47,7 @@ export type { PlaylistResumen } from './PlaylistResumen';
 export type { PoliticaDeRed } from './PoliticaDeRed';
 export type { PreseleccionEcualizador } from './PreseleccionEcualizador';
 export type { ProgresoImportacion } from './ProgresoImportacion';
+export type { ProveedorIa } from './ProveedorIa';
 export type { Qr } from './Qr';
 export type { Servicio } from './Servicio';
 export type { Telefono } from './Telefono';
