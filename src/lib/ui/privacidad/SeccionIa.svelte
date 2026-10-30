@@ -9,8 +9,10 @@
   import type { ProveedorIa } from '$core/ipc';
   import { privacidad } from '$core/privacidad.svelte';
   import { textos } from '$lib/i18n';
+  import { textosAparte } from '$lib/i18n/aparte';
 
   const t = textos.ajustes;
+  const a = textosAparte.privacidad;
   const PROVEEDORES: ProveedorIa[] = ['anthropic', 'openai'];
 
   let modelo = $state('');
@@ -32,11 +34,11 @@
 
 <section id="ia" aria-labelledby="t-ia">
   <h2 id="t-ia">{t.ia}</h2>
-  <p>{t.iaAyuda}</p>
+  <p>{a.iaAyuda}</p>
   <label class="ajuste">
     <span class="rotulo">
-      {t.iaActiva}
-      {#if !privacidad.politica.general}<small>{t.iaSinConexion}</small>{/if}
+      {a.iaActiva}
+      {#if !privacidad.politica.general}<small>{a.iaSinConexion}</small>{/if}
     </span>
     <input
       type="checkbox"
@@ -50,19 +52,19 @@
   {#if privacidad.ia}
     {@const ia = privacidad.ia}
     <label class="ajuste">
-      <span class="rotulo">{t.proveedor}</span>
+      <span class="rotulo">{a.proveedor}</span>
       <select
         class="campo"
         value={ia.proveedor}
         onchange={(e) => privacidad.proveedorYModelo(e.currentTarget.value as ProveedorIa, '')}
       >
         {#each PROVEEDORES as p (p)}
-          <option value={p}>{t.proveedores[p]}</option>
+          <option value={p}>{a.proveedores[p]}</option>
         {/each}
       </select>
     </label>
     <label class="ajuste">
-      <span class="rotulo">{t.modelo}<small>{t.modeloAyuda}</small></span>
+      <span class="rotulo">{a.modelo}<small>{a.modeloAyuda}</small></span>
       <input
         class="campo"
         maxlength="100"
@@ -74,14 +76,14 @@
     </label>
     <div class="ajuste">
       <span class="rotulo">
-        {t.clave}
-        {#if !ia.llavero}<small>{t.sinLlavero}</small>
-        {:else if ia.tieneClave}<small>{t.claveGuardada}</small>{/if}
+        {a.clave}
+        {#if !ia.llavero}<small>{a.sinLlavero}</small>
+        {:else if ia.tieneClave}<small>{a.claveGuardada}</small>{/if}
       </span>
       {#if ia.llavero}
         {#if ia.tieneClave}
           <button type="button" class="boton" onclick={() => privacidad.olvidarClave()}>
-            {t.olvidarClave}
+            {a.olvidarClave}
           </button>
         {:else}
           <form
@@ -96,19 +98,19 @@
               type="password"
               autocomplete="off"
               spellcheck="false"
-              placeholder={t.claveNueva}
-              aria-label={t.clave}
+              placeholder={a.claveNueva}
+              aria-label={a.clave}
               bind:value={clave}
             />
             <button type="submit" class="boton principal" disabled={!clave.trim()}>
-              {t.guardarClave}
+              {a.guardarClave}
             </button>
           </form>
         {/if}
       {/if}
     </div>
   {/if}
-  {#if privacidad.fallo}<p role="alert" class="fallo">{t.noGuardado}</p>{/if}
+  {#if privacidad.fallo}<p role="alert" class="fallo">{a.noGuardado}</p>{/if}
 </section>
 
 <style>

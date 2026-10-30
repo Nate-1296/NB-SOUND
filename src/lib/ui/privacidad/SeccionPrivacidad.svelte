@@ -7,15 +7,17 @@
 <script lang="ts">
   import { privacidad, SERVICIOS_EN_LINEA } from '$core/privacidad.svelte';
   import { textos } from '$lib/i18n';
+  import { textosAparte } from '$lib/i18n/aparte';
 
   const t = textos.ajustes;
+  const a = textosAparte.privacidad;
 </script>
 
 <section id="privacidad" aria-labelledby="t-privacidad">
   <h2 id="t-privacidad">{t.privacidad}</h2>
-  <p>{t.privacidadAyuda}</p>
+  <p>{a.privacidadAyuda}</p>
   <label class="ajuste">
-    <span class="rotulo">{t.conexion}<small>{t.conexionAyuda}</small></span>
+    <span class="rotulo">{a.conexion}<small>{a.conexionAyuda}</small></span>
     <input
       type="checkbox"
       role="switch"
@@ -28,7 +30,7 @@
       <li>
         <label class="ajuste">
           <span class="rotulo">
-            {t.servicios[servicio].nombre}<small>{t.servicios[servicio].envia}</small>
+            {a.servicios[servicio].nombre}<small>{a.servicios[servicio].envia}</small>
           </span>
           <input
             type="checkbox"
@@ -41,7 +43,7 @@
       </li>
     {/each}
   </ul>
-  {#if privacidad.fallo}<p role="alert" class="fallo">{t.noGuardado}</p>{/if}
+  {#if privacidad.fallo}<p role="alert" class="fallo">{a.noGuardado}</p>{/if}
 </section>
 
 <style>
