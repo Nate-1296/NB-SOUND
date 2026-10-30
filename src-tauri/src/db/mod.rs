@@ -6,6 +6,7 @@
 //! que el usuario percibe como una aplicación colgada. Portado de NB Books
 //! (`src-tauri/src/db/mod.rs`), donde cada regla de aquí costó un defecto.
 
+pub mod busqueda;
 pub mod migraciones;
 #[cfg(test)]
 mod pruebas_esquema;
