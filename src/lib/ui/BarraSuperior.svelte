@@ -2,16 +2,36 @@
   @component
   La barra superior con la búsqueda global.
 
-  La búsqueda no es un destino (ADR-007): es este campo, siempre visible, y
-  `Ctrl+K` lo enfoca desde cualquier parte. Los resultados llegan en F2.2.5.
+  La búsqueda no es un destino de la barra lateral (ADR-007): es este campo,
+  siempre visible, y `Ctrl+K` lo enfoca desde cualquier parte. Al escribir se abre
+  la página de resultados, que se actualiza con cada pausa al teclear.
 -->
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { page } from '$app/state';
   import { textos } from '$lib/i18n';
 
   import Icon from './Icon.svelte';
 
   let campo: HTMLInputElement | undefined = $state();
-  let consulta = $state('');
+  let consulta = $state(
+    page.url.pathname === '/buscar' ? (page.url.searchParams.get('q') ?? '') : ''
+  );
+
+  // Cada tecla no es una navegación: se espera a la pausa.
+  let espera: ReturnType<typeof setTimeout> | undefined;
+  function alEscribir() {
+    clearTimeout(espera);
+    espera = setTimeout(() => {
+      const q = consulta.trim();
+      if (q === '' && page.url.pathname !== '/buscar') return;
+      void goto(`/buscar?q=${encodeURIComponent(q)}`, {
+        replaceState: page.url.pathname === '/buscar',
+        keepFocus: true,
+        noScroll: true
+      });
+    }, 200);
+  }
 
   function alPulsar(evento: KeyboardEvent) {
     if ((evento.ctrlKey || evento.metaKey) && evento.key.toLowerCase() === 'k') {
@@ -32,6 +52,7 @@
       <input
         bind:this={campo}
         bind:value={consulta}
+        oninput={alEscribir}
         type="search"
         placeholder={textos.busqueda.marcador}
         autocomplete="off"

@@ -30,7 +30,16 @@ export const es = {
   busqueda: {
     etiqueta: 'Buscar en tu música',
     marcador: 'Canciones, álbumes, artistas o letras',
-    atajo: 'Ctrl+K'
+    atajo: 'Ctrl+K',
+    titulo: 'Buscar',
+    subtitulo: 'Encuentra artistas, álbumes, pistas y letras en toda tu biblioteca.',
+    artistas: 'Artistas',
+    albumes: 'Álbumes',
+    pistas: 'Pistas',
+    playlists: 'Playlists',
+    sinResultados: (q: string) => `Nada en tu biblioteca coincide con «${q}».`,
+    escribe: 'Escribe arriba para buscar.',
+    verTodas: (n: number) => `Ver las ${n.toLocaleString('es')} pistas`
   },
   reproductor: {
     region: 'Reproductor',
@@ -83,6 +92,7 @@ export const es = {
       antiguas: 'Antiguas',
       masReproducidas: 'Más reproducidas',
       menosReproducidas: 'Menos reproducidas',
+      relevancia: 'Relevancia',
       nombreAsc: 'Nombre A-Z',
       nombreDesc: 'Nombre Z-A',
       masPistas: 'Más pistas'

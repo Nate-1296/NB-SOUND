@@ -21,7 +21,7 @@
 | F2.2.2 Inicio | Pendiente |
 | F2.2.3 Biblioteca: canciones, álbumes, artistas y sus detalles | Hecha |
 | F2.2.4 Playlists manuales (crear, ordenar, añadir desde cualquier sitio) | Hecha |
-| F2.2.5 Búsqueda global y `Ctrl+K` | Pendiente |
+| F2.2.5 Búsqueda global y `Ctrl+K` | Hecha |
 | F2.2.6 Reproducción expandida, letras sincronizadas y minirreproductor | Pendiente |
 | F2.2.7 Los 63 temas de la V1 completos, la tipografía elegible y el color por portada como opción | Pendiente |
 | F2.2.8 Tu música (identidad, ánimo del día, actividad) con los datos ya migrados | Pendiente |

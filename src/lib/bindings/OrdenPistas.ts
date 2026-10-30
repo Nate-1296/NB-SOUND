@@ -3,4 +3,4 @@
 /**
  * Los órdenes de la V1 (`VistaBiblioteca.qml`), en su orden.
  */
-export type OrdenPistas = "tituloAsc" | "tituloDesc" | "artistaAsc" | "artistaDesc" | "albumAsc" | "albumDesc" | "anioDesc" | "anioAsc" | "duracionDesc" | "duracionAsc" | "recientes" | "antiguas" | "masReproducidas" | "menosReproducidas";
+export type OrdenPistas = "tituloAsc" | "tituloDesc" | "artistaAsc" | "artistaDesc" | "albumAsc" | "albumDesc" | "anioDesc" | "anioAsc" | "duracionDesc" | "duracionAsc" | "recientes" | "antiguas" | "masReproducidas" | "menosReproducidas" | "relevancia";

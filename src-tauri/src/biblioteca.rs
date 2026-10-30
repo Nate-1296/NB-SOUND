@@ -133,6 +133,8 @@ pub enum OrdenPistas {
     Antiguas,
     MasReproducidas,
     MenosReproducidas,
+    /// Por lo bien que casa con el texto buscado; sin texto, por título.
+    Relevancia,
 }
 
 impl OrdenPistas {
@@ -156,6 +158,8 @@ impl OrdenPistas {
             Self::Antiguas => "p.creada_en, p.id",
             Self::MasReproducidas => "p.reproducciones DESC, p.titulo COLLATE NOCASE, p.id",
             Self::MenosReproducidas => "p.reproducciones, p.titulo COLLATE NOCASE, p.id",
+            // Se sustituye en `pistas` cuando hay texto: ver `orden_por_relevancia`.
+            Self::Relevancia => "p.titulo COLLATE NOCASE, p.id",
         }
     }
 }
@@ -259,14 +263,24 @@ pub fn pistas(
         )
         .map_err(|_| NsError::StorageFailure)?;
     let mut todos = params;
+    // Con texto, la relevancia es el `rank` de FTS5 (título antes que letra).
+    let relevancia = (c.orden == OrdenPistas::Relevancia)
+        .then(|| c.texto.as_deref().and_then(crate::db::busqueda::consulta))
+        .flatten();
+    let orden = match relevancia {
+        Some(q) => {
+            todos.push(rusqlite::types::Value::Text(q));
+            "(SELECT b.rank FROM busqueda b WHERE busqueda MATCH ? AND b.rowid = p.id), p.id"
+        }
+        None => c.orden.sql(),
+    };
     todos.push(rusqlite::types::Value::Integer(i64::from(
         limite.min(MAX_TRAMO),
     )));
     todos.push(rusqlite::types::Value::Integer(i64::from(desde)));
     let sql = format!(
         "SELECT {COLUMNAS_RESUMEN} FROM pistas p LEFT JOIN albumes a ON a.id = p.album_id
-         WHERE {donde} ORDER BY {} LIMIT ? OFFSET ?",
-        c.orden.sql()
+         WHERE {donde} ORDER BY {orden} LIMIT ? OFFSET ?"
     );
     let mut s = conn
         .prepare_cached(&sql)
@@ -402,6 +416,21 @@ mod pruebas_lista {
         assert_eq!(ids(&pistas(&db, &c, 0, 50).unwrap()), [1, 2]);
         c.texto = Some("titi".into());
         assert_eq!(ids(&pistas(&db, &c, 0, 50).unwrap()), [3], "sin tildes");
+    }
+
+    #[test]
+    fn la_relevancia_pone_primero_lo_que_casa_en_el_titulo() {
+        let db = base();
+        db.conexion()
+            .unwrap()
+            .execute(
+                "INSERT INTO letras (pista_id, planas) VALUES (3, 'un bar de noche')",
+                [],
+            )
+            .unwrap();
+        let mut c = consulta(OrdenPistas::Relevancia);
+        c.texto = Some("bar".into());
+        assert_eq!(ids(&pistas(&db, &c, 0, 50).unwrap()), [1, 3]);
     }
 
     #[test]
