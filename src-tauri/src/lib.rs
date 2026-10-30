@@ -6,6 +6,7 @@
 //! (lo vigila `scripts/check-comandos.mjs`).
 
 pub mod audio;
+pub mod cola;
 pub mod comandos;
 pub mod db;
 pub mod error;

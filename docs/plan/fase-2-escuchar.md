@@ -11,11 +11,12 @@
 | Iteración | Estado |
 |---|---|
 | F2.1.1 `MotorAudio` de producción (a partir de F0.4.1) | Hecha |
-| F2.1.2 Cola, aleatorio y repetición | Pendiente |
+| F2.1.2 Cola, aleatorio y repetición | Hecha: las 31 pruebas de cola de la V1; el resto de las 112, en su iteración ([contrato](../engineering/contrato-reproductor.md)) |
 | F2.1.3 Ecualizador con las 18 preselecciones y preamplificación con margen | Hecha |
 | F2.1.4 Normalización de volumen por LUFS | Pendiente |
 | F2.1.5 Controles del sistema: MPRIS, SMTC y macOS | Pendiente |
 | F2.1.6 Atajos globales, bandeja y cierre limpio | Pendiente |
+| F2.1.7 Servicio de reproducción: cola, motor, sesión guardada, historial y avisos al puente | Pendiente |
 | F2.2.1 Carcasa con la disposición de la V1: barra lateral, barra superior con búsqueda, barra de reproducción | Pendiente |
 | F2.2.2 Inicio | Pendiente |
 | F2.2.3 Biblioteca: canciones, álbumes, artistas y sus detalles | Pendiente |
