@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use super::canalizacion::{album_id, artista_id, bd, Alta, Entorno};
+use super::correcciones;
 use super::duplicados::huella_de_archivo;
 use super::etiquetas::{self, Escritura};
 use super::texto::construir_slug;
@@ -367,7 +368,29 @@ pub fn editar_pista(e: &Entorno<'_>, pista: i64, datos: &DatosPista) -> NsResult
     a.fuentes = vec!["manual"];
     escribir_etiquetas(&archivo, &a);
     reasignar(e, pista, &fila, &a, &archivo)?;
-    Ok(())
+    recordar_correcciones(e.db, &[pista])
+}
+
+/// Guarda como corrección lo que quedó en cada pista, para que importarla otra
+/// vez respete lo editado.
+fn recordar_correcciones(db: &BaseDeDatos, pistas: &[i64]) -> NsResult<()> {
+    let mut filas = Vec::with_capacity(pistas.len());
+    for id in pistas {
+        let f = leer_fila(db, *id)?;
+        let huella: Option<String> = db
+            .conexion()?
+            .query_row("SELECT sha256 FROM pistas WHERE id = ?1", [id], |f| {
+                f.get(0)
+            })
+            .map_err(|_| NsError::StorageFailure)?;
+        filas.push((huella, alta_de_fila(&f)));
+    }
+    let mut conn = db.conexion()?;
+    let tx = db::transaccion_de_escritura(&mut conn)?;
+    for (huella, a) in &filas {
+        correcciones::recordar(&tx, huella.as_deref(), a)?;
+    }
+    bd(tx.commit())
 }
 
 /// Cambia los datos de un álbum y de todas sus pistas. Devuelve el id del álbum
@@ -471,6 +494,8 @@ pub fn editar_album(e: &Entorno<'_>, album: i64, datos: &DatosAlbum) -> NsResult
         Some(artista_viejo).filter(|a| *a != artista),
     )?;
     bd(tx.commit())?;
+    let ids: Vec<i64> = pistas.iter().map(|(id, _)| *id).collect();
+    recordar_correcciones(e.db, &ids)?;
     Ok(destino)
 }
 
@@ -668,6 +693,11 @@ mod tests {
             0,
             "el álbum que se queda vacío sobra"
         );
+        let huella: String = m.valor("SELECT sha256 FROM pistas WHERE id = 3");
+        let recordada = correcciones::buscar(&m.db, &huella, None, None)
+            .unwrap()
+            .expect("editar deja la corrección para la próxima importación");
+        assert_eq!(recordada.titulo, "Tres");
     }
 
     #[test]

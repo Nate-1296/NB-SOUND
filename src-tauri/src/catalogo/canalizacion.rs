@@ -21,6 +21,7 @@ use rusqlite::{params, OptionalExtension};
 use serde_json::json;
 
 use super::acoustid::{self, Huella};
+use super::correcciones;
 use super::duplicados::{huella_de_archivo, Calidad, Duplicado, Gestor, Referencia, Visible};
 use super::emparejador::{self, Contexto};
 use super::etapas::{self, Tercera};
@@ -749,6 +750,32 @@ pub fn procesar(e: &Entorno<'_>, g: &mut Gestor, ruta: &Path) -> NsResult<Result
             json!({"nombre_original": nombre, "duplicado": referencia(&d)}),
         );
     }
+    // Lo que el usuario dejó corregido gana a las fuentes y no necesita red
+    // (`overrides` de la V1).
+    let corregida = correcciones::buscar(
+        e.db,
+        &huella,
+        cruda.isrc.as_deref(),
+        correcciones::clave_artista_titulo(
+            cruda.artista.as_deref().unwrap_or_default(),
+            cruda.titulo.as_deref().unwrap_or_default(),
+        )
+        .as_deref(),
+    )
+    .unwrap_or_default();
+    if let Some(mut a) = corregida {
+        // Una corrección que solo fija identificadores toma el resto del archivo.
+        let tal_cual = alta_tal_cual(&cruda, &nombre, tecnico.duracion_seg);
+        if a.titulo.is_empty() {
+            a.titulo = tal_cual.titulo;
+        }
+        if a.artista.is_empty() {
+            a.artista = tal_cual.artista;
+        }
+        let verificada = a.verificada;
+        let pista = importar(e, ruta, &a, &tecnico, &cruda, true)?;
+        return Ok(Resultado::Importada { pista, verificada });
+    }
     let sin_red = e
         .red
         .autorizar(Servicio::MusicBrainz, "https://musicbrainz.org/ws/2/")
@@ -968,6 +995,40 @@ mod tests {
             .unwrap();
             ruta
         }
+    }
+
+    #[test]
+    fn lo_corregido_a_mano_gana_a_las_etiquetas_sin_necesitar_red() {
+        let m = montar("correccion");
+        m.db.conexion()
+            .unwrap()
+            .execute(
+                "INSERT INTO correcciones_catalogo (tipo, valor, cambios) VALUES
+                 ('artist_title', 'mana::rayando el sol',
+                  '{\"titulo_oficial\": \"Rayando el Sol\", \"artista_principal\": \"Maná\",
+                    \"album_oficial\": \"¿Dónde jugarán los niños?\", \"numero\": 4}')",
+                [],
+            )
+            .unwrap();
+        let origen = m.pista("x.wav", 20, Some("rayando el sol"), Some("MANA"));
+        let r = procesar(&m.entorno(), &mut Gestor::default(), &origen).unwrap();
+        let Resultado::Importada { pista, verificada } = r else {
+            panic!("{r:?}")
+        };
+        assert!(!verificada, "lo escrito a mano no cuenta como identificado");
+        let (titulo, album, numero): (String, String, i64) =
+            m.db.conexion()
+                .unwrap()
+                .query_row(
+                    "SELECT titulo, album_titulo, numero FROM pistas WHERE id = ?1",
+                    [pista],
+                    |f| Ok((f.get(0)?, f.get(1)?, f.get(2)?)),
+                )
+                .unwrap();
+        assert_eq!(
+            (titulo.as_str(), album.as_str(), numero),
+            ("Rayando el Sol", "¿Dónde jugarán los niños?", 4)
+        );
     }
 
     #[test]
