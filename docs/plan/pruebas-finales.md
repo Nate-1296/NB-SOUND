@@ -51,6 +51,7 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
       reproducir.
 - [ ] Cerrar la ventana mientras suena no deja audio sonando ni procesos vivos.
 - [ ] La primera vez, con la V1 importándose en segundo plano, el reproductor recoge la cola de la V1 al terminar.
+- [ ] Tras la importación, la medición de sonoridad recorre la biblioteca real sin que el equipo se note (CPU por debajo de un núcleo, sin cortes en lo que suena); con la normalización activa, una pista alta y una baja de la V1 suenan parecidas.
 - [ ] La carcasa, la barra lateral y la barra de reproducción se comparan con las capturas de la V1 (`legado/assets/screens/`) y con la V1 abierta al lado.
 - [ ] La biblioteca real (2.397 canciones, 1.421 álbumes) se desplaza sin tirones en WebKitGTK, con las portadas apareciendo al frenar; buscar, filtrar, ordenar y abrir álbum y artista funcionan como en la V1.
 - [ ] Las playlists de la V1 aparecen con sus categorías, mosaicos y orden; crear, renombrar, ordenar, quitar, borrar y añadir desde cualquier canción funcionan, y el móvil recibe los cambios y «Me gusta» al marcar favoritas.

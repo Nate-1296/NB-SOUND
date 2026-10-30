@@ -371,7 +371,7 @@ fn el_analisis_de_una_pista_cabe_en_16_kb() {
             tx.execute(
                 "INSERT INTO rasgos VALUES (?1, 'audio_basic_v3', ?2, ?3, 512, ?3, 'G#', 'minor',
                  ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3, ?3,
-                 -9.5, -0.3, 7.2, '2026-10-30T00:00:00.000Z')",
+                 '2026-10-30T00:00:00.000Z')",
                 rusqlite::params![id, sha, r],
             )
             .unwrap();
@@ -379,6 +379,11 @@ fn el_analisis_de_una_pista_cabe_en_16_kb() {
                 "INSERT INTO analisis_profundo VALUES (?1, 'musicnn_v1', ?2, 0.1, 0.2, 0.3, 0.4,
                  0.5, 0.6, 0.7, 0.8, ?3, 200, ?4, '2026-10-30T00:00:00.000Z')",
                 rusqlite::params![id, sha, embedding, etiquetas],
+            )
+            .unwrap();
+            tx.execute(
+                "INSERT INTO sonoridad VALUES (?1, ?2, -9.5, -0.3, 7.2, '2026-10-30T00:00:00.000Z')",
+                rusqlite::params![id, sha],
             )
             .unwrap();
             for etiqueta in ETIQUETAS {

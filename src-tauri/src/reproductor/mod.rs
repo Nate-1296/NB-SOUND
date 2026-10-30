@@ -9,7 +9,7 @@
 //! prevista ([`Cola::prevista`]). Cuando el motor la empieza por su cuenta, el
 //! servicio avanza la cola y comprueba que coincide.
 
-mod persistencia;
+pub mod persistencia;
 #[cfg(test)]
 mod pruebas;
 

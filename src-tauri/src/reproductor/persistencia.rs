@@ -53,10 +53,10 @@ pub fn resolver(
 ) -> NsResult<Option<PistaResuelta>> {
     let fila = bd(conn
         .query_row(
-            "SELECT p.ruta, coalesce(p.duracion_seg, 0), r.lufs, r.pico_verdadero, s.instrumental,
+            "SELECT p.ruta, coalesce(p.duracion_seg, 0), so.lufs, so.pico_verdadero, s.instrumental,
                     p.titulo, p.artista_nombre
              FROM pistas p
-             LEFT JOIN rasgos r ON r.pista_id = p.id
+             LEFT JOIN sonoridad so ON so.pista_id = p.id
              LEFT JOIN stems s ON s.pista_id = p.id AND s.estado = 'lista'
              WHERE p.id = ?1",
             [pista_id],

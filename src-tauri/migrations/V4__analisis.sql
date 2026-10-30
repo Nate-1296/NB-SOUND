@@ -43,11 +43,6 @@ CREATE TABLE rasgos (
     para_entrenar     REAL,
     para_fiesta       REAL,
     para_la_noche     REAL,
-    -- Sonoridad medida con EBU R128 (`ebur128`), para la normalización (F2.1.4).
-    -- La V1 nunca la llegó a medir.
-    lufs              REAL,
-    pico_verdadero    REAL,
-    rango_sonoridad   REAL    CHECK (rango_sonoridad >= 0),
     analizado_en      TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 ) STRICT;
 

@@ -17,6 +17,7 @@ pub mod identidad_movil;
 pub mod importador_v1;
 pub mod inicio;
 pub mod letras;
+pub mod medicion;
 pub mod net;
 pub mod paths;
 pub mod perfil;
@@ -176,6 +177,7 @@ pub fn run() {
                 }
             };
             importar_v1_en_segundo_plano(db.clone(), rutas.clone(), Arc::clone(&red), buzon);
+            medicion::arrancar(db.clone());
             Ok(())
         })
         .register_asynchronous_uri_scheme_protocol("portada", move |ctx, peticion, responder| {

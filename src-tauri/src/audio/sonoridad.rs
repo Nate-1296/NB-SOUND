@@ -22,7 +22,7 @@ const PICO_MAXIMO_DBTP: f64 = -1.0;
 /// de fondo lo convierte en protagonista.
 const SUBIDA_MAXIMA_DB: f64 = 12.0;
 
-/// Lo que se guarda de cada pista (`rasgos.lufs`, `pico_verdadero`, `rango_sonoridad`).
+/// Lo que se guarda de cada pista (tabla `sonoridad`).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Sonoridad {
     pub lufs: f64,
