@@ -18,7 +18,7 @@
 | F2.1.6 Atajos globales, bandeja y cierre limpio | Pendiente |
 | F2.1.7 Servicio de reproducción: cola, motor, sesión guardada, historial y avisos al puente | Hecha |
 | F2.2.1 Carcasa con la disposición de la V1: barra lateral, barra superior con búsqueda, barra de reproducción | Hecha |
-| F2.2.2 Inicio | Pendiente |
+| F2.2.2 Inicio | Hecha: Sorpréndeme llega con las recomendaciones (F5.3.3) |
 | F2.2.3 Biblioteca: canciones, álbumes, artistas y sus detalles | Hecha |
 | F2.2.4 Playlists manuales (crear, ordenar, añadir desde cualquier sitio) | Hecha |
 | F2.2.5 Búsqueda global y `Ctrl+K` | Hecha |

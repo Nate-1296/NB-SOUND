@@ -7,6 +7,7 @@
 -->
 <script lang="ts">
   import { type PistaResumen, pistasResumen, urlPortada } from '$core/ipc';
+  import { duracionLarga } from '$core/formato';
   import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
 
@@ -64,7 +65,7 @@
   </header>
   <div class="fichas">
     <span class="ficha acento">{textos.biblioteca.cuentaPistas(i.cola.length)}</span>
-    <span class="ficha">{formatoTiempo(total)}</span>
+    <span class="ficha">{duracionLarga(total)}</span>
   </div>
 
   {#if i.cola.length === 0}

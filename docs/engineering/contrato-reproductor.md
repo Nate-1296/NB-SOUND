@@ -8,7 +8,7 @@ Las de la cola viven en `src-tauri/src/cola/pruebas.rs` con el nombre de la orig
 las vistas (`qml_*`) se traducen a recorridos de Playwright cuando existe la vista: lo que verificaban era la
 disposición de QML, y su equivalente es la vista de la V2, no un archivo de QML.
 
-Traducidas: **57 de 112**.
+Traducidas: **59 de 112**.
 
 | Prueba de la V1 | Estado | Dónde vive en la V2 |
 |---|---|---|
@@ -67,8 +67,8 @@ Traducidas: **57 de 112**.
 | `sorprenderme_evita_repetir_artista_si_hay_alternativas` | Pendiente | F2.2.2, Inicio (Sorpréndeme) |
 | `modelo_reproductor_expone_duracion_total_de_cola` | Hecha | `PanelCola.svelte`: la ficha de duración total |
 | `modelo_duracion_cola_no_reentra_lock_del_reproductor` | Hecha | no aplica: el estado viaja en instantáneas, sin cerrojos compartidos con la interfaz |
-| `modelo_estadisticas_formatear_duracion_detallada` | Pendiente | F2.2.1, formato de tiempos en la barra y la cola |
-| `modelo_reproductor_formatea_duracion_larga_para_cola` | Pendiente | F2.2.1, formato de tiempos en la barra y la cola |
+| `modelo_estadisticas_formatear_duracion_detallada` | Hecha | `src/lib/core/formato.test.ts`, con el mismo nombre |
+| `modelo_reproductor_formatea_duracion_larga_para_cola` | Hecha | `src/lib/core/formato.test.ts`, con el mismo nombre |
 | `limpiar_cola_vacia_lista_sin_detener_pista_activa` | Hecha | `src-tauri/src/cola/pruebas.rs` |
 | `vaciar_cola_mantener_actual_conserva_solo_fila_activa` | Hecha | `src-tauri/src/cola/pruebas.rs` |
 | `vaciar_cola_mantener_actual_vacia_si_no_hay_fila_activa` | Hecha | `src-tauri/src/cola/pruebas.rs` |

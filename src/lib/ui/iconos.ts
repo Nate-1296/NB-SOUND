@@ -94,6 +94,7 @@ export const ICONOS = {
     '<path d="M12 3.5 5 6.25v6.15c0 4.2 2.9 7.35 7 8.6 4.1-1.25 7-4.4 7-8.6V6.25z"/><path d="m9.25 12.25 2 2 3.5-3.75"/>',
   red: '<path d="M12 18.75h.01"/><path d="M8.5 15.5a5 5 0 0 1 7 0"/><path d="M5.25 11.75a10 10 0 0 1 13.5 0"/>',
   reintentar: '<path d="M20.5 12a8.5 8.5 0 1 1-2.9-6.4"/><path d="M20.5 3.5v5.25h-5.25"/>',
+  reloj: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   repetir:
     '<path d="M4.5 11V9a2 2 0 0 1 2-2h13"/><path d="m17 4.5 2.5 2.5L17 9.5"/><path d="M19.5 13v2a2 2 0 0 1-2 2h-13"/><path d="m7 19.5-2.5-2.5L7 14.5"/>',
   repetirUna:

@@ -13,6 +13,7 @@ pub mod db;
 pub mod error;
 pub mod identidad_movil;
 pub mod importador_v1;
+pub mod inicio;
 pub mod letras;
 pub mod net;
 pub mod paths;
@@ -218,7 +219,8 @@ pub fn run() {
             comandos::guardar_preferencia,
             comandos::ecualizador,
             comandos::preselecciones_ecualizador,
-            comandos::carpeta_musica
+            comandos::carpeta_musica,
+            comandos::inicio
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

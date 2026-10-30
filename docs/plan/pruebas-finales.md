@@ -57,3 +57,4 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] La vista de reproducción toma el color de la portada; las letras sincronizadas siguen a la canción y llevan al segundo pulsado; el panel de la cola reordena con el ratón y con Alt+flechas; el minirreproductor flota encima y cerrar la ventana principal cierra todo.
 - [ ] La V2 abre con el tema de la V1 (`sangre_dragon`) y Fira Sans sin parpadear con el de fábrica; los 63 temas se ven como en la V1.
 - [ ] En Ajustes, cambiar de tema, tipografía y tamaño se ve al momento; el ecualizador suena con cada preselección y con las bandas movidas a mano; la normalización se nota desde la canción siguiente.
+- [ ] Inicio muestra las cifras, Retomar, el álbum destacado y las secciones de la V1 con la biblioteca real, y saluda por el nombre.

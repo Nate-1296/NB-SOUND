@@ -25,6 +25,7 @@ import type {
   ConsultaPistas,
   ConsultaPlaylists,
   InformeDeSalud,
+  Inicio,
   Instantanea,
   Letra,
   OrdenReproductor,
@@ -49,6 +50,7 @@ export type {
   ConsultaPistas,
   ConsultaPlaylists,
   InformeDeSalud,
+  Inicio,
   Instantanea,
   Letra,
   LineaLetra,
@@ -60,6 +62,7 @@ export type {
   PaginaAlbumes,
   PaginaArtistas,
   PaginaPistas,
+  PistaEscuchada,
   PistaResumen,
   PlaylistResumen,
   PreseleccionEcualizador
@@ -282,4 +285,9 @@ export function preseleccionesEcualizador(): Promise<PreseleccionEcualizador[]> 
 
 export function carpetaMusica(): Promise<string | null> {
   return call<string | null>('carpeta_musica');
+}
+
+/** Todo lo que muestra Inicio, en una sola petición. */
+export function inicio(): Promise<Inicio> {
+  return call<Inicio>('inicio');
 }
