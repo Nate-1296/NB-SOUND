@@ -190,6 +190,18 @@ pub fn servir(db: &BaseDeDatos, rutas: &Rutas, p: Peticion) -> NsResult<(Vec<u8>
     Ok((bytes, "image/jpeg"))
 }
 
+/// Dónde está en la caché la miniatura de una petición, si ya se generó. Lo usan
+/// los controles del sistema, que necesitan un archivo y no unos bytes.
+pub fn ruta_en_cache(db: &BaseDeDatos, rutas: &Rutas, p: Peticion) -> Option<PathBuf> {
+    let (id, _, _) = original(db, p).ok()??;
+    let tamano = p.tamano?;
+    let ruta = rutas
+        .cache
+        .join("miniaturas")
+        .join(format!("{id}-{tamano}.jpg"));
+    ruta.is_file().then_some(ruta)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -9,6 +9,7 @@ pub mod audio;
 pub mod biblioteca;
 pub mod cola;
 pub mod comandos;
+pub mod controles_sistema;
 pub mod db;
 pub mod error;
 pub mod identidad_movil;
@@ -95,18 +96,25 @@ fn importar_v1_en_segundo_plano(
     }
 }
 
-/// Cuenta a la interfaz lo que hace el reproductor, como eventos de Tauri.
-struct OyenteTauri(tauri::AppHandle);
+/// Cuenta lo que hace el reproductor a la interfaz, como eventos de Tauri, y a
+/// los controles del sistema, que llegan después porque necesitan su buzón.
+struct OyenteTauri {
+    app: tauri::AppHandle,
+    controles: Arc<std::sync::OnceLock<controles_sistema::ControlesSistema>>,
+}
 
 impl reproductor::Oyente for OyenteTauri {
     fn instantanea(&self, i: &reproductor::Instantanea) {
         use tauri::Emitter;
-        let _ = self.0.emit("reproductor:instantanea", i);
+        let _ = self.app.emit("reproductor:instantanea", i);
+        if let Some(c) = self.controles.get() {
+            c.actualizar(i);
+        }
     }
 
     fn aviso(&self, a: &reproductor::AvisoReproductor) {
         use tauri::Emitter;
-        let _ = self.0.emit("reproductor:aviso", a);
+        let _ = self.app.emit("reproductor:aviso", a);
     }
 }
 
@@ -136,14 +144,27 @@ pub fn run() {
             use tauri::Manager;
             // Sin salida de audio la aplicación sigue abriendo: la biblioteca se ve,
             // y Ajustes dice qué pasa con el sonido.
+            let controles = Arc::new(std::sync::OnceLock::new());
             let buzon = match reproductor::Reproductor::arrancar(
                 db.clone(),
                 rutas.stems(),
-                Box::new(OyenteTauri(app.handle().clone())),
+                Box::new(OyenteTauri {
+                    app: app.handle().clone(),
+                    controles: Arc::clone(&controles),
+                }),
             ) {
                 Ok(r) => {
                     let b = r.buzon();
                     app.manage(r);
+                    // Teclas multimedia y el reproductor del escritorio (F2.1.5).
+                    if let Some(c) = controles_sistema::ControlesSistema::arrancar(
+                        app.handle(),
+                        db.clone(),
+                        rutas.clone(),
+                        b.clone(),
+                    ) {
+                        let _ = controles.set(c);
+                    }
                     Some(b)
                 }
                 Err(error) => {

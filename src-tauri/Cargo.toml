@@ -59,6 +59,15 @@ symphonia = { version = "0.6.1", features = ["mp3", "aac", "alac", "flac", "vorb
 # (lo vigila `scripts/check-network.mjs`).
 ureq = { version = "3.4.0", default-features = false, features = ["rustls", "platform-verifier"] }
 
+# Controles del sistema (ADR-003, F2.1.5): MPRIS en Linux, con aleatorio y
+# repetición en los dos sentidos; SMTC en Windows y el centro de reproducción en
+# macOS.
+[target.'cfg(target_os = "linux")'.dependencies]
+mpris-server = "0.11.0"
+
+[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
+souvlaki = "0.9.3"
+
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
 
