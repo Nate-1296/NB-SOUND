@@ -139,7 +139,8 @@ pub fn dimensiones(ruta: &Path) -> Option<(u32, u32, &'static str)> {
     dimensiones_de(&cabecera)
 }
 
-fn dimensiones_de(b: &[u8]) -> Option<(u32, u32, &'static str)> {
+/// Lo mismo que [`dimensiones`] sobre los bytes ya leídos.
+pub fn dimensiones_de(b: &[u8]) -> Option<(u32, u32, &'static str)> {
     const PNG: &[u8] = b"\x89PNG\r\n\x1a\n";
     if b.starts_with(PNG) && b.get(12..16) == Some(b"IHDR") {
         let ancho = u32::from_be_bytes(b.get(16..20)?.try_into().ok()?);

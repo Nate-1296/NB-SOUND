@@ -15,5 +15,6 @@ pub mod modelo;
 pub mod musicbrainz;
 pub mod normalizacion;
 pub mod organizacion;
+pub mod portadas_red;
 pub mod shazam;
 pub mod texto;
