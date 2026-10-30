@@ -45,6 +45,11 @@ const MIGRACIONES: &[Migracion] = &[
         nombre: "análisis resumido",
         sql: include_str!("../../migrations/V4__analisis.sql"),
     },
+    Migracion {
+        version: 5,
+        nombre: "sincronización con el móvil",
+        sql: include_str!("../../migrations/V5__sincronizacion.sql"),
+    },
 ];
 
 /// Versión de esquema aplicada (`PRAGMA user_version`).

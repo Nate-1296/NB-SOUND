@@ -259,18 +259,26 @@ la ausencia de rasgos.
 
 | Columna | Destino |
 |---|---|
-| `id`, `device_token`, `nombre`, `plataforma`, `ultima_conexion`, `ultima_sync_version`, `creado_en`, `revocado` | `→ dispositivos`, **todo tal cual** (ADR-005). Once de los doce están revocados y se migran igual: un token revocado tiene que seguir rechazándose |
+| `id`, `nombre`, `plataforma`, `ultima_conexion`, `ultima_sync_version`, `creado_en`, `revocado` | `→ dispositivos`, **tal cual** (ADR-005). Once de los doce están revocados y se migran igual: un token revocado tiene que seguir rechazándose |
+| `device_token` | `→ dispositivos.token_sha256`: su SHA-256, no el token. El teléfono sigue enviando el mismo token y el servidor lo reconoce calculando el hash |
 | `seleccion_json` | `→ dispositivos.seleccion`. Vacía en los 12 |
 
-El `device_token` es un secreto de autenticación. En la V1 está en la base en claro; la V2 guarda **su hash**, no el
-token, salvo que el contrato móvil obligue a otra cosa, y eso se decide en F1.1.5.
+El `device_token` es un secreto de autenticación y la V1 lo guardaba en claro. El contrato móvil solo lo envía al
+emparejar, en la respuesta de `/pair`, que la V2 genera en ese momento: guardar el hash no le quita nada.
 
 ### `sync_estado` (3)
 
 | Clave | Destino |
 |---|---|
-| `sync_version_actual` | `→ instalacion.sync_version`, tal cual: el siguiente cambio de la V2 tiene que ser mayor |
+| `sync_version_actual` | `→ sincronizacion.version`, tal cual: el siguiente cambio de la V2 tiene que ser mayor |
 | `backfill_playlists_sync_v1`, `backfill_sync_version_v1` | **Se descartan**: marcas de migraciones internas de la V1 |
+
+### Cómo se mantiene la `sync_version`
+
+La V1 la subía a mano desde cada servicio. La V2 lo hace con disparadores en las tablas que el móvil recibe, solo
+para las columnas que el contrato envía, y deja una tumba en cada borrado. Mientras importa, el importador pausa los
+disparadores (`sincronizacion.pausada`) para que cada fila conserve la versión de la V1: 153 pistas tienen
+`sync_version = 0` y no pueden recibir una nueva, o el móvil volvería a descargarlas.
 
 ### `sync_tombstones` (21)
 
@@ -279,7 +287,7 @@ cambios desde una versión anterior a cualquiera de ellas.
 
 ### `sync_stem_transfers` (221)
 
-`dispositivo_id`, `pista_id`, `estado`, `bytes_enviados`, `actualizado_en` `→ transferencias_stems`. Las 221 están
+`dispositivo_id`, `pista_id`, `estado`, `bytes_enviados`, `actualizado_en` `→ transferencias_stems`, con los valores de estado de la V1. Las 221 están
 `in_progress`: se migran como pendientes, y el móvil las vuelve a pedir.
 
 ### Identidad del servidor

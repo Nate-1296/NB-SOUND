@@ -446,3 +446,147 @@ fn un_color_de_portada_que_no_es_hexadecimal_se_rechaza() {
     )
     .unwrap();
 }
+
+fn version_de(conn: &Connection, tabla: &str, id: i64) -> i64 {
+    conn.query_row(
+        &format!("SELECT sync_version FROM {tabla} WHERE id = ?1"),
+        [id],
+        |f| f.get(0),
+    )
+    .unwrap()
+}
+
+fn contador(conn: &Connection) -> i64 {
+    conn.query_row("SELECT version FROM sincronizacion", [], |f| f.get(0))
+        .unwrap()
+}
+
+#[test]
+fn cada_alta_recibe_una_sync_version_nueva() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    let (artista, album, pista) = (
+        version_de(&conn, "artistas", 1),
+        version_de(&conn, "albumes", 10),
+        version_de(&conn, "pistas", 100),
+    );
+    assert!(artista > 0 && album > artista && pista > album);
+    assert_eq!(contador(&conn), pista);
+}
+
+#[test]
+fn solo_los_cambios_que_ve_el_movil_suben_la_version() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    let antes = version_de(&conn, "pistas", 100);
+    conn.execute(
+        "UPDATE pistas SET reproducciones = reproducciones + 1 WHERE id = 100",
+        [],
+    )
+    .unwrap();
+    assert_eq!(version_de(&conn, "pistas", 100), antes);
+    conn.execute(
+        "UPDATE pistas SET favorita = 1, favorita_actualizada_en = '2026-10-30T00:00:00.000Z' \
+         WHERE id = 100",
+        [],
+    )
+    .unwrap();
+    assert!(version_de(&conn, "pistas", 100) > antes);
+}
+
+#[test]
+fn borrar_un_album_sube_la_version_de_sus_pistas_y_deja_tumba() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    let antes = version_de(&conn, "pistas", 100);
+    conn.execute("DELETE FROM albumes WHERE id = 10", [])
+        .unwrap();
+    assert!(version_de(&conn, "pistas", 100) > antes);
+    let tumba: i64 = conn
+        .query_row(
+            "SELECT sync_version FROM tumbas WHERE entidad = 'album' AND entidad_id = 10",
+            [],
+            |f| f.get(0),
+        )
+        .unwrap();
+    assert!(tumba > antes);
+}
+
+#[test]
+fn borrar_una_pista_deja_tumba_y_cambia_sus_playlists() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    conn.execute_batch(
+        "INSERT INTO playlists (id, nombre) VALUES (5, 'Para correr');
+         INSERT INTO playlist_pistas (playlist_id, pista_id, posicion) VALUES (5, 100, 0);",
+    )
+    .unwrap();
+    let antes = version_de(&conn, "playlists", 5);
+    conn.execute("DELETE FROM pistas WHERE id = 100", [])
+        .unwrap();
+    assert!(version_de(&conn, "playlists", 5) > antes);
+    let tumbas: i64 = conn
+        .query_row(
+            "SELECT count(*) FROM tumbas WHERE entidad = 'pista' AND entidad_id = 100",
+            [],
+            |f| f.get(0),
+        )
+        .unwrap();
+    assert_eq!(tumbas, 1);
+}
+
+#[test]
+fn reordenar_una_playlist_es_un_cambio_de_la_playlist() {
+    let (_db, conn) = base();
+    sembrar(&conn);
+    conn.execute_batch(
+        "INSERT INTO playlists (id, nombre) VALUES (5, 'Para correr');
+         INSERT INTO playlist_pistas (playlist_id, pista_id, posicion) VALUES (5, 100, 0);",
+    )
+    .unwrap();
+    let antes = version_de(&conn, "playlists", 5);
+    conn.execute("UPDATE playlist_pistas SET posicion = 3", [])
+        .unwrap();
+    assert!(version_de(&conn, "playlists", 5) > antes);
+}
+
+/// El importador copia las filas de la V1 con su `sync_version`: si recibieran
+/// una nueva, el móvil volvería a descargar la biblioteca entera.
+#[test]
+fn con_la_sincronizacion_pausada_se_conserva_la_version_de_la_v1() {
+    let (_db, conn) = base();
+    conn.execute_batch(
+        "UPDATE sincronizacion SET pausada = 1, version = 5217;
+         INSERT INTO artistas (id, nombre, clave, sync_version) VALUES (1, 'a', 'a', 7);
+         INSERT INTO pistas (id, artista_id, titulo, ruta, sync_version) VALUES (100, 1, 't', 'x', 5203);
+         UPDATE sincronizacion SET pausada = 0;",
+    )
+    .unwrap();
+    assert_eq!(version_de(&conn, "artistas", 1), 7);
+    assert_eq!(version_de(&conn, "pistas", 100), 5203);
+    assert_eq!(contador(&conn), 5217);
+    conn.execute("UPDATE pistas SET titulo = 'u' WHERE id = 100", [])
+        .unwrap();
+    assert_eq!(version_de(&conn, "pistas", 100), 5218);
+}
+
+#[test]
+fn un_dispositivo_guarda_el_hash_del_token_y_no_el_token() {
+    let (_db, conn) = base();
+    assert!(conn
+        .execute(
+            "INSERT INTO dispositivos (token_sha256, nombre) VALUES ('token-en-claro', 'tel')",
+            []
+        )
+        .is_err());
+}
+
+#[test]
+fn el_manifiesto_pide_las_tumbas_por_su_indice() {
+    let (_db, conn) = base();
+    let p = plan(
+        &conn,
+        "SELECT entidad, entidad_id FROM tumbas WHERE sync_version > 5 ORDER BY sync_version",
+    );
+    assert!(p.contains("tumbas_por_sync_version"), "{p}");
+}

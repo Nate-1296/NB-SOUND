@@ -16,7 +16,7 @@
 | F1.1.2 Esquema V2: catálogo (artistas, álbumes, pistas con su archivo y `verificada`, portadas e imágenes de artista, letras, por revisar) | Hecha |
 | F1.1.3 Esquema V2: uso (playlists, favoritos, historial, cola, estado del reproductor) | Hecha |
 | F1.1.4 Esquema V2: análisis resumido (rasgos, embeddings `f32`, LUFS, paleta) | Hecha |
-| F1.1.5 Esquema V2: sincronización (dispositivos, `sync_version`, tumbas, transferencias) | Pendiente |
+| F1.1.5 Esquema V2: sincronización (dispositivos, `sync_version`, tumbas, transferencias) | Hecha |
 | F1.1.6 Esquema V2: karaoke y DJ (stems, sesiones, eventos, preferencias) | Pendiente |
 | F1.2.1 Inventario columna a columna de las 30 tablas de la V1 y de lo que guarda fuera de la base | Hecha |
 | F1.2.2 Importador de solo lectura | Pendiente |
