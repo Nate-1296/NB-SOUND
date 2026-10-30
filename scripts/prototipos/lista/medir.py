@@ -8,7 +8,7 @@ Basado en `NB_Books/scripts/medir-en-webkitgtk.py`. Uso:
     python3 scripts/prototipos/lista/medir.py "http://localhost:4175/?total=100000"
 
 Desplaza la lista durante 8 s a 3.000 px por segundo (unas 54 filas por segundo,
-un arrastre rápido de la barra) y cuenta los fotogramas: cuántos tardan más de
+un arrastre rápido de la barra), o a la velocidad del segundo argumento y cuenta los fotogramas: cuántos tardan más de
 16,7 ms y más de 50 ms, y cuántos nodos tiene el documento.
 """
 
@@ -22,6 +22,7 @@ gi.require_version("WebKit2", "4.1")
 from gi.repository import GLib, Gtk, WebKit2  # noqa: E402
 
 URL = sys.argv[1]
+VELOCIDAD = sys.argv[2] if len(sys.argv) > 2 else "3000"
 GUION = r"""
 new Promise((resolver) => {
   const lista = document.querySelector('.lista');
@@ -31,7 +32,7 @@ new Promise((resolver) => {
   const paso = (ahora) => {
     tiempos.push(ahora - anterior);
     anterior = ahora;
-    lista.scrollTop = ((ahora - inicio) / 1000) * 3000;
+    lista.scrollTop = ((ahora - inicio) / 1000) * VELOCIDAD;
     if (ahora - inicio < 8000) requestAnimationFrame(paso);
     else {
       tiempos.shift();
@@ -76,7 +77,7 @@ def al_cargar(_v, evento):
     estado["listo"] = True
 
     def arrancar():
-        evaluar(f"window.__r=null; ({GUION}).then(v => window.__r = v); 'ok'", lambda _: None)
+        evaluar(f"window.__r=null; ({GUION.replace('VELOCIDAD', VELOCIDAD)}).then(v => window.__r = v); 'ok'", lambda _: None)
         GLib.timeout_add(500, sondear)
         return False
 

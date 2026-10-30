@@ -35,7 +35,7 @@
 | F0.4.4 Prototipo de rasgos básicos en Rust | Pendiente | Decide ADR-002 (rasgos) |
 | F0.4.5 Respuestas doradas del servidor móvil | Hecha | 36 respuestas (11 endpoints, errores, `Range`, selección y WebSocket) sobre un escenario inventado; grabar dos veces da lo mismo byte a byte. Revelaron campos que el contrato no documenta (las playlists traen `descripcion`, `categoria`, `etiqueta`, `num_pistas`, `cover_url`…), que la V2 también debe dar |
 | F0.4.6 Huella acústica: `fpcalc` o `rusty-chromaprint` | Hecha | En 66 pistas del corpus, `rusty-chromaprint` 0.3 da la misma longitud pero **ninguna huella idéntica** (entre 96,8 % y 99,7 % de bits iguales; la diferencia está en el remuestreo). Se queda `fpcalc` 1.6.2, que son 5 MB |
-| F0.4.7 Listas virtualizadas en WebKitGTK | Pendiente | |
+| F0.4.7 Listas virtualizadas en WebKitGTK | Hecha | 0 fotogramas largos con 100.000 filas hasta 30.000 px/s, 268 nodos siempre, sin pedir portadas durante el desplazamiento rápido. Propone enmendar ADR-008 (ventana virtual en lugar de las páginas de NB Books). [Informe](../audit/2026-10-29-prototipo-lista.md) |
 
 ---
 

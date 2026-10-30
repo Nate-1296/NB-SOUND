@@ -21,13 +21,31 @@
     altoFila: number;
     /** Devuelve las filas del bloque `b`: de `b * TAM_BLOQUE` en adelante. */
     cargarBloque: (bloque: number) => Promise<T[]>;
-    fila: Snippet<[T, number]>;
+    /** La fila; el tercer argumento dice si la lista va tan rápido que no conviene pedir imágenes. */
+    fila: Snippet<[T, number, boolean]>;
     etiqueta: string;
   }
 
   let { total, altoFila, cargarBloque, fila, etiqueta }: Props = $props();
 
   let scrollTop = $state(0);
+  /*
+   * Desplazamiento rápido: más de dos filas por fotograma. Mientras dura no se
+   * piden portadas, porque en WebKitGTK cada imagen nueva pasa por el proceso de
+   * red y a ese ritmo el coste de pedirlas, no el de la lista, es lo que tira los
+   * fotogramas (F0.4.7). Al frenar 120 ms, aparecen.
+   */
+  let rapido = $state(false);
+  let anterior = 0;
+  let reposo: ReturnType<typeof setTimeout> | undefined;
+
+  function alDesplazar(nuevo: number) {
+    if (Math.abs(nuevo - anterior) > altoFila * 2) rapido = true;
+    anterior = nuevo;
+    scrollTop = nuevo;
+    clearTimeout(reposo);
+    reposo = setTimeout(() => (rapido = false), 120);
+  }
   let altoVista = $state(0);
   const bloques = new SvelteMap<number, T[]>();
   const pedidos = new Set<number>();
@@ -59,14 +77,14 @@
   role="list"
   aria-label={etiqueta}
   bind:clientHeight={altoVista}
-  onscroll={(e) => (scrollTop = e.currentTarget.scrollTop)}
+  onscroll={(e) => alDesplazar(e.currentTarget.scrollTop)}
 >
   <div class="relleno" style:height="{total * altoFila}px">
     <div class="filas" style:transform="translateY({ventana.desplazamiento}px)">
       {#each indices as i (i)}
         {@const item = elemento(i)}
         <div class="fila" role="listitem" style:height="{altoFila}px">
-          {#if item !== undefined}{@render fila(item, i)}{/if}
+          {#if item !== undefined}{@render fila(item, i, rapido)}{/if}
         </div>
       {/each}
     </div>

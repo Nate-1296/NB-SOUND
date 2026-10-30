@@ -13,3 +13,4 @@
 | P6 | 2026-10-29 | ¿El agregado de aceleración en Linux con NVIDIA cabe en un tamaño razonable, dado que el proveedor CUDA de ONNX Runtime arrastra las librerías de CUDA? | F5.1.5, midiendo | Abierta, no bloquea |
 | P7 | 2026-10-29 | La V2 deja cada archivo en su formato. ¿NB Sound Mobile reproduce bien un FLAC o un M4A recibido por `track/{id}/audio`? La biblioteca real hoy es toda MP3, así que nunca se probó | F3.1.6, con el teléfono real | Abierta |
 | P8 | 2026-10-29 | ONNX Runtime llegó a 9 GB de memoria separando con `htdemucs`. ¿Cuánto baja sin *arena* ni patrón de memoria y con la sesión reutilizada? Sin bajarlo, el karaoke no cabe en un equipo de 8 GB | F5.2.1, con un tope de memoria en su criterio | Abierta |
+| P9 | 2026-10-29 | ¿Se acepta enmendar ADR-008 para que la biblioteca use una ventana virtual de alto fijo con bloques alineados (medida en F0.4.7) en lugar de las páginas de NB Books? | Decisión de Nathan | Abierta |
