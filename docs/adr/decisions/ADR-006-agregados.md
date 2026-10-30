@@ -48,9 +48,8 @@ Python del sistema, los comandos de reparación y cualquier texto que nombre una
 ## Consecuencias
 
 - **Positivas:** instalar el karaoke pasa de "Python + pip + torch + demucs + modelo" a un clic de 166 MB.
-- **Negativas:** hay que alojar los modelos convertidos en un sitio **público** con enlace estable. El
-  repositorio `Nate-1296/NB-SOUND` es privado, así que sus Releases no sirven sin credenciales. Se usará un
-  repositorio público de distribución, como en el ADR-011 de NB Books, decidido en F0.1.5.
+- **Negativas:** hay que alojar los modelos convertidos en un sitio público con enlace estable. Resuelto en
+  F0.1.5: Nathan hizo público `Nate-1296/NB-SOUND`, y los agregados se publican en sus Releases.
 - **Riesgos:** la licencia de los modelos de Essentia ([ADR-010](./ADR-010-licencia.md)).
 
 ## Enmienda del 2026-10-29: ffmpeg no viaja dentro

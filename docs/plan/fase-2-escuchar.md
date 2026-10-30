@@ -16,13 +16,13 @@
 | F2.1.4 Normalización de volumen por LUFS | Pendiente |
 | F2.1.5 Controles del sistema: MPRIS, SMTC y macOS | Pendiente |
 | F2.1.6 Atajos globales, bandeja y cierre limpio | Pendiente |
-| F2.2.1 Carcasa: barra lateral, barra superior con búsqueda, barra de reproducción | Pendiente |
+| F2.2.1 Carcasa con la disposición de la V1: barra lateral, barra superior con búsqueda, barra de reproducción | Pendiente |
 | F2.2.2 Inicio | Pendiente |
 | F2.2.3 Biblioteca: canciones, álbumes, artistas y sus detalles | Pendiente |
 | F2.2.4 Playlists manuales (crear, ordenar, añadir desde cualquier sitio) | Pendiente |
 | F2.2.5 Búsqueda global y `Ctrl+K` | Pendiente |
 | F2.2.6 Reproducción expandida, letras sincronizadas y minirreproductor | Pendiente |
-| F2.2.7 Color por portada | Pendiente |
+| F2.2.7 Los 63 temas de la V1 completos, la tipografía elegible y el color por portada como opción | Pendiente |
 | F2.2.8 Tu música (identidad, ánimo del día, actividad) con los datos ya migrados | Pendiente |
 | F2.2.9 Ajustes: Biblioteca, Reproducción, Apariencia, Acerca de | Pendiente |
 
@@ -37,6 +37,8 @@
   aplicación; aleatorio y repetición se reflejan en los dos sentidos. Lo que no se pueda comprobar en Windows o
   macOS se dice.
 * **F2.1.6:** cerrar la ventana durante la reproducción no deja audio sonando ni procesos (prueba de cierre).
+* **Todas las vistas de F2.2** se comparan con su captura de la V1 (`legado/assets/screens/`): misma disposición y
+  mismos elementos, salvo lo que ADR-007 rediseña.
 * **F2.2.x:** recorridos de Playwright de cada destino sin errores de consola (aserción en `afterEach`, como en NB
   Books); `check-ui` y `check-paquete` pasan; la biblioteca real se desplaza sin fotogramas largos en WebKitGTK.
 

@@ -17,7 +17,7 @@
 | F0.1.2 Contrato de trabajo (`CLAUDE.md`) | Hecha | 2026-10-29 |
 | F0.1.3 Mover la V1 a `legado/` | Hecha | 2026-10-29. Desde `legado/`, archivo por archivo: 1.207 pruebas pasan y 5 fallan, las cinco por desajustes previos de la V1 (versión de `pyproject.toml` distinta de `infra/version.py`, una prueba de MPRIS desfasada, dos de Ajustes que dependen del `.env` local y una de karaoke). El modo con `pytest-forked` no funciona en este entorno: cada prueba sale con estado 3 |
 | F0.1.4 Documentación de la V1 archivada en `docs/v1/` | Hecha | 2026-10-29 |
-| F0.1.5 Repositorio público de distribución para agregados | Pendiente | |
+| F0.1.5 Repositorio público de distribución para agregados | Hecha | 2026-10-29: Nathan hizo público `Nate-1296/NB-SOUND` tras revisar que la historia no contiene claves; los agregados irán en sus Releases |
 | F0.2.1 Esqueleto Tauri 2 + SvelteKit 2 + Svelte 5 + m3-svelte | Hecha | Carcasa con los siete destinos, Por revisar condicional y reproductor inerte |
 | F0.2.2 Herramientas idénticas a NB Books | Hecha | `cargo deny check` en verde (avisos, prohibiciones, licencias y orígenes) |
 | F0.2.3 Contrato de errores, tipos generados y frontera del puente | Hecha | 14 códigos canónicos |

@@ -22,7 +22,7 @@ conservar **por qué** se tomó.
 | [005](./decisions/ADR-005-contrato-movil.md) | El contrato con NB Sound Mobile queda congelado | Aceptado |
 | [006](./decisions/ADR-006-agregados.md) | Agregados que se instalan con un clic | Aceptado |
 | [007](./decisions/ADR-007-arquitectura-de-informacion.md) | Arquitectura de información: destinos, Por revisar y lo que deja de existir | Aceptado, enmendado el 2026-10-29 |
-| [008](./decisions/ADR-008-sistema-de-diseno.md) | Material 3 compartido con NB Books y color por portada | Aceptado |
+| [008](./decisions/ADR-008-sistema-de-diseno.md) | Material 3 con la apariencia de la V1 | Aceptado, enmendado el 2026-10-29 |
 | [009](./decisions/ADR-009-configuracion-y-red.md) | Configuración mínima, secretos en el llavero y una sola puerta de red | Aceptado |
 | [010](./decisions/ADR-010-licencia.md) | Licencia del código y de los modelos | Aceptado |
 | [011](./decisions/ADR-011-transicion-del-repositorio.md) | Transición del repositorio: V1 en `legado/`, V2 en la raíz | Aceptado |
