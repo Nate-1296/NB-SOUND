@@ -1,0 +1,286 @@
+{
+  "$comentario": "Escenario inventado para las respuestas doradas del servidor móvil (ADR-005). Lo siembra scripts/prototipos/contrato-movil/grabar.py en la V1 y lo sembrará el arnés de Rust en la V2. Ningún dato es del usuario.",
+  "artistas": [{ "id": 1, "nombre": "Banda Uno" }, { "id": 2, "nombre": "Solista Dos" }],
+  "albums": [
+    {
+      "id": 10,
+      "artista_id": 1,
+      "titulo": "Primer Disco",
+      "anio": 2001,
+      "tipo": "Album",
+      "portada": "PORTADA-10"
+    },
+    { "id": 11, "artista_id": 2, "titulo": "Sencillo", "anio": 2020, "tipo": "Single" }
+  ],
+  "pistas": [
+    {
+      "id": 100,
+      "album_id": 10,
+      "artista_id": 1,
+      "titulo": "Apertura",
+      "artista_nombre": "Banda Uno",
+      "album_titulo": "Primer Disco",
+      "track_number": 1,
+      "duracion_seg": 201.5,
+      "anio": 2001,
+      "genero": "Rock",
+      "audio": "AUDIO-100-",
+      "instrumental": "INSTRUMENTAL-100-",
+      "favorita": true,
+      "favorita_actualizada_en": "2026-01-01T00:00:00.000Z",
+      "letras": {
+        "synced_lyrics": "[00:01.00] primera linea\n[00:05.00] segunda linea",
+        "plain_lyrics": "primera linea\nsegunda linea"
+      }
+    },
+    {
+      "id": 101,
+      "album_id": 10,
+      "artista_id": 1,
+      "titulo": "Segunda",
+      "artista_nombre": "Banda Uno",
+      "album_titulo": "Primer Disco",
+      "track_number": 2,
+      "duracion_seg": 180.0,
+      "anio": 2001,
+      "genero": "Rock",
+      "audio": "AUDIO-101-"
+    },
+    {
+      "id": 102,
+      "album_id": 11,
+      "artista_id": 2,
+      "titulo": "Sola",
+      "artista_nombre": "Solista Dos",
+      "album_titulo": "Sencillo",
+      "track_number": 1,
+      "duracion_seg": 150.25,
+      "anio": 2020,
+      "genero": "Pop",
+      "audio": "AUDIO-102-"
+    },
+    {
+      "id": 103,
+      "album_id": 11,
+      "artista_id": 2,
+      "titulo": "Borrada",
+      "artista_nombre": "Solista Dos",
+      "album_titulo": "Sencillo",
+      "track_number": 2,
+      "duracion_seg": 99.0,
+      "audio": "AUDIO-103-"
+    }
+  ],
+  "playlists": [
+    { "id": 5, "nombre": "Para correr", "tipo": "manual", "pista_ids": [102, 100] },
+    { "id": 6, "nombre": "Oculta", "tipo": "manual", "visible": false, "pista_ids": [101] }
+  ],
+  "perfil": { "nombre_usuario": "Persona de prueba" },
+  "borrados": [{ "entidad": "pista", "entidad_id": 103 }],
+  "reproductor": {
+    "pista_activa": {
+      "id": 100,
+      "titulo": "Apertura",
+      "artista_nombre": "Banda Uno",
+      "album_titulo": "Primer Disco",
+      "album_id": 10
+    },
+    "estado": {
+      "reproduciendo": true,
+      "duracion_seg": 201.5,
+      "posicion_seg": 42.5,
+      "volumen": 80,
+      "modo_repeticion": "todo",
+      "aleatorio": false,
+      "karaoke_activo": false,
+      "karaoke_disponible": true,
+      "indice_cola": 0,
+      "modo_dj_activo": false
+    },
+    "cola": [
+      {
+        "id": 100,
+        "titulo": "Apertura",
+        "artista_nombre": "Banda Uno",
+        "album_titulo": "Primer Disco",
+        "duracion_seg": 201.5
+      },
+      {
+        "id": 102,
+        "titulo": "Sola",
+        "artista_nombre": "Solista Dos",
+        "album_titulo": "Sencillo",
+        "duracion_seg": 150.25
+      }
+    ]
+  },
+  "peticiones": [
+    { "nombre": "ping sin autenticación", "metodo": "GET", "ruta": "/api/v1/ping", "auth": false },
+    {
+      "nombre": "manifest sin autenticación",
+      "metodo": "GET",
+      "ruta": "/api/v1/manifest?since=0",
+      "auth": false
+    },
+    {
+      "nombre": "pair con token inválido",
+      "metodo": "POST",
+      "ruta": "/api/v1/pair",
+      "auth": false,
+      "cuerpo": {
+        "token": "no-es-el-token",
+        "nombre_dispositivo": "Telefono",
+        "plataforma": "android"
+      }
+    },
+    {
+      "nombre": "pair con el token del QR",
+      "metodo": "POST",
+      "ruta": "/api/v1/pair",
+      "auth": false,
+      "cuerpo": { "token": "<token>", "nombre_dispositivo": "Telefono", "plataforma": "android" }
+    },
+    { "nombre": "ping con autenticación (presencia)", "metodo": "GET", "ruta": "/api/v1/ping" },
+    { "nombre": "manifest completo", "metodo": "GET", "ruta": "/api/v1/manifest?since=0" },
+    {
+      "nombre": "manifest paginado, primera página",
+      "metodo": "GET",
+      "ruta": "/api/v1/manifest?since=0&limit=3"
+    },
+    {
+      "nombre": "manifest paginado, segunda página",
+      "metodo": "GET",
+      "ruta": "/api/v1/manifest?since=3&limit=3"
+    },
+    { "nombre": "manifest sin cambios", "metodo": "GET", "ruta": "/api/v1/manifest?since=1000" },
+    { "nombre": "selección por defecto", "metodo": "GET", "ruta": "/api/v1/seleccion" },
+    {
+      "nombre": "selección con modo inválido",
+      "metodo": "POST",
+      "ruta": "/api/v1/seleccion",
+      "cuerpo": { "seleccion": { "modo": "algunos" } }
+    },
+    {
+      "nombre": "selección por artistas",
+      "metodo": "POST",
+      "ruta": "/api/v1/seleccion",
+      "cuerpo": { "seleccion": { "modo": "artistas", "artista_ids": [2] } }
+    },
+    {
+      "nombre": "manifest filtrado por artista",
+      "metodo": "GET",
+      "ruta": "/api/v1/manifest?since=0"
+    },
+    {
+      "nombre": "selección por playlists, sin envoltorio",
+      "metodo": "POST",
+      "ruta": "/api/v1/seleccion",
+      "cuerpo": { "modo": "playlists", "playlist_ids": [5] }
+    },
+    {
+      "nombre": "manifest filtrado por playlist",
+      "metodo": "GET",
+      "ruta": "/api/v1/manifest?since=0"
+    },
+    {
+      "nombre": "selección nada",
+      "metodo": "POST",
+      "ruta": "/api/v1/seleccion",
+      "cuerpo": { "seleccion": { "modo": "nada" } }
+    },
+    {
+      "nombre": "manifest con selección nada",
+      "metodo": "GET",
+      "ruta": "/api/v1/manifest?since=0"
+    },
+    {
+      "nombre": "selección todo",
+      "metodo": "POST",
+      "ruta": "/api/v1/seleccion",
+      "cuerpo": { "seleccion": { "modo": "todo" } }
+    },
+    { "nombre": "audio completo", "metodo": "GET", "ruta": "/api/v1/track/100/audio" },
+    {
+      "nombre": "audio con Range inicial",
+      "metodo": "GET",
+      "ruta": "/api/v1/track/100/audio",
+      "cabeceras": { "Range": "bytes=0-99" }
+    },
+    {
+      "nombre": "audio con Range abierto",
+      "metodo": "GET",
+      "ruta": "/api/v1/track/100/audio",
+      "cabeceras": { "Range": "bytes=600-" }
+    },
+    {
+      "nombre": "audio de una pista inexistente",
+      "metodo": "GET",
+      "ruta": "/api/v1/track/999/audio"
+    },
+    { "nombre": "audio con id no numérico", "metodo": "GET", "ruta": "/api/v1/track/abc/audio" },
+    {
+      "nombre": "stems de una pista con instrumental",
+      "metodo": "GET",
+      "ruta": "/api/v1/track/100/stems"
+    },
+    {
+      "nombre": "stems con Range",
+      "metodo": "GET",
+      "ruta": "/api/v1/track/100/stems",
+      "cabeceras": { "Range": "bytes=10-19" }
+    },
+    {
+      "nombre": "stems de una pista sin instrumental",
+      "metodo": "GET",
+      "ruta": "/api/v1/track/101/stems"
+    },
+    { "nombre": "letras", "metodo": "GET", "ruta": "/api/v1/track/100/lyrics" },
+    {
+      "nombre": "letras de una pista sin letras",
+      "metodo": "GET",
+      "ruta": "/api/v1/track/101/lyrics"
+    },
+    { "nombre": "portada por cover", "metodo": "GET", "ruta": "/api/v1/asset/cover/10" },
+    { "nombre": "portada por album", "metodo": "GET", "ruta": "/api/v1/asset/album/10" },
+    {
+      "nombre": "portada de un álbum sin portada",
+      "metodo": "GET",
+      "ruta": "/api/v1/asset/cover/11"
+    },
+    { "nombre": "imagen de artista sin imagen", "metodo": "GET", "ruta": "/api/v1/asset/artist/1" },
+    { "nombre": "asset con tipo desconocido", "metodo": "GET", "ruta": "/api/v1/asset/otra/10" },
+    {
+      "nombre": "historial y favoritos",
+      "metodo": "POST",
+      "ruta": "/api/v1/history",
+      "cuerpo": {
+        "historial": [
+          {
+            "pista_id": 101,
+            "reproducido_en": "2026-05-30T10:00:00.000Z",
+            "duracion_seg": 180.0,
+            "completada": true
+          }
+        ],
+        "favoritos": [
+          { "pista_id": 101, "favorita": true, "actualizada_en": "2026-05-30T10:00:00.000Z" },
+          { "pista_id": 100, "favorita": false, "actualizada_en": "2025-01-01T00:00:00.000Z" },
+          { "pista_id": 102, "favorita": true }
+        ]
+      }
+    },
+    { "nombre": "manifest tras el historial", "metodo": "GET", "ruta": "/api/v1/manifest?since=8" },
+    {
+      "nombre": "control remoto",
+      "ws": true,
+      "mensajes": [
+        { "tipo": "comando", "accion": "play_pause" },
+        { "tipo": "comando", "accion": "seek", "posicion_seg": 90.0 },
+        { "tipo": "comando", "comando": "set_volume", "volumen": 70 },
+        { "tipo": "comando", "accion": "queue" },
+        { "tipo": "comando", "accion": "no_existe" },
+        "esto no es json"
+      ]
+    }
+  ]
+}

@@ -18,7 +18,8 @@
       "!**/playwright-report",
       "!**/legado",
       "!**/src-tauri/binarios",
-      "!**/scripts/prototipos"
+      "!**/scripts/prototipos",
+      "!**/src-tauri/tests/contrato_movil/respuestas.json"
     ]
   },
   "formatter": {

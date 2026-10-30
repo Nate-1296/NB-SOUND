@@ -33,7 +33,7 @@
 | F0.4.2 Prototipo de karaoke en ONNX | Pendiente | Decide ADR-002 (karaoke) |
 | F0.4.3 Prototipo de análisis en ONNX | Pendiente | Decide ADR-002 (análisis) |
 | F0.4.4 Prototipo de rasgos básicos en Rust | Pendiente | Decide ADR-002 (rasgos) |
-| F0.4.5 Respuestas doradas del servidor móvil | Pendiente | Base de ADR-005 |
+| F0.4.5 Respuestas doradas del servidor móvil | Hecha | 36 respuestas (11 endpoints, errores, `Range`, selección y WebSocket) sobre un escenario inventado; grabar dos veces da lo mismo byte a byte. Revelaron campos que el contrato no documenta (las playlists traen `descripcion`, `categoria`, `etiqueta`, `num_pistas`, `cover_url`…), que la V2 también debe dar |
 | F0.4.6 Huella acústica: `fpcalc` o `rusty-chromaprint` | Pendiente | |
 | F0.4.7 Listas virtualizadas en WebKitGTK | Pendiente | |
 
@@ -131,10 +131,13 @@ tonalidad con modo mayor o menor (perfiles de Krumhansl) en lugar del `argmax` d
 ±2 % (o 2× / 0,5×) del de la V1 en ≥ 95 % de las 2.397 pistas; el resto de rasgos con una correlación ≥ 0,95; la
 tonalidad nueva se valida a oído en 30 pistas.
 
-**F0.4.5 Respuestas doradas.** Con la V1 arrancada sobre una copia de la base, se graban las respuestas de los 11
-endpoints y del WebSocket, incluidos errores (token inválido, pista sin stems, `Range` parcial). Se redactan los
-datos sensibles y se guardan en `src-tauri/tests/contrato_movil/`. Se escribe el arnés que las reproduce contra
-cualquier servidor. Criterio: el arnés pasa contra la V1, que es la referencia.
+**F0.4.5 Respuestas doradas.** Con el servidor real de la V1 sobre un escenario inventado
+(`src-tauri/tests/contrato_movil/escenario.json`, sin datos del usuario), se graban las respuestas de los 11
+endpoints y del WebSocket, incluidos errores (token inválido, pista sin stems, `Range` parcial), en
+`respuestas.json`, con lo volátil sustituido por marcadores. El grabador está en
+`scripts/prototipos/contrato-movil/grabar.py`; con `--comprobar` vuelve a grabar y exige lo mismo. El arnés de la V2
+(F3) siembra el mismo escenario en su base y compara con estas respuestas, admitiendo solo campos añadidos.
+Criterio: el arnés pasa contra la V1, que es la referencia.
 
 **F0.4.6 Huella acústica.** `rusty-chromaprint` 0.3 frente a `fpcalc` en 100 pistas. Criterio: si la huella
 comprimida coincide exactamente y AcoustID devuelve los mismos resultados, se usa el crate y `fpcalc` deja de

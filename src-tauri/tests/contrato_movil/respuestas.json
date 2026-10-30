@@ -1,0 +1,1159 @@
+{
+  "origen": "NB Sound v1.1.16 (legado/servicios/servidor_sync.py)",
+  "version_protocolo": 1,
+  "respuestas": [
+    {
+      "nombre": "ping sin autenticación",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "60"
+      },
+      "cuerpo": {
+        "ok": true,
+        "servicio": "NB Sound",
+        "version_protocolo": 1
+      }
+    },
+    {
+      "nombre": "manifest sin autenticación",
+      "estado": 401,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "26"
+      },
+      "cuerpo": {
+        "error": "no_autorizado"
+      }
+    },
+    {
+      "nombre": "pair con token inválido",
+      "estado": 401,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "38"
+      },
+      "cuerpo": {
+        "error": "token_invalido_o_expirado"
+      }
+    },
+    {
+      "nombre": "pair con el token del QR",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "118"
+      },
+      "cuerpo": {
+        "ok": true,
+        "device_token": "<device_token>",
+        "dispositivo_id": 1,
+        "nombre": "Telefono"
+      }
+    },
+    {
+      "nombre": "ping con autenticación (presencia)",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "60"
+      },
+      "cuerpo": {
+        "ok": true,
+        "servicio": "NB Sound",
+        "version_protocolo": 1
+      }
+    },
+    {
+      "nombre": "manifest completo",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "3430"
+      },
+      "cuerpo": {
+        "protocolo": 1,
+        "since": 0,
+        "sync_version_actual": 11,
+        "sync_version": 11,
+        "generado_en": "<fecha>",
+        "pistas": [
+          {
+            "id": 100,
+            "titulo": "Apertura",
+            "artista_nombre": "Banda Uno",
+            "album_titulo": "Primer Disco",
+            "album_id": 10,
+            "artista_id": 1,
+            "track_number": 1,
+            "duracion_seg": 201.5,
+            "anio": 2001,
+            "genero": "Rock",
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": true,
+            "favorita_actualizada_en": "2026-01-01T00:00:00.000Z",
+            "hash_sha256": "d934c9f9dfcaf225befcce03108063788cacb9e4fa810ad3dc65fa26d6ea4ec3",
+            "sync_version": 5,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/100/audio",
+            "cover_url": "/api/v1/asset/cover/10",
+            "lyrics_url": "/api/v1/track/100/lyrics"
+          },
+          {
+            "id": 101,
+            "titulo": "Segunda",
+            "artista_nombre": "Banda Uno",
+            "album_titulo": "Primer Disco",
+            "album_id": 10,
+            "artista_id": 1,
+            "track_number": 2,
+            "duracion_seg": 180.0,
+            "anio": 2001,
+            "genero": "Rock",
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": false,
+            "favorita_actualizada_en": null,
+            "hash_sha256": "e9a615e56b2ef9f4f0646a24de2a0d28748dba8c06d0942b9c51b7413d6978f9",
+            "sync_version": 6,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/101/audio",
+            "cover_url": "/api/v1/asset/cover/10",
+            "lyrics_url": "/api/v1/track/101/lyrics"
+          },
+          {
+            "id": 102,
+            "titulo": "Sola",
+            "artista_nombre": "Solista Dos",
+            "album_titulo": "Sencillo",
+            "album_id": 11,
+            "artista_id": 2,
+            "track_number": 1,
+            "duracion_seg": 150.25,
+            "anio": 2020,
+            "genero": "Pop",
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": false,
+            "favorita_actualizada_en": null,
+            "hash_sha256": "5f0ff87a906b832c2849fba3d23353344d9f734cb1a7231d31976aee61b6325c",
+            "sync_version": 7,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/102/audio",
+            "cover_url": "/api/v1/asset/cover/11",
+            "lyrics_url": "/api/v1/track/102/lyrics"
+          },
+          {
+            "id": 103,
+            "titulo": "Borrada",
+            "artista_nombre": "Solista Dos",
+            "album_titulo": "Sencillo",
+            "album_id": 11,
+            "artista_id": 2,
+            "track_number": 2,
+            "duracion_seg": 99.0,
+            "anio": null,
+            "genero": null,
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": false,
+            "favorita_actualizada_en": null,
+            "hash_sha256": "d072083c3ebaa808031250002470a295c5ef542dd5f4d1710eba3b3a35520a12",
+            "sync_version": 8,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/103/audio",
+            "cover_url": "/api/v1/asset/cover/11",
+            "lyrics_url": "/api/v1/track/103/lyrics"
+          }
+        ],
+        "albums": [
+          {
+            "id": 10,
+            "titulo": "Primer Disco",
+            "artista_id": 1,
+            "tipo": "Album",
+            "anio": 2001,
+            "sync_version": 3,
+            "cover_url": "/api/v1/asset/cover/10"
+          },
+          {
+            "id": 11,
+            "titulo": "Sencillo",
+            "artista_id": 2,
+            "tipo": "Single",
+            "anio": 2020,
+            "sync_version": 4,
+            "cover_url": "/api/v1/asset/cover/11"
+          }
+        ],
+        "artistas": [
+          {
+            "id": 1,
+            "nombre": "Banda Uno",
+            "sync_version": 1,
+            "imagen_url": "/api/v1/asset/artist/1"
+          },
+          {
+            "id": 2,
+            "nombre": "Solista Dos",
+            "sync_version": 2,
+            "imagen_url": "/api/v1/asset/artist/2"
+          }
+        ],
+        "playlists": [
+          {
+            "id": 5,
+            "nombre": "Para correr",
+            "descripcion": "",
+            "tipo": "manual",
+            "subtipo": "usuario",
+            "origen": "usuario",
+            "auto_key": null,
+            "categoria": "creada",
+            "etiqueta": "Manual",
+            "es_favoritos": false,
+            "es_anclada": false,
+            "num_pistas": 2,
+            "sync_version": 9,
+            "pista_ids": [
+              102,
+              100
+            ],
+            "cover_url": null
+          }
+        ],
+        "tombstones": [
+          {
+            "entidad": "pista",
+            "entidad_id": 103,
+            "sync_version": 11
+          }
+        ],
+        "next_since": 11,
+        "has_more": false,
+        "perfil": {
+          "nombre": "Persona de prueba",
+          "foto": "",
+          "estadisticas": {
+            "total_pistas": 4,
+            "total_favoritas": 1
+          }
+        }
+      }
+    },
+    {
+      "nombre": "manifest paginado, primera página",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "677"
+      },
+      "cuerpo": {
+        "protocolo": 1,
+        "since": 0,
+        "sync_version_actual": 11,
+        "sync_version": 11,
+        "generado_en": "<fecha>",
+        "pistas": [],
+        "albums": [
+          {
+            "id": 10,
+            "titulo": "Primer Disco",
+            "artista_id": 1,
+            "tipo": "Album",
+            "anio": 2001,
+            "sync_version": 3,
+            "cover_url": "/api/v1/asset/cover/10"
+          }
+        ],
+        "artistas": [
+          {
+            "id": 1,
+            "nombre": "Banda Uno",
+            "sync_version": 1,
+            "imagen_url": "/api/v1/asset/artist/1"
+          },
+          {
+            "id": 2,
+            "nombre": "Solista Dos",
+            "sync_version": 2,
+            "imagen_url": "/api/v1/asset/artist/2"
+          }
+        ],
+        "playlists": [],
+        "tombstones": [],
+        "next_since": 3,
+        "has_more": true,
+        "perfil": {
+          "nombre": "Persona de prueba",
+          "foto": "",
+          "estadisticas": {
+            "total_pistas": 4,
+            "total_favoritas": 1
+          }
+        }
+      }
+    },
+    {
+      "nombre": "manifest paginado, segunda página",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "1628"
+      },
+      "cuerpo": {
+        "protocolo": 1,
+        "since": 3,
+        "sync_version_actual": 11,
+        "sync_version": 11,
+        "generado_en": "<fecha>",
+        "pistas": [
+          {
+            "id": 100,
+            "titulo": "Apertura",
+            "artista_nombre": "Banda Uno",
+            "album_titulo": "Primer Disco",
+            "album_id": 10,
+            "artista_id": 1,
+            "track_number": 1,
+            "duracion_seg": 201.5,
+            "anio": 2001,
+            "genero": "Rock",
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": true,
+            "favorita_actualizada_en": "2026-01-01T00:00:00.000Z",
+            "hash_sha256": "d934c9f9dfcaf225befcce03108063788cacb9e4fa810ad3dc65fa26d6ea4ec3",
+            "sync_version": 5,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/100/audio",
+            "cover_url": "/api/v1/asset/cover/10",
+            "lyrics_url": "/api/v1/track/100/lyrics"
+          },
+          {
+            "id": 101,
+            "titulo": "Segunda",
+            "artista_nombre": "Banda Uno",
+            "album_titulo": "Primer Disco",
+            "album_id": 10,
+            "artista_id": 1,
+            "track_number": 2,
+            "duracion_seg": 180.0,
+            "anio": 2001,
+            "genero": "Rock",
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": false,
+            "favorita_actualizada_en": null,
+            "hash_sha256": "e9a615e56b2ef9f4f0646a24de2a0d28748dba8c06d0942b9c51b7413d6978f9",
+            "sync_version": 6,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/101/audio",
+            "cover_url": "/api/v1/asset/cover/10",
+            "lyrics_url": "/api/v1/track/101/lyrics"
+          }
+        ],
+        "albums": [
+          {
+            "id": 11,
+            "titulo": "Sencillo",
+            "artista_id": 2,
+            "tipo": "Single",
+            "anio": 2020,
+            "sync_version": 4,
+            "cover_url": "/api/v1/asset/cover/11"
+          }
+        ],
+        "artistas": [],
+        "playlists": [],
+        "tombstones": [],
+        "next_since": 6,
+        "has_more": true,
+        "perfil": {
+          "nombre": "Persona de prueba",
+          "foto": "",
+          "estadisticas": {
+            "total_pistas": 4,
+            "total_favoritas": 1
+          }
+        }
+      }
+    },
+    {
+      "nombre": "manifest sin cambios",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "354"
+      },
+      "cuerpo": {
+        "protocolo": 1,
+        "since": 1000,
+        "sync_version_actual": 11,
+        "sync_version": 11,
+        "generado_en": "<fecha>",
+        "pistas": [],
+        "albums": [],
+        "artistas": [],
+        "playlists": [],
+        "tombstones": [],
+        "next_since": 11,
+        "has_more": false,
+        "perfil": {
+          "nombre": "Persona de prueba",
+          "foto": "",
+          "estadisticas": {
+            "total_pistas": 4,
+            "total_favoritas": 1
+          }
+        }
+      }
+    },
+    {
+      "nombre": "selección por defecto",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "31"
+      },
+      "cuerpo": {
+        "seleccion": {
+          "modo": "todo"
+        }
+      }
+    },
+    {
+      "nombre": "selección con modo inválido",
+      "estado": 400,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "26"
+      },
+      "cuerpo": {
+        "error": "modo_invalido"
+      }
+    },
+    {
+      "nombre": "selección por artistas",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "67"
+      },
+      "cuerpo": {
+        "ok": true,
+        "seleccion": {
+          "modo": "artistas",
+          "artista_ids": [
+            2
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "manifest filtrado por artista",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "1750"
+      },
+      "cuerpo": {
+        "protocolo": 1,
+        "since": 0,
+        "sync_version_actual": 11,
+        "sync_version": 11,
+        "generado_en": "<fecha>",
+        "pistas": [
+          {
+            "id": 102,
+            "titulo": "Sola",
+            "artista_nombre": "Solista Dos",
+            "album_titulo": "Sencillo",
+            "album_id": 11,
+            "artista_id": 2,
+            "track_number": 1,
+            "duracion_seg": 150.25,
+            "anio": 2020,
+            "genero": "Pop",
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": false,
+            "favorita_actualizada_en": null,
+            "hash_sha256": "5f0ff87a906b832c2849fba3d23353344d9f734cb1a7231d31976aee61b6325c",
+            "sync_version": 7,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/102/audio",
+            "cover_url": "/api/v1/asset/cover/11",
+            "lyrics_url": "/api/v1/track/102/lyrics"
+          },
+          {
+            "id": 103,
+            "titulo": "Borrada",
+            "artista_nombre": "Solista Dos",
+            "album_titulo": "Sencillo",
+            "album_id": 11,
+            "artista_id": 2,
+            "track_number": 2,
+            "duracion_seg": 99.0,
+            "anio": null,
+            "genero": null,
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": false,
+            "favorita_actualizada_en": null,
+            "hash_sha256": "d072083c3ebaa808031250002470a295c5ef542dd5f4d1710eba3b3a35520a12",
+            "sync_version": 8,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/103/audio",
+            "cover_url": "/api/v1/asset/cover/11",
+            "lyrics_url": "/api/v1/track/103/lyrics"
+          }
+        ],
+        "albums": [
+          {
+            "id": 11,
+            "titulo": "Sencillo",
+            "artista_id": 2,
+            "tipo": "Single",
+            "anio": 2020,
+            "sync_version": 4,
+            "cover_url": "/api/v1/asset/cover/11"
+          }
+        ],
+        "artistas": [
+          {
+            "id": 2,
+            "nombre": "Solista Dos",
+            "sync_version": 2,
+            "imagen_url": "/api/v1/asset/artist/2"
+          }
+        ],
+        "playlists": [],
+        "tombstones": [
+          {
+            "entidad": "pista",
+            "entidad_id": 103,
+            "sync_version": 11
+          }
+        ],
+        "next_since": 11,
+        "has_more": false,
+        "perfil": {
+          "nombre": "Persona de prueba",
+          "foto": "",
+          "estadisticas": {
+            "total_pistas": 4,
+            "total_favoritas": 1
+          }
+        }
+      }
+    },
+    {
+      "nombre": "selección por playlists, sin envoltorio",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "69"
+      },
+      "cuerpo": {
+        "ok": true,
+        "seleccion": {
+          "modo": "playlists",
+          "playlist_ids": [
+            5
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "manifest filtrado por playlist",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "2315"
+      },
+      "cuerpo": {
+        "protocolo": 1,
+        "since": 0,
+        "sync_version_actual": 11,
+        "sync_version": 11,
+        "generado_en": "<fecha>",
+        "pistas": [
+          {
+            "id": 100,
+            "titulo": "Apertura",
+            "artista_nombre": "Banda Uno",
+            "album_titulo": "Primer Disco",
+            "album_id": 10,
+            "artista_id": 1,
+            "track_number": 1,
+            "duracion_seg": 201.5,
+            "anio": 2001,
+            "genero": "Rock",
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": true,
+            "favorita_actualizada_en": "2026-01-01T00:00:00.000Z",
+            "hash_sha256": "d934c9f9dfcaf225befcce03108063788cacb9e4fa810ad3dc65fa26d6ea4ec3",
+            "sync_version": 5,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/100/audio",
+            "cover_url": "/api/v1/asset/cover/10",
+            "lyrics_url": "/api/v1/track/100/lyrics"
+          },
+          {
+            "id": 102,
+            "titulo": "Sola",
+            "artista_nombre": "Solista Dos",
+            "album_titulo": "Sencillo",
+            "album_id": 11,
+            "artista_id": 2,
+            "track_number": 1,
+            "duracion_seg": 150.25,
+            "anio": 2020,
+            "genero": "Pop",
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": false,
+            "favorita_actualizada_en": null,
+            "hash_sha256": "5f0ff87a906b832c2849fba3d23353344d9f734cb1a7231d31976aee61b6325c",
+            "sync_version": 7,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/102/audio",
+            "cover_url": "/api/v1/asset/cover/11",
+            "lyrics_url": "/api/v1/track/102/lyrics"
+          }
+        ],
+        "albums": [
+          {
+            "id": 10,
+            "titulo": "Primer Disco",
+            "artista_id": 1,
+            "tipo": "Album",
+            "anio": 2001,
+            "sync_version": 3,
+            "cover_url": "/api/v1/asset/cover/10"
+          },
+          {
+            "id": 11,
+            "titulo": "Sencillo",
+            "artista_id": 2,
+            "tipo": "Single",
+            "anio": 2020,
+            "sync_version": 4,
+            "cover_url": "/api/v1/asset/cover/11"
+          }
+        ],
+        "artistas": [
+          {
+            "id": 1,
+            "nombre": "Banda Uno",
+            "sync_version": 1,
+            "imagen_url": "/api/v1/asset/artist/1"
+          },
+          {
+            "id": 2,
+            "nombre": "Solista Dos",
+            "sync_version": 2,
+            "imagen_url": "/api/v1/asset/artist/2"
+          }
+        ],
+        "playlists": [
+          {
+            "id": 5,
+            "nombre": "Para correr",
+            "descripcion": "",
+            "tipo": "manual",
+            "subtipo": "usuario",
+            "origen": "usuario",
+            "auto_key": null,
+            "categoria": "creada",
+            "etiqueta": "Manual",
+            "es_favoritos": false,
+            "es_anclada": false,
+            "num_pistas": 2,
+            "sync_version": 9,
+            "pista_ids": [
+              102,
+              100
+            ],
+            "cover_url": null
+          }
+        ],
+        "tombstones": [
+          {
+            "entidad": "pista",
+            "entidad_id": 103,
+            "sync_version": 11
+          }
+        ],
+        "next_since": 11,
+        "has_more": false,
+        "perfil": {
+          "nombre": "Persona de prueba",
+          "foto": "",
+          "estadisticas": {
+            "total_pistas": 4,
+            "total_favoritas": 1
+          }
+        }
+      }
+    },
+    {
+      "nombre": "selección nada",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "43"
+      },
+      "cuerpo": {
+        "ok": true,
+        "seleccion": {
+          "modo": "nada"
+        }
+      }
+    },
+    {
+      "nombre": "manifest con selección nada",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "410"
+      },
+      "cuerpo": {
+        "protocolo": 1,
+        "since": 0,
+        "sync_version_actual": 11,
+        "sync_version": 11,
+        "generado_en": "<fecha>",
+        "pistas": [],
+        "albums": [],
+        "artistas": [],
+        "playlists": [],
+        "tombstones": [
+          {
+            "entidad": "pista",
+            "entidad_id": 103,
+            "sync_version": 11
+          }
+        ],
+        "next_since": 11,
+        "has_more": false,
+        "perfil": {
+          "nombre": "Persona de prueba",
+          "foto": "",
+          "estadisticas": {
+            "total_pistas": 4,
+            "total_favoritas": 1
+          }
+        }
+      }
+    },
+    {
+      "nombre": "selección todo",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "43"
+      },
+      "cuerpo": {
+        "ok": true,
+        "seleccion": {
+          "modo": "todo"
+        }
+      }
+    },
+    {
+      "nombre": "audio completo",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "audio/mpeg",
+        "content-length": "640",
+        "accept-ranges": "bytes",
+        "x-nb-sound-hash": "d934c9f9dfcaf225befcce03108063788cacb9e4fa810ad3dc65fa26d6ea4ec3"
+      },
+      "cuerpo": {
+        "bytes": 640,
+        "sha256": "d934c9f9dfcaf225befcce03108063788cacb9e4fa810ad3dc65fa26d6ea4ec3"
+      }
+    },
+    {
+      "nombre": "audio con Range inicial",
+      "estado": 206,
+      "cabeceras": {
+        "content-type": "audio/mpeg",
+        "content-length": "100",
+        "content-range": "bytes 0-99/640",
+        "accept-ranges": "bytes",
+        "x-nb-sound-hash": "d934c9f9dfcaf225befcce03108063788cacb9e4fa810ad3dc65fa26d6ea4ec3"
+      },
+      "cuerpo": {
+        "bytes": 100,
+        "sha256": "4f079de3440c9e82aac276658c211873ab51c9ab1c03ca0922598b16831cab22"
+      }
+    },
+    {
+      "nombre": "audio con Range abierto",
+      "estado": 206,
+      "cabeceras": {
+        "content-type": "audio/mpeg",
+        "content-length": "40",
+        "content-range": "bytes 600-639/640",
+        "accept-ranges": "bytes",
+        "x-nb-sound-hash": "d934c9f9dfcaf225befcce03108063788cacb9e4fa810ad3dc65fa26d6ea4ec3"
+      },
+      "cuerpo": {
+        "bytes": 40,
+        "sha256": "51e06ab3451b908055ae550b303fc38ca67e98ec9087355dd915c4200d25e2e2"
+      }
+    },
+    {
+      "nombre": "audio de una pista inexistente",
+      "estado": 404,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "26"
+      },
+      "cuerpo": {
+        "error": "no_encontrado"
+      }
+    },
+    {
+      "nombre": "audio con id no numérico",
+      "estado": 404,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "26"
+      },
+      "cuerpo": {
+        "error": "no_encontrado"
+      }
+    },
+    {
+      "nombre": "stems de una pista con instrumental",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "audio/mpeg",
+        "content-length": "1088",
+        "accept-ranges": "bytes"
+      },
+      "cuerpo": {
+        "bytes": 1088,
+        "sha256": "2a5117e356e94005d55350864ac29a9f3a2b33ed8ef31f260aeb4211ca819dc2"
+      }
+    },
+    {
+      "nombre": "stems con Range",
+      "estado": 206,
+      "cabeceras": {
+        "content-type": "audio/mpeg",
+        "content-length": "10",
+        "content-range": "bytes 10-19/1088",
+        "accept-ranges": "bytes"
+      },
+      "cuerpo": {
+        "bytes": 10,
+        "sha256": "e0fc3488c4a90a97552ba52f782b818bcd60cdbc8d13f71f7c244d9c94829893"
+      }
+    },
+    {
+      "nombre": "stems de una pista sin instrumental",
+      "estado": 404,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "22"
+      },
+      "cuerpo": {
+        "error": "sin_stems"
+      }
+    },
+    {
+      "nombre": "letras",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "119"
+      },
+      "cuerpo": {
+        "synced_lyrics": "[00:01.00] primera linea\n[00:05.00] segunda linea",
+        "plain_lyrics": "primera linea\nsegunda linea"
+      }
+    },
+    {
+      "nombre": "letras de una pista sin letras",
+      "estado": 404,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "23"
+      },
+      "cuerpo": {
+        "error": "sin_lyrics"
+      }
+    },
+    {
+      "nombre": "portada por cover",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "image/jpeg",
+        "content-length": "10",
+        "accept-ranges": "bytes"
+      },
+      "cuerpo": {
+        "bytes": 10,
+        "sha256": "9f15437fb80c44bfc87e9db306b59354852890b28bb5cb1a3dd6edd9decf1721"
+      }
+    },
+    {
+      "nombre": "portada por album",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "image/jpeg",
+        "content-length": "10",
+        "accept-ranges": "bytes"
+      },
+      "cuerpo": {
+        "bytes": 10,
+        "sha256": "9f15437fb80c44bfc87e9db306b59354852890b28bb5cb1a3dd6edd9decf1721"
+      }
+    },
+    {
+      "nombre": "portada de un álbum sin portada",
+      "estado": 404,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "26"
+      },
+      "cuerpo": {
+        "error": "no_encontrado"
+      }
+    },
+    {
+      "nombre": "imagen de artista sin imagen",
+      "estado": 404,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "26"
+      },
+      "cuerpo": {
+        "error": "no_encontrado"
+      }
+    },
+    {
+      "nombre": "asset con tipo desconocido",
+      "estado": 404,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "26"
+      },
+      "cuerpo": {
+        "error": "no_encontrado"
+      }
+    },
+    {
+      "nombre": "historial y favoritos",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "90"
+      },
+      "cuerpo": {
+        "ok": true,
+        "historial_insertado": 1,
+        "favoritos_aplicados": 1,
+        "favoritos_ignorados": 2
+      }
+    },
+    {
+      "nombre": "manifest tras el historial",
+      "estado": 200,
+      "cabeceras": {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "1291"
+      },
+      "cuerpo": {
+        "protocolo": 1,
+        "since": 8,
+        "sync_version_actual": 12,
+        "sync_version": 12,
+        "generado_en": "<fecha>",
+        "pistas": [
+          {
+            "id": 101,
+            "titulo": "Segunda",
+            "artista_nombre": "Banda Uno",
+            "album_titulo": "Primer Disco",
+            "album_id": 10,
+            "artista_id": 1,
+            "track_number": 2,
+            "duracion_seg": 180.0,
+            "anio": 2001,
+            "genero": "Rock",
+            "isrc": null,
+            "mb_recording_id": null,
+            "favorita": true,
+            "favorita_actualizada_en": "2026-05-30T10:00:00.000Z",
+            "hash_sha256": "e9a615e56b2ef9f4f0646a24de2a0d28748dba8c06d0942b9c51b7413d6978f9",
+            "sync_version": 12,
+            "bpm": null,
+            "energy": null,
+            "key": null,
+            "audio_url": "/api/v1/track/101/audio",
+            "cover_url": "/api/v1/asset/cover/10",
+            "lyrics_url": "/api/v1/track/101/lyrics"
+          }
+        ],
+        "albums": [],
+        "artistas": [],
+        "playlists": [
+          {
+            "id": 5,
+            "nombre": "Para correr",
+            "descripcion": "",
+            "tipo": "manual",
+            "subtipo": "usuario",
+            "origen": "usuario",
+            "auto_key": null,
+            "categoria": "creada",
+            "etiqueta": "Manual",
+            "es_favoritos": false,
+            "es_anclada": false,
+            "num_pistas": 2,
+            "sync_version": 9,
+            "pista_ids": [
+              102,
+              100
+            ],
+            "cover_url": null
+          }
+        ],
+        "tombstones": [
+          {
+            "entidad": "pista",
+            "entidad_id": 103,
+            "sync_version": 11
+          }
+        ],
+        "next_since": 12,
+        "has_more": false,
+        "perfil": {
+          "nombre": "Persona de prueba",
+          "foto": "",
+          "estadisticas": {
+            "total_pistas": 4,
+            "total_favoritas": 2
+          }
+        }
+      }
+    },
+    {
+      "nombre": "control remoto",
+      "frames": [
+        {
+          "tipo": "estado",
+          "reproduciendo": true,
+          "pista": {
+            "id": 100,
+            "titulo": "Apertura",
+            "artista": "Banda Uno",
+            "album": "Primer Disco",
+            "duracion_seg": 201.5,
+            "cover_url": "/api/v1/asset/cover/10"
+          },
+          "posicion_seg": 42.5,
+          "volumen": 80,
+          "modo_repeticion": "todo",
+          "aleatorio": false,
+          "karaoke_activo": false,
+          "karaoke_disponible": true,
+          "indice_cola": 0,
+          "dj_activo": false
+        },
+        {
+          "tipo": "ack",
+          "accion": "play_pause",
+          "resultado": {
+            "ok": true,
+            "encolado": true
+          }
+        },
+        {
+          "tipo": "ack",
+          "accion": "seek",
+          "resultado": {
+            "ok": true,
+            "encolado": true
+          }
+        },
+        {
+          "tipo": "ack",
+          "accion": "set_volume",
+          "resultado": {
+            "ok": true,
+            "encolado": true
+          }
+        },
+        {
+          "tipo": "ack",
+          "accion": "queue",
+          "resultado": {
+            "ok": true,
+            "encolado": true
+          }
+        },
+        {
+          "tipo": "cola",
+          "items": [
+            {
+              "id": 100,
+              "titulo": "Apertura",
+              "artista": "Banda Uno",
+              "album": "Primer Disco",
+              "duracion_seg": 201.5
+            },
+            {
+              "id": 102,
+              "titulo": "Sola",
+              "artista": "Solista Dos",
+              "album": "Sencillo",
+              "duracion_seg": 150.25
+            }
+          ],
+          "indice": -1
+        },
+        {
+          "tipo": "ack",
+          "accion": "no_existe",
+          "resultado": {
+            "ok": true,
+            "encolado": true
+          }
+        },
+        {
+          "tipo": "error",
+          "detalle": "json_invalido"
+        }
+      ]
+    }
+  ]
+}
