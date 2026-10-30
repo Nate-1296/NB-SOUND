@@ -34,10 +34,12 @@ import type {
   PaginaAlbumes,
   PaginaArtistas,
   PaginaPistas,
+  Pendiente,
   Perfil,
   PistaResumen,
   PlaylistResumen,
   PreseleccionEcualizador,
+  ProgresoImportacion,
   Telefono
 } from '$lib/bindings';
 
@@ -49,6 +51,7 @@ export type {
   ArtistaDelDia,
   ArtistaResumen,
   AvisoReproductor,
+  CandidatoRevisar,
   Categoria,
   ConsultaAlbumes,
   ConsultaArtistas,
@@ -69,11 +72,13 @@ export type {
   PaginaAlbumes,
   PaginaArtistas,
   PaginaPistas,
+  Pendiente,
   Perfil,
   PistaEscuchada,
   PistaResumen,
   PlaylistResumen,
   PreseleccionEcualizador,
+  ProgresoImportacion,
   Qr,
   Telefono
 } from '$lib/bindings';
@@ -340,4 +345,47 @@ export function movilQuitar(id: number): Promise<void> {
 /** Algo cambió en los teléfonos: uno se emparejó, se conectó o se fue. */
 export function alCambiarLosTelefonos(cada: () => void): Promise<UnlistenFn> {
   return escuchar<null>('movil:cambio', () => cada());
+}
+
+// --- Importar y Por revisar ---------------------------------------------------
+
+export function importacionProgreso(): Promise<ProgresoImportacion> {
+  return call<ProgresoImportacion>('importacion_progreso');
+}
+
+/** El selector nativo de archivos (o de carpeta) y lo elegido a la cola. */
+export function anadirMusica(carpeta: boolean): Promise<number> {
+  return call<number>('anadir_musica', { carpeta });
+}
+
+export function alCambiarLaImportacion(
+  cada: (p: ProgresoImportacion) => void
+): Promise<UnlistenFn> {
+  return escuchar<ProgresoImportacion>('importacion:progreso', cada);
+}
+
+/** Se arrastran archivos sobre la ventana (`true`) o se dejan de arrastrar. */
+export function alArrastrarArchivos(cada: (encima: boolean) => void): Promise<UnlistenFn> {
+  return escuchar<boolean>('importacion:arrastre', cada);
+}
+
+export function porRevisarListar(): Promise<Pendiente[]> {
+  return call<Pendiente[]>('por_revisar_listar');
+}
+
+export function porRevisarContar(): Promise<number> {
+  return call<number>('por_revisar_contar');
+}
+
+/** Tal como está (`candidato` nulo) o con el candidato elegido. */
+export function porRevisarImportar(id: number, candidato: number | null): Promise<number> {
+  return call<number>('por_revisar_importar', { id, candidato });
+}
+
+export function porRevisarDescartar(ids: number[]): Promise<void> {
+  return call<void>('por_revisar_descartar', { ids });
+}
+
+export function porRevisarReintentar(id: number): Promise<void> {
+  return call<void>('por_revisar_reintentar', { id });
 }

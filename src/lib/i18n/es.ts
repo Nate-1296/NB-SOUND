@@ -403,6 +403,64 @@ export const es = {
     licencia: 'Software libre bajo la licencia GPL-3.0-or-later.',
     terceros: 'Incluye componentes de terceros con sus licencias (THIRD_PARTY_LICENSES.md).'
   },
+  importacion: {
+    soltar: 'Suelta para añadir a tu biblioteca',
+    soltarAyuda:
+      'Canciones o carpetas enteras. Lo que no se pueda identificar queda en Por revisar.',
+    anadir: 'Añadir música',
+    anadirCarpeta: 'Añadir carpeta',
+    catalogando: (n: number) => (n === 1 ? 'Catalogando 1 canción' : `Catalogando ${n} canciones`),
+    deTotal: (hechos: number, total: number) => `${hechos} de ${total}`,
+    resumen: (anadidas: number, revisar: number) =>
+      revisar > 0
+        ? `${anadidas === 1 ? '1 añadida' : `${anadidas} añadidas`}. ${revisar} por revisar`
+        : anadidas === 1
+          ? '1 añadida'
+          : `${anadidas} añadidas`,
+    sinVerificar: (n: number) => (n === 1 ? '1 sin verificar' : `${n} sin verificar`),
+    verPorRevisar: 'Ver Por revisar',
+    cerrar: 'Cerrar'
+  },
+  porRevisar: {
+    titulo: 'Por revisar',
+    vacio: 'No hay nada pendiente. Todo lo que importaste está en tu biblioteca.',
+    cuenta: (n: number) => (n === 1 ? '1 archivo no importado' : `${n} archivos no importados`),
+    noImportado: 'No importado',
+    causas: {
+      candidatos_ambiguos: 'Encontramos varias versiones posibles de esta canción',
+      puntaje_intermedio: 'No estamos seguros de que sea esta canción',
+      duracion_marginal: 'No estamos seguros de que sea esta canción',
+      release_type_dudoso: 'No sabemos si es de un álbum o de un sencillo',
+      sin_candidatos: 'No encontramos esta canción en ninguna fuente',
+      metadata_insuficiente: 'No encontramos esta canción en ninguna fuente',
+      puntaje_bajo: 'No encontramos esta canción en ninguna fuente',
+      escritura_fallida: 'No pudimos guardar los datos en el archivo',
+      validacion_post_escritura: 'No pudimos guardar los datos en el archivo',
+      duplicado: 'Ya tienes esta canción',
+      duracion_invalida: 'El archivo parece dañado o incompleto',
+      audio_ilegible: 'El archivo parece dañado o incompleto'
+    } as Record<string, string>,
+    importarTalCual: 'Importar tal como está',
+    importarTodas: 'Importar todas tal como están',
+    elegir: 'Elegir esta',
+    buscarDeNuevo: 'Buscar de nuevo',
+    descartar: 'Descartar',
+    descartarSeleccionadas: 'Descartar las seleccionadas',
+    seleccionar: (nombre: string) => `Seleccionar ${nombre}`,
+    candidatos: 'Posibles coincidencias',
+    tuArchivo: 'Tu archivo',
+    sinDatos: 'Sin datos',
+    faltara: 'Entrará sin verificar. Le faltará:',
+    falta: { portada: 'portada', letra: 'letra', album: 'álbum', anio: 'año' } as Record<
+      string,
+      string
+    >,
+    nadaFalta: 'Entrará sin verificar, con los datos que trae el archivo.',
+    confirmar: 'Importar',
+    cancelar: 'Cancelar',
+    papelera: 'Los archivos descartados van a la papelera del sistema.',
+    error: 'No se pudo completar. Vuelve a intentarlo.'
+  },
   vistas: {
     proximamente: 'Esta sección llega en una fase próxima del plan.'
   }

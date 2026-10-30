@@ -578,3 +578,103 @@ pub async fn movil_telefonos(
 pub async fn movil_quitar(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<()> {
     con_movil(&estado, move |m| m.quitar(id)).await
 }
+
+// --- Importar (F4.2) ----------------------------------------------------------
+
+#[tauri::command]
+pub async fn importacion_progreso(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::catalogo::importacion::ProgresoImportacion> {
+    Ok(estado.importador.progreso())
+}
+
+/// "Añadir música": el selector nativo de archivos o de carpeta, y lo elegido a
+/// la cola. Las rutas no cruzan el puente: las elige el sistema y se quedan en
+/// Rust.
+#[tauri::command]
+pub async fn anadir_musica(app: AppHandle, carpeta: bool) -> NsResult<u32> {
+    use tauri_plugin_dialog::DialogExt;
+    let elegidas = tauri::async_runtime::spawn_blocking(move || {
+        let d = app.dialog().file().set_title("Añadir música");
+        let rutas: Vec<std::path::PathBuf> = if carpeta {
+            d.blocking_pick_folder()
+                .and_then(|f| f.into_path().ok())
+                .into_iter()
+                .collect()
+        } else {
+            d.add_filter("Audio", &crate::catalogo::canalizacion::EXTENSIONES)
+                .blocking_pick_files()
+                .unwrap_or_default()
+                .into_iter()
+                .filter_map(|f| f.into_path().ok())
+                .collect()
+        };
+        (app, rutas)
+    })
+    .await
+    .map_err(|_| NsError::Internal)?;
+    let (app, rutas) = elegidas;
+    let n = rutas.len() as u32;
+    if n > 0 {
+        app.state::<Estado>().importador.importar(rutas);
+    }
+    Ok(n)
+}
+
+// --- Por revisar (F4.2.4) -----------------------------------------------------
+
+/// Cota: `catalogo::por_revisar::MAX_PENDIENTES`.
+#[tauri::command]
+pub async fn por_revisar_listar(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<Vec<crate::catalogo::por_revisar::Pendiente>> {
+    en_segundo_plano(&estado, crate::catalogo::por_revisar::listar).await
+}
+
+#[tauri::command]
+pub async fn por_revisar_contar(estado: tauri::State<'_, Estado>) -> NsResult<u32> {
+    en_segundo_plano(&estado, crate::catalogo::por_revisar::contar).await
+}
+
+/// Importa uno: tal como está, o con el candidato elegido.
+#[tauri::command]
+pub async fn por_revisar_importar(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    candidato: Option<u32>,
+) -> NsResult<i64> {
+    let importador = estado.importador.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        importador.con_entorno(|e| {
+            crate::catalogo::por_revisar::importar(e, id, candidato.map(|c| c as usize))
+        })
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
+#[tauri::command]
+pub async fn por_revisar_descartar(
+    estado: tauri::State<'_, Estado>,
+    ids: Vec<i64>,
+) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| {
+        for id in &ids {
+            crate::catalogo::por_revisar::descartar(db, *id)?;
+        }
+        Ok(())
+    })
+    .await
+}
+
+/// Vuelve a buscarlo: a la cola de importación.
+#[tauri::command]
+pub async fn por_revisar_reintentar(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<()> {
+    let importador = estado.importador.clone();
+    let ruta = en_segundo_plano(&estado, move |db| {
+        crate::catalogo::por_revisar::para_reintentar(db, id)
+    })
+    .await?;
+    importador.importar(vec![ruta]);
+    Ok(())
+}

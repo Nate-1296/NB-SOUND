@@ -24,11 +24,11 @@
 | F4.1.10 Portadas e imágenes de artista (las seis fuentes de la V1) | Hecha: `catalogo/portadas_red.rs`: etiquetas, Cover Art Archive, iTunes, TheAudioDB, Deezer y Wikipedia con la puntuación de la V1; una sola copia por contenido, la HD si existe (P11) |
 | F4.1.11 Letras (LRCLIB y lyrics.ovh) | Hecha: `catalogo/letras_red.rs`, con el orden, la puntuación de filas y el trato del 429 de la V1 |
 | F4.1.12 Rasgos básicos y LUFS al importar | Pendiente |
-| F4.1.13 Recuperación tras un cierre a medias (`core/import_recovery_service.py`) | Pendiente |
-| F4.2.1 Arrastrar y soltar en toda la ventana; "Añadir música" | Pendiente |
+| F4.1.13 Recuperación tras un cierre a medias (`core/import_recovery_service.py`) | Hecha: cada archivo se apunta en `pendientes_importacion` (V9) antes de empezar y se borra al terminar; al arrancar se sigue por donde iba (`catalogo/importacion.rs`) |
+| F4.2.1 Arrastrar y soltar en toda la ventana; "Añadir música" | Hecha: el evento de la ventana llega a Rust y el selector nativo se abre desde Rust; ninguna ruta cruza el puente |
 | F4.2.2 Carpeta de música vigilada | Pendiente |
-| F4.2.3 Progreso discreto y resumen | Pendiente |
-| F4.2.4 Por revisar: lista con el motivo en lenguaje llano, comparador lado a lado y acciones | Pendiente |
+| F4.2.3 Progreso discreto y resumen | Hecha: la tarjeta "Catalogando N canciones" y el resumen con enlace a Por revisar |
+| F4.2.4 Por revisar: lista con el motivo en lenguaje llano, comparador lado a lado y acciones | Hecha: motivos de la enmienda de ADR-007, candidatos al lado del archivo, importar tal como está avisando de lo que faltará, buscar de nuevo, descartar a la papelera y acciones en lote. Una prueba recorre todas las causas internas |
 | F4.2.5 Editar metadatos de una pista o un álbum | Pendiente |
 | F4.2.6 Copia de seguridad y restauración (`servicios/backup.py`) | Pendiente |
 | F4.2.7 Ajustes > Privacidad y servicios en línea; Inteligencia artificial | Pendiente |

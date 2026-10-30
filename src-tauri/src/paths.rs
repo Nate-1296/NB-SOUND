@@ -108,6 +108,32 @@ impl Rutas {
     }
 }
 
+/// La carpeta de música de quien no ha elegido ninguna: la del sistema
+/// (`XDG_MUSIC_DIR` en Linux, `Music` en Windows y macOS).
+pub fn musica_por_defecto() -> Option<PathBuf> {
+    if let Some(x) = std::env::var_os("XDG_MUSIC_DIR").filter(|v| !v.is_empty()) {
+        return Some(PathBuf::from(x));
+    }
+    let casa = PathBuf::from(std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE"))?);
+    // En Linux, el escritorio la nombra en su idioma (`~/Música`) en user-dirs.dirs.
+    let config = std::env::var_os("XDG_CONFIG_HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| casa.join(".config"));
+    if let Ok(texto) = std::fs::read_to_string(config.join("user-dirs.dirs")) {
+        let valor = texto
+            .lines()
+            .find_map(|l| l.trim().strip_prefix("XDG_MUSIC_DIR="))
+            .map(|v| {
+                v.trim_matches('"')
+                    .replace("$HOME", &casa.to_string_lossy())
+            });
+        if let Some(v) = valor.filter(|v| !v.is_empty()) {
+            return Some(PathBuf::from(v));
+        }
+    }
+    Some(casa.join("Music"))
+}
+
 /// Dónde guardaba sus cosas la V1, para el importador (ADR-004). Solo se leen.
 #[derive(Debug, Clone)]
 pub struct RutasV1 {

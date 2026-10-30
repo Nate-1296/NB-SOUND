@@ -59,3 +59,10 @@ Aprobadas por Nathan antes de añadirlas:
   **Al final no se añadió:** las teclas multimedia ya llegan a todo el sistema por MPRIS y SMTC (F2.1.5), y
   registrarlas además como atajo global las haría actuar dos veces. Los atajos de la V1 eran de la ventana
   (`Principal.qml`), y así se portan.
+
+## Enmienda del 2026-10-30: el selector de archivos
+
+**Aprobado por Nathan.** `tauri-plugin-dialog` (el plugin oficial de Tauri, la misma versión que NB Books) para
+"Añadir música", elegir la carpeta de música y, más adelante, la copia de seguridad. Se usa solo desde Rust: el
+diálogo lo abre un comando y las rutas elegidas se quedan en el runtime, así que ninguna cruza el puente desde el
+webview. Arrastrar y soltar tampoco las pasa por él: el evento de la ventana llega a Rust.

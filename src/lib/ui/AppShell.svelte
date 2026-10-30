@@ -12,20 +12,22 @@
 
   import { accionDeTecla, esCampoDeTexto } from '$core/atajos';
   import { abrirMinirreproductor } from '$core/ipc';
+  import { importacion } from '$core/importacion.svelte';
   import { telefonos } from '$core/movil.svelte';
   import { reproductor } from '$core/reproductor.svelte';
 
   import { clasificarAncho } from './anchos';
   import BarraReproduccion from './BarraReproduccion.svelte';
   import BarraSuperior from './BarraSuperior.svelte';
+  import CapaArrastre from './importacion/CapaArrastre.svelte';
+  import TarjetaImportacion from './importacion/TarjetaImportacion.svelte';
   import NavLateral from './NavLateral.svelte';
 
   interface Props {
-    pendientes?: number;
     children: Snippet;
   }
 
-  let { pendientes = 0, children }: Props = $props();
+  let { children }: Props = $props();
 
   let ancho = $state(0);
   const clase = $derived(clasificarAncho(ancho));
@@ -33,6 +35,7 @@
   onMount(() => {
     void reproductor.arrancar();
     void telefonos.arrancar();
+    void importacion.arrancar();
   });
 
   function alPulsar(e: KeyboardEvent) {
@@ -73,11 +76,13 @@
 <svelte:window onkeydown={alPulsar} />
 
 <div class="carcasa" data-ancho={clase} bind:clientWidth={ancho}>
-  <div class="lateral"><NavLateral {pendientes} /></div>
+  <div class="lateral"><NavLateral pendientes={importacion.pendientes} /></div>
   <div class="superior"><BarraSuperior /></div>
   <main class="contenido">{@render children()}</main>
   <div class="reproductor"><BarraReproduccion /></div>
 </div>
+<CapaArrastre />
+<TarjetaImportacion />
 
 <style>
   .carcasa {

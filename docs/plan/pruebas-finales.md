@@ -87,3 +87,9 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Shazam reconoce de verdad pistas del corpus con la firma de la V2 (API no oficial: se comprueba contra el
       servicio real, con el consentimiento dado en Ajustes).
 - [ ] AcoustID y MusicBrainz responden con la clave de AcoustID que el importador llevó de la V1 al llavero.
+- [ ] Arrastrar una carpeta con canciones sobre cualquier parte de la ventana las importa, con la tarjeta de progreso
+      y el resumen; "Añadir música" abre el selector del sistema.
+- [ ] Cerrar la aplicación a mitad de una importación y volver a abrirla: sigue por donde iba sin duplicar nada.
+- [ ] Por revisar: cada motivo con su texto, elegir un candidato, importar tal como está, buscar de nuevo y descartar a
+      la papelera del sistema (comprobar que el archivo está en la papelera).
+- [ ] Con la red desactivada en Ajustes, importar canciones con etiquetas: entran sin verificar.

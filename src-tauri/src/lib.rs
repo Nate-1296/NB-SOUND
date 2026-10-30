@@ -43,6 +43,7 @@ pub struct Estado {
     pub red: Arc<Red>,
     pub db: BaseDeDatos,
     pub movil: Arc<movil::ServidorMovil>,
+    pub importador: catalogo::importacion::Importador,
 }
 
 /// La política de red que el usuario dejó guardada; la de fábrica, que no deja
@@ -177,14 +178,31 @@ pub fn run() {
             }
         },
     ));
+    let aviso = Arc::clone(&ventana);
+    let importador = catalogo::importacion::Importador::arrancar(
+        catalogo::importacion::Recursos {
+            db: db.clone(),
+            rutas: rutas.clone(),
+            red: Arc::clone(&red),
+            fpcalc: catalogo::acoustid::ruta_fpcalc(),
+        },
+        move |p| {
+            use tauri::Emitter;
+            if let Some(app) = aviso.get() {
+                let _ = app.emit("importacion:progreso", p);
+            }
+        },
+    );
     let estado = Estado {
         rutas: rutas.clone(),
         red: Arc::clone(&red),
         db: db.clone(),
         movil: Arc::clone(&servidor_movil),
+        importador: importador.clone(),
     };
 
     let aplicacion = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .manage(estado)
         .setup(move |app| {
             use tauri::Manager;
@@ -268,12 +286,27 @@ pub fn run() {
         // Cerrar la ventana principal cierra la aplicación aunque el
         // minirreproductor siga abierto: si no, la música seguiría sonando sin
         // ventana desde la que pararla.
-        .on_window_event(|ventana, evento| {
-            if ventana.label() == "main"
-                && matches!(evento, tauri::WindowEvent::CloseRequested { .. })
-            {
-                use tauri::Manager;
-                ventana.app_handle().exit(0);
+        .on_window_event(move |ventana, evento| {
+            use tauri::{DragDropEvent, Emitter, Manager, WindowEvent};
+            if ventana.label() != "main" {
+                return;
+            }
+            match evento {
+                WindowEvent::CloseRequested { .. } => ventana.app_handle().exit(0),
+                // Soltar archivos en cualquier parte de la ventana los importa
+                // (F4.2.1). Las rutas no pasan por el webview: van del sistema al
+                // importador.
+                WindowEvent::DragDrop(DragDropEvent::Drop { paths, .. }) => {
+                    let _ = ventana.emit("importacion:arrastre", false);
+                    importador.importar(paths.clone());
+                }
+                WindowEvent::DragDrop(DragDropEvent::Enter { .. }) => {
+                    let _ = ventana.emit("importacion:arrastre", true);
+                }
+                WindowEvent::DragDrop(DragDropEvent::Leave) => {
+                    let _ = ventana.emit("importacion:arrastre", false);
+                }
+                _ => {}
             }
         })
         .invoke_handler(tauri::generate_handler![
@@ -313,7 +346,14 @@ pub fn run() {
             comandos::movil_permitir,
             comandos::movil_emparejar,
             comandos::movil_telefonos,
-            comandos::movil_quitar
+            comandos::movil_quitar,
+            comandos::importacion_progreso,
+            comandos::anadir_musica,
+            comandos::por_revisar_listar,
+            comandos::por_revisar_contar,
+            comandos::por_revisar_importar,
+            comandos::por_revisar_descartar,
+            comandos::por_revisar_reintentar
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

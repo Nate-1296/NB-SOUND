@@ -18,7 +18,7 @@ Regenerar: `node scripts/generate-notices.mjs`
 Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
 (ADR-010).
 
-## Componentes de Rust (642)
+## Componentes de Rust (648)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -397,6 +397,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `regex-lite` | 0.1.9 | MIT OR Apache-2.0 | https://github.com/rust-lang/regex |
 | `regex-syntax` | 0.8.11 | MIT OR Apache-2.0 | https://github.com/rust-lang/regex |
 | `reqwest` | 0.13.5 | MIT OR Apache-2.0 | https://github.com/seanmonstar/reqwest |
+| `rfd` | 0.17.2 | MIT | https://github.com/PolyMeilex/rfd |
 | `ring` | 0.17.14 | Apache-2.0 AND ISC | https://github.com/briansmith/ring |
 | `rsqlite-vfs` | 0.1.1 | MIT |  |
 | `rtrb` | 0.4.1 | MIT OR Apache-2.0 | https://github.com/mgeier/rtrb |
@@ -500,6 +501,9 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `tauri-build` | 2.7.4 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
 | `tauri-codegen` | 2.7.4 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
 | `tauri-macros` | 2.7.4 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
+| `tauri-plugin` | 2.7.2 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
+| `tauri-plugin-dialog` | 2.8.4 | Apache-2.0 OR MIT | https://github.com/tauri-apps/plugins-workspace |
+| `tauri-plugin-fs` | 2.7.1 | Apache-2.0 OR MIT | https://github.com/tauri-apps/plugins-workspace |
 | `tauri-runtime` | 2.12.2 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
 | `tauri-runtime-wry` | 2.12.3 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
 | `tauri-utils` | 2.10.2 | Apache-2.0 OR MIT | https://github.com/tauri-apps/tauri |
@@ -543,6 +547,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `tracing-subscriber` | 0.3.23 | MIT | https://github.com/tokio-rs/tracing |
 | `trait-variant` | 0.1.3 | MIT OR Apache-2.0 | https://github.com/rust-lang/impl-trait-utils |
 | `transpose` | 0.2.3 | MIT OR Apache-2.0 | https://github.com/ejmahler/transpose |
+| `trash` | 5.2.9 | MIT | https://github.com/ArturKovacs/trash |
 | `tray-icon` | 0.25.1 | MIT OR Apache-2.0 | https://github.com/tauri-apps/tray-icon |
 | `triple_buffer` | 9.0.0 | MPL-2.0 | https://github.com/HadrienG2/triple-buffer |
 | `try-lock` | 0.2.5 | MIT | https://github.com/seanmonstar/try-lock |
@@ -559,6 +564,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `ureq` | 3.5.0 | MIT OR Apache-2.0 | https://github.com/algesten/ureq |
 | `ureq-proto` | 0.6.5 | MIT OR Apache-2.0 | https://github.com/algesten/ureq-proto |
 | `url` | 2.5.8 | MIT OR Apache-2.0 | https://github.com/servo/rust-url |
+| `urlencoding` | 2.1.3 | MIT | https://github.com/kornelski/rust_urlencoding |
 | `urlpattern` | 0.6.0 | MIT | https://github.com/denoland/rust-urlpattern |
 | `utf_types` | 1.0.0 | Apache-2.0 OR MIT | https://github.com/hsivonen/utf_types |
 | `utf8_iter` | 1.1.0 | Apache-2.0 OR MIT | https://github.com/hsivonen/utf8_iter |

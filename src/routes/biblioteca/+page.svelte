@@ -8,6 +8,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import {
+    anadirMusica,
     type AlbumResumen,
     type ArtistaResumen,
     bibliotecaAlbumes,
@@ -190,6 +191,16 @@
       <h1>{t.titulo}</h1>
       <p class="cuenta">{cuenta}</p>
     </div>
+    <div class="anadir">
+      <button type="button" class="boton principal" onclick={() => anadirMusica(false)}>
+        <Icon nombre="mas" tamano={18} />
+        {textos.importacion.anadir}
+      </button>
+      <button type="button" class="boton" onclick={() => anadirMusica(true)}>
+        <Icon nombre="carpeta" tamano={18} />
+        {textos.importacion.anadirCarpeta}
+      </button>
+    </div>
     <div class="pestanas" role="tablist">
       {#each ['albumes', 'artistas', 'pistas'] as const as v (v)}
         <button
@@ -359,6 +370,33 @@
   h1 {
     margin: 0;
     font-size: var(--ns-texto-xl);
+  }
+
+  .anadir {
+    display: flex;
+    gap: var(--ns-espacio-2);
+    margin-left: auto;
+  }
+
+  .boton {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    height: 2.5rem;
+    padding: 0 var(--ns-espacio-4);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+    background: none;
+    color: var(--m3c-on-surface);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .boton.principal {
+    border-color: var(--m3c-primary);
+    background: var(--m3c-primary);
+    color: var(--m3c-on-primary);
   }
 
   .cuenta {
