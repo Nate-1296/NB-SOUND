@@ -20,7 +20,7 @@ Cada una exige su ficha completa (objetivo, criterio, dependencias) antes de emp
 |---|---|
 | F8.1 Forma de onda | Hecha: 1.000 picos por pista en `sonoridad.picos` (migración V10), calculados en la misma decodificación que los LUFS (`audio/sonoridad.rs`, `medicion.rs`), servidos por `forma_de_onda` y dibujados en `FormaDeOnda.svelte` sobre la barra y en la sesión activa del DJ con los puntos de entrada y salida de `EstadoDj` |
 | F8.2 Listas inteligentes vivas | Hecha: `ReglaInteligente` evaluada en SQLite (`playlists/inteligentes.rs`), sincronizada en `playlist_pistas` sin subir `sync_version` cuando no hay cambios, convergencia con `regenerar_automaticas` ("Crear para mí") y diálogo `DialogoInteligente.svelte` |
-| F8.3 Resumen local de escucha | Pendiente: sin ficha |
+| F8.3 Resumen local de escucha | En curso |
 | F8.4 Copia a dispositivos | Pendiente: sin ficha |
 | F8.5 Modo fiesta | Bloqueada: necesita un ADR del modelo de confianza aprobado por Nathan |
 
@@ -113,3 +113,39 @@ automáticas de la V1 ("Crear para mí").
 **A las pruebas finales.** Crear en la instalación real una lista inteligente por BPM + ánimo + favoritas y comprobar
 que el teléfono la sincroniza y que al marcar una nueva favorita entra sola; pulsar "Crear para mí" sobre la
 biblioteca migrada de la V1 y verificar las listas generadas.
+
+## F8.3 Resumen local de escucha
+
+**Objetivo.** En **Tu música**, el usuario puede explorar su resumen local de escucha por mes, por año o de todo el
+historial, con el radar de seis ánimos, el mapa de calor por día de la semana y hora, los más escuchados del periodo y
+una tarjeta exportable a archivo desde el propio equipo sin que ningún dato salga por la red.
+
+**Depende de.** F2.2.8 (`perfil.rs` y `VistaTuMusica.svelte`) y F5.3.1 (`rasgos` y `analisis_profundo`).
+
+**Decisiones.**
+
+* **Periodos desde el historial local:** `resumen_escucha` lista los años (`YYYY`) y meses (`YYYY-MM`) con escuchas en
+  la hora local del equipo (`'localtime'`), además de `"todo"`, y calcula las cifras, los más escuchados, el radar y el
+  mapa de calor filtrados al periodo elegido.
+* **Radar de seis ejes:** cada escucha del periodo aporta los seis rasgos de su pista (`energía`, `bailable`, `alegre`,
+  `calma`, `nocturna`, `melancólica`), prefiriendo `analisis_profundo` de la versión actual sobre las aproximaciones de
+  `rasgos`. El promedio de las escuchas con análisis da los seis valores en `[0, 1]` que se pintan como polígono en SVG.
+* **Mapa de calor 7 × 24:** 168 celdas ordenadas de lunes (fila 0) a domingo (fila 6) y de las 00:00 a las 23:00 en la
+  hora local, para ver de un vistazo qué días y a qué horas suena más la música.
+* **Tarjeta exportable 100 % local:** `exportar_resumen_escucha` genera en Rust (`perfil::tarjeta_svg`) una tarjeta SVG
+  autónoma con las cifras del periodo, el radar de ánimos, el artista y la canción principales y el nombre del perfil,
+  y la guarda mediante el selector nativo de archivos sin usar la red.
+
+**Criterio de aceptación.**
+
+1. `resumen_escucha` devuelve los años y meses disponibles en `historial` y filtra cifras, tops, radar y mapa de calor
+   por `"todo"`, por año (`YYYY`) o por mes (`YYYY-MM`).
+2. El radar calcula los seis ejes promediando las escuchas del periodo con `analisis_profundo` o `rasgos`, y el mapa de
+   calor asigna cada escucha a su celda `(lunes..domingo) × (0..23)` en hora local.
+3. `tarjeta_svg` produce un documento SVG válido y autónomo con los datos del periodo y escapando cualquier carácter
+   especial en nombres de usuario, artistas o canciones; `exportar_resumen_escucha` lo escribe en la ruta elegida.
+4. `VistaTuMusica.svelte` incorpora el selector de periodo (Todo, años y meses), el radar de ánimos, el mapa de calor
+   por día y hora y el botón "Exportar tarjeta".
+
+**A las pruebas finales.** En la instalación real, recorrer en Tu música los resúmenes mensuales y anuales del
+historial migrado de la V1, comprobar el radar y el mapa de calor y exportar la tarjeta de un mes y de un año.
