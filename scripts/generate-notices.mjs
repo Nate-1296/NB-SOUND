@@ -45,7 +45,7 @@ const PERMITIDAS = new Set([
   'MPL-2.0',
   '0BSD',
   'CDLA-Permissive-2.0',
-  // Tipografías: IBM Plex Sans, en static/fuentes/LICENCIAS.md.
+  // Tipografías: las cinco de static/fuentes/LICENCIAS.md.
   'OFL-1.1',
   // NB Sound es GPL-3.0-or-later (ADR-010): admite lo compatible con ella.
   'GPL-3.0-or-later',
@@ -212,7 +212,22 @@ Regenerar: \`node scripts/generate-notices.mjs\`
 |---|---|---|---|---|
 | Chromaprint (\`fpcalc\`) | 1.6.2 | LGPL-2.1-or-later | https://github.com/acoustid/chromaprint | Huella acústica para AcoustID |
 | ONNX Runtime | 1.31.1 | MIT | https://github.com/microsoft/onnxruntime | Inferencia de los agregados |
-| IBM Plex Sans | 6.x | OFL-1.1 | https://github.com/IBM/plex | Tipografía de la interfaz (\`static/fuentes/LICENCIAS.md\`) |
+| Inter | 4.x | OFL-1.1 | https://github.com/rsms/inter | Tipografía de la interfaz, de fábrica (\`static/fuentes/LICENCIAS.md\`) |
+| Fira Sans | 4.x | OFL-1.1 | https://github.com/mozilla/Fira | Tipografía a elección |
+| IBM Plex Sans | 6.x | OFL-1.1 | https://github.com/IBM/plex | Tipografía a elección |
+| Atkinson Hyperlegible | 1.x | OFL-1.1 | https://github.com/googlefonts/atkinson-hyperlegible | Tipografía a elección |
+| Source Sans 3 | 3.x | OFL-1.1 | https://github.com/adobe-fonts/source-sans | Tipografía a elección |
+
+## Código portado
+
+Lógica traducida a Rust desde otros proyectos, con su licencia original, compatible con la de NB Sound.
+
+| Origen | Licencia | Qué se portó | Dónde |
+|---|---|---|---|
+| \`songrec\` 0.8 (Marin M.) | GPL-3.0-or-later | La firma acústica de Shazam y su formato binario | \`src-tauri/src/catalogo/shazam.rs\` |
+| \`librosa\` 0.11 | ISC | El seguidor de pulsos y los rasgos espectrales | \`src-tauri/src/rasgos.rs\` |
+| \`difflib\` de CPython | PSF-2.0 | \`SequenceMatcher.ratio\` | \`src-tauri/src/catalogo/texto.rs\` |
+| NB Sound 1.1.16 | GPL-3.0-or-later | La lógica de catalogación, reproducción, DJ y sincronización de la V1 | todo \`src-tauri/src/\` |
 
 ## Modelos de los agregados
 
