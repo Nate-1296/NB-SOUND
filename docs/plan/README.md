@@ -19,6 +19,9 @@
 | 8.º | 7 | Retiro de la V1 y publicación de la 2.0 | [fase-7-retiro.md](./fase-7-retiro.md) |
 | 9.º | 8 | Capacidades nuevas | [fase-8-nuevas.md](./fase-8-nuevas.md) |
 
+Lo que se hace en cada sesión, con sus commits y lo que quedó pendiente, se registra en la
+[bitácora](./bitacora.md).
+
 **Por qué este orden.** Lo irreversible va primero (licencia, datos, contratos). Después, lo que hace que la V2 se
 pueda usar a diario: escuchar (Fase 2) y que el móvil no note el cambio (Fase 3). Al terminar la Fase 3, la V2 ya
 puede sustituir a la V1 para escuchar y sincronizar, aunque la importación siga en la V1. La catalogación (Fase 4)
