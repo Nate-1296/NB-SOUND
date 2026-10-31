@@ -15,8 +15,15 @@ Regenerar: `node scripts/generate-notices.mjs`
 | ONNX Runtime | 1.31.1 | MIT | https://github.com/microsoft/onnxruntime | Inferencia de los agregados |
 | IBM Plex Sans | 6.x | OFL-1.1 | https://github.com/IBM/plex | Tipografía de la interfaz (`static/fuentes/LICENCIAS.md`) |
 
-Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
-(ADR-010).
+## Modelos de los agregados
+
+No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada uno con su licencia (ADR-010).
+
+| Modelo | Licencia | Origen | Agregado |
+|---|---|---|---|
+| `htdemucs` (Meta), exportado a ONNX | MIT | https://github.com/facebookresearch/demucs | Karaoke |
+| MusiCNN y sus cabezas (MTG, Universitat Pompeu Fabra) | CC BY-NC 4.0, uso no comercial | https://essentia.upf.edu/models.html | Análisis musical |
+| `all-MiniLM-L6-v2` | Apache-2.0 | https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2 | Pedidos al DJ |
 
 ## Componentes de Rust (666)
 

@@ -126,3 +126,6 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
       el micrófono lo ofrece con su tamaño (F5.1.4).
 - [ ] Tras importar la V1, las 115 pistas con instrumental aparecen en "Listas para cantar" sin volver a separarse, y
       las que esperaban en cola están pendientes (F5.2.4).
+- [ ] Con el agregado de análisis instalado: las 407 pistas que analizó la V1 dan las mismas salidas que F0.4.3 (peor
+      diferencia por debajo de 0,01, con valencia y activación en la escala de DEAM llevada a 0–1), y analizar en
+      segundo plano no produce vacíos de buffer (F5.3.1, F5.3.2).

@@ -424,6 +424,8 @@ export const es = {
     version: (v: string) => `NB Sound ${v}`,
     licencia: 'Software libre bajo la licencia GPL-3.0-or-later.',
     terceros: 'Incluye componentes de terceros con sus licencias (THIRD_PARTY_LICENSES.md).',
+    modelos:
+      'Los agregados usan htdemucs de Meta (MIT) para el karaoke, los modelos de Essentia del MTG de la Universitat Pompeu Fabra (CC BY-NC, uso no comercial) para el análisis y all-MiniLM-L6-v2 (Apache-2.0) para los pedidos al DJ.',
     agregados: 'Agregados',
     privacidad: 'Privacidad y servicios en línea',
     ia: 'Inteligencia artificial'

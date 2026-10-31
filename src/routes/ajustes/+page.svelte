@@ -256,6 +256,7 @@
       {/await}
       <p>{t.licencia}</p>
       <p>{t.terceros}</p>
+      <p>{t.modelos}</p>
     </section>
   </div>
 </div>

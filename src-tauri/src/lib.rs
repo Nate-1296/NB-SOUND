@@ -6,6 +6,7 @@
 //! (lo vigila `scripts/check-comandos.mjs`).
 
 pub mod agregados;
+pub mod analisis;
 pub mod audio;
 pub mod bandeja;
 pub mod biblioteca;
@@ -298,6 +299,8 @@ pub fn run() {
                 Arc::clone(&servidor_movil),
             );
             medicion::arrancar(db.clone());
+            // El análisis con modelos, en su hilo y con pausas (F5.3.2).
+            analisis::arrancar(db.clone(), rutas.clone());
             // La carpeta de música vigilada (F4.2.2).
             catalogo::vigilancia::vigilar(db.clone(), importador_setup.clone());
             // La copia automática, si toca (F4.2.6). Comprimir las portadas tarda:
