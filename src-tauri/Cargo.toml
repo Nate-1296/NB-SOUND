@@ -90,6 +90,7 @@ trash = "5.2.9"
 # La carpeta de música vigilada (F4.2.2; ADR-002).
 notify = "8.2.1"
 zip = { version = "9.1.3", default-features = false, features = ["deflate"] }
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["load-dynamic"] }
 
 # Controles del sistema (ADR-003, F2.1.5): MPRIS en Linux, con aleatorio y
 # repetición en los dos sentidos; SMTC en Windows y el centro de reproducción en

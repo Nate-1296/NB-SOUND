@@ -15,7 +15,7 @@
 | F5.1.3 Ajustes > Agregados: tarjetas con Instalar y Quitar | Hecha: una tarjeta por agregado con qué hace, cuánto ocupa y un botón; el progreso llega por `agregados:cambio` y se sigue usando la aplicación. Pulsar Instalar consiente el servicio de agregados; con la conexión general apagada no se descarga. Sin Release publicada (P13) se ven como "Todavía no disponible"; el clic hasta el micrófono funcionando va a las pruebas finales |
 | F5.1.4 Ofrecer el agregado donde hace falta | Pendiente |
 | F5.1.5 Detección de GPU y agregado de aceleración | Parcial: `gpu.rs` detecta lo que aprovecharía ONNX Runtime (NVIDIA con su controlador en Linux, DirectML en Windows, CoreML en Apple Silicon) y Ajustes recomienda el agregado con su motivo, sin instalarlo. El agregado en sí espera a P13 y a medir su tamaño (P6) |
-| F5.2.1 Separación con `htdemucs` ONNX en segundo plano, con prioridad baja | Pendiente |
+| F5.2.1 Separación con `htdemucs` ONNX en segundo plano, con prioridad baja | Hecha: `karaoke.rs` con el algoritmo por segmentos de la V1 (solo acumula la voz), la sesión sin *arena* ni patrón de memoria y con la mitad de los núcleos (P8), una cola en su hilo que retoma lo cortado y reintenta lo fallido al pedirlo, y el instrumental en WAV (P14). `onnx.rs` carga el ONNX Runtime que viaja dentro. Sin el modelo en el entorno, el algoritmo se prueba con modelos de mentira; el vacío de buffer y el pico de memoria con el modelo real van a las pruebas finales |
 | F5.2.2 Botón de micrófono: conmutar original/instrumental y preparar mientras suena | Pendiente |
 | F5.2.3 "Listas para cantar" y "Preparar mis favoritas" | Pendiente |
 | F5.2.4 Stems migrados de la V1 reconocidos sin volver a separar | Pendiente |

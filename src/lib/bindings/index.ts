@@ -53,6 +53,7 @@ export type { PistaEscuchada } from './PistaEscuchada';
 export type { PistaResumen } from './PistaResumen';
 export type { PlaylistResumen } from './PlaylistResumen';
 export type { PoliticaDeRed } from './PoliticaDeRed';
+export type { Preparando } from './Preparando';
 export type { PreseleccionEcualizador } from './PreseleccionEcualizador';
 export type { ProgresoImportacion } from './ProgresoImportacion';
 export type { ProveedorIa } from './ProveedorIa';

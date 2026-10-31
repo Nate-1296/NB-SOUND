@@ -118,3 +118,6 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 
 - [ ] Con la Release de agregados publicada (P13): instalar cada agregado desde Ajustes, cortar la red a mitad y
       reanudar; el archivo instalado es el del catálogo (F5.1.2).
+- [ ] Separar con el modelo real (`NS_MODELO_KARAOKE`, `NS_AUDIO_KARAOKE` y `NS_ONNXRUNTIME` en
+      `karaoke::tests::con_el_modelo_real_separa_una_pista`) y en la aplicación: con todos los núcleos ocupados, ningún
+      vacío de buffer en la reproducción, y el pico de memoria del proceso por debajo de 3 GB (F5.2.1, P8).

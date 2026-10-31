@@ -772,8 +772,13 @@ pub async fn agregado_instalar(app: AppHandle, id: crate::agregados::IdAgregado)
         .await
         .map_err(|_| NsError::Internal)??;
     }
+    let karaoke = app.state::<Estado>().karaoke.clone();
     gestor.instalar(rutas, red, id, move || {
         let _ = app.emit("agregados:cambio", ());
+        // Recién instalado, la cola del karaoke puede empezar sin esperar.
+        if id == crate::agregados::IdAgregado::Karaoke {
+            karaoke.despertar();
+        }
     })
 }
 

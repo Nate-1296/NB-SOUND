@@ -20,10 +20,12 @@ pub mod gpu;
 pub mod identidad_movil;
 pub mod importador_v1;
 pub mod inicio;
+pub mod karaoke;
 pub mod letras;
 pub mod medicion;
 pub mod movil;
 pub mod net;
+pub mod onnx;
 pub mod paths;
 pub mod perfil;
 pub mod playlists;
@@ -50,6 +52,7 @@ pub struct Estado {
     pub movil: Arc<movil::ServidorMovil>,
     pub importador: catalogo::importacion::Importador,
     pub agregados: agregados::Gestor,
+    pub karaoke: karaoke::Karaoke,
 }
 
 /// La política de red que el usuario dejó guardada; la de fábrica, que no deja
@@ -202,6 +205,13 @@ pub fn run() {
             }
         },
     );
+    let aviso = Arc::clone(&ventana);
+    let servicio_karaoke = karaoke::Karaoke::arrancar(db.clone(), rutas.clone(), move || {
+        use tauri::Emitter;
+        if let Some(app) = aviso.get() {
+            let _ = app.emit("karaoke:cambio", ());
+        }
+    });
     let estado = Estado {
         rutas: rutas.clone(),
         red: Arc::clone(&red),
@@ -209,6 +219,7 @@ pub fn run() {
         movil: Arc::clone(&servidor_movil),
         importador: importador.clone(),
         agregados: agregados::Gestor::default(),
+        karaoke: servicio_karaoke,
     };
     let importador_setup = importador.clone();
 
@@ -218,6 +229,26 @@ pub fn run() {
         .setup(move |app| {
             use tauri::Manager;
             let _ = ventana.set(app.handle().clone());
+            // ONNX Runtime viaja entre los recursos. Solo en depuración se busca
+            // también en `binarios/`, para no dejar en el binario publicado la ruta
+            // de la máquina que lo compiló.
+            let biblioteca = app
+                .path()
+                .resource_dir()
+                .map(|d| d.join(onnx::nombre_biblioteca()))
+                .ok()
+                .filter(|r| r.is_file());
+            #[cfg(debug_assertions)]
+            let biblioteca = biblioteca.or_else(|| {
+                Some(
+                    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                        .join("binarios")
+                        .join(onnx::nombre_biblioteca()),
+                )
+            });
+            if let Some(b) = biblioteca {
+                onnx::fijar_ruta(&b);
+            }
             // Sin salida de audio la aplicación sigue abriendo: la biblioteca se ve,
             // y Ajustes dice qué pasa con el sonido.
             let controles = Arc::new(std::sync::OnceLock::new());

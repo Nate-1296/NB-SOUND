@@ -18,7 +18,7 @@ Regenerar: `node scripts/generate-notices.mjs`
 Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
 (ADR-010).
 
-## Componentes de Rust (660)
+## Componentes de Rust (666)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -270,6 +270,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `libc` | 0.2.191 | MIT OR Apache-2.0 | https://github.com/rust-lang/libc |
 | `libdbus-sys` | 0.2.7 | Apache-2.0/MIT | https://github.com/diwic/dbus-rs |
 | `libloading` | 0.7.4 | ISC | https://github.com/nagisa/rust_libloading/ |
+| `libloading` | 0.9.0 | ISC | https://github.com/nagisa/rust_libloading/ |
 | `libredox` | 0.1.25 | MIT | https://gitlab.redox-os.org/redox-os/libredox.git |
 | `libsqlite3-sys` | 0.38.2 | MIT | https://github.com/rusqlite/rusqlite |
 | `linux-raw-sys` | 0.12.1 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | https://github.com/sunfishcode/linux-raw-sys |
@@ -284,6 +285,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `markup5ever` | 0.39.0 | MIT OR Apache-2.0 | https://github.com/servo/html5ever |
 | `matchers` | 0.2.0 | MIT | https://github.com/hawkw/matchers |
 | `matchit` | 0.8.4 | MIT AND BSD-3-Clause | https://github.com/ibraheemdev/matchit |
+| `matrixmultiply` | 0.3.11 | MIT/Apache-2.0 | https://github.com/bluss/matrixmultiply/ |
 | `mdns-sd` | 0.21.6 | Apache-2.0 OR MIT | https://github.com/keepsimple1/mdns-sd |
 | `memchr` | 2.8.3 | Unlicense OR MIT | https://github.com/BurntSushi/memchr |
 | `memoffset` | 0.9.1 | MIT | https://github.com/Gilnaa/memoffset |
@@ -296,6 +298,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `moxcms` | 0.8.1 | BSD-3-Clause OR Apache-2.0 | https://github.com/awxkee/moxcms.git |
 | `mpris-server` | 0.11.0 | MPL-2.0 | https://github.com/SeaDve/mpris-server |
 | `muda` | 0.20.0 | Apache-2.0 OR MIT | https://github.com/tauri-apps/muda |
+| `ndarray` | 0.17.2 | MIT OR Apache-2.0 | https://github.com/rust-ndarray/ndarray |
 | `ndk` | 0.9.0 | MIT OR Apache-2.0 | https://github.com/rust-mobile/ndk |
 | `ndk-context` | 0.1.1 | MIT OR Apache-2.0 | https://github.com/rust-windowing/android-ndk-rs |
 | `ndk-sys` | 0.6.0+11769913 | MIT OR Apache-2.0 | https://github.com/rust-mobile/ndk |
@@ -345,6 +348,8 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `openssl-probe` | 0.2.2 | MIT OR Apache-2.0 | https://github.com/rustls/openssl-probe |
 | `option-ext` | 0.2.0 | MPL-2.0 | https://github.com/soc/option-ext.git |
 | `ordered-stream` | 0.2.0 | MIT OR Apache-2.0 | https://github.com/danieldg/ordered-stream |
+| `ort` | 2.0.0-rc.15 | MIT OR Apache-2.0 | https://github.com/pykeio/ort |
+| `ort-sys` | 2.0.0-rc.15 | MIT OR Apache-2.0 | https://github.com/pykeio/ort |
 | `pango` | 0.18.3 | MIT | https://github.com/gtk-rs/gtk-rs-core |
 | `pango-sys` | 0.18.0 | MIT | https://github.com/gtk-rs/gtk-rs-core |
 | `parking` | 2.2.1 | Apache-2.0 OR MIT | https://github.com/smol-rs/parking |
@@ -394,6 +399,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `rand_core` | 0.9.5 | MIT OR Apache-2.0 | https://github.com/rust-random/rand |
 | `rand_core` | 0.10.1 | MIT OR Apache-2.0 | https://github.com/rust-random/rand_core |
 | `raw-window-handle` | 0.6.2 | MIT OR Apache-2.0 OR Zlib | https://github.com/rust-windowing/raw-window-handle |
+| `rawpointer` | 0.2.1 | MIT/Apache-2.0 | https://github.com/bluss/rawpointer/ |
 | `rcgen` | 0.14.10 | MIT OR Apache-2.0 | https://github.com/rustls/rcgen |
 | `realfft` | 3.5.1 | MIT | https://github.com/HEnquist/realfft |
 | `redox_syscall` | 0.5.18 | MIT | https://gitlab.redox-os.org/redox-os/syscall |
