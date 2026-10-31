@@ -113,6 +113,14 @@ impl Constructor {
         self.consumidas.extend(ids);
     }
 
+    /// Retoma una sesión guardada: la siguiente pista va en `posicion` y ya suena
+    /// `acumulada`. La V1 (`cargar_sesion`) suma la duración entera de lo
+    /// planificado, sin descontar los solapamientos, y aquí se hace igual.
+    pub fn retomar(&mut self, posicion: usize, acumulada: f64) {
+        self.posicion = posicion;
+        self.acumulada = acumulada;
+    }
+
     #[must_use]
     pub const fn duracion_acumulada_seg(&self) -> f64 {
         self.acumulada

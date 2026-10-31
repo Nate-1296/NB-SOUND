@@ -11,6 +11,8 @@ pub mod narrativa;
 pub mod ontologia;
 mod ontologia_datos;
 pub mod planificador;
+pub mod servicio;
+pub mod sesiones;
 pub mod transiciones;
 
 /// `sum()` de Python 3.12 en adelante, que suma flotantes con la compensación de
