@@ -154,4 +154,7 @@ dependen las capas y la medida del equipo, sigue sin publicar (P13).
 | `276424f` | F7.2.2 (a medias) | (Nathan, en local) El actualizador detrás de la puerta de red | Dos en `net.rs` |
 | `985d605` | F7.2.2 | Cierre: `cargo test` (548) y `pnpm verify` en verde, avisos regenerados con las dependencias del actualizador, y las enmiendas de ADR-001 (la dependencia) y ADR-009 (la excepción del cliente HTTP propio del plugin y sus límites) | — |
 | `d62be50` | F7.2.1 | `publicacion.yml`: al empujar una etiqueta `v*` (o a mano) compila en Ubuntu 22.04 (AppImage, deb y rpm; la glibc más vieja para que el AppImage arranque en más sistemas), Windows (MSI y NSIS) y macOS de Apple Silicon (dmg), con los binarios de `binarios.json` comprobados por SHA-256. Firma con los secretos `TAURI_SIGNING_PRIVATE_KEY*`, sube `latest.json` y deja la publicación en borrador: publicarla sigue siendo decisión de Nathan | No se ha ejecutado: no hay forma de lanzarla desde esta sesión sin crear una etiqueta |
-| (siguiente) | F7.2.4 | La 2.0.0 queda preparada sin publicar: la versión en los tres manifiestos y `CHANGELOG.md`, que el borrador de la publicación cita. No se crea la etiqueta `v2.0.0`: hacerlo lanzaría la publicación | `pnpm verify` en verde |
+| `cd50bc5` | F7.2.4 | La 2.0.0 queda preparada sin publicar: la versión en los tres manifiestos y `CHANGELOG.md`, que el borrador de la publicación cita. No se crea la etiqueta `v2.0.0`: hacerlo lanzaría la publicación | `pnpm verify` en verde |
+
+**Cierre de la Fase 7.** Informe en [2026-10-31-cierre-fase-7.md](../audit/2026-10-31-cierre-fase-7.md), con lo que
+falta para publicar y el prompt de la Fase 8.
