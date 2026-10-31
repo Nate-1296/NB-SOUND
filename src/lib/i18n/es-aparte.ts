@@ -291,6 +291,46 @@ export const esAparte = {
     },
     limite: 'Máximo de canciones',
     invalida: 'Revisa los rangos: el mínimo no puede superar al máximo.'
+  },
+
+  resumenEscucha: {
+    titulo: 'Resumen local de escucha',
+    sub: 'Tu actividad por mes, por año o en todo tu historial, sin salir del equipo.',
+    todo: 'Todo el historial',
+    exportar: 'Exportar tarjeta SVG',
+    exportando: 'Exportando…',
+    exportada: 'Tarjeta guardada.',
+    radarTitulo: 'Radar de ánimos',
+    radarSub: 'Promedio de las canciones escuchadas en el periodo.',
+    ejes: {
+      energia: 'Energía',
+      bailable: 'Bailable',
+      alegre: 'Alegre',
+      calma: 'Calma',
+      nocturna: 'Nocturna',
+      melancolica: 'Melancólica'
+    },
+    mapaTitulo: 'Mapa de calor por día y hora',
+    mapaSub: 'A qué horas escuchas más música en tu hora local.',
+    diasSemana: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as const,
+    celdaMapa: (dia: string, hora: number, escuchas: number) =>
+      `${dia} ${String(hora).padStart(2, '0')}:00 · ${escuchas} ${escuchas === 1 ? 'escucha' : 'escuchas'}`,
+    reproduccionesPeriodo: (n: number) =>
+      `${n.toLocaleString('es')} ${n === 1 ? 'reproducción' : 'reproducciones'}`,
+    meses: {
+      '01': 'Ene',
+      '02': 'Feb',
+      '03': 'Mar',
+      '04': 'Abr',
+      '05': 'May',
+      '06': 'Jun',
+      '07': 'Jul',
+      '08': 'Ago',
+      '09': 'Sep',
+      '10': 'Oct',
+      '11': 'Nov',
+      '12': 'Dic'
+    } as Record<string, string>
   }
 };
 

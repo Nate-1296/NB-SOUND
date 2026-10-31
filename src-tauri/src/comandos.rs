@@ -611,6 +611,47 @@ pub async fn perfil(estado: tauri::State<'_, Estado>) -> NsResult<crate::perfil:
     en_segundo_plano(&estado, crate::perfil::perfil).await
 }
 
+/// Resumen local de escucha (F8.3) por mes (`YYYY-MM`), año (`YYYY`) o `"todo"`.
+#[tauri::command]
+pub async fn resumen_escucha(
+    estado: tauri::State<'_, Estado>,
+    periodo: Option<String>,
+) -> NsResult<crate::perfil::ResumenEscucha> {
+    en_segundo_plano(&estado, move |db| {
+        crate::perfil::resumen_escucha(db, periodo.as_deref())
+    })
+    .await
+}
+
+/// Exporta la tarjeta SVG del resumen de escucha donde elija el selector nativo (F8.3).
+/// Devuelve `false` si se canceló. La ruta no cruza el puente IPC.
+#[tauri::command]
+pub async fn exportar_resumen_escucha(app: AppHandle, periodo: Option<String>) -> NsResult<bool> {
+    use tauri_plugin_dialog::DialogExt;
+    let db = app.state::<Estado>().db.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let sufijo = periodo
+            .as_deref()
+            .filter(|p| !p.is_empty())
+            .unwrap_or("todo");
+        let Some(destino) = app
+            .dialog()
+            .file()
+            .set_title("Exportar resumen de escucha")
+            .add_filter("Tarjeta SVG", &["svg"])
+            .set_file_name(format!("nb-sound-resumen-{sufijo}.svg"))
+            .blocking_save_file()
+            .and_then(|f| f.into_path().ok())
+        else {
+            return Ok(false);
+        };
+        crate::perfil::exportar_tarjeta(&db, periodo.as_deref(), &destino)?;
+        Ok(true)
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
 // --- Dispositivos (F3.3) ------------------------------------------------------
 
 /// Ejecuta un trabajo con el servidor móvil fuera del hilo de la ventana: encender

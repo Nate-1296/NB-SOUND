@@ -20,7 +20,7 @@ Cada una exige su ficha completa (objetivo, criterio, dependencias) antes de emp
 |---|---|
 | F8.1 Forma de onda | Hecha: 1.000 picos por pista en `sonoridad.picos` (migración V10), calculados en la misma decodificación que los LUFS (`audio/sonoridad.rs`, `medicion.rs`), servidos por `forma_de_onda` y dibujados en `FormaDeOnda.svelte` sobre la barra y en la sesión activa del DJ con los puntos de entrada y salida de `EstadoDj` |
 | F8.2 Listas inteligentes vivas | Hecha: `ReglaInteligente` evaluada en SQLite (`playlists/inteligentes.rs`), sincronizada en `playlist_pistas` sin subir `sync_version` cuando no hay cambios, convergencia con `regenerar_automaticas` ("Crear para mí") y diálogo `DialogoInteligente.svelte` |
-| F8.3 Resumen local de escucha | En curso |
+| F8.3 Resumen local de escucha | Hecha: `resumen_escucha` por mes (`YYYY-MM`), año (`YYYY`) o `"todo"`, radar de seis ánimos (`RadarAnimos`), mapa de calor 7×24 en hora local y tarjeta SVG autónoma exportable (`tarjeta_svg`, `exportar_resumen_escucha`) en `VistaTuMusica.svelte` |
 | F8.4 Copia a dispositivos | Pendiente: sin ficha |
 | F8.5 Modo fiesta | Bloqueada: necesita un ADR del modelo de confianza aprobado por Nathan |
 

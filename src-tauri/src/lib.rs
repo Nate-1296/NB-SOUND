@@ -451,6 +451,8 @@ pub fn run() {
             comandos::borrar_clave_ia,
             comandos::inicio,
             comandos::perfil,
+            comandos::resumen_escucha,
+            comandos::exportar_resumen_escucha,
             comandos::movil_estado,
             comandos::movil_permitir,
             comandos::movil_emparejar,

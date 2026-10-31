@@ -19,13 +19,25 @@ import type {
   OrdenInteligente,
   PoliticaDeRed,
   ProveedorIa,
+  RadarAnimos,
   ReglaInteligente,
-  ResumenCopia
+  ResumenCopia,
+  ResumenEscucha
 } from '$lib/bindings';
 
 import { call, escuchar } from './index';
 
-export type { OrdenInteligente, ReglaInteligente };
+export type { OrdenInteligente, RadarAnimos, ReglaInteligente, ResumenEscucha };
+
+// --- Resumen local de escucha (F8.3) ---------------------------------------------
+
+export function resumenEscucha(periodo: string | null = null): Promise<ResumenEscucha> {
+  return call<ResumenEscucha>('resumen_escucha', { periodo });
+}
+
+export function exportarResumenEscucha(periodo: string | null = null): Promise<boolean> {
+  return call<boolean>('exportar_resumen_escucha', { periodo });
+}
 
 // --- Listas inteligentes y automáticas (F8.2) ------------------------------------
 
