@@ -141,3 +141,5 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
       se hunde ni sube de golpe, y en las capas la voz de la entrante vuelve al final del solapamiento (F6.1.3).
 - [ ] Con los dos platos, la reproducción normal sigue por debajo del 2 % de un núcleo (criterio de ADR-003), y una
       mezcla en curso, por debajo del 4 % (F6.1.3).
+- [ ] Con el agregado de karaoke instalado, la medida del equipo de desarrollo termina en menos de dos minutos y da
+      un perfil coherente con lo que tarda en preparar una pista para cantar (F6.1.4).

@@ -105,7 +105,7 @@ Ajustes); quedó en 244,3 KB.
 * Las pistas analizadas por la V2 antes de este commit no tienen etiquetas de ambiente básicas; las de la V1 llegaron
   con la importación. Nadie usa aún la V2 con datos propios, así que no se añade una migración de relleno.
 | `7c08cfe` | F6.1.3 (1/2) | La decisión de cada mezcla (`dj/mezcla.rs`): puntos de entrada y salida por pulsos, técnica según fase, tempo, tonalidad, perfil e instrumental, solapamiento y las curvas de volumen y bandas. Las capas de la V1 hacían aparecer la pista entrante al 40 % y cortaban la saliente al 40 %; aquí ambas entran y salen en rampa. No se porta el cálculo por RMS, que la V1 nunca activaba | Las propiedades de `test_dj_mix_engine.py` que no dependen de VLC; ninguna curva salta salvo el corte |
-| (siguiente) | F6.1.3 (2/2) | El motor pasa a dos platos (fuente, alimentador, diez bandas y volumen cada uno) colgados de la pista maestra, que conserva el ecualizador del usuario y el limitador; la reproducción normal sigue siendo idéntica muestra a muestra. `dj/ejecutor.rs` arma la entrante en silencio, abre la puerta cuando suena (o a los 2,5 s), aplica las curvas con el reloj del audio y, al terminar, cambia de plato. El barrido mueve sus bandas de forma continua, no a saltos de 4 dB, y las rampas de volumen se curvan para que el cruce no deje un hueco: Kira interpola en decibelios | La puerta de `test_dj_transicion_gate.py`; las cinco técnicas renderizadas fuera de línea sin clics, sin picos, sin escalones de 1,5 dB en 50 ms ni de 1 LU en la sonoridad a corto plazo |
+| `fb63d45` | F6.1.3 (2/2) | El motor pasa a dos platos (fuente, alimentador, diez bandas y volumen cada uno) colgados de la pista maestra, que conserva el ecualizador del usuario y el limitador; la reproducción normal sigue siendo idéntica muestra a muestra. `dj/ejecutor.rs` arma la entrante en silencio, abre la puerta cuando suena (o a los 2,5 s), aplica las curvas con el reloj del audio y, al terminar, cambia de plato. El barrido mueve sus bandas de forma continua, no a saltos de 4 dB, y las rampas de volumen se curvan para que el cruce no deje un hueco: Kira interpola en decibelios | La puerta de `test_dj_transicion_gate.py`; las cinco técnicas renderizadas fuera de línea sin clics, sin picos, sin escalones de 1,5 dB en 50 ms ni de 1 LU en la sonoridad a corto plazo |
 
 **Decisiones de F6.1.3.**
 
@@ -114,3 +114,7 @@ Ajustes); quedó en 244,3 KB.
   sin voz.
 * La pista que entra solo se anuncia (`PistaEmpieza`) cuando la mezcla termina y su plato pasa a ser el activo; el
   plato que no lo es no cuenta ni su comienzo ni su final.
+
+| Commit | Iteración | Qué se hizo | Pruebas nuevas |
+|---|---|---|---|
+| (siguiente) | F6.1.4 | `dj/equipo.rs`: el perfil (bajo, medio, alto), su clasificación por el factor de tiempo real y la medición en un hilo aparte, una a la vez. Se mide separando diez segundos de audio sintético con el modelo del agregado de karaoke (`karaoke::medir`), por el mismo camino que una pista; sin el agregado, el perfil es bajo y el DJ mezcla sin capas. No se guarda: la migración descarta la medida de la V1 y la V2 mide en cada arranque, al abrir el DJ por primera vez, como la V1 | Las propiedades de `test_dj_hardware_profile.py` salvo las de persistencia; una medición no se solapa con otra; la separación de prueba son dos segmentos |

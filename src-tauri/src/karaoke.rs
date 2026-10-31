@@ -260,19 +260,70 @@ pub fn separar_archivo(
 ) -> NsResult<u64> {
     let (izq, der) = cargar(audio)?;
     let mut s = sesion(modelo)?;
-    let mut llamar = |trozo: &[f32]| -> NsResult<Vec<f32>> {
-        let entrada = ort::value::Tensor::from_array(([1usize, 2, SEGMENTO], trozo.to_vec()))
-            .map_err(|_| NsError::Internal)?;
-        let salidas = s
-            .run(ort::inputs![entrada])
-            .map_err(|_| NsError::Internal)?;
-        let (_, datos) = salidas[0]
-            .try_extract_tensor::<f32>()
-            .map_err(|_| NsError::Internal)?;
-        Ok(datos.to_vec())
-    };
-    let (a, b) = separar(&izq, &der, &mut llamar, seguir)?;
+    let (a, b) = separar(&izq, &der, &mut |trozo| inferir(&mut s, trozo), seguir)?;
     escribir_wav(destino, &a, &b)
+}
+
+fn inferir(s: &mut ort::session::Session, trozo: &[f32]) -> NsResult<Vec<f32>> {
+    let entrada = ort::value::Tensor::from_array(([1usize, 2, SEGMENTO], trozo.to_vec()))
+        .map_err(|_| NsError::Internal)?;
+    let salidas = s
+        .run(ort::inputs![entrada])
+        .map_err(|_| NsError::Internal)?;
+    let (_, datos) = salidas[0]
+        .try_extract_tensor::<f32>()
+        .map_err(|_| NsError::Internal)?;
+    Ok(datos.to_vec())
+}
+
+/// Diez segundos con contenido en todo el espectro, como `_generar_audio_sintetico`
+/// de la V1: grave, medio y agudo modulados, con un poco de ruido para que el
+/// modelo no tenga un silencio fácil, y el canal derecho 30 muestras detrás.
+fn audio_de_prueba() -> (Vec<f32>, Vec<f32>) {
+    use std::f64::consts::TAU;
+    let n = TASA as usize * 10;
+    let mut x = 42u64;
+    let mut ruido = move || {
+        // Un generador lineal congruente basta: solo tiene que no ser silencio.
+        x = x.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1);
+        ((x >> 40) as f64 / f64::from(1u32 << 24) - 0.5) * 0.04
+    };
+    let izq: Vec<f32> = (0..n)
+        .map(|i| {
+            let t = i as f64 / f64::from(TASA);
+            let base = 0.30 * (TAU * 80.0 * t).sin()
+                + 0.25 * (TAU * 440.0 * t).sin()
+                + 0.20 * (TAU * 3000.0 * t).sin();
+            (base * (0.5 + 0.5 * (TAU * 0.5 * t).sin()) + ruido()) as f32
+        })
+        .collect();
+    let mut der = izq.clone();
+    der.rotate_right(30);
+    (izq, der)
+}
+
+/// Lo que tarda `modelo` en separar diez segundos, sin contar la carga.
+///
+/// # Errors
+///
+/// Los del modelo.
+pub fn medir_con(
+    modelo: &mut dyn FnMut(&[f32]) -> NsResult<Vec<f32>>,
+) -> NsResult<std::time::Duration> {
+    let (izq, der) = audio_de_prueba();
+    let inicio = std::time::Instant::now();
+    separar(&izq, &der, modelo, &mut |_| true)?;
+    Ok(inicio.elapsed())
+}
+
+/// [`medir_con`] con el modelo del agregado.
+///
+/// # Errors
+///
+/// [`NsError::ComponentUnavailable`] si el modelo no se puede cargar; los del modelo.
+pub fn medir(modelo: &Path) -> NsResult<std::time::Duration> {
+    let mut s = sesion(modelo)?;
+    medir_con(&mut |trozo| inferir(&mut s, trozo))
 }
 
 // --- La cola en segundo plano ----------------------------------------------------------

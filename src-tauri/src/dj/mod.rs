@@ -4,6 +4,7 @@ pub mod azar;
 pub mod constructor;
 pub mod ejecutor;
 pub mod embeddings;
+pub mod equipo;
 pub mod intencion;
 pub mod mezcla;
 pub mod narrativa;

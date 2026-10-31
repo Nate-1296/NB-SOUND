@@ -11,6 +11,7 @@
 
 use serde::{Deserialize, Serialize};
 
+pub use super::equipo::{tecnicas, Perfil};
 use super::transiciones::Transicion;
 
 /// `TecnicaMezcla`. Se guarda con los nombres de la V1; el texto que ve el usuario
@@ -32,28 +33,6 @@ pub enum Tecnica {
     /// La que entra lo hace sin voz, debajo de la que sale.
     #[serde(rename = "harmonic_mix")]
     Capas,
-}
-
-/// La capacidad del equipo para mezclar (`PerfilHardware`). Con el perfil bajo no
-/// se mezcla por capas, que necesita el instrumental. Cómo se mide es de F6.1.4.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Perfil {
-    #[serde(rename = "low")]
-    Bajo,
-    #[serde(rename = "mid")]
-    Medio,
-    #[serde(rename = "high")]
-    Alto,
-}
-
-/// `tecnicas_habilitadas`.
-#[must_use]
-pub fn tecnicas(perfil: Perfil) -> &'static [Tecnica] {
-    use Tecnica as T;
-    match perfil {
-        Perfil::Bajo => &[T::Corte, T::Fundido, T::SinGraves, T::Barrido],
-        Perfil::Medio | Perfil::Alto => &[T::Corte, T::Fundido, T::SinGraves, T::Barrido, T::Capas],
-    }
 }
 
 /// `MixPoints`: desde dónde suena la pista en una sesión y desde dónde puede
