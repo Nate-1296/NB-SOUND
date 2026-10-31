@@ -54,12 +54,8 @@ function walk(dir) {
   return out;
 }
 
-// `docs/v1/` es la documentación archivada de la V1 (ADR-011): no gobierna nada y
-// se borra en la Fase 7, así que no se le exigen las reglas de la V2.
-const ARCHIVADA = join(ROOT, 'docs', 'v1');
-
 const files = [
-  ...walk(join(ROOT, 'docs')).filter((f) => !f.startsWith(ARCHIVADA)),
+  ...walk(join(ROOT, 'docs')),
   ...ROOT_DOCS.map((f) => join(ROOT, f))
 ];
 

@@ -336,6 +336,7 @@ pub fn run() {
                 Arc::clone(&servidor_movil),
             );
             medicion::arrancar(db.clone());
+            catalogo::auditoria::arrancar(db.clone(), rutas.clone());
             // El análisis con modelos, en su hilo y con pausas (F5.3.2).
             analisis::arrancar(db.clone(), rutas.clone());
             // La carpeta de música vigilada (F4.2.2).

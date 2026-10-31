@@ -6,6 +6,7 @@
 //! fase).
 
 pub mod acoustid;
+pub mod auditoria;
 pub mod canalizacion;
 pub mod completar_datos;
 pub mod correcciones;

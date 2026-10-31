@@ -24,8 +24,9 @@ Si el trabajo depende de una decisión no tomada, **no se empieza**: se plantea 
 
 ## 3. Estado del repositorio
 
-* **La V1 está congelada en `v1.1.16`.** Hasta F0.1.3 vive en la raíz; después, en `legado/`. No se le añaden
-  funciones. Sirve para consultar la lógica, grabar las respuestas doradas y medir la paridad.
+* **La V1 está congelada en la etiqueta `v1.1.16`** y se retiró del repositorio en F7.1.2 (`legado/` y `docs/v1/`
+  ya no existen). Se consulta en esa etiqueta; para medir la paridad hay una copia local fuera del repositorio con su
+  entorno de Python. Lo que la V2 cita de la V1 en sus comentarios usa las rutas de entonces.
 * **La V2 se construye en la raíz** con la estructura de NB Books ([ADR-011](docs/adr/decisions/ADR-011-transicion-del-repositorio.md)).
 * **Solo existe la rama `main`.** No se crean ramas.
 * **NB Sound Mobile no se toca** ([ADR-005](docs/adr/decisions/ADR-005-contrato-movil.md)). Su
@@ -70,7 +71,6 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 ```
 
-Hasta que exista el esqueleto (F0.2.1), la verificación de la V1 es `pytest` desde su carpeta.
 
 ## 7. Los corpus reales
 

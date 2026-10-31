@@ -1,3 +1,0 @@
-# Dependencias opcionales para Audio Intelligence profunda
-# Requiere modelos compatibles descargados manualmente
-essentia-tensorflow

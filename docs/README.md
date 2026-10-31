@@ -12,4 +12,4 @@
 | [Contrato con NB Sound Mobile](./engineering/contrato-movil.md) | Cómo se comprueba que el móvil no nota el cambio |
 | [Investigación del 2026-10-29](./audit/2026-10-29-investigacion-v2.md) | Los datos y las fuentes detrás de los ADR |
 | [Visión original de la V2](./contextual/vision-v2-original.md) | El planteamiento de partida, ya superado por el plan |
-| [Documentación de la V1](./v1/README.md) | Solo para consultar; describe la versión congelada en `v1.1.16` |
+| [Documentación de la V1](https://github.com/Nate-1296/NB-SOUND/tree/v1.1.16/docs) | Solo para consultar, en la etiqueta `v1.1.16`: se retiró del repositorio en F7.1.2 |

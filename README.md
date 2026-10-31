@@ -5,7 +5,7 @@ prepara karaoke y mezcla sesiones de DJ. Sin conexión por defecto, con todo den
 
 > **Estado:** en reconstrucción. La **V2** (Tauri 2 + Svelte 5 + Rust) se construye en la raíz siguiendo el
 > [plan de ejecución](docs/plan/README.md). La **V1** está congelada en la etiqueta `v1.1.16` y su código vive en
-> [`legado/`](legado/README.md) solo como referencia.
+> [`legado/`](https://github.com/Nate-1296/NB-SOUND/blob/v1.1.16/README.md) solo como referencia.
 
 ## Documentación
 

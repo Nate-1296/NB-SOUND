@@ -30,7 +30,6 @@
     "guardianes": "node scripts/guardianes.mjs",
     "paletas": "node scripts/generar-paletas.mjs",
     "check:paletas": "node scripts/generar-paletas.mjs --check",
-    "temas": "node scripts/generar-temas.mjs",
     "binarios": "node scripts/fetch-binarios.mjs",
     "check:binarios": "node scripts/fetch-binarios.mjs --check"
   },

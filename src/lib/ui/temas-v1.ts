@@ -1,7 +1,9 @@
 /*
- * GENERADO POR scripts/generar-temas.mjs DESDE legado/ui/modelos_qml.py. NO SE EDITA A MANO.
- *
  * Los 63 temas de la V1 con todos sus colores (enmienda de ADR-008).
+ *
+ * Se generó de `ui/modelos_qml.py` (`_TEMAS`) de la V1 con un script que se retiró
+ * con ella en F7.1.2: desde entonces este archivo es la fuente. Cambiar un tema es
+ * cambiarlo aquí.
  */
 
 export interface ColoresV1 {
