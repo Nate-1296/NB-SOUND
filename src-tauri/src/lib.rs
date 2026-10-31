@@ -433,7 +433,8 @@ pub fn run() {
             comandos::agregado_quitar,
             comandos::gpu_detectada,
             comandos::karaoke_estado,
-            comandos::karaoke_preparar
+            comandos::karaoke_preparar,
+            comandos::karaoke_preparar_favoritas
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

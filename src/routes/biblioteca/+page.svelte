@@ -21,7 +21,9 @@
     type OrdenPistas,
     type PistaResumen,
     reproducirLista,
-    urlPortada
+    urlPortada,
+    karaokeEstado,
+    karaokePrepararFavoritas
   } from '$core/ipc';
   import { reproductor } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
@@ -69,6 +71,18 @@
   let textoAplicado = $state('');
   let favoritas = $state(false);
   let sinVerificar = $state(false);
+  let paraCantar = $state(false);
+  let ofertaKaraoke = $state(false);
+  let avisoFavoritas = $state<string | null>(null);
+
+  // "Preparar mis favoritas" (F5.2.3); sin el agregado, se ofrece (F5.1.4).
+  async function prepararFavoritas() {
+    if (!(await karaokeEstado()).instalado) {
+      ofertaKaraoke = true;
+      return;
+    }
+    avisoFavoritas = t.favoritasEnCola(await karaokePrepararFavoritas());
+  }
   let ordenPistas = $state<OrdenPistas>('tituloAsc');
   let ordenAlbumes = $state<OrdenAlbumes>('tituloAsc');
   let ordenArtistas = $state<OrdenArtistas>('nombreAsc');
@@ -86,6 +100,7 @@
     texto: textoAplicado || null,
     favoritas,
     sinVerificar,
+    paraCantar,
     albumId: null,
     artistaId: null,
     orden: ordenPistas
@@ -245,7 +260,27 @@
       >
         <Icon nombre="advertencia" tamano={14} />{t.sinVerificar}
       </button>
+      <button
+        type="button"
+        class="ficha"
+        class:activa={paraCantar}
+        aria-pressed={paraCantar}
+        onclick={() => (paraCantar = !paraCantar)}
+      >
+        <Icon nombre="microfono" tamano={14} />{t.paraCantar}
+      </button>
+      {#if paraCantar}
+        <button type="button" class="ficha" onclick={prepararFavoritas}>
+          <Icon nombre="favorito" tamano={14} />{t.prepararFavoritas}
+        </button>
+      {/if}
     </div>
+    {#if avisoFavoritas && paraCantar}<p class="aviso" role="status">{avisoFavoritas}</p>{/if}
+    {#if ofertaKaraoke}
+      {#await import('$ui/agregados/OfertaAgregado.svelte') then m}
+        <m.default id="karaoke" oncerrar={() => (ofertaKaraoke = false)} />
+      {/await}
+    {/if}
   {/if}
 
   <div class="fichas ordenes">
@@ -293,7 +328,7 @@
     <div class="lista">
       {#if total === 0}
         <p class="vacio">
-          {textoAplicado || favoritas || sinVerificar ? t.vacia : t.vaciaBiblioteca}
+          {textoAplicado || favoritas || sinVerificar || paraCantar ? t.vacia : t.vaciaBiblioteca}
         </p>
       {:else if total !== null}
         {#key version}
@@ -573,5 +608,11 @@
 
   .centinela {
     height: 1px;
+  }
+
+  .aviso {
+    margin: 0;
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-sm);
   }
 </style>

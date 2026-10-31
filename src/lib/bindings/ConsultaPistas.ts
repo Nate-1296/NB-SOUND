@@ -8,4 +8,9 @@ export type ConsultaPistas = {
 /**
  * Busca en título, artista, álbum y letra, sin tildes y por prefijo.
  */
-texto: string | null, favoritas: boolean, sinVerificar: boolean, albumId: number | null, artistaId: number | null, orden: OrdenPistas, };
+texto: string | null, favoritas: boolean, sinVerificar: boolean, 
+/**
+ * Solo las que tienen el instrumental listo: "Listas para cantar" (F5.2.3).
+ * Opcional para que las consultas que no lo dicen sigan valiendo.
+ */
+paraCantar?: boolean, albumId: number | null, artistaId: number | null, orden: OrdenPistas, };

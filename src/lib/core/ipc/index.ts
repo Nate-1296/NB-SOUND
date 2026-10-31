@@ -354,6 +354,11 @@ export function karaokePreparar(pistas: number[]): Promise<void> {
   return call<void>('karaoke_preparar', { pistas });
 }
 
+/** "Preparar mis favoritas": devuelve cuántas entraron en la cola. */
+export function karaokePrepararFavoritas(): Promise<number> {
+  return call<number>('karaoke_preparar_favoritas');
+}
+
 /** El avance de lo que se prepara, y cuándo termina una pista. */
 export function alCambiarElKaraoke(cada: () => void): Promise<UnlistenFn> {
   return escuchar<null>('karaoke:cambio', () => cada());

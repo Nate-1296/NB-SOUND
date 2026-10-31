@@ -309,6 +309,36 @@ pub fn pedir(db: &BaseDeDatos, pistas: &[i64]) -> NsResult<()> {
     tx.commit().map_err(|_| NsError::StorageFailure)
 }
 
+/// "Preparar mis favoritas" (F5.2.3): las favoritas que no tienen instrumental
+/// ni lo esperan van a la cola. Devuelve cuántas entraron.
+///
+/// # Errors
+///
+/// [`NsError::StorageFailure`] si la escritura falla.
+pub fn pedir_favoritas(db: &BaseDeDatos) -> NsResult<u32> {
+    let mut conn = db.conexion()?;
+    let tx = db::transaccion_de_escritura(&mut conn)?;
+    let nuevas = tx
+        .execute(
+            "INSERT INTO stems (pista_id, estado)
+             SELECT p.id, 'pendiente' FROM pistas p
+             WHERE p.favorita = 1 AND p.estado = 'biblioteca'
+               AND NOT EXISTS (SELECT 1 FROM stems s WHERE s.pista_id = p.id)",
+            [],
+        )
+        .map_err(|_| NsError::StorageFailure)?;
+    let reintentadas = tx
+        .execute(
+            "UPDATE stems SET estado = 'pendiente', error = NULL
+             WHERE estado = 'fallida'
+               AND pista_id IN (SELECT id FROM pistas WHERE favorita = 1 AND estado = 'biblioteca')",
+            [],
+        )
+        .map_err(|_| NsError::StorageFailure)?;
+    tx.commit().map_err(|_| NsError::StorageFailure)?;
+    Ok(u32::try_from(nuevas + reintentadas).unwrap_or(u32::MAX))
+}
+
 /// La próxima pendiente, por orden de petición, con su archivo y su huella.
 fn siguiente(db: &BaseDeDatos) -> NsResult<Option<(i64, PathBuf, Option<String>)>> {
     let conn = db.conexion()?;
@@ -607,5 +637,35 @@ mod tests {
         let bytes = separar_archivo(&modelo, &audio, &d.join("i.wav"), &mut |_| true).unwrap();
         assert!(bytes > 44);
         let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn preparar_las_favoritas_pone_en_cola_solo_lo_que_falta() {
+        let db = BaseDeDatos::en_memoria().unwrap();
+        db.conexion()
+            .unwrap()
+            .execute_batch(
+                "INSERT INTO pistas (id, titulo, ruta, favorita) VALUES
+                     (1, 'a', 'a.mp3', 1), (2, 'b', 'b.mp3', 1), (3, 'c', 'c.mp3', 1), (4, 'd', 'd.mp3', 0);
+                 INSERT INTO stems (pista_id, estado, instrumental) VALUES (1, 'lista', 'x.wav');
+                 INSERT INTO stems (pista_id, estado) VALUES (2, 'fallida');",
+            )
+            .unwrap();
+        assert_eq!(pedir_favoritas(&db).unwrap(), 2);
+        assert_eq!(
+            pedir_favoritas(&db).unwrap(),
+            0,
+            "lo que ya espera no se cuenta"
+        );
+        let pendientes: String = db
+            .conexion()
+            .unwrap()
+            .query_row(
+                "SELECT group_concat(pista_id) FROM (SELECT pista_id FROM stems WHERE estado = 'pendiente' ORDER BY pista_id)",
+                [],
+                |f| f.get(0),
+            )
+            .unwrap();
+        assert_eq!(pendientes, "2,3");
     }
 }

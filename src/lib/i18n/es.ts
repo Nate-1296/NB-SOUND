@@ -86,6 +86,12 @@ export const es = {
     buscar: 'Buscar por pista, artista, álbum o letra',
     favoritas: 'Favoritas',
     sinVerificar: 'Sin verificar',
+    paraCantar: 'Listas para cantar',
+    prepararFavoritas: 'Preparar mis favoritas',
+    favoritasEnCola: (n: number) =>
+      n === 0
+        ? 'Tus favoritas ya están listas o en camino.'
+        : `${n === 1 ? '1 favorita' : `${n} favoritas`} en preparación. Puedes seguir escuchando.`,
     orden: 'Orden',
     ordenes: {
       tituloAsc: 'Título A-Z',

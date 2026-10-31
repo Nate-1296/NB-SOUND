@@ -173,6 +173,11 @@ pub struct ConsultaPistas {
     pub texto: Option<String>,
     pub favoritas: bool,
     pub sin_verificar: bool,
+    /// Solo las que tienen el instrumental listo: "Listas para cantar" (F5.2.3).
+    /// Opcional para que las consultas que no lo dicen sigan valiendo.
+    #[serde(default)]
+    #[ts(optional)]
+    pub para_cantar: Option<bool>,
     #[ts(type = "number | null")]
     pub album_id: Option<i64>,
     #[ts(type = "number | null")]
@@ -205,6 +210,11 @@ fn filtro(c: &ConsultaPistas) -> (String, Vec<rusqlite::types::Value>) {
     }
     if c.sin_verificar {
         sql.push_str(" AND p.verificada = 0");
+    }
+    if c.para_cantar == Some(true) {
+        sql.push_str(
+            " AND EXISTS (SELECT 1 FROM stems s WHERE s.pista_id = p.id AND s.estado = 'lista')",
+        );
     }
     if let Some(a) = c.album_id {
         sql.push_str(" AND p.album_id = ?");
@@ -360,6 +370,7 @@ mod pruebas_lista {
             texto: None,
             favoritas: false,
             sin_verificar: false,
+            para_cantar: None,
             album_id: None,
             artista_id: None,
             orden,
@@ -917,5 +928,30 @@ mod pruebas_detalle {
         assert_eq!(album(&db, 11).unwrap(), None);
         assert_eq!(artista(&db, 1).unwrap().unwrap().num_albumes, 1);
         assert_eq!(artista(&db, 2).unwrap(), None);
+    }
+
+    #[test]
+    fn listas_para_cantar_son_solo_las_que_tienen_instrumental() {
+        let db = BaseDeDatos::en_memoria().unwrap();
+        db.conexion()
+            .unwrap()
+            .execute_batch(
+                "INSERT INTO pistas (id, titulo, ruta) VALUES (1, 'a', 'a.mp3'), (2, 'b', 'b.mp3'), (3, 'c', 'c.mp3');
+                 INSERT INTO stems (pista_id, estado, instrumental) VALUES (2, 'lista', 'b.wav');
+                 INSERT INTO stems (pista_id, estado) VALUES (3, 'pendiente');",
+            )
+            .unwrap();
+        let c = ConsultaPistas {
+            texto: None,
+            favoritas: false,
+            sin_verificar: false,
+            para_cantar: Some(true),
+            album_id: None,
+            artista_id: None,
+            orden: OrdenPistas::TituloAsc,
+        };
+        let p = pistas(&db, &c, 0, 10).unwrap();
+        let ids: Vec<i64> = p.pistas.iter().map(|x| x.id).collect();
+        assert_eq!((ids, p.total), (vec![2], 1));
     }
 }

@@ -124,3 +124,5 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Con el agregado de karaoke: pulsar el micrófono en una canción sin instrumental, ver el avance en el botón,
       seguir escuchando el original y, al terminar, cantar sin que la canción se corte (F5.2.2); sin el agregado,
       el micrófono lo ofrece con su tamaño (F5.1.4).
+- [ ] Tras importar la V1, las 115 pistas con instrumental aparecen en "Listas para cantar" sin volver a separarse, y
+      las que esperaban en cola están pendientes (F5.2.4).

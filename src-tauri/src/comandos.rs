@@ -848,6 +848,16 @@ pub async fn karaoke_estado(estado: tauri::State<'_, Estado>) -> NsResult<Estado
     .await
 }
 
+/// "Preparar mis favoritas": las favoritas sin instrumental, a la cola. Devuelve
+/// cuántas entraron.
+#[tauri::command]
+pub async fn karaoke_preparar_favoritas(estado: tauri::State<'_, Estado>) -> NsResult<u32> {
+    let karaoke = estado.karaoke.clone();
+    let n = en_segundo_plano(&estado, crate::karaoke::pedir_favoritas).await?;
+    karaoke.despertar();
+    Ok(n)
+}
+
 /// Pone pistas en la cola del karaoke: la que suena al pulsar el micrófono, o
 /// "Preparar mis favoritas". Se preparan mientras suena el original.
 #[tauri::command]
