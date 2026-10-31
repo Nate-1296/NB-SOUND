@@ -4,6 +4,7 @@ pub mod azar;
 pub mod constructor;
 pub mod embeddings;
 pub mod intencion;
+pub mod mezcla;
 pub mod narrativa;
 pub mod ontologia;
 mod ontologia_datos;
