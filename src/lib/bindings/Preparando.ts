@@ -3,4 +3,4 @@
 /**
  * Lo que ve la interfaz: qué pista se está preparando y cuánto lleva.
  */
-export type Preparando = { pista: bigint, fraccion: number, };
+export type Preparando = { pista: number, fraccion: number, };

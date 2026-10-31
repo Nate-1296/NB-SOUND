@@ -30,6 +30,7 @@ export type { DatosPista } from './DatosPista';
 export type { Emparejar } from './Emparejar';
 export type { EstadoAgregado } from './EstadoAgregado';
 export type { EstadoCopia } from './EstadoCopia';
+export type { EstadoKaraoke } from './EstadoKaraoke';
 export type { EstadoMovil } from './EstadoMovil';
 export type { Gpu } from './Gpu';
 export type { IdAgregado } from './IdAgregado';

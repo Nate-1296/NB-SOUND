@@ -806,6 +806,61 @@ pub async fn agregado_quitar(
     .map_err(|_| NsError::Internal)?
 }
 
+// --- Karaoke (F5.2.2 y F5.2.3) ---------------------------------------------------------
+
+/// Lo que necesita el micrófono para decidir qué ofrecer.
+#[derive(Debug, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub struct EstadoKaraoke {
+    /// El agregado está instalado y puede preparar instrumentales.
+    pub instalado: bool,
+    /// Hay archivo publicado que instalar (P13).
+    pub publicado: bool,
+    #[ts(type = "number")]
+    pub bytes: u64,
+    pub preparando: Option<crate::karaoke::Preparando>,
+    /// Cuántas esperan en la cola.
+    pub pendientes: u32,
+}
+
+#[tauri::command]
+pub async fn karaoke_estado(estado: tauri::State<'_, Estado>) -> NsResult<EstadoKaraoke> {
+    let (rutas, preparando) = (estado.rutas.clone(), estado.karaoke.preparando());
+    en_segundo_plano(&estado, move |db| {
+        let pendientes: u32 = db
+            .conexion()?
+            .query_row(
+                "SELECT count(*) FROM stems WHERE estado IN ('pendiente', 'separando')",
+                [],
+                |f| f.get(0),
+            )
+            .map_err(|_| NsError::StorageFailure)?;
+        let e = crate::agregados::entrada(crate::agregados::IdAgregado::Karaoke)?;
+        Ok(EstadoKaraoke {
+            instalado: crate::karaoke::modelo_instalado(&rutas).is_some(),
+            publicado: e.publicada(),
+            bytes: e.bytes,
+            preparando,
+            pendientes,
+        })
+    })
+    .await
+}
+
+/// Pone pistas en la cola del karaoke: la que suena al pulsar el micrófono, o
+/// "Preparar mis favoritas". Se preparan mientras suena el original.
+#[tauri::command]
+pub async fn karaoke_preparar(estado: tauri::State<'_, Estado>, pistas: Vec<i64>) -> NsResult<()> {
+    if pistas.len() > 10_000 {
+        return Err(NsError::InvalidInput);
+    }
+    let karaoke = estado.karaoke.clone();
+    en_segundo_plano(&estado, move |db| crate::karaoke::pedir(db, &pistas)).await?;
+    karaoke.despertar();
+    Ok(())
+}
+
 // --- Copia de seguridad (F4.2.6) ------------------------------------------------------
 
 #[tauri::command]

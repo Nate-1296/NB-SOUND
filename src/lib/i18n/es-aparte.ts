@@ -30,6 +30,11 @@ export const esAparte = {
     actualizar: 'Actualizar',
     quitar: 'Quitar',
     noDisponible: 'Todavía no disponible',
+    ofertaNecesita: (megas: number) =>
+      `Necesita un agregado de ${megas} MB. Se descarga una vez y puedes seguir escuchando mientras.`,
+    ofertaSigue: 'puedes seguir escuchando',
+    ofertaLista: 'Instalado. Pulsa el micrófono para preparar esta canción.',
+    cerrar: 'Cerrar',
     recomendado: (gpu: string) => `Recomendado: tu equipo tiene ${gpu}.`,
     gpus: {
       cuda: 'una tarjeta NVIDIA',

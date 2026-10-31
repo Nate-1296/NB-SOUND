@@ -55,7 +55,7 @@ Traducidas: **59 de 112**.
 | `modelo_lyrics_plain_tipo_documento_se_oculta` | Hecha | `src-tauri/src/letras.rs`, con el mismo nombre |
 | `modelo_reproductor_expone_y_alterna_karaoke_lista` | Hecha | `src-tauri/src/audio/pruebas.rs`: `el_karaoke_pasa_al_instrumental_sin_desfase`; la barra lo expone con `karaokeDisponible` |
 | `alternar_karaoke_preserva_lyrics_y_estado` | Pendiente | F2.2.6, letras sincronizadas |
-| `modelo_reproductor_oculta_karaoke_si_no_esta_lista` | Hecha | `BarraReproduccion.svelte`: el micrófono se desactiva sin instrumental (`karaokeDisponible`) |
+| `modelo_reproductor_oculta_karaoke_si_no_esta_lista` | Rediseñada (ADR-007, F5.2.2) | La V1 desactivaba el micrófono sin instrumental. La V2 no lo alterna sin él (`karaokeDisponible` sigue siendo la condición), pero pulsarlo prepara el instrumental mientras suena el original, o, sin el agregado, ofrece instalarlo. `audio::pruebas::el_instrumental_preparado_a_mitad_de_pista_entra_sin_desfase` |
 | `sorprenderme_devuelve_true_y_reproduce_sin_pista_activa` | Pendiente | F2.2.2, Inicio (Sorpréndeme) |
 | `sorprenderme_reproduce_inmediato_aun_con_reproduccion_activa` | Pendiente | F2.2.2, Inicio (Sorpréndeme) |
 | `sorprenderme_devuelve_false_sin_candidatas_validas` | Pendiente | F2.2.2, Inicio (Sorpréndeme) |

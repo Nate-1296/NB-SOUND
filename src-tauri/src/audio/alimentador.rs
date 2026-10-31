@@ -46,6 +46,12 @@ pub enum Orden {
     Detener {
         generacion: u64,
     },
+    /// El instrumental de la pista que suena acaba de prepararse (F5.2.2): se abre
+    /// y se lleva al mismo frame que el original, sin cortar lo que suena.
+    Instrumental {
+        ficha: u64,
+        ruta: PathBuf,
+    },
 }
 
 struct Abierta {
@@ -204,6 +210,18 @@ impl Alimentador {
                                 if let Some(i) = a.instrumental.as_mut() {
                                     let _ = i.buscar(segundos);
                                 }
+                            }
+                        }
+                        Orden::Instrumental { ficha, ruta } => {
+                            if let Some(a) = actual
+                                .as_mut()
+                                .filter(|a| a.pista.ficha == ficha && a.instrumental.is_none())
+                            {
+                                a.instrumental = Decodificador::abrir(&ruta, a.pista.ganancia_db)
+                                    .ok()
+                                    .filter(|i| i.tasa == a.original.tasa)
+                                    .and_then(|mut i| i.buscar_frame(a.frame).ok().map(|_| i));
+                                a.pista.instrumental = Some(ruta);
                             }
                         }
                         Orden::Detener { generacion: g } => {

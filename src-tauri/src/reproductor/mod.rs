@@ -62,6 +62,9 @@ pub enum Orden {
     Ecualizador(AjustesEcualizador),
     Normalizar(bool),
     Karaoke(bool),
+    /// El karaoke terminó de preparar esta pista (F5.2.2): si es la que suena, el
+    /// micrófono se puede usar sin esperar a la siguiente.
+    InstrumentalListo(i64),
     /// Vuelve a leer la sesión y las preferencias: la primera vez que se abre la
     /// V2, el importador de la V1 termina con el reproductor ya en marcha.
     Recargar,
@@ -381,6 +384,33 @@ impl<B: Backend> Servicio<B> {
             Orden::Karaoke(k) => {
                 self.karaoke = k && self.actual.as_ref().is_some_and(|s| s.karaoke);
                 self.motor.karaoke(self.karaoke);
+                Accion::Nada
+            }
+            Orden::InstrumentalListo(pista) => {
+                let ruta = self
+                    .actual
+                    .as_ref()
+                    .filter(|s| s.fila.pista_id == pista && !s.karaoke)
+                    .and_then(|_| self.db.conexion().ok())
+                    .and_then(|conn| {
+                        persistencia::resolver(
+                            &conn,
+                            pista,
+                            self.musica.as_deref(),
+                            &self.stems,
+                            self.normalizar,
+                        )
+                        .ok()
+                        .flatten()
+                    })
+                    .and_then(|p| p.instrumental);
+                if let (Some(ruta), Some(s)) = (ruta, self.actual.as_mut()) {
+                    s.karaoke = true;
+                    if let Some(f) = self.fichas.get_mut(&s.ficha) {
+                        f.karaoke = true;
+                    }
+                    self.motor.instrumental_listo(s.ficha, ruta);
+                }
                 Accion::Nada
             }
         };

@@ -53,6 +53,8 @@ export const es = {
     repetir: 'Repetir',
     karaoke: 'Modo karaoke',
     karaokeNoListo: 'Esta canción aún no está lista para cantar',
+    karaokePreparar: 'Preparar el karaoke de esta canción',
+    karaokePreparando: (p: number) => `Preparando el karaoke: ${p} %`,
     letras: 'Letras',
     cola: 'Cola',
     colaCon: (n: number) => (n === 1 ? 'Cola, 1 canción' : `Cola, ${n} canciones`),

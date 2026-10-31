@@ -123,6 +123,21 @@ impl Decodificador {
         Ok(requerido)
     }
 
+    /// Salta a un frame exacto. Pasar por segundos pierde un frame por redondeo
+    /// según el valor, así que se busca un frame antes y se descarta lo que sobre.
+    ///
+    /// # Errors
+    ///
+    /// Los de [`Decodificador::buscar`].
+    pub fn buscar_frame(&mut self, frame: u64) -> NsResult<u64> {
+        let antes = frame.saturating_sub(1) as f64 / f64::from(self.tasa);
+        let llegado = self.buscar(antes)?;
+        if llegado < frame {
+            self.descartar += frame - llegado;
+        }
+        Ok(frame.max(llegado))
+    }
+
     /// Añade a `destino` hasta `n` frames. Devuelve cuántos añadió; 0 es el final.
     ///
     /// # Errors

@@ -263,6 +263,14 @@ impl<B: Backend> Motor<B> {
         }
     }
 
+    /// Añade a la pista que suena el instrumental que se acaba de preparar. Lo
+    /// ya decodificado por delante (como mucho un segundo y medio) sigue sin él.
+    pub fn instrumental_listo(&self, ficha: u64, ruta: std::path::PathBuf) {
+        let _ = self
+            .ordenes
+            .send(alimentador::Orden::Instrumental { ficha, ruta });
+    }
+
     /// Original o instrumental, con una transición de 30 ms.
     pub fn karaoke(&self, activo: bool) {
         self.compartido.karaoke(activo);

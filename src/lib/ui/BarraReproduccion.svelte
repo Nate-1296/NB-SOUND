@@ -8,7 +8,13 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { abrirMinirreproductor, urlPortada } from '$core/ipc';
+  import {
+    abrirMinirreproductor,
+    alCambiarElKaraoke,
+    karaokeEstado,
+    karaokePreparar,
+    urlPortada
+  } from '$core/ipc';
   import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
 
@@ -45,6 +51,34 @@
     capaCola.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
     capaCola.style.bottom = `${window.innerHeight - r.top + 8}px`;
     capaCola.showPopover();
+  }
+
+  // El micrófono (F5.2.2): con instrumental alterna; sin él, lo prepara mientras
+  // suena el original; sin el agregado, lo ofrece ahí mismo (F5.1.4).
+  let preparando = $state<number | null>(null);
+  let ofertaKaraoke = $state(false);
+  $effect(() => {
+    void i.pistaId;
+    preparando = null;
+  });
+  $effect(() => {
+    const quitar = alCambiarElKaraoke(async () => {
+      const e = await karaokeEstado();
+      if (e.preparando && e.preparando.pista === i.pistaId) preparando = e.preparando.fraccion;
+      else if (preparando !== null && !e.pendientes) preparando = null;
+    });
+    return () => void quitar.then((f) => f());
+  });
+  async function microfono() {
+    if (i.karaokeDisponible) return reproductor.alternarKaraoke();
+    if (i.pistaId === null) return;
+    const e = await karaokeEstado();
+    if (!e.instalado) {
+      ofertaKaraoke = true;
+      return;
+    }
+    await karaokePreparar([i.pistaId]);
+    preparando ??= 0;
   }
 
   /** Letras y pantalla completa abren la vista de reproducción; otra vez, vuelven. */
@@ -194,14 +228,25 @@
       type="button"
       class="control conmutador"
       class:activo={i.karaokeActivo}
+      class:preparando={preparando !== null}
+      style:--progreso={`${Math.round((preparando ?? 0) * 100)}%`}
       aria-label={t.karaoke}
       aria-pressed={i.karaokeActivo}
-      title={i.karaokeDisponible ? t.karaoke : t.karaokeNoListo}
-      disabled={!i.karaokeDisponible}
-      onclick={reproductor.alternarKaraoke}
+      title={preparando !== null
+        ? t.karaokePreparando(Math.floor(preparando * 100))
+        : i.karaokeDisponible
+          ? t.karaoke
+          : t.karaokePreparar}
+      disabled={!hayPista}
+      onclick={microfono}
     >
       <Icon nombre="microfono" tamano={20} />
     </button>
+    {#if ofertaKaraoke}
+      {#await import('./agregados/OfertaAgregado.svelte') then m}
+        <m.default id="karaoke" oncerrar={() => (ofertaKaraoke = false)} />
+      {/await}
+    {/if}
     <SelectorDestino />
     <button
       type="button"
@@ -473,5 +518,13 @@
     .volumen .deslizador {
       display: none;
     }
+  }
+
+  /* Lo preparado del karaoke, como un anillo alrededor del micrófono. */
+  .control.preparando {
+    background: conic-gradient(
+      var(--m3c-primary) var(--progreso),
+      var(--m3c-surface-container-highest) 0
+    );
   }
 </style>

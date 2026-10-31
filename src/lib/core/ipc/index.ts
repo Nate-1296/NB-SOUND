@@ -26,6 +26,7 @@ import type {
   ConsultaPlaylists,
   DatosCompletados,
   Emparejar,
+  EstadoKaraoke,
   EstadoMovil,
   Gpu,
   InformeDeSalud,
@@ -67,6 +68,7 @@ export type {
   Emparejar,
   EstadoAgregado,
   EstadoCopia,
+  EstadoKaraoke,
   EstadoMovil,
   Gpu,
   IdAgregado,
@@ -339,6 +341,22 @@ export function inicio(): Promise<Inicio> {
 /** Lo que el historial dice del usuario (Tu música). */
 export function perfil(): Promise<Perfil> {
   return call<Perfil>('perfil');
+}
+
+// --- Karaoke ---------------------------------------------------------------------
+
+export function karaokeEstado(): Promise<EstadoKaraoke> {
+  return call<EstadoKaraoke>('karaoke_estado');
+}
+
+/** A la cola del karaoke: se preparan mientras suena el original. */
+export function karaokePreparar(pistas: number[]): Promise<void> {
+  return call<void>('karaoke_preparar', { pistas });
+}
+
+/** El avance de lo que se prepara, y cuándo termina una pista. */
+export function alCambiarElKaraoke(cada: () => void): Promise<UnlistenFn> {
+  return escuchar<null>('karaoke:cambio', () => cada());
 }
 
 // --- Dispositivos -------------------------------------------------------------

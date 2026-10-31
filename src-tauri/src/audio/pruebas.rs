@@ -326,6 +326,27 @@ fn el_karaoke_pasa_al_instrumental_sin_desfase() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
+/// F5.2.2: el instrumental que se prepara mientras suena el original se añade a
+/// la pista en curso y cae en su sitio, sin desfase y sin cortar.
+#[test]
+fn el_instrumental_preparado_a_mitad_de_pista_entra_sin_desfase() {
+    let dir = temporal("karaoke-en-caliente");
+    let _ = wav(&dir.join("o.wav"), 44_100, 44_100 * 6, ruido(15));
+    let inst = wav(&dir.join("i.wav"), 44_100, 44_100 * 6, ruido(16));
+    let mut m = motor(44_100);
+    m.reproducir(pista(1, &dir.join("o.wav")), 0.0);
+    let _ = renderizar(&mut m, 44_100);
+    m.instrumental_listo(1, dir.join("i.wav"));
+    m.karaoke(true);
+    // Lo decodificado por delante (hasta un segundo y medio) sigue sin
+    // instrumental; pasado eso, suena solo el instrumental, en su sitio.
+    let _ = renderizar(&mut m, 44_100 * 2);
+    let frame = m.compartido().frame.load(Ordering::Relaxed) as usize;
+    let salida = renderizar(&mut m, 4_096);
+    assert_eq!(&salida[..400], &inst[frame * 2..frame * 2 + 400]);
+    let _ = std::fs::remove_dir_all(dir);
+}
+
 #[test]
 fn una_pista_que_no_existe_se_salta_y_lo_dice() {
     let dir = temporal("ilegible");

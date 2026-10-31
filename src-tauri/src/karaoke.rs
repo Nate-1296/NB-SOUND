@@ -282,6 +282,7 @@ pub fn separar_archivo(
 #[ts(export, export_to = "../../src/lib/bindings/")]
 #[serde(rename_all = "camelCase")]
 pub struct Preparando {
+    #[ts(type = "number")]
     pub pista: i64,
     pub fraccion: f64,
 }
@@ -357,7 +358,7 @@ fn una(
     rutas: &Rutas,
     modelo: &Path,
     estado: &Mutex<Option<Preparando>>,
-    avisar: &dyn Fn(),
+    avisar: &dyn Fn(Option<i64>),
 ) -> NsResult<bool> {
     let Some((pista, audio, sha)) = siguiente(db)? else {
         return Ok(false);
@@ -375,11 +376,12 @@ fn una(
             ultimo = f;
             *estado.lock().unwrap_or_else(PoisonError::into_inner) =
                 Some(Preparando { pista, fraccion: f });
-            avisar();
+            avisar(None);
         }
         true
     });
     *estado.lock().unwrap_or_else(PoisonError::into_inner) = None;
+    let lista = resultado.is_ok();
     match resultado {
         Ok(bytes) => marcar(
             db,
@@ -401,7 +403,7 @@ fn una(
             )?;
         }
     }
-    avisar();
+    avisar(lista.then_some(pista));
     Ok(true)
 }
 
@@ -414,8 +416,13 @@ pub struct Karaoke {
 
 impl Karaoke {
     /// Arranca el hilo. Sin el agregado instalado espera: se le despierta al
-    /// pedir una pista o al instalarlo.
-    pub fn arrancar(db: BaseDeDatos, rutas: Rutas, avisar: impl Fn() + Send + 'static) -> Self {
+    /// pedir una pista o al instalarlo. `avisar` recibe cada cambio y, cuando una
+    /// pista queda lista, su id.
+    pub fn arrancar(
+        db: BaseDeDatos,
+        rutas: Rutas,
+        avisar: impl Fn(Option<i64>) + Send + 'static,
+    ) -> Self {
         let (tx, rx): (Sender<()>, Receiver<()>) = mpsc::channel();
         let estado = Arc::new(Mutex::new(None));
         let e = Arc::clone(&estado);

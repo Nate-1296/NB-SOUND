@@ -121,3 +121,6 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Separar con el modelo real (`NS_MODELO_KARAOKE`, `NS_AUDIO_KARAOKE` y `NS_ONNXRUNTIME` en
       `karaoke::tests::con_el_modelo_real_separa_una_pista`) y en la aplicación: con todos los núcleos ocupados, ningún
       vacío de buffer en la reproducción, y el pico de memoria del proceso por debajo de 3 GB (F5.2.1, P8).
+- [ ] Con el agregado de karaoke: pulsar el micrófono en una canción sin instrumental, ver el avance en el botón,
+      seguir escuchando el original y, al terminar, cantar sin que la canción se corte (F5.2.2); sin el agregado,
+      el micrófono lo ofrece con su tamaño (F5.1.4).

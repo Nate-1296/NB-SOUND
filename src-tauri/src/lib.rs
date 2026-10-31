@@ -206,10 +206,16 @@ pub fn run() {
         },
     );
     let aviso = Arc::clone(&ventana);
-    let servicio_karaoke = karaoke::Karaoke::arrancar(db.clone(), rutas.clone(), move || {
+    // El reproductor arranca con la ventana; hasta entonces no hay a quién avisar.
+    let buzon_karaoke: Arc<std::sync::OnceLock<reproductor::Buzon>> = Arc::default();
+    let al_reproductor = Arc::clone(&buzon_karaoke);
+    let servicio_karaoke = karaoke::Karaoke::arrancar(db.clone(), rutas.clone(), move |lista| {
         use tauri::Emitter;
         if let Some(app) = aviso.get() {
             let _ = app.emit("karaoke:cambio", ());
+        }
+        if let (Some(pista), Some(b)) = (lista, al_reproductor.get()) {
+            b.enviar(reproductor::Orden::InstrumentalListo(pista));
         }
     });
     let estado = Estado {
@@ -263,6 +269,7 @@ pub fn run() {
             ) {
                 Ok(r) => {
                     let b = r.buzon();
+                    let _ = buzon_karaoke.set(b.clone());
                     app.manage(r);
                     // Teclas multimedia y el reproductor del escritorio (F2.1.5).
                     if let Some(c) = controles_sistema::ControlesSistema::arrancar(
@@ -424,7 +431,9 @@ pub fn run() {
             comandos::agregados_estado,
             comandos::agregado_instalar,
             comandos::agregado_quitar,
-            comandos::gpu_detectada
+            comandos::gpu_detectada,
+            comandos::karaoke_estado,
+            comandos::karaoke_preparar
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");
