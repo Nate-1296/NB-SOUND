@@ -12,6 +12,7 @@ import type {
   DatosPista,
   EstadoAgregado,
   EstadoCopia,
+  Gpu,
   IdAgregado,
   PoliticaDeRed,
   ProveedorIa,
@@ -21,6 +22,11 @@ import type {
 import { call, escuchar } from './index';
 
 // --- Agregados -------------------------------------------------------------------
+
+/** La GPU que aprovecharía el agregado de aceleración, o `null`. */
+export function gpuDetectada(): Promise<Gpu | null> {
+  return call<Gpu | null>('gpu_detectada');
+}
 
 export function agregadosEstado(): Promise<EstadoAgregado[]> {
   return call<EstadoAgregado[]>('agregados_estado');

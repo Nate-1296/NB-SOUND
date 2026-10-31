@@ -5,12 +5,13 @@
   seguir usando la aplicación. Se carga aparte del arranque.
 -->
 <script lang="ts">
-  import { type EstadoAgregado, NsError } from '$core/ipc';
+  import { type EstadoAgregado, NsError, type Gpu } from '$core/ipc';
   import {
     agregadoInstalar,
     agregadoQuitar,
     agregadosEstado,
-    alCambiarLosAgregados
+    alCambiarLosAgregados,
+    gpuDetectada
   } from '$core/ipc/aparte';
   import { textos } from '$lib/i18n';
   import { textosAparte } from '$lib/i18n/aparte';
@@ -20,6 +21,7 @@
 
   let lista = $state<EstadoAgregado[]>([]);
   let fallo = $state<string | null>(null);
+  let gpu = $state<Gpu | null>(null);
 
   async function refrescar() {
     lista = await agregadosEstado();
@@ -27,6 +29,7 @@
 
   $effect(() => {
     void refrescar();
+    void gpuDetectada().then((g) => (gpu = g));
     const quitar = alCambiarLosAgregados(() => void refrescar());
     return () => void quitar.then((f) => f());
   });
@@ -57,6 +60,9 @@
         <div class="datos">
           <strong>{t.nombres[a.id]}</strong>
           <span>{t.descripciones[a.id]}</span>
+          {#if a.id === 'aceleracion' && gpu && !a.instalado}
+            <span class="recomendado">{t.recomendado(gpu.nombre ?? t.gpus[gpu.acelerador])}</span>
+          {/if}
           {#if a.error}
             <span class="error" role="alert">{t.errores[a.error] ?? t.error}</span>
           {/if}
@@ -111,6 +117,11 @@
 
   .error {
     color: var(--m3c-error);
+  }
+
+  .datos .recomendado {
+    color: var(--m3c-primary);
+    font-weight: 600;
   }
 
   .tarjetas {

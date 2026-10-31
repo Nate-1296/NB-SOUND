@@ -14,7 +14,7 @@
 | F5.1.2 Descarga reanudable, verificación e instalación atómica | Hecha: `Red::descargar` escribe a disco con `Range` y sin el tope global de 30 s; el ZIP parcial sobrevive a un cierre, se verifica el SHA-256 antes de abrirlo y se extrae a una carpeta temporal que se cambia de nombre al final. Probado con un servidor de mentira: corte y reanudación, servidor que ignora el `Range`, hash alterado y ruta trampa. La prueba contra la Release real va a las pruebas finales |
 | F5.1.3 Ajustes > Agregados: tarjetas con Instalar y Quitar | Hecha: una tarjeta por agregado con qué hace, cuánto ocupa y un botón; el progreso llega por `agregados:cambio` y se sigue usando la aplicación. Pulsar Instalar consiente el servicio de agregados; con la conexión general apagada no se descarga. Sin Release publicada (P13) se ven como "Todavía no disponible"; el clic hasta el micrófono funcionando va a las pruebas finales |
 | F5.1.4 Ofrecer el agregado donde hace falta | Pendiente |
-| F5.1.5 Detección de GPU y agregado de aceleración | Pendiente |
+| F5.1.5 Detección de GPU y agregado de aceleración | Parcial: `gpu.rs` detecta lo que aprovecharía ONNX Runtime (NVIDIA con su controlador en Linux, DirectML en Windows, CoreML en Apple Silicon) y Ajustes recomienda el agregado con su motivo, sin instalarlo. El agregado en sí espera a P13 y a medir su tamaño (P6) |
 | F5.2.1 Separación con `htdemucs` ONNX en segundo plano, con prioridad baja | Pendiente |
 | F5.2.2 Botón de micrófono: conmutar original/instrumental y preparar mientras suena | Pendiente |
 | F5.2.3 "Listas para cantar" y "Preparar mis favoritas" | Pendiente |

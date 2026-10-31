@@ -777,6 +777,15 @@ pub async fn agregado_instalar(app: AppHandle, id: crate::agregados::IdAgregado)
     })
 }
 
+/// La GPU que aprovecharía el agregado de aceleración, para recomendarlo con su
+/// motivo (F5.1.5). Leer `/proc` es rápido, pero no en el hilo de la ventana.
+#[tauri::command]
+pub async fn gpu_detectada() -> NsResult<Option<crate::gpu::Gpu>> {
+    tauri::async_runtime::spawn_blocking(crate::gpu::detectar)
+        .await
+        .map_err(|_| NsError::Internal)
+}
+
 /// Cota: los cuatro agregados del catálogo compilado (`agregados::CATALOGO`).
 #[tauri::command]
 pub async fn agregado_quitar(

@@ -16,6 +16,7 @@ pub mod controles_sistema;
 pub mod copia_seguridad;
 pub mod db;
 pub mod error;
+pub mod gpu;
 pub mod identidad_movil;
 pub mod importador_v1;
 pub mod inicio;
@@ -391,7 +392,8 @@ pub fn run() {
             comandos::reiniciar,
             comandos::agregados_estado,
             comandos::agregado_instalar,
-            comandos::agregado_quitar
+            comandos::agregado_quitar,
+            comandos::gpu_detectada
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

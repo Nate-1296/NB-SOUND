@@ -30,6 +30,12 @@ export const esAparte = {
     actualizar: 'Actualizar',
     quitar: 'Quitar',
     noDisponible: 'Todavía no disponible',
+    recomendado: (gpu: string) => `Recomendado: tu equipo tiene ${gpu}.`,
+    gpus: {
+      cuda: 'una tarjeta NVIDIA',
+      directMl: 'una tarjeta gráfica compatible con DirectML',
+      coreMl: 'un procesador Apple con Neural Engine'
+    },
     sinConexion: 'Activa los servicios en línea en Privacidad para descargarlo.',
     errores: {
       NETWORK_FAILURE: 'La descarga se cortó. Al volver a pulsar Instalar sigue donde se quedó.',

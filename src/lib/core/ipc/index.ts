@@ -27,6 +27,7 @@ import type {
   DatosCompletados,
   Emparejar,
   EstadoMovil,
+  Gpu,
   InformeDeSalud,
   Inicio,
   Instantanea,
@@ -45,6 +46,7 @@ import type {
 } from '$lib/bindings';
 
 export type {
+  Acelerador,
   AjustesEcualizador,
   AjustesIa,
   AlbumResumen,
@@ -66,6 +68,7 @@ export type {
   EstadoAgregado,
   EstadoCopia,
   EstadoMovil,
+  Gpu,
   IdAgregado,
   InformeDeSalud,
   Inicio,

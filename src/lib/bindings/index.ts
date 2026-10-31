@@ -8,6 +8,7 @@
  * Ver `docs/adr/decisions/ADR-001-pila-tecnologica.md`.
  */
 
+export type { Acelerador } from './Acelerador';
 export type { AjustesEcualizador } from './AjustesEcualizador';
 export type { AjustesIa } from './AjustesIa';
 export type { AlbumResumen } from './AlbumResumen';
@@ -30,6 +31,7 @@ export type { Emparejar } from './Emparejar';
 export type { EstadoAgregado } from './EstadoAgregado';
 export type { EstadoCopia } from './EstadoCopia';
 export type { EstadoMovil } from './EstadoMovil';
+export type { Gpu } from './Gpu';
 export type { IdAgregado } from './IdAgregado';
 export type { InformeDeSalud } from './InformeDeSalud';
 export type { Inicio } from './Inicio';

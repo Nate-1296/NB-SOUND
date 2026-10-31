@@ -61,4 +61,5 @@ rellenar URL, tamaño y SHA-256.
 |---|---|---|---|
 | `832a152` | — | Esta bitácora, con todo lo anterior | `check-docs` |
 | `2e037ea` | F5.1.1, F5.1.2 | `agregados.rs`: catálogo compilado sin publicar (P13) e instalación reanudable, verificada y atómica; `Red::descargar` a disco con `Range` | Corte y reanudación, `Range` ignorado, hash alterado, ruta trampa, quitar y reinstalar |
-| (siguiente) | F5.1.3 | Ajustes > Agregados con su gestor y progreso. Para dar margen al arranque (249,2 KB de 250), lo del puente que solo usan pantallas diferidas pasa a `$core/ipc/aparte.ts` y Dispositivos se carga aparte: 245,4 KB. Se devuelve a su función un comentario de documentación que una inserción anterior había separado | El gestor con el catálogo sin publicar |
+| `2ef9687` | F5.1.3 | Ajustes > Agregados con su gestor y progreso. Para dar margen al arranque (249,2 KB de 250), lo del puente que solo usan pantallas diferidas pasa a `$core/ipc/aparte.ts` y Dispositivos se carga aparte: 245,4 KB. Se devuelve a su función un comentario de documentación que una inserción anterior había separado | El gestor con el catálogo sin publicar |
+| (siguiente) | F5.1.5 | `gpu.rs`: la GPU que aprovecharía ONNX Runtime, sin procesos externos; Ajustes recomienda el agregado de aceleración con su motivo y nunca lo instala solo | El controlador de NVIDIA con y sin tarjeta |
