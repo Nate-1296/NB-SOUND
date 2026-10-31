@@ -93,3 +93,23 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Por revisar: cada motivo con su texto, elegir un candidato, importar tal como está, buscar de nuevo y descartar a
       la papelera del sistema (comprobar que el archivo está en la papelera).
 - [ ] Con la red desactivada en Ajustes, importar canciones con etiquetas: entran sin verificar.
+- [ ] Copiar un álbum en la carpeta de música con la aplicación abierta lo importa solo, cuando termina de copiarse
+      (F4.2.2); copiarlo con la aplicación cerrada lo importa al abrirla.
+- [ ] Ajustes > Privacidad: apagar un servicio corta su siguiente petición sin reiniciar; con la conexión general
+      apagada no sale nada (F4.2.7).
+- [ ] Ajustes > Inteligencia artificial con una clave real de Anthropic: se guarda en el llavero del sistema (visible
+      en su gestor de contraseñas como "NB Sound") y un empate entre candidatos se resuelve; con OpenAI, igual
+      (F4.1.7).
+- [ ] "Completar datos" sobre una pista sin verificar le pone portada y letra y, si la identifica, la verifica; el
+      teléfono la sigue reconociendo y la vuelve a descargar con los datos nuevos (F4.2.8, arnés de respuestas
+      doradas en verde).
+- [ ] Editar los datos de una canción y de un álbum: el teléfono recibe el cambio y el archivo lleva las etiquetas
+      nuevas; renombrar un álbum conserva su portada; borrar la pista e importar el mismo archivo otra vez respeta
+      lo editado (F4.2.5).
+- [ ] Crear una copia de seguridad, cambiar la biblioteca, restaurarla y reiniciar: vuelve a estar como en la copia;
+      la copia automática semanal aparece en su carpeta (F4.2.6).
+- [ ] Rasgos: comparar con la V1 los rasgos de F4.1.12 que el prototipo no midió (ancho de banda, caída espectral,
+      ataques, pulsos y aproximaciones) sobre el corpus, con correlación ≥ 0,95, y escuchar la tonalidad de 30
+      pistas.
+- [ ] Paridad global de la Fase 4: 300 archivos sin etiquetar (copias del corpus fuera de la carpeta real) importados
+      con la V1 y con la V2, con las decisiones coincidiendo en ≥ 98 % y cada diferencia explicada en el informe.
