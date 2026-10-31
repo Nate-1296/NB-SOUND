@@ -17,7 +17,7 @@
 //! pista y, si se le dice cuál es la siguiente, la encadena sin hueco.
 
 mod alimentador;
-mod decodificador;
+pub(crate) mod decodificador;
 pub mod ecualizador;
 mod fuente;
 mod limitador;

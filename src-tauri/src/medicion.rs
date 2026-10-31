@@ -1,4 +1,5 @@
-//! La sonoridad de la biblioteca, medida en segundo plano (F2.1.4).
+//! La sonoridad de la biblioteca, medida en segundo plano (F2.1.4), y en el mismo
+//! hilo los rasgos básicos de lo importado (F4.1.12).
 //!
 //! La V1 nunca midió la sonoridad, así que al llegar de ella ninguna pista la
 //! tiene, y la normalización no haría nada. Medirla entera en la importación
@@ -139,6 +140,15 @@ pub fn arrancar(db: BaseDeDatos) {
                 Ok(_) => {}
                 Err(error) => {
                     tracing::error!(codigo = error.code(), "no se pudo medir la sonoridad")
+                }
+            }
+            // Los rasgos básicos de lo importado (F4.1.12), en el mismo hilo: dos
+            // análisis a la vez se notarían en el equipo.
+            match crate::rasgos::analizar_pendientes(&db, PAUSA_ENTRE_PISTAS) {
+                Ok(n) if n > 0 => tracing::info!(pistas = n, "rasgos analizados"),
+                Ok(_) => {}
+                Err(error) => {
+                    tracing::error!(codigo = error.code(), "no se pudieron analizar los rasgos")
                 }
             }
             std::thread::sleep(PAUSA_SIN_TRABAJO);

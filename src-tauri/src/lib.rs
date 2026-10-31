@@ -28,6 +28,7 @@ pub mod playlists;
 pub mod portadas;
 pub mod preferencias;
 pub mod privacidad;
+pub mod rasgos;
 pub mod reproductor;
 pub mod secrets;
 pub mod security;
