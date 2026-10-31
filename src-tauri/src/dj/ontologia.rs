@@ -9,8 +9,6 @@
 //! la búsqueda y la agregación, que deben dar lo mismo que la V1 (lo comprueban las
 //! respuestas doradas de `intencion.rs`).
 
-use std::collections::BTreeMap;
-
 pub use super::ontologia_datos::{CONCEPTOS, EJES};
 use crate::catalogo::texto::eliminar_acentos;
 
@@ -53,10 +51,50 @@ pub fn sumar(m: &mut Mapa, clave: &str, valor: f64) {
     }
 }
 
-/// Un mapa ordenado por clave, para guardar y comparar.
 #[must_use]
-pub fn ordenado(m: &Mapa) -> BTreeMap<String, f64> {
-    m.iter().cloned().collect()
+pub fn valor(m: &Mapa, clave: &str) -> Option<f64> {
+    m.iter().find(|(k, _)| k == clave).map(|(_, v)| *v)
+}
+
+/// Un [`Mapa`] como objeto JSON, leído en el orden del documento: así una intención
+/// guardada por la V1 vuelve con el orden de su `dict`, y con él, las mismas sumas
+/// y los mismos desempates.
+pub mod objeto {
+    use serde::de::{MapAccess, Visitor};
+    use serde::ser::SerializeMap;
+    use serde::{Deserializer, Serializer};
+
+    use super::Mapa;
+
+    pub fn serialize<S: Serializer>(m: &Mapa, s: S) -> Result<S::Ok, S::Error> {
+        let mut o = s.serialize_map(Some(m.len()))?;
+        for (k, v) in m {
+            o.serialize_entry(k, v)?;
+        }
+        o.end()
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Mapa, D::Error> {
+        struct Visitante;
+        impl<'de> Visitor<'de> for Visitante {
+            type Value = Mapa;
+            fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str("un objeto de números")
+            }
+            fn visit_map<A: MapAccess<'de>>(self, mut a: A) -> Result<Mapa, A::Error> {
+                let mut m = Mapa::new();
+                while let Some((k, v)) = a.next_entry::<String, f64>()? {
+                    // Una clave repetida se queda con el último valor, como `json.loads`.
+                    match m.iter_mut().find(|(c, _)| *c == k) {
+                        Some(e) => e.1 = v,
+                        None => m.push((k, v)),
+                    }
+                }
+                Ok(m)
+            }
+        }
+        d.deserialize_map(Visitante)
+    }
 }
 
 /// `\w` de Python: letras, dígitos y el guion bajo.

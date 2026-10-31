@@ -11,8 +11,6 @@
 //! leyendo y las nuevas se guarden igual. Las notas y el resumen son las frases de
 //! la V1, tal cual, porque forman parte de ese registro.
 
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
 
 use super::ontologia::{self, Coincidencia, Mapa, Rol};
@@ -41,13 +39,16 @@ const FACTOR_DEBIL: f64 = 0.55;
 #[serde(default)]
 pub struct Intencion {
     pub prompt: String,
-    pub axes: BTreeMap<String, f64>,
+    #[serde(with = "ontologia::objeto")]
+    pub axes: Mapa,
     pub focos: Vec<String>,
     pub exclusiones: Vec<String>,
-    pub generos: BTreeMap<String, f64>,
+    #[serde(with = "ontologia::objeto")]
+    pub generos: Mapa,
     pub generos_excluidos: Vec<String>,
     pub curva_energia: String,
-    pub estilo_transicion: BTreeMap<String, f64>,
+    #[serde(with = "ontologia::objeto")]
+    pub estilo_transicion: Mapa,
     pub contradicciones: Vec<(String, String)>,
     pub vacio: bool,
     pub notas: Vec<String>,
@@ -60,13 +61,13 @@ impl Default for Intencion {
     fn default() -> Self {
         Self {
             prompt: String::new(),
-            axes: BTreeMap::new(),
+            axes: Mapa::new(),
             focos: Vec::new(),
             exclusiones: Vec::new(),
-            generos: BTreeMap::new(),
+            generos: Mapa::new(),
             generos_excluidos: Vec::new(),
             curva_energia: "stable".to_owned(),
-            estilo_transicion: BTreeMap::new(),
+            estilo_transicion: Mapa::new(),
             contradicciones: Vec::new(),
             vacio: false,
             notas: Vec::new(),
@@ -301,13 +302,13 @@ pub fn interpretar(prompt: &str, duracion_minutos: u32) -> Intencion {
     }
     Intencion {
         prompt: limpio.to_owned(),
-        axes: ontologia::ordenado(&ejes),
+        axes: ejes,
         focos,
         exclusiones,
-        generos: ontologia::ordenado(&ontologia::generos(&positivos)),
+        generos: ontologia::generos(&positivos),
         generos_excluidos: excluidos,
         curva_energia: curva.to_owned(),
-        estilo_transicion: ontologia::ordenado(&ontologia::estilo_transicion(&positivos)),
+        estilo_transicion: ontologia::estilo_transicion(&positivos),
         contradicciones: pares,
         vacio: false,
         notas,
@@ -335,7 +336,7 @@ mod tests {
             let propia = interpretar(frase, 60);
             assert_eq!(propia.axes.len(), esperada.axes.len(), "{frase}: ejes");
             for (eje, v) in &esperada.axes {
-                let p = propia.axes.get(eje).copied().unwrap_or(f64::NAN);
+                let p = ontologia::valor(&propia.axes, eje).unwrap_or(f64::NAN);
                 assert!((p - v).abs() < 1e-9, "{frase}: {eje} {p} frente a {v}");
             }
             for (m, (k, v)) in [
@@ -346,7 +347,7 @@ mod tests {
             .flat_map(|(p, e)| e.iter().map(move |kv| (*p, kv)))
             {
                 assert!(
-                    (m.get(k).copied().unwrap_or(f64::NAN) - v).abs() < 1e-9,
+                    (ontologia::valor(m, k).unwrap_or(f64::NAN) - v).abs() < 1e-9,
                     "{frase}: {k}"
                 );
             }
@@ -398,7 +399,8 @@ mod tests {
         ] {
             assert!(json.get(clave).is_some(), "{clave}");
         }
-        let vuelta: Intencion = serde_json::from_value(json).unwrap();
+        // Desde el texto, que conserva el orden de los mapas; `Value` los ordena.
+        let vuelta: Intencion = serde_json::from_str(&serde_json::to_string(&i).unwrap()).unwrap();
         assert_eq!(vuelta, i);
         // Una de la V1 con claves que falten se lee con sus valores de fábrica.
         let vieja: Intencion = serde_json::from_str(r#"{"prompt": "x", "vacio": true}"#).unwrap();

@@ -134,3 +134,6 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 
 - [ ] Con el agregado de texto instalado, el tokenizador propio da los mismos ids que el `tokenizer.json` de MiniLM con
       `tokenizers` de HuggingFace en 50 frases del DJ, y los embeddings coinciden con los de la V1 (F6.1.1).
+- [ ] Sobre la base migrada de la instalación real, diez pedidos con semilla construyen en la V2 la misma sesión que la
+      V1 (mismas pistas en el mismo orden). Las pistas con etiquetas `genre_discogs400` en la V1 pueden diferir: la
+      importación conserva solo las de MusiCNN (F6.1.2).

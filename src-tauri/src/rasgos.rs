@@ -768,7 +768,65 @@ fn guardar(db: &BaseDeDatos, p: &Pendiente, r: Option<&Rasgos>) -> NsResult<()> 
         tracing::error!(error = %error, "no se pudieron guardar los rasgos");
         NsError::StorageFailure
     })?;
+    if let Some(r) = r {
+        guardar_ambiente(
+            &tx,
+            p.id,
+            "basic_rules",
+            VERSION,
+            &[
+                ("energetica", r.energia),
+                ("tranquila", r.calma),
+                ("bailable", r.bailabilidad),
+                ("triste", r.melancolia),
+                ("nocturna", r.para_la_noche),
+                ("entrenamiento", r.para_entrenar),
+                ("concentracion", r.para_concentrarse),
+                ("fiesta", r.para_fiesta),
+            ],
+        )?;
+    }
     tx.commit().map_err(|_| NsError::StorageFailure)
+}
+
+/// `derive_vibe_tags` y `derive_deep_vibe_tags` de la V1: cada aproximación que
+/// llega a 0,35 da su etiqueta de ambiente, con la puntuación como confianza.
+/// Sustituye las de esa fuente: un nuevo análisis no deja etiquetas viejas. Las
+/// usan las listas por ánimo y el DJ, que penaliza la pista cuyo ambiente nombra
+/// algo que el pedido niega.
+///
+/// # Errors
+///
+/// [`NsError::StorageFailure`] si la base falla.
+pub(crate) fn guardar_ambiente(
+    tx: &rusqlite::Transaction<'_>,
+    pista: i64,
+    fuente: &str,
+    version: &str,
+    valores: &[(&str, f64)],
+) -> NsResult<()> {
+    let fallo = |error: rusqlite::Error| {
+        tracing::error!(error = %error, "no se pudieron guardar las etiquetas de ambiente");
+        NsError::StorageFailure
+    };
+    tx.execute(
+        "DELETE FROM etiquetas_ambiente WHERE pista_id = ?1 AND fuente = ?2",
+        params![pista, fuente],
+    )
+    .map_err(fallo)?;
+    for (etiqueta, valor) in valores {
+        if !valor.is_finite() || *valor < 0.35 {
+            continue;
+        }
+        let v = crate::catalogo::texto::redondear(valor.min(1.0), 4);
+        tx.execute(
+            "INSERT INTO etiquetas_ambiente (pista_id, etiqueta, fuente, puntuacion, confianza, version)
+             VALUES (?1, ?2, ?3, ?4, ?4, ?5)",
+            params![pista, etiqueta, fuente, v, version],
+        )
+        .map_err(fallo)?;
+    }
+    Ok(())
 }
 
 /// Analiza lo pendiente, lo más reciente primero, con una pausa entre pistas.
@@ -978,6 +1036,54 @@ mod tests {
             .unwrap();
         assert_eq!(v1, 99.0);
         let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn el_ambiente_lleva_lo_que_llega_a_035_y_sustituye_lo_anterior() {
+        let db = BaseDeDatos::en_memoria().unwrap();
+        let mut conn = db.conexion().unwrap();
+        conn.execute(
+            "INSERT INTO pistas (id, titulo, ruta) VALUES (1, 'a', 'a.mp3')",
+            [],
+        )
+        .unwrap();
+        let tx = db::transaccion_de_escritura(&mut conn).unwrap();
+        guardar_ambiente(
+            &tx,
+            1,
+            "basic_rules",
+            VERSION,
+            &[("fiesta", 0.9), ("triste", 0.2)],
+        )
+        .unwrap();
+        guardar_ambiente(
+            &tx,
+            1,
+            "basic_rules",
+            VERSION,
+            &[
+                ("bailable", 0.123_456_789 + 0.3),
+                ("tranquila", 0.349_999),
+                ("x", f64::NAN),
+            ],
+        )
+        .unwrap();
+        guardar_ambiente(&tx, 1, "deep_model", VERSION, &[("fiesta", 0.5)]).unwrap();
+        tx.commit().unwrap();
+        let filas: Vec<(String, String, f64)> = conn
+            .prepare("SELECT etiqueta, fuente, puntuacion FROM etiquetas_ambiente ORDER BY fuente")
+            .unwrap()
+            .query_map([], |f| Ok((f.get(0)?, f.get(1)?, f.get(2)?)))
+            .unwrap()
+            .collect::<rusqlite::Result<_>>()
+            .unwrap();
+        assert_eq!(
+            filas,
+            vec![
+                ("bailable".to_owned(), "basic_rules".to_owned(), 0.4235),
+                ("fiesta".to_owned(), "deep_model".to_owned(), 0.5),
+            ]
+        );
     }
 
     #[test]

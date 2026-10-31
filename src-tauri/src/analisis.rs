@@ -577,6 +577,17 @@ fn guardar(db: &BaseDeDatos, pista: i64, sha: Option<&str>, p: Option<&Profundo>
         tracing::error!(error = %error, "no se pudo guardar el análisis");
         NsError::StorageFailure
     })?;
+    let ambiente = p.map_or_else(Vec::new, |p| {
+        vec![
+            ("feliz", p.feliz),
+            ("triste", p.triste),
+            ("relajada", p.relajada),
+            ("intensa", p.agresiva),
+            ("fiesta", p.fiesta),
+            ("bailable", p.bailable),
+        ]
+    });
+    crate::rasgos::guardar_ambiente(&tx, pista, "deep_model", VERSION, &ambiente)?;
     tx.commit().map_err(|_| NsError::StorageFailure)
 }
 

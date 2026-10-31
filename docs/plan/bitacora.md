@@ -91,4 +91,16 @@ Ajustes); quedó en 244,3 KB.
 
 | Commit | Iteración | Qué se hizo | Pruebas nuevas |
 |---|---|---|---|
-| (siguiente) | F6.1.1 | Ontología, intención y embeddings del DJ. La tabla de conceptos se generó desde el módulo de la V1 con un script de un solo uso fuera del repositorio, para no transcribir a mano 800 líneas de datos; las respuestas doradas (`dj/doradas_intencion.json`) salen del mismo módulo. El tokenizador de MiniLM se escribe a mano: `tokenizers` no está en ningún ADR | 14 intenciones y dos embeddings iguales a la V1; la tabla y sus cinco referencias muertas; el WordPiece |
+| `aa43803` | F6.1.1 | Ontología, intención y embeddings del DJ. La tabla de conceptos se generó desde el módulo de la V1 con un script de un solo uso fuera del repositorio, para no transcribir a mano 800 líneas de datos; las respuestas doradas (`dj/doradas_intencion.json`) salen del mismo módulo. El tokenizador de MiniLM se escribe a mano: `tokenizers` no está en ningún ADR | 14 intenciones y dos embeddings iguales a la V1; la tabla y sus cinco referencias muertas; el WordPiece |
+| (siguiente) | F6.1.2 | Narrativa, planificador y constructor por bloques, con la puntuación de transiciones y el refinado del orden que el constructor de la V1 usa en cada bloque (la mezcla audible queda en F6.1.3). Para que la misma semilla dé la misma sesión se escribe el Mersenne Twister de Python (`dj/azar.rs`) y la suma compensada de `sum()` de Python 3.12+. Se cierra un hueco de F4.1.12 y F5.3.1: las etiquetas de ambiente (`derive_vibe_tags` y su versión del modelo) no se guardaban, y el DJ las usa para penalizar lo negado | Siete sesiones con semilla iguales bit a bit a la V1 (pistas, orden, puntuaciones, razones, transiciones, resumen); la secuencia del azar; las propiedades de `test_dj_privado_scheduler.py`; la carga de candidatas; el ambiente |
+
+**Decisiones de F6.1.2.**
+
+* La intención guarda sus mapas en el orden de inserción, como el `dict` de la V1 (`ontologia::objeto`): el orden
+  decide sumas y el desempate del estilo de transición.
+* La similitud del embedding con cada pista se calcula una vez por sesión y no una vez por bloque como en la V1: el
+  resultado es el mismo y con MiniLM ahorra una inferencia por pista y bloque.
+* `serde_json` lee los flotantes con `float_roundtrip` solo en las pruebas, para comparar las doradas bit a bit; el
+  binario no cambia.
+* Las pistas analizadas por la V2 antes de este commit no tienen etiquetas de ambiente básicas; las de la V1 llegaron
+  con la importación. Nadie usa aún la V2 con datos propios, así que no se añade una migración de relleno.

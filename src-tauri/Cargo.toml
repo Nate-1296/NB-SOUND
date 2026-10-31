@@ -102,6 +102,9 @@ mpris-server = "0.11.0"
 souvlaki = "0.9.3"
 
 [dev-dependencies]
+# Solo en las pruebas: las doradas de la V1 se comparan bit a bit, y el lector por
+# defecto puede errar en la última cifra de un `f64`.
+serde_json = { version = "1", features = ["float_roundtrip"] }
 tauri = { version = "2", features = ["test"] }
 # El cliente del arnés de respuestas doradas (tests/contrato_movil.rs): habla
 # WebSocket sobre TLS con el servidor como lo haría el teléfono.
