@@ -142,7 +142,9 @@
   // --- Álbumes y artistas: por páginas que se añaden al llegar al final ---
   let albumes = $state<AlbumResumen[]>([]);
   let artistas = $state<ArtistaResumen[]>([]);
-  let totalGrid = $state(0);
+  let totalAlbumes = $state(0);
+  let totalArtistas = $state(0);
+  let pedidoGrid = 0;
   let cargandoGrid = false;
   const PAGINA = 120;
 
@@ -150,15 +152,23 @@
     const busqueda = textoAplicado || null;
     if (vista === 'albumes') {
       const orden = ordenAlbumes;
+      const g = ++pedidoGrid;
+      cargandoGrid = true;
       void bibliotecaAlbumes({ texto: busqueda, artistaId: null, orden }, 0, PAGINA).then((p) => {
+        if (g !== pedidoGrid) return;
         albumes = p.albumes;
-        totalGrid = p.total;
+        totalAlbumes = p.total;
+        cargandoGrid = false;
       });
     } else if (vista === 'artistas') {
       const orden = ordenArtistas;
+      const g = ++pedidoGrid;
+      cargandoGrid = true;
       void bibliotecaArtistas({ texto: busqueda, orden }, 0, PAGINA).then((p) => {
+        if (g !== pedidoGrid) return;
         artistas = p.artistas;
-        totalGrid = p.total;
+        totalArtistas = p.total;
+        cargandoGrid = false;
       });
     }
   });
@@ -166,25 +176,30 @@
   async function masGrid() {
     if (cargandoGrid) return;
     const busqueda = textoAplicado || null;
+    const g = pedidoGrid;
     cargandoGrid = true;
     try {
-      if (vista === 'albumes' && albumes.length < totalGrid) {
+      if (vista === 'albumes' && albumes.length > 0 && albumes.length < totalAlbumes) {
         const p = await bibliotecaAlbumes(
           { texto: busqueda, artistaId: null, orden: ordenAlbumes },
           albumes.length,
           PAGINA
         );
-        albumes = [...albumes, ...p.albumes];
-      } else if (vista === 'artistas' && artistas.length < totalGrid) {
+        if (g !== pedidoGrid) return;
+        const vistos = new Set(albumes.map((x) => x.id));
+        albumes = [...albumes, ...p.albumes.filter((x) => !vistos.has(x.id))];
+      } else if (vista === 'artistas' && artistas.length > 0 && artistas.length < totalArtistas) {
         const p = await bibliotecaArtistas(
           { texto: busqueda, orden: ordenArtistas },
           artistas.length,
           PAGINA
         );
-        artistas = [...artistas, ...p.artistas];
+        if (g !== pedidoGrid) return;
+        const vistos = new Set(artistas.map((x) => x.id));
+        artistas = [...artistas, ...p.artistas.filter((x) => !vistos.has(x.id))];
       }
     } finally {
-      cargandoGrid = false;
+      if (g === pedidoGrid) cargandoGrid = false;
     }
   }
 
@@ -200,8 +215,8 @@
     vista === 'pistas'
       ? t.cuentaPistas(total ?? 0)
       : vista === 'albumes'
-        ? t.cuentaAlbumes(totalGrid)
-        : t.cuentaArtistas(totalGrid)
+        ? t.cuentaAlbumes(totalAlbumes)
+        : t.cuentaArtistas(totalArtistas)
   );
 </script>
 
@@ -370,7 +385,9 @@
         </li>
       {/each}
     </ul>
-    <div use:alFinal class="centinela"></div>
+    {#if albumes.length > 0 && albumes.length < totalAlbumes}
+      <div use:alFinal class="centinela"></div>
+    {/if}
   {:else}
     <ul class="rejilla">
       {#each artistas as a (a.id)}
@@ -389,7 +406,9 @@
         </li>
       {/each}
     </ul>
-    <div use:alFinal class="centinela"></div>
+    {#if artistas.length > 0 && artistas.length < totalArtistas}
+      <div use:alFinal class="centinela"></div>
+    {/if}
   {/if}
 </section>
 
