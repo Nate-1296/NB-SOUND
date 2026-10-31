@@ -34,7 +34,7 @@ jobs:
         include:
           # La 22.04, y no la última: el AppImage hereda la glibc del sistema que lo
           # compila, y con la más vieja arranca en más distribuciones.
-          - plataforma: Linux (AppImage, deb, rpm)
+          - plataforma: Linux (AppImage, deb, rpm, tar.gz)
             os: ubuntu-22.04
           - plataforma: Windows (MSI, NSIS)
             os: windows-latest
@@ -48,7 +48,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libasound2-dev rpm
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libasound2-dev rpm file libfuse2 xdg-utils
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -63,6 +63,7 @@ jobs:
         run: pnpm binarios
       - uses: tauri-apps/tauri-action@v0
         env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -74,3 +75,19 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           includeUpdaterJson: true
           args: --config {"bundle":{"createUpdaterArtifacts":true}}
+      - name: Paquete de sistema .tar.gz (Linux)
+        if: runner.os == 'Linux'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          etiqueta="${{ github.ref_type == 'tag' && github.ref_name || '' }}"
+          [ -z "$etiqueta" ] && etiqueta="v$version"
+          archivo="NB.Sound_${version}_amd64.tar.gz"
+          datos=$(echo src-tauri/target/release/bundle/deb/*/data)
+          tar -czf "$archivo" --owner=0 --group=0 -C "$datos" usr
+          tar -ztvf "$archivo" | grep -q "usr/bin/nb-sound"
+          tar -ztvf "$archivo" | grep -q "usr/bin/fpcalc"
+          tar -ztvf "$archivo" | grep -q "usr/lib/NB Sound/libonnxruntime.so"
+          tar -ztvf "$archivo" | grep -q "usr/share/applications/NB Sound.desktop"
+          gh release upload "$etiqueta" "$archivo" --clobber

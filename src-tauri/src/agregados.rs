@@ -257,7 +257,8 @@ pub fn instalar(
     if tiene < e.bytes {
         let archivo = std::fs::OpenOptions::new()
             .create(true)
-            .append(true)
+            .write(true)
+            .truncate(false)
             .open(&zip)
             .map_err(|_| NsError::StorageFailure)?;
         let mut destino = AlArchivo(archivo);

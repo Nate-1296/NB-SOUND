@@ -125,22 +125,13 @@ fn bucle(
     if !musica.is_dir() {
         return;
     }
-    // Lo que llegó con la aplicación cerrada.
-    if let Ok(n) = nuevos(db, musica) {
-        if !n.is_empty() {
-            tracing::info!(
-                archivos = n.len(),
-                "archivos nuevos en la carpeta de música"
-            );
-            if !mandar(n) {
-                return;
-            }
-        }
-    }
+    let inicial = nuevos(db, musica).unwrap_or_default();
     let (tx, rx) = mpsc::channel();
     let Ok(mut w) = notify::recommended_watcher(move |e: notify::Result<notify::Event>| {
         if let Ok(e) = e {
-            let _ = tx.send(e.paths);
+            if !matches!(e.kind, notify::EventKind::Access(_)) {
+                let _ = tx.send(e.paths);
+            }
         }
     }) else {
         tracing::error!("no se pudo vigilar la carpeta de música");
@@ -149,6 +140,17 @@ fn bucle(
     if w.watch(musica, RecursiveMode::Recursive).is_err() {
         tracing::error!("no se pudo vigilar la carpeta de música");
         return;
+    }
+    // Se avisa después de activar el vigilante: así nada de lo que entre justo a
+    // continuación se pierde.
+    if !inicial.is_empty() {
+        tracing::info!(
+            archivos = inicial.len(),
+            "archivos nuevos en la carpeta de música"
+        );
+        if !mandar(inicial) {
+            return;
+        }
     }
     // Ruta, tamaño visto y desde cuándo no cambia.
     let mut esperando: HashMap<PathBuf, (u64, Instant)> = HashMap::new();
@@ -238,11 +240,11 @@ mod tests {
         .unwrap();
         conn.execute(
             "INSERT INTO pendientes_importacion (ruta, importacion_id, orden) VALUES (?1, 1, 1)",
-            [d.join("a/b/03_z.mp3").to_string_lossy()],
+            [d.join("a").join("b").join("03_z.mp3").to_string_lossy()],
         )
         .unwrap();
         let n = nuevos(&db, &d).unwrap();
-        assert_eq!(n, [d.join("a/b/02_y.mp3")]);
+        assert_eq!(n, [d.join("a").join("b").join("02_y.mp3")]);
         let _ = std::fs::remove_dir_all(&d);
     }
 
@@ -251,6 +253,7 @@ mod tests {
         let d = std::env::temp_dir().join(format!("ns-vigilancia-album-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
+        let d = d.canonicalize().unwrap_or(d);
         std::fs::write(d.join("de_antes.mp3"), b"x").unwrap();
         let db = BaseDeDatos::en_memoria().unwrap();
         let (tx, rx) = mpsc::channel();

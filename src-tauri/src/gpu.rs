@@ -84,10 +84,10 @@ mod tests {
         let d = std::env::temp_dir().join(format!("ns-gpu-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         assert_eq!(nvidia_en(&d), None);
-        std::fs::create_dir_all(d.join("gpus/0000:01:00.0")).unwrap();
+        std::fs::create_dir_all(d.join("gpus/0000_01_00.0")).unwrap();
         std::fs::write(d.join("version"), "NVRM version: 550.120\n").unwrap();
         std::fs::write(
-            d.join("gpus/0000:01:00.0/information"),
+            d.join("gpus/0000_01_00.0/information"),
             "Model: \t\t NVIDIA GeForce RTX 3060\nIRQ:   142\n",
         )
         .unwrap();

@@ -29,12 +29,12 @@ hablando con NB Sound Mobile con el mismo contrato.
 
 ### Plataformas
 
-Linux (AppImage, deb y rpm), Windows (MSI y NSIS) y macOS en Apple Silicon (dmg). macOS con Intel deja de estar
-soportado: ONNX Runtime 1.31 ya no publica binario para esa arquitectura.
+Linux (AppImage, deb, rpm y tar.gz de sistema), Windows (MSI y NSIS) y macOS en Apple Silicon (dmg). macOS con Intel
+deja de estar soportado: ONNX Runtime 1.31 ya no publica binario para esa arquitectura.
 
 ### Pendiente antes de publicar
 
 Las comprobaciones con la instalación real y con máquinas limpias de
-[docs/plan/pruebas-finales.md](docs/plan/pruebas-finales.md), y la publicación de los agregados (P13).
+[docs/plan/pruebas-finales.md](docs/plan/pruebas-finales.md).
 
 [2.0.0]: https://github.com/Nate-1296/NB-SOUND/releases/tag/v2.0.0
