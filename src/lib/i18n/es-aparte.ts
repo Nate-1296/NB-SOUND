@@ -358,6 +358,30 @@ export const esAparte = {
     resumen: (copiadas: number, omitidas: number, mb: string, m3u: string | null) =>
       `${copiadas.toLocaleString('es')} ${copiadas === 1 ? 'pista copiada' : 'pistas copiadas'}${omitidas > 0 ? `, ${omitidas.toLocaleString('es')} ya existentes` : ''} (${mb} MB)${m3u ? ` · ${m3u}` : ''}.`,
     error: 'No se pudo completar la copia al dispositivo.'
+  },
+
+  modoFiesta: {
+    titulo: 'Modo fiesta (QR en red local)',
+    ayuda:
+      'Abre una página temporal en tu red Wi-Fi para que los invitados busquen canciones y las sugieran desde el navegador sin instalar nada.',
+    interruptor: 'Activar Modo fiesta',
+    interruptorAyuda:
+      'Solo funciona mientras está encendido. Al apagarlo se cierra el puerto y se borran las sesiones.',
+    qrEtiqueta: 'Código QR para unirse al Modo fiesta',
+    urlEtiqueta: 'Enlace para invitados en la misma red:',
+    regenerarQr: 'Rotar QR',
+    automatico: 'Encolar sugerencias automáticamente',
+    automaticoAyuda:
+      'Si está apagado, tú apruebas o descartas cada sugerencia antes de que pase a la cola.',
+    sugerenciasTitulo: 'Sugerencias de los invitados',
+    sinSugerencias: 'Todavía no han enviado sugerencias.',
+    porInvitado: (alias: string) => `Sugerida por ${alias}`,
+    enCola: 'En la cola',
+    aceptar: 'Aceptar',
+    descartar: 'Descartar',
+    bloquear: 'Bloquear invitado',
+    bloqueados: (n: number) =>
+      `${n} ${n === 1 ? 'invitado bloqueado' : 'invitados bloqueados'} en esta sesión`
   }
 };
 

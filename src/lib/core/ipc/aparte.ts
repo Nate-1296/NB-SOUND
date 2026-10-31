@@ -14,6 +14,7 @@ import type {
   Descubrimiento,
   EstadoAgregado,
   EstadoCopia,
+  EstadoFiesta,
   EstructuraCarpetas,
   Gpu,
   IdAgregado,
@@ -26,12 +27,14 @@ import type {
   ReglaInteligente,
   ResumenCopia,
   ResumenCopiaDispositivo,
-  ResumenEscucha
+  ResumenEscucha,
+  SugerenciaFiesta
 } from '$lib/bindings';
 
 import { call, escuchar } from './index';
 
 export type {
+  EstadoFiesta,
   EstructuraCarpetas,
   OpcionesCopiaDispositivo,
   OrdenInteligente,
@@ -39,8 +42,39 @@ export type {
   RadarAnimos,
   ReglaInteligente,
   ResumenCopiaDispositivo,
-  ResumenEscucha
+  ResumenEscucha,
+  SugerenciaFiesta
 };
+
+// --- Modo fiesta (F8.5) ----------------------------------------------------------
+
+export function fiestaEstado(): Promise<EstadoFiesta> {
+  return call<EstadoFiesta>('fiesta_estado');
+}
+
+export function fiestaEncender(activo: boolean): Promise<EstadoFiesta> {
+  return call<EstadoFiesta>('fiesta_encender', { activo });
+}
+
+export function fiestaRegenerarQr(): Promise<EstadoFiesta> {
+  return call<EstadoFiesta>('fiesta_regenerar_qr');
+}
+
+export function fiestaModoAutomatico(activo: boolean): Promise<EstadoFiesta> {
+  return call<EstadoFiesta>('fiesta_modo_automatico', { activo });
+}
+
+export function fiestaResolverSugerencia(
+  id: number,
+  aceptar: boolean,
+  bloquear: boolean
+): Promise<EstadoFiesta> {
+  return call<EstadoFiesta>('fiesta_resolver_sugerencia', { id, aceptar, bloquear });
+}
+
+export function alCambiarFiesta(cada: () => void): Promise<UnlistenFn> {
+  return escuchar<null>('fiesta:cambio', () => cada());
+}
 
 // --- Copia a dispositivos externos (F8.4) ----------------------------------------
 

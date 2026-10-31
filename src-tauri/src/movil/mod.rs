@@ -29,7 +29,7 @@ use serde::Serialize;
 use ts_rs::TS;
 
 pub use control::Puente;
-pub use emparejamiento::{huella_token, Qr};
+pub use emparejamiento::{huella_token, qr, Qr};
 /// El JSON como lo escribía la V1; lo usa el arnés de respuestas doradas.
 pub use json::a_bytes as json_como_v1;
 pub use repositorio::{aplicar_historial, Telefono, MAX_DISPOSITIVOS};

@@ -21,6 +21,7 @@ pub mod db;
 pub mod descubrir;
 pub mod dj;
 pub mod error;
+pub mod fiesta;
 pub mod gpu;
 pub mod identidad_movil;
 pub mod importador_v1;
@@ -55,6 +56,7 @@ pub struct Estado {
     pub red: Arc<Red>,
     pub db: BaseDeDatos,
     pub movil: Arc<movil::ServidorMovil>,
+    pub fiesta: Arc<fiesta::ServidorFiesta>,
     pub importador: catalogo::importacion::Importador,
     pub agregados: agregados::Gestor,
     pub karaoke: karaoke::Karaoke,
@@ -145,6 +147,7 @@ struct OyenteTauri {
     app: tauri::AppHandle,
     controles: Arc<std::sync::OnceLock<controles_sistema::ControlesSistema>>,
     movil: movil::Puente,
+    fiesta: Arc<fiesta::ServidorFiesta>,
 }
 
 impl reproductor::Oyente for OyenteTauri {
@@ -155,6 +158,7 @@ impl reproductor::Oyente for OyenteTauri {
             c.actualizar(i);
         }
         self.movil.publicar(i);
+        self.fiesta.actualizar_sonando_id(i.pista_id);
     }
 
     fn aviso(&self, a: &reproductor::AvisoReproductor) {
@@ -253,11 +257,33 @@ pub fn run() {
     // La medida del equipo para mezclar (F6.1.4): la comparten el DJ, que la lanza
     // al abrirse, y el reproductor, que la usa en cada mezcla.
     let equipo = dj::equipo::Equipo::default();
+    let aviso = Arc::clone(&ventana);
+    let al_reproductor = Arc::clone(&buzon_karaoke);
+    let servidor_fiesta = Arc::new(fiesta::ServidorFiesta::nuevo(
+        db.clone(),
+        rutas.clone(),
+        fiesta::OpcionesFiesta::default(),
+        move |pista_id| {
+            if let Some(b) = al_reproductor.get() {
+                b.enviar(reproductor::Orden::Agregar {
+                    ids: vec![pista_id],
+                    justo_despues: false,
+                });
+            }
+        },
+        move || {
+            use tauri::Emitter;
+            if let Some(app) = aviso.get() {
+                let _ = app.emit("fiesta:cambio", ());
+            }
+        },
+    ));
     let estado = Estado {
         rutas: rutas.clone(),
         red: Arc::clone(&red),
         db: db.clone(),
         movil: Arc::clone(&servidor_movil),
+        fiesta: Arc::clone(&servidor_fiesta),
         importador: importador.clone(),
         agregados: agregados::Gestor::default(),
         karaoke: servicio_karaoke,
@@ -266,6 +292,7 @@ pub fn run() {
         a_ciegas: Arc::default(),
     };
     let importador_setup = importador.clone();
+    let fiesta_setup = Arc::clone(&servidor_fiesta);
 
     let aplicacion = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -304,6 +331,7 @@ pub fn run() {
                     app: app.handle().clone(),
                     controles: Arc::clone(&controles),
                     movil: puente.clone(),
+                    fiesta: Arc::clone(&fiesta_setup),
                 }),
                 equipo.clone(),
             ) {
@@ -460,6 +488,11 @@ pub fn run() {
             comandos::movil_telefonos,
             comandos::movil_quitar,
             comandos::copia_dispositivo_ejecutar,
+            comandos::fiesta_estado,
+            comandos::fiesta_encender,
+            comandos::fiesta_regenerar_qr,
+            comandos::fiesta_modo_automatico,
+            comandos::fiesta_resolver_sugerencia,
             comandos::importacion_progreso,
             comandos::anadir_musica,
             comandos::por_revisar_listar,
@@ -517,6 +550,7 @@ pub fn run() {
             // Los teléfonos dejan de ver el equipo en el acto, no al caducar mDNS.
             if let Some(e) = app.try_state::<Estado>() {
                 e.movil.apagar();
+                let _ = e.fiesta.apagar();
             }
         }
     });

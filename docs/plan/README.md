@@ -17,7 +17,7 @@
 | 6.º | 5 | Agregados: karaoke y análisis musical | [fase-5-agregados.md](./fase-5-agregados.md) |
 | 7.º | 6 | DJ Privado y A ciegas | [fase-6-dj.md](./fase-6-dj.md) |
 | 8.º | 7 | Retiro de la V1 y publicación de la 2.0 | [fase-7-retiro.md](./fase-7-retiro.md) |
-| 9.º | 8 | Capacidades nuevas | [fase-8-nuevas.md](./fase-8-nuevas.md) |
+| 9.º | 8 | Capacidades nuevas (**cerrada el 2026-10-31**) | [fase-8-nuevas.md](./fase-8-nuevas.md) |
 
 Lo que se hace en cada sesión, con sus commits y lo que quedó pendiente, se registra en la
 [bitácora](./bitacora.md).

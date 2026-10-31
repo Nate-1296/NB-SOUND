@@ -755,6 +755,68 @@ pub async fn copia_dispositivo_ejecutar(
     .map_err(|_| NsError::Internal)?
 }
 
+// --- Modo fiesta (F8.5, ADR-012) ----------------------------------------------
+
+async fn con_fiesta<T: Send + 'static>(
+    estado: &tauri::State<'_, Estado>,
+    trabajo: impl FnOnce(&crate::fiesta::ServidorFiesta) -> NsResult<T> + Send + 'static,
+) -> NsResult<T> {
+    let fiesta = std::sync::Arc::clone(&estado.fiesta);
+    tauri::async_runtime::spawn_blocking(move || trabajo(&fiesta))
+        .await
+        .map_err(|_| NsError::Internal)?
+}
+
+#[tauri::command]
+pub async fn fiesta_estado(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::fiesta::EstadoFiesta> {
+    con_fiesta(&estado, |f| f.estado()).await
+}
+
+#[tauri::command]
+pub async fn fiesta_encender(
+    estado: tauri::State<'_, Estado>,
+    activo: bool,
+) -> NsResult<crate::fiesta::EstadoFiesta> {
+    con_fiesta(
+        &estado,
+        move |f| {
+            if activo {
+                f.encender()
+            } else {
+                f.apagar()
+            }
+        },
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn fiesta_regenerar_qr(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::fiesta::EstadoFiesta> {
+    con_fiesta(&estado, |f| f.regenerar_qr()).await
+}
+
+#[tauri::command]
+pub async fn fiesta_modo_automatico(
+    estado: tauri::State<'_, Estado>,
+    activo: bool,
+) -> NsResult<crate::fiesta::EstadoFiesta> {
+    con_fiesta(&estado, move |f| f.fijar_automatico(activo)).await
+}
+
+#[tauri::command]
+pub async fn fiesta_resolver_sugerencia(
+    estado: tauri::State<'_, Estado>,
+    id: u64,
+    aceptar: bool,
+    bloquear: bool,
+) -> NsResult<crate::fiesta::EstadoFiesta> {
+    con_fiesta(&estado, move |f| f.resolver(id, aceptar, bloquear)).await
+}
+
 // --- Importar (F4.2) ----------------------------------------------------------
 
 #[tauri::command]

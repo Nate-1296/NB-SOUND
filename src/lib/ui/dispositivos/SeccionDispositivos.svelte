@@ -16,6 +16,7 @@
   import { textosAparte } from '$lib/i18n/aparte';
   import Icon from '$ui/Icon.svelte';
 
+  import BloqueFiesta from './BloqueFiesta.svelte';
   import DialogoConectar from './DialogoConectar.svelte';
 
   const t = textos.ajustes;
@@ -212,6 +213,8 @@
       {/if}
     </div>
   </div>
+
+  <BloqueFiesta />
 </section>
 
 <DialogoConectar abierto={conectando} oncerrar={() => (conectando = false)} />

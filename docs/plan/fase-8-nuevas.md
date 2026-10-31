@@ -22,7 +22,7 @@ Cada una exige su ficha completa (objetivo, criterio, dependencias) antes de emp
 | F8.2 Listas inteligentes vivas | Hecha: `ReglaInteligente` evaluada en SQLite (`playlists/inteligentes.rs`), sincronizada en `playlist_pistas` sin subir `sync_version` cuando no hay cambios, convergencia con `regenerar_automaticas` ("Crear para mí") y diálogo `DialogoInteligente.svelte` |
 | F8.3 Resumen local de escucha | Hecha: `resumen_escucha` por mes (`YYYY-MM`), año (`YYYY`) o `"todo"`, radar de seis ánimos (`RadarAnimos`), mapa de calor 7×24 en hora local y tarjeta SVG autónoma exportable (`tarjeta_svg`, `exportar_resumen_escucha`) en `VistaTuMusica.svelte` |
 | F8.4 Copia a dispositivos | Hecha: `copia_dispositivo::copiar` con saneado FAT32/exFAT, tres estructuras de carpetas (`ArtistaAlbum`, `Artista`, `Plana`), portada y etiquetas incrustadas en la copia con `lofty` sin tocar los originales, conversión opcional a WAV PCM (16 bits, 44,1 kHz), lista `.m3u8` e interfaz en `SeccionDispositivos.svelte` |
-| F8.5 Modo fiesta | Bloqueada: ficha y [ADR-012](../adr/decisions/ADR-012-modo-fiesta.md) propuestos, pendientes de aprobación de Nathan antes de escribir código |
+| F8.5 Modo fiesta | Hecha: listener HTTP efímero y aislado en `fiesta.rs` (`PUERTOS_FIESTA = 8831..=8899`) conforme a [ADR-012](../adr/decisions/ADR-012-modo-fiesta.md), con token de 128 bits en `/f/{token}` validado en tiempo constante, cookie `HttpOnly` de invitado, cuotas por invitado/IP, moderación del anfitrión o aceptación automática y panel en `BloqueFiesta.svelte` dentro de `SeccionDispositivos.svelte` |
 
 ## F8.1 Forma de onda
 

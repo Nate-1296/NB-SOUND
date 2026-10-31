@@ -1,7 +1,7 @@
 # ADR-012: Modelo de confianza y aislamiento del modo fiesta
 
 **Fecha:** 2026-10-31
-**Estado:** Propuesto
+**Estado:** Aceptado
 
 ## Contexto
 
@@ -124,3 +124,4 @@ cuotas estrictas en memoria.
   * *Riesgo:* que el servidor quede encendido por olvido al terminar la reunión. *Mitigación:* indicador permanente en
     la barra superior mientras el Modo fiesta está activo y apagado automático tras 2 horas sin sugerencias ni
     reproducción.
+

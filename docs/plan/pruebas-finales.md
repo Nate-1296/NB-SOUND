@@ -164,3 +164,6 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] En la instalación real, en Ajustes > Dispositivos: copiar una playlist y las favoritas a una memoria USB o
       microSD con portada incrustada y comprobar la estructura de carpetas, la portada en los archivos, el archivo
       `.m3u8` y la conversión opcional a WAV (F8.4).
+- [ ] En la instalación real, en Ajustes > Dispositivos: encender el Modo fiesta, escanear el código QR desde un
+      teléfono en la misma red Wi-Fi, buscar canciones desde el navegador del teléfono, enviar sugerencias, aprobarlas,
+      descartarlas, probar el modo automático y rotar el QR comprobando que el enlace anterior deja de funcionar (F8.5).
