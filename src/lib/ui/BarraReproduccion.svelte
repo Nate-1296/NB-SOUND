@@ -67,21 +67,63 @@
   $effect(() => {
     const quitar = alCambiarElKaraoke(async () => {
       const e = await karaokeEstado();
-      if (e.preparando && e.preparando.pista === i.pistaId) preparando = e.preparando.fraccion;
-      else if (preparando !== null && !e.pendientes) preparando = null;
+      if (e.preparando && e.preparando.pista === i.pistaId) {
+        preparando = e.preparando.fraccion;
+        const pct = Math.round((preparando ?? 0) * 100);
+        window.dispatchEvent(
+          new CustomEvent('ns:notificacion', {
+            detail: {
+              tipo: 'progreso',
+              id: 'karaoke-progreso',
+              mensaje: t.karaokePreparando(pct),
+              progreso: pct
+            }
+          })
+        );
+      } else if (preparando !== null && !e.pendientes) {
+        preparando = null;
+        window.dispatchEvent(
+          new CustomEvent('ns:notificacion', {
+            detail: { tipo: 'quitar', id: 'karaoke-progreso' }
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent('ns:notificacion', {
+            detail: { tipo: 'exito', mensaje: t.karaokeListo }
+          })
+        );
+      }
     });
     return () => void quitar.then((f) => f());
   });
   async function microfono() {
     if (i.karaokeDisponible) return reproductor.alternarKaraoke();
     if (i.pistaId === null) return;
-    const e = await karaokeEstado();
-    if (!e.instalado) {
-      ofertaKaraoke = true;
-      return;
+    try {
+      const e = await karaokeEstado();
+      if (!e.instalado) {
+        ofertaKaraoke = true;
+        return;
+      }
+      await karaokePreparar([i.pistaId]);
+      preparando ??= 0;
+      window.dispatchEvent(
+        new CustomEvent('ns:notificacion', {
+          detail: {
+            tipo: 'progreso',
+            id: 'karaoke-progreso',
+            mensaje: t.karaokePreparando(0),
+            progreso: 0
+          }
+        })
+      );
+    } catch {
+      window.dispatchEvent(
+        new CustomEvent('ns:notificacion', {
+          detail: { tipo: 'error', mensaje: t.karaokeError }
+        })
+      );
     }
-    await karaokePreparar([i.pistaId]);
-    preparando ??= 0;
   }
 
   /** Letras y pantalla completa abren la vista de reproducción; otra vez, vuelven. */
@@ -159,31 +201,22 @@
         <span class="titulo">{t.aCiegas}</span>
         <span class="artista">{t.adivina}</span>
       {:else if pista}
-        <button
-          type="button"
-          class="titulo enlace-titulo"
-          title={pista.titulo}
-          onclick={() => abrirVista(false)}
-        >
+        <button type="button" class="titulo enlace-titulo" onclick={() => abrirVista(false)}>
           {pista.titulo}
         </button>
         {#if pista.artistaId !== null}
-          <a
-            href="/biblioteca/artista?id={pista.artistaId}"
-            class="artista enlace"
-            title={pista.artista}
-          >
+          <a href="/biblioteca/artista?id={pista.artistaId}" class="artista enlace">
             {pista.artista}
           </a>
         {:else}
-          <span class="artista" title={pista.artista}>{pista.artista}</span>
+          <span class="artista">{pista.artista}</span>
         {/if}
         {#if pista.albumId !== null}
-          <a href="/biblioteca/album?id={pista.albumId}" class="album enlace" title={pista.album}>
+          <a href="/biblioteca/album?id={pista.albumId}" class="album enlace">
             {pista.album}
           </a>
         {:else}
-          <span class="album" title={pista.album}>{pista.album}</span>
+          <span class="album">{pista.album}</span>
         {/if}
       {:else}
         <span class="titulo">{t.nadaSonando}</span>
@@ -295,17 +328,17 @@
       class:activo={i.karaokeActivo}
       class:preparando={preparando !== null}
       style:--progreso={`${Math.round((preparando ?? 0) * 100)}%`}
-      aria-label={t.karaoke}
+      aria-label={preparando !== null
+        ? t.karaokePreparando(Math.round(preparando * 100))
+        : t.karaoke}
       aria-pressed={i.karaokeActivo}
-      title={preparando !== null
-        ? t.karaokePreparando(Math.floor(preparando * 100))
-        : i.karaokeDisponible
-          ? t.karaoke
-          : t.karaokePreparar}
       disabled={!hayPista}
       onclick={microfono}
     >
       <Icon nombre="microfono" tamano={20} />
+      {#if preparando !== null}
+        <span class="pct-karaoke">{Math.round(preparando * 100)}%</span>
+      {/if}
     </button>
     {#if ofertaKaraoke}
       {#await import('./agregados/OfertaAgregado.svelte') then m}
@@ -650,5 +683,14 @@
       var(--m3c-primary) var(--progreso),
       var(--m3c-surface-container-highest) 0
     );
+  }
+
+  .pct-karaoke {
+    position: absolute;
+    bottom: -1rem;
+    font-size: var(--ns-texto-xs);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--m3c-primary);
   }
 </style>

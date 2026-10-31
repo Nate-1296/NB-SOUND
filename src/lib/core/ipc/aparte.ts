@@ -27,6 +27,7 @@ import type {
   ReglaInteligente,
   ResumenCopia,
   ResumenCopiaDispositivo,
+  ResumenDuplicados,
   ResumenEscucha,
   SugerenciaFiesta
 } from '$lib/bindings';
@@ -42,6 +43,7 @@ export type {
   RadarAnimos,
   ReglaInteligente,
   ResumenCopiaDispositivo,
+  ResumenDuplicados,
   ResumenEscucha,
   SugerenciaFiesta
 };
@@ -238,4 +240,14 @@ export function guardarClaveIa(clave: string): Promise<AjustesIa> {
 
 export function borrarClaveIa(): Promise<AjustesIa> {
   return call<AjustesIa>('borrar_clave_ia');
+}
+
+// --- Duplicados (FDB-02, COMP-07) ------------------------------------------------
+
+export function duplicadosResumen(): Promise<ResumenDuplicados> {
+  return call<ResumenDuplicados>('duplicados_resumen');
+}
+
+export function purgarDuplicados(borrarArchivos: boolean): Promise<number> {
+  return call<number>('purgar_duplicados', { borrarArchivos });
 }

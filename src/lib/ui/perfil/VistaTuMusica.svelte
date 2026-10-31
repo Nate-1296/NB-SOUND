@@ -350,6 +350,16 @@
           <span class="etiqueta">{tr.mapaTitulo}</span>
           <p class="sub">{tr.mapaSub}</p>
           <div class="rejilla-calor">
+            <div class="fila-calor eje-horas" aria-hidden="true">
+              <span class="etiqueta-dia"></span>
+              <div class="horas-dia marcas-eje">
+                <span class="marca-hora h-0">{tr.marcasHoras.h0}</span>
+                <span class="marca-hora h-6">{tr.marcasHoras.h6}</span>
+                <span class="marca-hora h-12">{tr.marcasHoras.h12}</span>
+                <span class="marca-hora h-18">{tr.marcasHoras.h18}</span>
+                <span class="marca-hora h-23">{tr.marcasHoras.h23}</span>
+              </div>
+            </div>
             {#each tr.diasSemana as nombreDia, d (d)}
               <div class="fila-calor">
                 <span class="etiqueta-dia">{nombreDia}</span>
@@ -764,6 +774,37 @@
   .etiqueta-dia {
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
+  }
+
+  .marcas-eje {
+    margin-bottom: var(--ns-espacio-1);
+  }
+
+  .marca-hora {
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .marca-hora.h-0 {
+    grid-column: 1 / span 2;
+  }
+
+  .marca-hora.h-6 {
+    grid-column: 7 / span 2;
+  }
+
+  .marca-hora.h-12 {
+    grid-column: 13 / span 2;
+  }
+
+  .marca-hora.h-18 {
+    grid-column: 19 / span 2;
+  }
+
+  .marca-hora.h-23 {
+    grid-column: 23 / span 2;
   }
 
   .horas-dia {

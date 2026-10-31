@@ -6,6 +6,9 @@
  * solo los importan módulos que ya se cargan a demanda, y con ellos se cargan.
  */
 export const esAparte = {
+  comun: {
+    error: 'No se pudo completar. Vuelve a intentarlo.'
+  },
   descubrir: {
     titulo: (que: string) => `Para lo que pides: ${que}`,
     sinAnalisis:
@@ -312,6 +315,7 @@ export const esAparte = {
     },
     mapaTitulo: 'Mapa de calor por día y hora',
     mapaSub: 'A qué horas escuchas más música en tu hora local.',
+    marcasHoras: { h0: '00h', h6: '06h', h12: '12h', h18: '18h', h23: '23h' },
     diasSemana: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as const,
     celdaMapa: (dia: string, hora: number, escuchas: number) =>
       `${dia} ${String(hora).padStart(2, '0')}:00 · ${escuchas} ${escuchas === 1 ? 'escucha' : 'escuchas'}`,
@@ -382,6 +386,28 @@ export const esAparte = {
     bloquear: 'Bloquear invitado',
     bloqueados: (n: number) =>
       `${n} ${n === 1 ? 'invitado bloqueado' : 'invitados bloqueados'} en esta sesión`
+  },
+
+  duplicados: {
+    titulo: 'Canciones duplicadas',
+    descripcion: 'Detecta archivos redundantes o repetidos de tu biblioteca para liberar espacio.',
+    sinDuplicados: 'No se han detectado canciones duplicadas en tu biblioteca.',
+    encontrados: (n: number, espacio: string) =>
+      n === 1
+        ? `1 canción duplicada detectada (${espacio} recuperables)`
+        : `${n} canciones duplicadas detectadas (${espacio} recuperables)`,
+    limpiar: 'Limpiar duplicados',
+    confirmarTitulo: '¿Limpiar canciones duplicadas?',
+    confirmarPregunta: (n: number) =>
+      `¿Deseas purgar ${n} pistas duplicadas? Se conservará únicamente la copia de mayor calidad.`,
+    borrarArchivos: 'Eliminar también los archivos duplicados del disco',
+    purgarBtn: 'Purgar duplicados',
+    cancelar: 'Cancelar',
+    purgadas: (n: number) =>
+      n === 1
+        ? '1 canción duplicada eliminada con éxito'
+        : `${n} canciones duplicadas eliminadas con éxito`,
+    error: 'Error al purgar duplicados'
   }
 };
 

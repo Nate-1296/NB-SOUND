@@ -15,6 +15,11 @@
   import { textos } from '$lib/i18n';
   import type { TemaV1 } from '$ui/temas-v1';
 
+  interface Props {
+    seccion?: 'reproduccion' | 'apariencia';
+  }
+  let { seccion }: Props = $props();
+
   const t = textos.ajustes;
   const TIPOGRAFIAS = [
     'Inter',
@@ -65,130 +70,238 @@
   $effect(() => {
     void import('$ui/temas-v1').then((m) => (temas = m.TEMAS_V1));
   });
+
+  function esClaro(fondo: string): boolean {
+    const hex = fondo.replace('#', '');
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return 0.299 * r + 0.587 * g + 0.114 * b > 130;
+  }
+
+  function esEspecial(id: string): boolean {
+    return (
+      id === 'negro_puro' ||
+      id === 'hielo_oled' ||
+      id === 'terminal_verde' ||
+      id === 'sangre_dragon'
+    );
+  }
+
+  const temasEspeciales = $derived(temas.filter((tem) => esEspecial(tem.id)));
+  const temasClaros = $derived(
+    temas.filter((tem) => esClaro(tem.colores.fondo) && !esEspecial(tem.id))
+  );
+  const temasOscuros = $derived(
+    temas.filter((tem) => !esClaro(tem.colores.fondo) && !esEspecial(tem.id))
+  );
 </script>
 
-<section id="reproduccion" aria-labelledby="t-reproduccion">
-  <h2 id="t-reproduccion">{t.reproduccion}</h2>
-  <label class="ajuste interruptor">
-    <span class="rotulo">{t.normalizar}<small>{t.normalizarAyuda}</small></span>
-    <input
-      type="checkbox"
-      role="switch"
-      checked={reproductor.instantanea.normalizar}
-      onchange={(e) => reproductor.orden({ tipo: 'normalizar', activo: e.currentTarget.checked })}
-    />
-  </label>
+{#if !seccion || seccion === 'reproduccion'}
+  <section id="reproduccion" aria-labelledby="t-reproduccion">
+    <h2 id="t-reproduccion">{t.reproduccion}</h2>
+    <label class="ajuste interruptor">
+      <span class="rotulo">{t.normalizar}<small>{t.normalizarAyuda}</small></span>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={reproductor.instantanea.normalizar}
+        onchange={(e) => reproductor.orden({ tipo: 'normalizar', activo: e.currentTarget.checked })}
+      />
+    </label>
 
-  <h3>{t.ecualizador}</h3>
-  <label class="ajuste interruptor">
-    <span class="rotulo">{t.ecualizadorActivo}</span>
-    <input
-      type="checkbox"
-      role="switch"
-      checked={eq.activo}
-      onchange={(e) => enviarEq({ ...eq, activo: e.currentTarget.checked })}
-    />
-  </label>
-  <label class="ajuste">
-    <span class="rotulo">{t.preseleccion}</span>
-    <select
-      class="campo"
-      disabled={!eq.activo}
-      value={eq.preseleccion === null ? '' : String(eq.preseleccion)}
-      onchange={(e) => elegirPreseleccion(e.currentTarget.value)}
-    >
-      {#if eq.preseleccion === null}<option value="">{t.personalizado}</option>{/if}
-      {#each preselecciones as p, i (p.nombre)}
-        <option value={String(i)}>{p.nombre}</option>
+    <h3>{t.ecualizador}</h3>
+    <label class="ajuste interruptor">
+      <span class="rotulo">{t.ecualizadorActivo}</span>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={eq.activo}
+        onchange={(e) => enviarEq({ ...eq, activo: e.currentTarget.checked })}
+      />
+    </label>
+    <label class="ajuste">
+      <span class="rotulo">{t.preseleccion}</span>
+      <select
+        class="campo"
+        disabled={!eq.activo}
+        value={eq.preseleccion === null ? '' : String(eq.preseleccion)}
+        onchange={(e) => elegirPreseleccion(e.currentTarget.value)}
+      >
+        {#if eq.preseleccion === null}<option value="">{t.personalizado}</option>{/if}
+        {#each preselecciones as p, i (p.nombre)}
+          <option value={String(i)}>{p.nombre}</option>
+        {/each}
+      </select>
+    </label>
+    <div class="bandas" class:apagado={!eq.activo}>
+      {#each eq.bandas as valor, k (k)}
+        <label class="banda">
+          <span class="db">{valor > 0 ? '+' : ''}{valor.toFixed(1)}</span>
+          <input
+            type="range"
+            min="-20"
+            max="20"
+            step="0.1"
+            value={valor}
+            disabled={!eq.activo}
+            aria-label={t.banda(BANDAS[k] ?? '')}
+            oninput={(e) => moverBanda(k, Number(e.currentTarget.value))}
+          />
+          <span class="hz">{BANDAS[k]}</span>
+        </label>
       {/each}
-    </select>
-  </label>
-  <div class="bandas" class:apagado={!eq.activo}>
-    {#each eq.bandas as valor, k (k)}
-      <label class="banda">
-        <span class="db">{valor > 0 ? '+' : ''}{valor.toFixed(1)}</span>
-        <input
-          type="range"
-          min="-20"
-          max="20"
-          step="0.1"
-          value={valor}
-          disabled={!eq.activo}
-          aria-label={t.banda(BANDAS[k] ?? '')}
-          oninput={(e) => moverBanda(k, Number(e.currentTarget.value))}
-        />
-        <span class="hz">{BANDAS[k]}</span>
-      </label>
-    {/each}
-  </div>
-</section>
+    </div>
+  </section>
+{/if}
 
-<section id="apariencia" aria-labelledby="t-apariencia">
-  <h2 id="t-apariencia">{t.apariencia}</h2>
-  <h3>{t.tema}</h3>
-  <div class="temas" role="radiogroup" aria-label={t.tema}>
-    {#each temas as tema (tema.id)}
-      {@const elegido = aparienciaActual.actual.tema === tema.id}
-      <button
-        type="button"
-        role="radio"
-        class="tema"
-        class:elegido
-        aria-checked={elegido}
-        title={tema.nombre}
-        onclick={() => aparienciaActual.cambiar('tema', tema.id)}
-      >
-        <span
-          class="muestra-tema"
-          style:--fondo={tema.colores.fondo}
-          style:--superficie={tema.colores.superficie}
-          style:--acento={tema.colores.acento}
-        ></span>
-        <span class="nombre-tema">{tema.nombre}</span>
-      </button>
-    {/each}
-  </div>
+{#if !seccion || seccion === 'apariencia'}
+  <section id="apariencia" aria-labelledby="t-apariencia">
+    <h2 id="t-apariencia">{t.apariencia}</h2>
 
-  <h3>{t.tipografia}</h3>
-  <div class="tipografias" role="radiogroup" aria-label={t.tipografia}>
-    {#each TIPOGRAFIAS as familia (familia)}
-      {@const elegida = aparienciaActual.actual.tipografia === familia}
-      <button
-        type="button"
-        role="radio"
-        class="tipografia"
-        class:elegido={elegida}
-        aria-checked={elegida}
-        style:font-family={`'${familia}'`}
-        onclick={() => aparienciaActual.cambiar('tipografia', familia)}
-      >
-        <strong>{familia}</strong>
-        <span>{t.muestra}</span>
-      </button>
-    {/each}
-  </div>
+    <h3>{t.temasOscuros}</h3>
+    <div class="temas" role="radiogroup" aria-label={t.temasOscuros}>
+      {#each temasOscuros as tema (tema.id)}
+        {@const elegido = aparienciaActual.actual.tema === tema.id}
+        <button
+          type="button"
+          role="radio"
+          class="tema"
+          class:elegido
+          aria-checked={elegido}
+          onclick={() => aparienciaActual.cambiar('tema', tema.id)}
+        >
+          <span
+            class="maqueta-tema"
+            style:--fondo={tema.colores.fondo}
+            style:--superficie={tema.colores.superficie}
+            style:--elevado={tema.colores.fondoElevado}
+            style:--acento={tema.colores.acento}
+            aria-hidden="true"
+          >
+            <span class="maqueta-lateral"></span>
+            <span class="maqueta-principal">
+              <span class="maqueta-cabecera"></span>
+              <span class="maqueta-cuerpo">
+                <span class="maqueta-tarjeta"></span>
+                <span class="maqueta-boton"></span>
+              </span>
+            </span>
+          </span>
+          <span class="nombre-tema">{tema.nombre}</span>
+        </button>
+      {/each}
+    </div>
 
-  <label class="ajuste">
-    <span class="rotulo">{t.escala} · {aparienciaActual.actual.escala}%</span>
-    <input
-      type="range"
-      min="75"
-      max="150"
-      step="5"
-      value={aparienciaActual.actual.escala}
-      onchange={(e) => aparienciaActual.cambiar('escala', Number(e.currentTarget.value))}
-    />
-  </label>
-  <label class="ajuste interruptor">
-    <span class="rotulo">{t.colorPortada}</span>
-    <input
-      type="checkbox"
-      role="switch"
-      checked={aparienciaActual.actual.colorPorPortada}
-      onchange={(e) => aparienciaActual.cambiar('colorPorPortada', e.currentTarget.checked)}
-    />
-  </label>
-</section>
+    <h3>{t.temasClaros}</h3>
+    <div class="temas" role="radiogroup" aria-label={t.temasClaros}>
+      {#each temasClaros as tema (tema.id)}
+        {@const elegido = aparienciaActual.actual.tema === tema.id}
+        <button
+          type="button"
+          role="radio"
+          class="tema"
+          class:elegido
+          aria-checked={elegido}
+          onclick={() => aparienciaActual.cambiar('tema', tema.id)}
+        >
+          <span
+            class="maqueta-tema"
+            style:--fondo={tema.colores.fondo}
+            style:--superficie={tema.colores.superficie}
+            style:--elevado={tema.colores.fondoElevado}
+            style:--acento={tema.colores.acento}
+            aria-hidden="true"
+          >
+            <span class="maqueta-lateral"></span>
+            <span class="maqueta-principal">
+              <span class="maqueta-cabecera"></span>
+              <span class="maqueta-cuerpo">
+                <span class="maqueta-tarjeta"></span>
+                <span class="maqueta-boton"></span>
+              </span>
+            </span>
+          </span>
+          <span class="nombre-tema">{tema.nombre}</span>
+        </button>
+      {/each}
+    </div>
+
+    <h3>{t.temasEspeciales}</h3>
+    <div class="temas" role="radiogroup" aria-label={t.temasEspeciales}>
+      {#each temasEspeciales as tema (tema.id)}
+        {@const elegido = aparienciaActual.actual.tema === tema.id}
+        <button
+          type="button"
+          role="radio"
+          class="tema"
+          class:elegido
+          aria-checked={elegido}
+          onclick={() => aparienciaActual.cambiar('tema', tema.id)}
+        >
+          <span
+            class="maqueta-tema"
+            style:--fondo={tema.colores.fondo}
+            style:--superficie={tema.colores.superficie}
+            style:--elevado={tema.colores.fondoElevado}
+            style:--acento={tema.colores.acento}
+            aria-hidden="true"
+          >
+            <span class="maqueta-lateral"></span>
+            <span class="maqueta-principal">
+              <span class="maqueta-cabecera"></span>
+              <span class="maqueta-cuerpo">
+                <span class="maqueta-tarjeta"></span>
+                <span class="maqueta-boton"></span>
+              </span>
+            </span>
+          </span>
+          <span class="nombre-tema">{tema.nombre}</span>
+        </button>
+      {/each}
+    </div>
+
+    <h3>{t.tipografia}</h3>
+    <div class="tipografias" role="radiogroup" aria-label={t.tipografia}>
+      {#each TIPOGRAFIAS as familia (familia)}
+        {@const elegida = aparienciaActual.actual.tipografia === familia}
+        <button
+          type="button"
+          role="radio"
+          class="tipografia"
+          class:elegido={elegida}
+          aria-checked={elegida}
+          style:font-family={`'${familia}'`}
+          onclick={() => aparienciaActual.cambiar('tipografia', familia)}
+        >
+          <strong>{familia}</strong>
+          <span>{t.muestra}</span>
+        </button>
+      {/each}
+    </div>
+
+    <label class="ajuste">
+      <span class="rotulo">{t.escala} · {aparienciaActual.actual.escala}%</span>
+      <input
+        type="range"
+        min="75"
+        max="150"
+        step="5"
+        value={aparienciaActual.actual.escala}
+        onchange={(e) => aparienciaActual.cambiar('escala', Number(e.currentTarget.value))}
+      />
+    </label>
+    <label class="ajuste interruptor">
+      <span class="rotulo">{t.colorPortada}</span>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={aparienciaActual.actual.colorPorPortada}
+        onchange={(e) => aparienciaActual.cambiar('colorPorPortada', e.currentTarget.checked)}
+      />
+    </label>
+  </section>
+{/if}
 
 <style>
   section {
@@ -310,16 +423,60 @@
     border-width: 2px;
   }
 
-  /* La muestra pinta los colores del propio tema: son datos, no estilo. */
-  .muestra-tema {
-    height: 2.5rem;
+  /* La maqueta dibuja la interfaz en miniatura con los colores del tema */
+  .maqueta-tema {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 3.5rem;
+    overflow: hidden;
+    border: 1px solid var(--m3c-outline-variant);
     border-radius: var(--ns-radio-sm);
-    background: linear-gradient(
-      90deg,
-      var(--fondo) 0 40%,
-      var(--superficie) 40% 75%,
-      var(--acento) 75%
-    );
+    background: var(--fondo);
+  }
+
+  .maqueta-lateral {
+    width: 24%;
+    height: 100%;
+    border-right: 1px solid var(--m3c-outline-variant);
+    background: var(--superficie);
+  }
+
+  .maqueta-principal {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .maqueta-cabecera {
+    width: 100%;
+    height: 30%;
+    border-bottom: 1px solid var(--m3c-outline-variant);
+    background: var(--elevado);
+  }
+
+  .maqueta-cuerpo {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ns-espacio-1);
+    padding: var(--ns-espacio-1);
+  }
+
+  .maqueta-tarjeta {
+    flex: 1 1 auto;
+    height: 80%;
+    border-radius: var(--ns-radio-sm);
+    background: var(--superficie);
+  }
+
+  .maqueta-boton {
+    width: 1rem;
+    height: 80%;
+    border-radius: var(--ns-radio-sm);
+    background: var(--acento);
   }
 
   .nombre-tema {

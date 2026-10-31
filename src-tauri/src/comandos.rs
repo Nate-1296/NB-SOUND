@@ -281,6 +281,89 @@ pub async fn borrar_pista(
     .map_err(|_| NsError::Internal)?
 }
 
+/// Información de duplicados detectados en la biblioteca (FDB-02, COMP-07).
+#[derive(Debug, Clone, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub struct ResumenDuplicados {
+    pub total: u32,
+    #[ts(type = "number")]
+    pub bytes_recuperables: u64,
+}
+
+#[tauri::command]
+pub async fn duplicados_resumen(estado: tauri::State<'_, Estado>) -> NsResult<ResumenDuplicados> {
+    let db = estado.db.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let conn = db.conexion()?;
+        let (total, bytes): (u32, Option<i64>) = conn
+            .query_row(
+                "SELECT COUNT(*), SUM(tamano) FROM pistas WHERE estado = 'duplicado'",
+                [],
+                |f| Ok((f.get(0)?, f.get(1)?)),
+            )
+            .map_err(|_| NsError::StorageFailure)?;
+        Ok(ResumenDuplicados {
+            total,
+            bytes_recuperables: bytes.unwrap_or(0).max(0) as u64,
+        })
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
+#[tauri::command]
+pub async fn purgar_duplicados(
+    estado: tauri::State<'_, Estado>,
+    borrar_archivos: bool,
+) -> NsResult<u32> {
+    let db = estado.db.clone();
+    let importador = estado.importador.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut conn = db.conexion()?;
+        let mut s = conn
+            .prepare("SELECT id, ruta FROM pistas WHERE estado = 'duplicado'")
+            .map_err(|_| NsError::StorageFailure)?;
+        let filas = s
+            .query_map([], |f| Ok((f.get::<_, i64>(0)?, f.get::<_, String>(1)?)))
+            .map_err(|_| NsError::StorageFailure)?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|_| NsError::StorageFailure)?;
+        drop(s);
+
+        if filas.is_empty() {
+            return Ok(0);
+        }
+
+        let total = filas.len() as u32;
+
+        if borrar_archivos {
+            let _ = importador.con_entorno(|entorno| {
+                for (_, ruta) in &filas {
+                    if let Ok(archivo) =
+                        crate::security::resolve_within(&entorno.musica, std::path::Path::new(ruta))
+                    {
+                        if archivo.is_file() {
+                            let _ = std::fs::remove_file(&archivo);
+                        }
+                    }
+                }
+                Ok(())
+            });
+        }
+
+        let tx = crate::db::transaccion_de_escritura(&mut conn)?;
+        tx.execute("DELETE FROM pistas WHERE estado = 'duplicado'", [])
+            .map_err(|_| NsError::StorageFailure)?;
+        tx.commit().map_err(|_| NsError::StorageFailure)?;
+
+        tracing::info!(total = total, "duplicados purgados de la biblioteca");
+        Ok(total)
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
 #[tauri::command]
 pub async fn biblioteca_album(
     estado: tauri::State<'_, Estado>,

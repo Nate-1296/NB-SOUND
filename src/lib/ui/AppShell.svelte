@@ -93,6 +93,9 @@
 </div>
 <CapaArrastre />
 <TarjetaImportacion />
+{#await import('$ui/ToastContenedor.svelte') then m}
+  <m.default />
+{/await}
 
 <style>
   .carcasa {

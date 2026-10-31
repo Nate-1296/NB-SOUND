@@ -14,6 +14,7 @@ export const esDj = {
     minutos: (n: number) => `${n} min`,
     crear: 'Crear sesión',
     creando: 'Preparando la sesión…',
+    error: 'No se pudo generar la sesión. Inténtalo de nuevo.',
     vacia: 'Escribe lo que quieres escuchar.',
     sinCandidatas:
       'Ninguna canción de tu biblioteca encaja con eso. Prueba con otras palabras o con menos exclusiones.',

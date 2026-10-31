@@ -9,10 +9,19 @@
   import SeccionIa from './SeccionIa.svelte';
   import SeccionPrivacidad from './SeccionPrivacidad.svelte';
 
+  interface Props {
+    seccion?: 'privacidad' | 'ia';
+  }
+  let { seccion }: Props = $props();
+
   $effect(() => {
     void privacidad.refrescar();
   });
 </script>
 
-<SeccionPrivacidad />
-<SeccionIa />
+{#if !seccion || seccion === 'privacidad'}
+  <SeccionPrivacidad />
+{/if}
+{#if !seccion || seccion === 'ia'}
+  <SeccionIa />
+{/if}

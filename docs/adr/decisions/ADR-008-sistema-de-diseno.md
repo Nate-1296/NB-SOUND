@@ -55,5 +55,6 @@ En consecuencia, lo de arriba cambia en cuatro puntos:
   aplicación con su licencia.
 * **Las listas son continuas, como en la V1**, no páginas como en NB Books. F0.4.7 midió una ventana virtual de alto
   fijo con bloques alineados sin un solo fotograma largo con 100.000 filas (P9, cerrada).
+* **Los logotipos sincronizados por tema vuelven a la barra lateral (DIS-02, COMP-05):** Se restauran los logotipos dinámicos para cada uno de los temas en `static/logos/logo_[tema].png`, conectando la marca a `aparienciaActual.actual.tema` con fallback a `/logo.png`, garantizando coherencia cromática con la identidad visual histórica.
 * La carcasa de la Fase 0 (clara, con acento cian) es provisional: F2.2.1 la ajusta a la disposición de la V1.
 

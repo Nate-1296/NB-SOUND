@@ -54,14 +54,34 @@
     const [p] = copia.splice(desde, 1);
     if (!p) return;
     copia.splice(hasta, 0, p);
+    const anterior = pistas;
     pistas = copia;
-    await moverEnPlaylist(id, desde, hasta);
+    try {
+      await moverEnPlaylist(id, desde, hasta);
+    } catch {
+      pistas = anterior;
+      window.dispatchEvent(
+        new CustomEvent('ns:notificacion', {
+          detail: { tipo: 'error', mensaje: esAparte.comun.error }
+        })
+      );
+    }
   }
 
   async function quitar(p: PistaResumen) {
+    const anterior = pistas;
     pistas = pistas.filter((x) => x.id !== p.id);
-    await quitarDePlaylist(id, p.id);
-    version += 1;
+    try {
+      await quitarDePlaylist(id, p.id);
+      version += 1;
+    } catch {
+      pistas = anterior;
+      window.dispatchEvent(
+        new CustomEvent('ns:notificacion', {
+          detail: { tipo: 'error', mensaje: esAparte.comun.error }
+        })
+      );
+    }
   }
 
   async function borrar() {

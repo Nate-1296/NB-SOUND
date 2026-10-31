@@ -930,28 +930,28 @@ Las siguientes dos características existían en la versión legacy de Python/QM
 | **EXP-11** | Sec. 3: Modelos Mentales | Doble clic en la fila de pista para reproducir | **Hecho** |
 | **EXP-12** | Sec. 3: Modelos Mentales | Falta de indicador visual de pista sonando en listas | **Hecho** |
 | **EXP-13** | Sec. 3: Modelos Mentales | Tarjetas de estadísticas inertes en Inicio y Tu Música | **Hecho** |
-| **DIS-01** | Sec. 4: Sobrecarga Visual | Vista de Ajustes tosca, monótona y desestructurada | Pendiente |
-| **DIS-02** | Sec. 4: Sobrecarga Visual | Los logotipos de marca no cambian con el tema activo | Pendiente |
-| **DIS-03** | Sec. 4: Sobrecarga Visual | Saturación con hasta 10 botones visibles por fila | Pendiente |
-| **DIS-04** | Sec. 4: Sobrecarga Visual | Doble fila de 14 chips de filtrado en Biblioteca | Pendiente |
-| **DIS-05** | Sec. 4: Sobrecarga Visual | Tooltips nativos del navegador que se solapan | Pendiente |
-| **DIS-06** | Sec. 4: Sobrecarga Visual | Mapa de actividad horaria 24h sin rotulación de horas | Pendiente |
-| **DIS-07** | Sec. 4: Sobrecarga Visual | Carruseles de Inicio sin botones de avance ni snap | Pendiente |
-| **FDB-01** | Sec. 5: Feedback / Carga | Preparación de karaoke invisible sin feedback real | Pendiente |
-| **FDB-02** | Sec. 5: Feedback / Carga | Gestión de canciones duplicadas en caja negra sin purga | Pendiente |
-| **FDB-03** | Sec. 5: Feedback / Carga | Acciones de mantenimiento en Ajustes sin confirmación Toast | Pendiente |
-| **FDB-04** | Sec. 5: Feedback / Carga | Reordenamiento en playlist sin estado deshabilitado | Pendiente |
-| **FDB-05** | Sec. 5: Feedback / Carga | Botón "Generar sesión" en DJ tarda sin progreso visual | Pendiente |
+| **DIS-01** | Sec. 4: Sobrecarga Visual | Vista de Ajustes tosca, monótona y desestructurada | **Hecho** |
+| **DIS-02** | Sec. 4: Sobrecarga Visual | Los logotipos de marca no cambian con el tema activo | **Hecho** |
+| **DIS-03** | Sec. 4: Sobrecarga Visual | Saturación con hasta 10 botones visibles por fila | **Hecho** |
+| **DIS-04** | Sec. 4: Sobrecarga Visual | Doble fila de 14 chips de filtrado en Biblioteca | **Hecho** |
+| **DIS-05** | Sec. 4: Sobrecarga Visual | Tooltips nativos del navegador que se solapan | **Hecho** |
+| **DIS-06** | Sec. 4: Sobrecarga Visual | Mapa de actividad horaria 24h sin rotulación de horas | **Hecho** |
+| **DIS-07** | Sec. 4: Sobrecarga Visual | Carruseles de Inicio sin botones de avance ni snap | **Hecho** |
+| **FDB-01** | Sec. 5: Feedback / Carga | Preparación de karaoke invisible sin feedback real | **Hecho** |
+| **FDB-02** | Sec. 5: Feedback / Carga | Gestión de canciones duplicadas en caja negra sin purga | **Hecho** |
+| **FDB-03** | Sec. 5: Feedback / Carga | Acciones de mantenimiento en Ajustes sin confirmación Toast | **Hecho** |
+| **FDB-04** | Sec. 5: Feedback / Carga | Reordenamiento en playlist sin estado deshabilitado | **Hecho** |
+| **FDB-05** | Sec. 5: Feedback / Carga | Botón "Generar sesión" en DJ tarda sin progreso visual | **Hecho** |
 | **COMP-01** | Sec. 8: Port Forense | Pérdida de modos de visualización (Sm/Md/Lg y Lista) | Pendiente |
-| **COMP-02** | Sec. 8: Port Forense | Degradación de Ajustes frente al estándar Master-Detail | Pendiente |
-| **COMP-03** | Sec. 8: Port Forense | Desaparición del sistema de notificaciones Toast | Pendiente |
+| **COMP-02** | Sec. 8: Port Forense | Degradación de Ajustes frente al estándar Master-Detail | **Hecho** |
+| **COMP-03** | Sec. 8: Port Forense | Desaparición del sistema de notificaciones Toast | **Hecho** |
 | **COMP-04** | Sec. 8: Port Forense | Pérdida de fondo ambiental dinámico y letras inmersivas | Pendiente |
-| **COMP-05** | Sec. 8: Port Forense | Supresión de los 64 logotipos dinámicos por tema | Pendiente |
+| **COMP-05** | Sec. 8: Port Forense | Supresión de los 64 logotipos dinámicos por tema | **Hecho** |
 | **COMP-06** | Sec. 8: Port Forense | Pérdida del botón de ingesta global en barra superior | Pendiente |
-| **COMP-07** | Sec. 8: Port Forense | Omisión de gestión de duplicados y borrado seguro | Pendiente |
+| **COMP-07** | Sec. 8: Port Forense | Omisión de gestión de duplicados y borrado seguro | **Hecho** |
 | **COMP-08** | Sec. 8: Port Forense | Rígido anclaje de barra lateral y falta de pantalla completa | Pendiente |
 | **COMP-09** | Sec. 8: Port Forense | Mutilación del selector multi-selección de playlists | Pendiente |
-| **COMP-11** | Sec. 8: Port Forense | Desplazamiento deficiente en carruseles de Inicio | Pendiente |
+| **COMP-11** | Sec. 8: Port Forense | Desplazamiento deficiente en carruseles de Inicio | **Hecho** |
 | **COMP-13** | Sec. 8: Port Forense | Falta opción "Mostrar en explorador de archivos" (Dolphin) | Pendiente |
 | **COMP-14** | Sec. 8: Port Forense | DJ Privado carece de chips interactivos por categorías | Pendiente |
 | **COMP-15** | Sec. 8: Port Forense | Pérdida del ecualizador visual dinámico en Inicio | Pendiente |

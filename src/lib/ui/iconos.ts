@@ -78,6 +78,8 @@ export const ICONOS = {
   lista:
     '<path d="M8.5 6.5h12M8.5 12h12M8.5 17.5h12"/><path d="M3.5 6.5h1.25M3.5 12h1.25M3.5 17.5h1.25"/>',
   mas: '<path d="M12 3.5v17M3.5 12h17"/>',
+  masHorizontal:
+    '<circle cx="12" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
   menu: '<path d="M3.5 7h17M3.5 12h17M3.5 17h17"/>',
   microfono:
     '<rect x="9" y="3" width="6" height="10.5" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3"/>',

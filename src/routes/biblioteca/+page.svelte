@@ -86,6 +86,9 @@
   let ordenPistas = $state<OrdenPistas>('tituloAsc');
   let ordenAlbumes = $state<OrdenAlbumes>('tituloAsc');
   let ordenArtistas = $state<OrdenArtistas>('nombreAsc');
+  const ordenesActuales = $derived(
+    vista === 'pistas' ? ORDENES_PISTAS : vista === 'albumes' ? ORDENES_ALBUMES : ORDENES_ARTISTAS
+  );
 
   // La búsqueda espera a que se deje de escribir: cada tecla no es una consulta.
   let espera: ReturnType<typeof setTimeout> | undefined;
@@ -257,41 +260,69 @@
     <input type="search" placeholder={t.buscar} aria-label={t.buscar} bind:value={texto} />
   </label>
 
-  {#if vista === 'pistas'}
-    <div class="fichas">
-      <button
-        type="button"
-        class="ficha"
-        class:activa={favoritas}
-        aria-pressed={favoritas}
-        onclick={() => (favoritas = !favoritas)}
-      >
-        <Icon nombre="favorito" tamano={14} />{t.favoritas}
-      </button>
-      <button
-        type="button"
-        class="ficha"
-        class:activa={sinVerificar}
-        aria-pressed={sinVerificar}
-        onclick={() => (sinVerificar = !sinVerificar)}
-      >
-        <Icon nombre="advertencia" tamano={14} />{t.sinVerificar}
-      </button>
-      <button
-        type="button"
-        class="ficha"
-        class:activa={paraCantar}
-        aria-pressed={paraCantar}
-        onclick={() => (paraCantar = !paraCantar)}
-      >
-        <Icon nombre="microfono" tamano={14} />{t.paraCantar}
-      </button>
-      {#if paraCantar}
-        <button type="button" class="ficha" onclick={prepararFavoritas}>
-          <Icon nombre="favorito" tamano={14} />{t.prepararFavoritas}
+  <div class="barra-filtros">
+    {#if vista === 'pistas'}
+      <div class="fichas">
+        <button
+          type="button"
+          class="ficha"
+          class:activa={favoritas}
+          aria-pressed={favoritas}
+          onclick={() => (favoritas = !favoritas)}
+        >
+          <Icon nombre="favorito" tamano={14} />{t.favoritas}
         </button>
-      {/if}
+        <button
+          type="button"
+          class="ficha"
+          class:activa={sinVerificar}
+          aria-pressed={sinVerificar}
+          onclick={() => (sinVerificar = !sinVerificar)}
+        >
+          <Icon nombre="advertencia" tamano={14} />{t.sinVerificar}
+        </button>
+        <button
+          type="button"
+          class="ficha"
+          class:activa={paraCantar}
+          aria-pressed={paraCantar}
+          onclick={() => (paraCantar = !paraCantar)}
+        >
+          <Icon nombre="microfono" tamano={14} />{t.paraCantar}
+        </button>
+        {#if paraCantar}
+          <button type="button" class="ficha" onclick={prepararFavoritas}>
+            <Icon nombre="favorito" tamano={14} />{t.prepararFavoritas}
+          </button>
+        {/if}
+      </div>
+    {/if}
+
+    <div class="control-orden">
+      <span class="rotulo-orden">{t.orden}:</span>
+      <select
+        class="selector-orden"
+        aria-label={t.orden}
+        value={vista === 'pistas'
+          ? ordenPistas
+          : vista === 'albumes'
+            ? ordenAlbumes
+            : ordenArtistas}
+        onchange={(e) => {
+          const v = e.currentTarget.value;
+          if (vista === 'pistas') ordenPistas = v as OrdenPistas;
+          else if (vista === 'albumes') ordenAlbumes = v as OrdenAlbumes;
+          else ordenArtistas = v as OrdenArtistas;
+        }}
+      >
+        {#each ordenesActuales as o (o)}
+          <option value={o}>{t.ordenes[o]}</option>
+        {/each}
+      </select>
     </div>
+  </div>
+
+  {#if vista === 'pistas'}
     {#if avisoFavoritas && paraCantar}<p class="aviso" role="status">{avisoFavoritas}</p>{/if}
     {#if ofertaKaraoke}
       {#await import('$ui/agregados/OfertaAgregado.svelte') then m}
@@ -299,47 +330,6 @@
       {/await}
     {/if}
   {/if}
-
-  <div class="fichas ordenes">
-    <span class="rotulo">{t.orden}</span>
-    {#if vista === 'pistas'}
-      {#each ORDENES_PISTAS as o (o)}
-        <button
-          type="button"
-          class="ficha"
-          class:activa={ordenPistas === o}
-          aria-pressed={ordenPistas === o}
-          onclick={() => (ordenPistas = o)}
-        >
-          <Icon nombre="ordenar" tamano={14} />{t.ordenes[o]}
-        </button>
-      {/each}
-    {:else if vista === 'albumes'}
-      {#each ORDENES_ALBUMES as o (o)}
-        <button
-          type="button"
-          class="ficha"
-          class:activa={ordenAlbumes === o}
-          aria-pressed={ordenAlbumes === o}
-          onclick={() => (ordenAlbumes = o)}
-        >
-          <Icon nombre="ordenar" tamano={14} />{t.ordenes[o]}
-        </button>
-      {/each}
-    {:else}
-      {#each ORDENES_ARTISTAS as o (o)}
-        <button
-          type="button"
-          class="ficha"
-          class:activa={ordenArtistas === o}
-          aria-pressed={ordenArtistas === o}
-          onclick={() => (ordenArtistas = o)}
-        >
-          <Icon nombre="ordenar" tamano={14} />{t.ordenes[o]}
-        </button>
-      {/each}
-    {/if}
-  </div>
 
   {#if vista === 'pistas'}
     <div class="lista">
@@ -514,6 +504,14 @@
     border-color: var(--m3c-primary);
   }
 
+  .barra-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ns-espacio-3);
+  }
+
   .fichas {
     display: flex;
     flex-wrap: wrap;
@@ -521,11 +519,32 @@
     gap: var(--ns-espacio-2);
   }
 
-  .rotulo {
-    margin-right: var(--ns-espacio-2);
+  .control-orden {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+  }
+
+  .rotulo-orden {
     color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-xs);
-    font-weight: 600;
+    font-size: var(--ns-texto-sm);
+    font-weight: 500;
+  }
+
+  .selector-orden {
+    height: 2.25rem;
+    padding: 0 var(--ns-espacio-3);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container);
+    color: var(--m3c-on-surface);
+    font: inherit;
+    font-size: var(--ns-texto-sm);
+    cursor: pointer;
+  }
+
+  .selector-orden:hover {
+    background: var(--m3c-surface-container-high);
   }
 
   .ficha {

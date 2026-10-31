@@ -38,9 +38,31 @@
 
   const retomar = $derived(datos?.paraVolver[0] ?? null);
   const hayBiblioteca = $derived((datos?.cifras.pistas ?? 0) > 0);
+  const idsVolver = $derived(datos?.paraVolver.map((x) => x.pista.id) ?? []);
+  const idsTop = $derived(datos?.top.map((x) => x.pista.id) ?? []);
+  const idsUltimos = $derived(datos?.ultimosAnadidos.map((x) => x.id) ?? []);
 
   function reproducir(ids: number[], desde = 0) {
     void reproductor.reproducirPistas(ids, desde);
+  }
+
+  function reproducirAlbum(albumId: number) {
+    void reproducirLista(
+      {
+        texto: null,
+        favoritas: false,
+        sinVerificar: false,
+        albumId,
+        artistaId: null,
+        orden: 'albumAsc'
+      },
+      0
+    );
+  }
+
+  function desplazar(btn: HTMLButtonElement, direccion: -1 | 1) {
+    const fila = btn.closest('.cabecera-carrusel')?.nextElementSibling as HTMLElement;
+    fila?.scrollBy({ left: direccion * fila.clientWidth * 0.8, behavior: 'smooth' });
   }
 </script>
 
@@ -60,34 +82,23 @@
     <div class="heroe">
       <div class="izquierda">
         <ul class="cifras">
-          <li>
-            <a class="cifra-enlace" href="/biblioteca?vista=pistas">
-              <Icon nombre="cancion" tamano={18} /><strong
-                >{datos.cifras.pistas.toLocaleString('es')}</strong
-              ><span>{t.pistas}</span>
-            </a>
-          </li>
-          <li>
-            <a class="cifra-enlace" href="/biblioteca?vista=artistas">
-              <Icon nombre="artista" tamano={18} /><strong
-                >{datos.cifras.artistas.toLocaleString('es')}</strong
-              ><span>{t.artistas}</span>
-            </a>
-          </li>
-          <li>
-            <a class="cifra-enlace" href="/biblioteca?vista=albumes">
-              <Icon nombre="album" tamano={18} /><strong
-                >{datos.cifras.albumes.toLocaleString('es')}</strong
-              ><span>{t.albumes}</span>
-            </a>
-          </li>
-          <li>
-            <div class="cifra-estatica">
-              <Icon nombre="reloj" tamano={18} /><strong
-                >{duracionDetallada(datos.cifras.duracionSeg)}</strong
-              ><span>{t.duracion}</span>
-            </div>
-          </li>
+          {#each [{ href: '/biblioteca?vista=pistas', icono: 'cancion', valor: datos.cifras.pistas.toLocaleString('es'), rotulo: t.pistas }, { href: '/biblioteca?vista=artistas', icono: 'artista', valor: datos.cifras.artistas.toLocaleString('es'), rotulo: t.artistas }, { href: '/biblioteca?vista=albumes', icono: 'album', valor: datos.cifras.albumes.toLocaleString('es'), rotulo: t.albumes }, { href: null, icono: 'reloj', valor: duracionDetallada(datos.cifras.duracionSeg), rotulo: t.duracion }] as c (c.rotulo)}
+            <li>
+              {#if c.href}
+                <a class="cifra-enlace" href={c.href}>
+                  <Icon nombre={c.icono as any} tamano={18} /><strong>{c.valor}</strong><span
+                    >{c.rotulo}</span
+                  >
+                </a>
+              {:else}
+                <div class="cifra-estatica">
+                  <Icon nombre={c.icono as any} tamano={18} /><strong>{c.valor}</strong><span
+                    >{c.rotulo}</span
+                  >
+                </div>
+              {/if}
+            </li>
+          {/each}
         </ul>
 
         {#if retomar}
@@ -121,22 +132,7 @@
                 .join(' · ')}
             </span>
             <div class="botones">
-              <button
-                type="button"
-                class="boton relleno"
-                onclick={() =>
-                  reproducirLista(
-                    {
-                      texto: null,
-                      favoritas: false,
-                      sinVerificar: false,
-                      albumId: a.id,
-                      artistaId: null,
-                      orden: 'albumAsc'
-                    },
-                    0
-                  )}
-              >
+              <button type="button" class="boton relleno" onclick={() => reproducirAlbum(a.id)}>
                 <Icon nombre="reproducir" tamano={16} />{t.reproducir}
               </button>
               <a class="boton" href={`/biblioteca/album?id=${a.id}`}>{t.verAlbum}</a>
@@ -152,11 +148,7 @@
       <ul class="vuelve">
         {#each datos.paraVolver.slice(0, 7) as e, k (e.pista.id)}
           <li class:grande={k === 0}>
-            <button
-              type="button"
-              class="tarjeta-pista"
-              onclick={() => reproducir(datos?.paraVolver.map((x) => x.pista.id) ?? [], k)}
-            >
+            <button type="button" class="tarjeta-pista" onclick={() => reproducir(idsVolver, k)}>
               <span class="mini-portada">
                 {#if e.pista.tienePortada}<img
                     src={urlPortada('pista', e.pista.id, k === 0 ? 320 : 64)}
@@ -182,11 +174,7 @@
       <ol class="top">
         {#each datos.top as e, k (e.pista.id)}
           <li>
-            <button
-              type="button"
-              class="fila-top"
-              onclick={() => reproducir(datos?.top.map((x) => x.pista.id) ?? [], k)}
-            >
+            <button type="button" class="fila-top" onclick={() => reproducir(idsTop, k)}>
               <span class="numero">{String(k + 1).padStart(2, '0')}</span>
               <span class="mini-portada">
                 {#if e.pista.tienePortada}<img
@@ -206,9 +194,51 @@
       </ol>
     {/if}
 
+    {#snippet carruselCabecera(titulo: string, sub: string)}
+      <div class="cabecera-carrusel">
+        <div>
+          <h2 class="seccion">{titulo}</h2>
+          <p class="seccion-sub">{sub}</p>
+        </div>
+        <div class="controles-carrusel">
+          <button
+            type="button"
+            class="boton-avance"
+            aria-label={t.anterior}
+            onclick={(e) => desplazar(e.currentTarget, -1)}
+          >
+            <Icon nombre="anterior" tamano={16} />
+          </button>
+          <button
+            type="button"
+            class="boton-avance"
+            aria-label={t.siguiente}
+            onclick={(e) => desplazar(e.currentTarget, 1)}
+          >
+            <Icon nombre="siguiente" tamano={16} />
+          </button>
+        </div>
+      </div>
+    {/snippet}
+
+    {#snippet tarjetaCaratula(
+      titulo: string,
+      sub: string,
+      url: string,
+      placeholder: 'album' | 'cancion'
+    )}
+      <span class="caratula">
+        {#if url}<img src={url} alt="" loading="lazy" />{:else}<Icon
+            nombre={placeholder}
+            tamano={32}
+          />{/if}
+      </span>
+      <strong>{titulo}</strong>
+      <span class="sub">{sub}</span>
+    {/snippet}
+
     {#if datos.playlistsDestacadas.length > 0}
-      <h2 class="seccion">{t.playlists}</h2>
-      <p class="seccion-sub">{t.playlistsSub}</p>
+      {@render carruselCabecera(t.playlists, t.playlistsSub)}
       <ul class="fila">
         {#each datos.playlistsDestacadas as p (p.id)}
           <li>
@@ -231,33 +261,31 @@
       </ul>
     {/if}
 
-    {#each [{ titulo: t.queGustan, sub: t.queGustanSub, lista: datos.albumesQueGustan }, { titulo: t.masEscuchados, sub: t.masEscuchadosSub, lista: datos.albumesMasEscuchados }] as grupo (grupo.titulo)}
-      {#if grupo.lista.length > 0}
-        <h2 class="seccion">{grupo.titulo}</h2>
-        <p class="seccion-sub">{grupo.sub}</p>
+    {#snippet carruselAlbumes(titulo: string, sub: string, lista: Inicio['albumesQueGustan'])}
+      {#if lista.length > 0}
+        {@render carruselCabecera(titulo, sub)}
         <ul class="fila">
-          {#each grupo.lista as a (a.id)}
+          {#each lista as a (a.id)}
             <li>
               <a class="tarjeta enlace" href={`/biblioteca/album?id=${a.id}`}>
-                <span class="caratula">
-                  {#if a.tienePortada}<img
-                      src={urlPortada('album', a.id, 320)}
-                      alt=""
-                      loading="lazy"
-                    />{:else}<Icon nombre="album" tamano={32} />{/if}
-                </span>
-                <strong>{a.titulo}</strong>
-                <span class="sub">{a.artista}</span>
+                {@render tarjetaCaratula(
+                  a.titulo,
+                  a.artista,
+                  a.tienePortada ? urlPortada('album', a.id, 320) : '',
+                  'album'
+                )}
               </a>
             </li>
           {/each}
         </ul>
       {/if}
-    {/each}
+    {/snippet}
+
+    {@render carruselAlbumes(t.queGustan, t.queGustanSub, datos.albumesQueGustan)}
+    {@render carruselAlbumes(t.masEscuchados, t.masEscuchadosSub, datos.albumesMasEscuchados)}
 
     {#if datos.artistasQueSuenan.length > 0}
-      <h2 class="seccion">{t.artistas10}</h2>
-      <p class="seccion-sub">{t.artistasSub}</p>
+      {@render carruselCabecera(t.artistas10, t.artistasSub)}
       <ul class="fila">
         {#each datos.artistasQueSuenan as a (a.id)}
           <li>
@@ -277,25 +305,17 @@
     {/if}
 
     {#if datos.ultimosAnadidos.length > 0}
-      <h2 class="seccion">{t.anadidos}</h2>
-      <p class="seccion-sub">{t.anadidosSub}</p>
+      {@render carruselCabecera(t.anadidos, t.anadidosSub)}
       <ul class="fila">
         {#each datos.ultimosAnadidos as p, k (p.id)}
           <li>
-            <button
-              type="button"
-              class="tarjeta"
-              onclick={() => reproducir(datos?.ultimosAnadidos.map((x) => x.id) ?? [], k)}
-            >
-              <span class="caratula">
-                {#if p.tienePortada}<img
-                    src={urlPortada('pista', p.id, 320)}
-                    alt=""
-                    loading="lazy"
-                  />{:else}<Icon nombre="cancion" tamano={32} />{/if}
-              </span>
-              <strong>{p.titulo}</strong>
-              <span class="sub">{p.artista}</span>
+            <button type="button" class="tarjeta" onclick={() => reproducir(idsUltimos, k)}>
+              {@render tarjetaCaratula(
+                p.titulo,
+                p.artista,
+                p.tienePortada ? urlPortada('pista', p.id, 320) : '',
+                'cancion'
+              )}
             </button>
           </li>
         {/each}
@@ -607,6 +627,47 @@
     padding: 0 0 var(--ns-espacio-2);
     overflow-x: auto;
     list-style: none;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+  }
+
+  .fila li {
+    scroll-snap-align: start;
+  }
+
+  .cabecera-carrusel {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--ns-espacio-3);
+    margin-top: var(--ns-espacio-5);
+  }
+
+  .cabecera-carrusel .seccion {
+    margin-top: 0;
+  }
+
+  .controles-carrusel {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+  }
+
+  .boton-avance {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container);
+    color: var(--m3c-on-surface);
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+
+  .boton-avance:hover {
+    background: var(--m3c-surface-container-high);
   }
 
   .tarjeta {

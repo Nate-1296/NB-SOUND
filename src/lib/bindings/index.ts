@@ -85,6 +85,7 @@ export type { ReglaInteligente } from './ReglaInteligente';
 export type { ResultadoIntento } from './ResultadoIntento';
 export type { ResumenCopia } from './ResumenCopia';
 export type { ResumenCopiaDispositivo } from './ResumenCopiaDispositivo';
+export type { ResumenDuplicados } from './ResumenDuplicados';
 export type { ResumenEscucha } from './ResumenEscucha';
 export type { RetoVisible } from './RetoVisible';
 export type { Ronda } from './Ronda';

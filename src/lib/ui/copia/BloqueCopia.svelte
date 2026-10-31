@@ -42,10 +42,20 @@
     mensaje = t.creando;
     try {
       const r = await copiaCrear();
-      mensaje = r ? t.creada((r.bytes / 1_048_576).toFixed(1), r.portadas) : null;
+      const txt = r ? t.creada((r.bytes / 1_048_576).toFixed(1), r.portadas) : null;
+      mensaje = txt;
+      if (txt) {
+        window.dispatchEvent(
+          new CustomEvent('ns:notificacion', { detail: { tipo: 'exito', mensaje: txt } })
+        );
+      }
       estado = await copiaEstado();
     } catch (error) {
-      mensaje = explicar(error);
+      const err = explicar(error);
+      mensaje = err;
+      window.dispatchEvent(
+        new CustomEvent('ns:notificacion', { detail: { tipo: 'error', mensaje: err } })
+      );
     } finally {
       ocupado = false;
     }
@@ -56,9 +66,18 @@
     ocupado = true;
     mensaje = null;
     try {
-      if (await copiaRestaurar()) estado = await copiaEstado();
+      if (await copiaRestaurar()) {
+        estado = await copiaEstado();
+        window.dispatchEvent(
+          new CustomEvent('ns:notificacion', { detail: { tipo: 'exito', mensaje: t.pendiente } })
+        );
+      }
     } catch (error) {
-      mensaje = explicar(error);
+      const err = explicar(error);
+      mensaje = err;
+      window.dispatchEvent(
+        new CustomEvent('ns:notificacion', { detail: { tipo: 'error', mensaje: err } })
+      );
     } finally {
       ocupado = false;
     }
@@ -68,7 +87,11 @@
     try {
       estado = await paso();
     } catch (error) {
-      mensaje = explicar(error);
+      const err = explicar(error);
+      mensaje = err;
+      window.dispatchEvent(
+        new CustomEvent('ns:notificacion', { detail: { tipo: 'error', mensaje: err } })
+      );
     }
   }
 

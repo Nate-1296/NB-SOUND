@@ -1,14 +1,9 @@
 <!--
   @component
   Una canción en una lista, con la disposición de la V1 (`VistaBiblioteca.qml`):
-  número, portada, título con artista, álbum y año debajo, álbum, duración, la
-  estrella, el menú y las acciones Reproducir, Añadir a cola, Abrir álbum y Abrir
-  artista. "Editar datos" (F4.2.5) abre su diálogo, que se carga aparte. Si está
-  sin verificar, también "Completar datos" (F4.2.8), cuyo resultado ocupa el
-  subtítulo hasta que la lista se recarga.
-
-  Durante el desplazamiento rápido no pide la portada (F0.4.7): pinta el hueco y
-  la pide al frenar.
+  número, portada, título con artista, álbum y año debajo, álbum, duración y
+  acciones limpias (reproducir, favorita, añadir a playlist y menú desplegable
+  ··· con acciones secundarias: DIS-03).
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
@@ -47,25 +42,41 @@
   const t = textos.biblioteca;
   let rota = $state(false);
 
-  // El menú va en la capa superior (`popover`): la fila recorta lo que se sale, y
-  // la lista virtual la recicla al desplazarse.
-  let menu: HTMLDivElement | undefined = $state();
-  let menuAbierto = $state(false);
-  function abrirMenu(e: MouseEvent) {
+  // Popover para añadir a playlists
+  let menuPlaylists: HTMLDivElement | undefined = $state();
+  let menuPlaylistsAbierto = $state(false);
+  function abrirMenuPlaylists(e: MouseEvent) {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    if (!menu) return;
-    menu.style.top = `${Math.min(r.bottom + 4, window.innerHeight - 300)}px`;
-    menu.style.left = `${Math.max(8, r.right - 224)}px`;
-    menuAbierto = true;
-    menu.showPopover();
+    if (!menuPlaylists) return;
+    menuPlaylists.style.top = `${Math.min(r.bottom + 4, window.innerHeight - 300)}px`;
+    menuPlaylists.style.left = `${Math.max(8, r.right - 224)}px`;
+    menuPlaylistsAbierto = true;
+    menuPlaylists.showPopover();
   }
-  function cerrarMenu() {
-    menu?.hidePopover();
+  function cerrarMenuPlaylists() {
+    menuPlaylists?.hidePopover();
   }
+
+  // Popover para más acciones (···)
+  let menuAcciones: HTMLDivElement | undefined = $state();
+  let menuAccionesAbierto = $state(false);
+  function abrirMenuAcciones(e: MouseEvent) {
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    if (!menuAcciones) return;
+    menuAcciones.style.top = `${Math.min(r.bottom + 4, window.innerHeight - 300)}px`;
+    menuAcciones.style.left = `${Math.max(8, r.right - 200)}px`;
+    menuAccionesAbierto = true;
+    menuAcciones.showPopover();
+  }
+  function cerrarMenuAcciones() {
+    menuAcciones?.hidePopover();
+  }
+
   let editando = $state(false);
   let borrando = $state(false);
   let completando = $state(false);
   let resultado = $state<string | null>(null);
+
   async function completar() {
     completando = true;
     resultado = null;
@@ -149,13 +160,15 @@
   {/if}
   <span class="duracion">{formatoTiempo(pista.duracionSeg)}</span>
   <span class="acciones">
+    <button type="button" class="icono reproducir" aria-label={t.reproducir} onclick={onreproducir}>
+      <Icon nombre="reproducir" tamano={16} />
+    </button>
     <button
       type="button"
       class="icono"
       class:activo={pista.favorita}
       aria-label={pista.favorita ? t.quitarFavorita : t.marcarFavorita}
       aria-pressed={pista.favorita}
-      title={pista.favorita ? t.quitarFavorita : t.marcarFavorita}
       onclick={onfavorita}
     >
       <Icon nombre="favorito" tamano={18} />
@@ -164,44 +177,124 @@
       type="button"
       class="icono"
       aria-label={textos.playlists.anadirA}
-      title={textos.playlists.anadirA}
       aria-haspopup="menu"
-      onclick={abrirMenu}
+      onclick={abrirMenuPlaylists}
     >
       <Icon nombre="mas" tamano={18} />
     </button>
+    <button
+      type="button"
+      class="icono"
+      aria-label={t.masAcciones}
+      aria-haspopup="menu"
+      onclick={abrirMenuAcciones}
+    >
+      <Icon nombre="masHorizontal" tamano={18} />
+    </button>
+
     <div
       class="capa"
       popover="auto"
-      bind:this={menu}
-      ontoggle={(e) => (menuAbierto = e.newState === 'open')}
+      bind:this={menuPlaylists}
+      ontoggle={(e) => (menuPlaylistsAbierto = e.newState === 'open')}
     >
-      {#if menuAbierto}<MenuAnadir pistas={[pista.id]} oncerrar={cerrarMenu} />{/if}
+      {#if menuPlaylistsAbierto}
+        <MenuAnadir pistas={[pista.id]} oncerrar={cerrarMenuPlaylists} />
+      {/if}
     </div>
-    <button type="button" class="boton principal" onclick={onreproducir}>
-      <Icon nombre="reproducir" tamano={14} />{t.reproducir}
-    </button>
-    <button type="button" class="boton" onclick={onanadir}>
-      <Icon nombre="reproducir" tamano={14} />{t.anadirACola}
-    </button>
-    <button
-      type="button"
-      class="icono"
-      aria-label={t.editarDatos}
-      title={t.editarDatos}
-      onclick={() => (editando = true)}
+
+    <div
+      class="capa"
+      popover="auto"
+      bind:this={menuAcciones}
+      ontoggle={(e) => (menuAccionesAbierto = e.newState === 'open')}
     >
-      <Icon nombre="editar" tamano={18} />
-    </button>
-    <button
-      type="button"
-      class="icono"
-      aria-label={t.borrarCancion}
-      title={t.borrarCancion}
-      onclick={() => (borrando = true)}
-    >
-      <Icon nombre="borrar" tamano={18} />
-    </button>
+      {#if menuAccionesAbierto}
+        <div class="menu-contextual" role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            class="opcion-menu"
+            onclick={() => {
+              cerrarMenuAcciones();
+              onanadir();
+            }}
+          >
+            <Icon nombre="cola" tamano={18} />
+            <span>{t.anadirACola}</span>
+          </button>
+          {#if !pista.verificada}
+            <button
+              type="button"
+              role="menuitem"
+              class="opcion-menu"
+              disabled={completando}
+              onclick={() => {
+                cerrarMenuAcciones();
+                completar();
+              }}
+            >
+              <Icon nombre="comprobado" tamano={18} />
+              <span>{t.completarDatos}</span>
+            </button>
+          {/if}
+          <button
+            type="button"
+            role="menuitem"
+            class="opcion-menu"
+            onclick={() => {
+              cerrarMenuAcciones();
+              editando = true;
+            }}
+          >
+            <Icon nombre="editar" tamano={18} />
+            <span>{t.editarDatos}</span>
+          </button>
+          {#if contexto !== 'album' && pista.albumId !== null}
+            <button
+              type="button"
+              role="menuitem"
+              class="opcion-menu"
+              onclick={() => {
+                cerrarMenuAcciones();
+                goto(`/biblioteca/album?id=${pista.albumId}`);
+              }}
+            >
+              <Icon nombre="album" tamano={18} />
+              <span>{t.abrirAlbum}</span>
+            </button>
+          {/if}
+          {#if contexto !== 'artista' && pista.artistaId !== null}
+            <button
+              type="button"
+              role="menuitem"
+              class="opcion-menu"
+              onclick={() => {
+                cerrarMenuAcciones();
+                goto(`/biblioteca/artista?id=${pista.artistaId}`);
+              }}
+            >
+              <Icon nombre="artista" tamano={18} />
+              <span>{t.abrirArtista}</span>
+            </button>
+          {/if}
+          <hr class="separador-menu" />
+          <button
+            type="button"
+            role="menuitem"
+            class="opcion-menu destructiva"
+            onclick={() => {
+              cerrarMenuAcciones();
+              borrando = true;
+            }}
+          >
+            <Icon nombre="borrar" tamano={18} />
+            <span>{t.borrarCancion}</span>
+          </button>
+        </div>
+      {/if}
+    </div>
+
     {#if editando}
       {#await import('../edicion/DialogoEditar.svelte') then m}
         <m.default
@@ -227,31 +320,6 @@
           oncerrar={() => (borrando = false)}
         />
       {/await}
-    {/if}
-    {#if !pista.verificada}
-      <button type="button" class="boton" disabled={completando} onclick={completar}>
-        {t.completarDatos}
-      </button>
-    {/if}
-    {#if contexto !== 'album'}
-      <button
-        type="button"
-        class="boton"
-        disabled={pista.albumId === null}
-        onclick={() => goto(`/biblioteca/album?id=${pista.albumId}`)}
-      >
-        {t.abrirAlbum}
-      </button>
-    {/if}
-    {#if contexto !== 'artista'}
-      <button
-        type="button"
-        class="boton"
-        disabled={pista.artistaId === null}
-        onclick={() => goto(`/biblioteca/artista?id=${pista.artistaId}`)}
-      >
-        {t.abrirArtista}
-      </button>
     {/if}
   </span>
 </div>
@@ -358,6 +426,57 @@
     background: none;
   }
 
+  .menu-contextual {
+    display: flex;
+    flex-direction: column;
+    min-width: 14rem;
+    padding: var(--ns-espacio-1);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-md);
+    background: var(--m3c-surface-container-high);
+    box-shadow: 0 4px 16px var(--m3c-shadow);
+  }
+
+  .separador-menu {
+    margin: var(--ns-espacio-1) 0;
+    border: none;
+    border-top: 1px solid var(--m3c-outline-variant);
+  }
+
+  .opcion-menu {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-3);
+    padding: var(--ns-espacio-2) var(--ns-espacio-3);
+    border: none;
+    border-radius: var(--ns-radio-sm);
+    background: none;
+    color: var(--m3c-on-surface);
+    font: inherit;
+    font-size: var(--ns-texto-sm);
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+
+  .opcion-menu:hover:not(:disabled) {
+    background: var(--m3c-surface-container-highest);
+  }
+
+  .opcion-menu:disabled {
+    opacity: 0.38;
+    cursor: default;
+  }
+
+  .opcion-menu.destructiva {
+    color: var(--m3c-error);
+  }
+
+  .opcion-menu.destructiva:hover {
+    background: var(--m3c-error-container);
+    color: var(--m3c-on-error-container);
+  }
+
   .acciones {
     display: flex;
     align-items: center;
@@ -381,42 +500,17 @@
     color: var(--m3c-primary);
   }
 
-  .boton {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ns-espacio-1);
-    height: 2.25rem;
-    padding: 0 var(--ns-espacio-4);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-pleno);
-    background: none;
-    color: var(--m3c-on-surface);
-    font: inherit;
-    font-size: var(--ns-texto-sm);
-    font-weight: 600;
-    white-space: nowrap;
-    cursor: pointer;
-  }
-
-  .boton:hover:not(:disabled),
   .icono:hover {
     background: var(--m3c-surface-container-high);
   }
 
-  .boton:disabled {
-    opacity: 0.38;
-    cursor: default;
+  .icono.reproducir {
+    color: var(--m3c-primary);
   }
 
-  .boton.principal {
-    border-color: var(--m3c-primary);
-    background: var(--m3c-primary);
-    color: var(--m3c-on-primary);
-  }
-
-  .boton.principal:hover {
-    background: var(--m3c-primary);
-    filter: brightness(1.08);
+  .icono.reproducir:hover {
+    background: var(--m3c-primary-container);
+    color: var(--m3c-on-primary-container);
   }
 
   @container carcasa (max-width: 75rem) {
@@ -426,10 +520,6 @@
 
     .fila {
       grid-template-columns: 2.5rem 2.625rem minmax(10rem, 1fr) 3.5rem auto;
-    }
-
-    .boton:not(.principal) {
-      display: none;
     }
   }
 </style>

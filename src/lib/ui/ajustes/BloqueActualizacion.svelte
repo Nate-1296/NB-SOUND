@@ -30,9 +30,19 @@
     mensaje = t.buscando;
     try {
       nueva = await actualizacionBuscar();
-      mensaje = nueva ? t.disponible(nueva.version) : t.alDia;
+      const txt = nueva ? t.disponible(nueva.version) : t.alDia;
+      mensaje = txt;
+      window.dispatchEvent(
+        new CustomEvent('ns:notificacion', {
+          detail: { tipo: nueva ? 'info' : 'exito', mensaje: txt }
+        })
+      );
     } catch (error) {
-      mensaje = explicar(error);
+      const err = explicar(error);
+      mensaje = err;
+      window.dispatchEvent(
+        new CustomEvent('ns:notificacion', { detail: { tipo: 'error', mensaje: err } })
+      );
     } finally {
       ocupado = false;
     }
@@ -44,7 +54,11 @@
     try {
       await actualizacionInstalar();
     } catch (error) {
-      mensaje = explicar(error);
+      const err = explicar(error);
+      mensaje = err;
+      window.dispatchEvent(
+        new CustomEvent('ns:notificacion', { detail: { tipo: 'error', mensaje: err } })
+      );
     } finally {
       ocupado = false;
     }

@@ -25,6 +25,7 @@
   let { pendientes = 0 }: Props = $props();
 
   const pie = $derived<Destino[]>(pendientes > 0 ? [POR_REVISAR, AJUSTES] : [AJUSTES]);
+  const rutaLogo = $derived(`/logos/logo_${aparienciaActual.actual.tema}.png`);
 </script>
 
 {#snippet enlace(destino: Destino)}
@@ -35,7 +36,7 @@
       class="destino"
       class:activo
       aria-current={activo ? 'page' : undefined}
-      title={destino.etiqueta}
+      title={aparienciaActual.barraLateralCompacta ? destino.etiqueta : undefined}
     >
       <span class="icono"><Icon nombre={destino.icono} tamano={20} /></span>
       <span class="etiqueta">{destino.etiqueta}</span>
@@ -48,7 +49,15 @@
 
 <nav class="lateral" aria-label={textos.nav.principal}>
   <a class="marca" href="/" aria-label={textos.app.nombre}>
-    <img src="/logo.png" alt="" width="136" height="136" />
+    <img
+      src={rutaLogo}
+      alt=""
+      width="136"
+      height="136"
+      onerror={(e) => {
+        (e.currentTarget as HTMLImageElement).src = '/logo.png';
+      }}
+    />
   </a>
 
   {#each SECCIONES as seccion (seccion.etiqueta)}
@@ -73,9 +82,7 @@
       type="button"
       class="boton-colapso"
       onclick={() => aparienciaActual.alternarBarraLateral()}
-      title={aparienciaActual.barraLateralCompacta
-        ? textos.nav.expandirLateral
-        : textos.nav.colapsarLateral}
+      title={aparienciaActual.barraLateralCompacta ? textos.nav.expandirLateral : undefined}
       aria-label={aparienciaActual.barraLateralCompacta
         ? textos.nav.expandirLateral
         : textos.nav.colapsarLateral}
