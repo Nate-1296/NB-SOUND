@@ -56,3 +56,8 @@ el contenedor; las licencias nuevas (MIT y Apache-2.0) se revisaron a mano.
 Nathan delegó la decisión sobre P13 y pidió seguir con la Fase 5. Se construye la mecánica de agregados con el
 catálogo preparado y sus entradas marcadas como no publicadas: en cuanto haya una Release con los archivos, basta con
 rellenar URL, tamaño y SHA-256.
+
+| Commit | Iteración | Qué se hizo | Pruebas nuevas |
+|---|---|---|---|
+| `832a152` | — | Esta bitácora, con todo lo anterior | `check-docs` |
+| (este) | F5.1.1, F5.1.2 | `agregados.rs`: catálogo compilado sin publicar (P13) e instalación reanudable, verificada y atómica; `Red::descargar` a disco con `Range` | Corte y reanudación, `Range` ignorado, hash alterado, ruta trampa, quitar y reinstalar |

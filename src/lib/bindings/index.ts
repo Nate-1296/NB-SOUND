@@ -29,6 +29,7 @@ export type { DatosPista } from './DatosPista';
 export type { Emparejar } from './Emparejar';
 export type { EstadoCopia } from './EstadoCopia';
 export type { EstadoMovil } from './EstadoMovil';
+export type { IdAgregado } from './IdAgregado';
 export type { InformeDeSalud } from './InformeDeSalud';
 export type { Inicio } from './Inicio';
 export type { Instantanea } from './Instantanea';

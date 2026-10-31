@@ -113,3 +113,8 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
       pistas.
 - [ ] Paridad global de la Fase 4: 300 archivos sin etiquetar (copias del corpus fuera de la carpeta real) importados
       con la V1 y con la V2, con las decisiones coincidiendo en ≥ 98 % y cada diferencia explicada en el informe.
+
+## Fase 5
+
+- [ ] Con la Release de agregados publicada (P13): instalar cada agregado desde Ajustes, cortar la red a mitad y
+      reanudar; el archivo instalado es el del catálogo (F5.1.2).
