@@ -109,6 +109,7 @@
   // --- Pistas ---
   let total = $state<number | null>(null);
   let primerBloque: PistaResumen[] = [];
+  let pedido = 0;
   let version = $state(0);
   // Editar o completar una pista la cambia en la base: se vuelve a pedir la lista.
   let recargas = $state(0);
@@ -116,11 +117,12 @@
     const c = consulta;
     void recargas;
     if (vista !== 'pistas') return;
-    const v = ++version;
+    const v = ++pedido;
     void bibliotecaPistas(c, 0, TAM_BLOQUE).then((p) => {
-      if (v !== version) return;
+      if (v !== pedido) return;
       primerBloque = p.pistas;
       total = p.total;
+      version = v;
     });
   });
 
