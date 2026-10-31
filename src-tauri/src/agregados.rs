@@ -84,29 +84,34 @@ impl Entrada {
 
 const MB: u64 = 1024 * 1024;
 
-/// El catálogo. Sin publicar todavía (P13): al subir la Release `agregados-1`, se
-/// rellenan `url`, `bytes` y `sha256` de cada uno.
+/// El catálogo de agregados publicados en `agregados-1` (F5.1.1, ADR-006).
 pub const CATALOGO: [Entrada; 4] = [
     Entrada {
         id: IdAgregado::Karaoke,
         version: "1",
-        url: None,
-        bytes: 166 * MB,
-        sha256: None,
+        url: Some(
+            "https://github.com/Nate-1296/NB-SOUND/releases/download/agregados-1/karaoke-1.zip",
+        ),
+        bytes: 145_667_909,
+        sha256: Some("09ebc268fb34f524fccc42bcbe8fb5a0f8d66b5b652dc6571e31c472528de0e6"),
     },
     Entrada {
         id: IdAgregado::Analisis,
         version: "1",
-        url: None,
-        bytes: 4 * MB,
-        sha256: None,
+        url: Some(
+            "https://github.com/Nate-1296/NB-SOUND/releases/download/agregados-1/analisis-1.zip",
+        ),
+        bytes: 3_480_224,
+        sha256: Some("67e175121873772a42f4d0cfa6c5cff5c88cfb82c590a4b87d246e62502f8530"),
     },
     Entrada {
         id: IdAgregado::TextoDj,
         version: "1",
-        url: None,
-        bytes: 90 * MB,
-        sha256: None,
+        url: Some(
+            "https://github.com/Nate-1296/NB-SOUND/releases/download/agregados-1/texto-dj-1.zip",
+        ),
+        bytes: 82_967_596,
+        sha256: Some("25b67dee0b84cd54b702c89d227bf3c07f8b7990ba700db6094ea9cd1f2bf2b5"),
     },
     Entrada {
         id: IdAgregado::Aceleracion,

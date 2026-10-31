@@ -28,8 +28,7 @@ En este orden, todo de Nathan:
 1. **Las pruebas finales** con la instalación real y máquinas limpias
    ([pruebas-finales.md](../plan/pruebas-finales.md)): la importación de la V1, el contrato móvil con el teléfono, el
    DJ a oído y con la misma sesión que la V1, A ciegas, y la puerta de empaquetado en las tres plataformas.
-2. **P13**: publicar la Release de agregados. Sin ella, karaoke, análisis y texto del DJ no se pueden instalar, y la
-   2.0 saldría sin sus funciones opcionales.
+2. **P13 (hecho el 2026-10-31):** publicada la Release `agregados-1` con `karaoke-1.zip`, `analisis-1.zip` y `texto-dj-1.zip`, y fijados sus URLs, tamaños y SHA-256 en `src-tauri/src/agregados.rs`.
 3. **Empujar la etiqueta `v2.0.0`.** Lanza `publicacion.yml`, que compila, firma y deja un borrador con
    `latest.json`. Es la primera ejecución real del workflow: si falla algo de la firma o del empaquetado, se ve ahí.
 4. **Publicar el borrador** en GitHub. Desde ese momento, el actualizador de las instalaciones lo encuentra.
