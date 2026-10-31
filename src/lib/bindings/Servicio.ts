@@ -3,4 +3,4 @@
 /**
  * Un servicio externo. El orden es el de Ajustes > Privacidad.
  */
-export type Servicio = "acoustId" | "musicBrainz" | "coverArtArchive" | "shazam" | "itunes" | "lrclib" | "lyricsOvh" | "deezer" | "wikipedia" | "theAudioDb" | "proveedorIa" | "agregados";
+export type Servicio = "acoustId" | "musicBrainz" | "coverArtArchive" | "shazam" | "itunes" | "lrclib" | "lyricsOvh" | "deezer" | "wikipedia" | "theAudioDb" | "proveedorIa" | "agregados" | "actualizaciones";

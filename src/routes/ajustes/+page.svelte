@@ -76,6 +76,9 @@
       {#await version then v}
         {#if v}<p>{t.version(v)}</p>{/if}
       {/await}
+      {#await import('$ui/ajustes/BloqueActualizacion.svelte') then m}
+        <m.default />
+      {/await}
       <p>{t.licencia}</p>
       <p>{t.terceros}</p>
       <p>{t.modelos}</p>

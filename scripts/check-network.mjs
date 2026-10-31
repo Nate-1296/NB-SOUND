@@ -30,6 +30,12 @@ const LA_PUERTA = join(FUENTE, 'net.rs');
 /** Nombre del crate cliente. Si cambia, cambia aquí y en `Cargo.toml`. */
 const CLIENTE = 'ureq';
 
+/**
+ * Los crates que salen a la red con su propio cliente. El de actualizaciones
+ * (F7.2.2) solo puede usarse desde la puerta, después de `Red::autorizar`.
+ */
+const CON_CLIENTE_PROPIO = ['tauri_plugin_updater'];
+
 /** @param {string} dir @returns {string[]} */
 function recorrer(dir) {
   const salida = [];
@@ -50,7 +56,7 @@ function sinComentarios(texto) {
 }
 
 const problemas = [];
-const usoDelCliente = new RegExp(`\\b${CLIENTE}\\s*::`, 'g');
+const usoDelCliente = new RegExp(`\\b(${[CLIENTE, ...CON_CLIENTE_PROPIO].join('|')})\\s*::`, 'g');
 
 for (const archivo of recorrer(FUENTE)) {
   if (archivo === LA_PUERTA) continue;
@@ -59,7 +65,7 @@ for (const archivo of recorrer(FUENTE)) {
   for (const coincidencia of texto.matchAll(usoDelCliente)) {
     const linea = texto.slice(0, coincidencia.index).split('\n').length;
     problemas.push(
-      `${relative(ROOT, archivo)}:${linea}  usa "${CLIENTE}" fuera de src/net.rs`
+      `${relative(ROOT, archivo)}:${linea}  usa "${coincidencia[1]}" fuera de src/net.rs`
     );
   }
 }

@@ -29,7 +29,8 @@ export const SERVICIOS_EN_LINEA = [
   'lyricsOvh',
   'deezer',
   'wikipedia',
-  'theAudioDb'
+  'theAudioDb',
+  'actualizaciones'
 ] as const satisfies readonly Servicio[];
 
 class Privacidad {

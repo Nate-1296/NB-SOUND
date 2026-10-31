@@ -268,6 +268,7 @@ pub fn run() {
 
     let aplicacion = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(net::plugin_de_actualizaciones())
         .manage(estado)
         .setup(move |app| {
             use tauri::Manager;
@@ -471,6 +472,8 @@ pub fn run() {
             comandos::reiniciar,
             comandos::agregados_estado,
             comandos::agregado_instalar,
+            comandos::actualizacion_buscar,
+            comandos::actualizacion_instalar,
             comandos::agregado_quitar,
             comandos::gpu_detectada,
             comandos::karaoke_estado,

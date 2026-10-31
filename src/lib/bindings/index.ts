@@ -9,6 +9,7 @@
  */
 
 export type { Acelerador } from './Acelerador';
+export type { Actualizacion } from './Actualizacion';
 export type { AjustesEcualizador } from './AjustesEcualizador';
 export type { AjustesIa } from './AjustesIa';
 export type { AlbumResumen } from './AlbumResumen';

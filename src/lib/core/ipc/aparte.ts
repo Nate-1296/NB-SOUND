@@ -7,6 +7,7 @@
 
 import type { UnlistenFn } from '@tauri-apps/api/event';
 import type {
+  Actualizacion,
   AjustesIa,
   DatosAlbum,
   DatosPista,
@@ -38,6 +39,18 @@ export function gpuDetectada(): Promise<Gpu | null> {
 
 export function agregadosEstado(): Promise<EstadoAgregado[]> {
   return call<EstadoAgregado[]>('agregados_estado');
+}
+
+// --- Actualizaciones de la aplicación ------------------------------------------------
+
+/** La versión publicada más nueva que la instalada; buscarla es consentir el servicio. */
+export function actualizacionBuscar(): Promise<Actualizacion | null> {
+  return call<Actualizacion | null>('actualizacion_buscar');
+}
+
+/** Instala la versión más nueva; la aplicación se reinicia con ella. */
+export function actualizacionInstalar(): Promise<void> {
+  return call<void>('actualizacion_instalar');
 }
 
 /** Empieza a instalarlo en segundo plano; el progreso llega con `alCambiarLosAgregados`. */

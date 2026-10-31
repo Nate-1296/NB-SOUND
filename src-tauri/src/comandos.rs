@@ -734,6 +734,51 @@ pub async fn por_revisar_descartar(
     .await
 }
 
+// --- Actualizaciones de la aplicación (F7.2.2) -----------------------------------
+
+/// Pulsar "Buscar actualizaciones" es el consentimiento del servicio, como
+/// "Instalar" lo es de los agregados; con la conexión general apagada no sale
+/// nada. Nunca se busca sin que el usuario lo pida.
+async fn consentir_actualizaciones(app: &AppHandle) -> NsResult<std::sync::Arc<crate::net::Red>> {
+    let (db, red) = {
+        let e = app.state::<Estado>();
+        (e.db.clone(), std::sync::Arc::clone(&e.red))
+    };
+    let mut politica = red.politica();
+    if !politica.general {
+        return Err(NsError::NetworkDisabled);
+    }
+    if politica
+        .servicios
+        .insert(crate::net::Servicio::Actualizaciones)
+    {
+        let r = std::sync::Arc::clone(&red);
+        tauri::async_runtime::spawn_blocking(move || {
+            crate::privacidad::cambiar_politica(&db, &r, politica)
+        })
+        .await
+        .map_err(|_| NsError::Internal)??;
+    }
+    Ok(red)
+}
+
+/// La versión publicada más nueva que la instalada, si la hay.
+#[tauri::command]
+pub async fn actualizacion_buscar(app: AppHandle) -> NsResult<Option<crate::net::Actualizacion>> {
+    let red = consentir_actualizaciones(&app).await?;
+    crate::net::buscar_actualizacion(&app, &red).await
+}
+
+/// Instala la versión más nueva y reinicia la aplicación con ella.
+#[tauri::command]
+pub async fn actualizacion_instalar(app: AppHandle) -> NsResult<()> {
+    let red = consentir_actualizaciones(&app).await?;
+    if crate::net::instalar_actualizacion(&app, &red).await? {
+        app.restart();
+    }
+    Ok(())
+}
+
 // --- Agregados (F5.1.3) ----------------------------------------------------------------
 
 /// Cota: los cuatro agregados del catálogo compilado (`agregados::CATALOGO`).

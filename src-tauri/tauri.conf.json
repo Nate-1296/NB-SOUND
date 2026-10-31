@@ -52,5 +52,15 @@
         "type": "offlineInstaller"
       }
     }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU1RDkwQTgyMzREQjM4QTcKUldTbk9OczBnZ3JaVmRhV1VqM1VjQXVmOGZxOFBMZk5zemV0Ums4WXBYMWlyM2x6TUt0Qk5ocy8K",
+      "endpoints": ["https://github.com/Nate-1296/NB-SOUND/releases/latest/download/latest.json"],
+      "requireSignedVersion": true,
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

@@ -97,6 +97,19 @@ export const esAparte = {
     } as Record<string, string>,
     error: 'No se pudo instalar. Vuelve a intentarlo.'
   },
+  actualizacion: {
+    buscar: 'Buscar actualizaciones',
+    buscando: 'Buscando',
+    alDia: 'Tienes la versión más reciente.',
+    disponible: (v: string) => `NB Sound ${v} está disponible.`,
+    instalar: 'Instalar y reiniciar',
+    instalando: 'Descargando e instalando. NB Sound se reiniciará solo.',
+    sinConexion: 'Activa los servicios en línea en Privacidad para buscar actualizaciones.',
+    noDisponible:
+      'Esta instalación se actualiza con el gestor de paquetes del sistema o descargando la nueva versión.',
+    firma: 'La descarga no lleva la firma de NB Sound, así que no se ha instalado.',
+    error: 'No se pudo conectar. Vuelve a intentarlo más tarde.'
+  },
   copia: {
     titulo: 'Copia de seguridad',
     ayuda:
@@ -196,6 +209,11 @@ export const esAparte = {
       theAudioDb: {
         nombre: 'TheAudioDB',
         envia: 'El nombre del artista y del álbum, para buscar portadas e imágenes de artista.'
+      },
+      actualizaciones: {
+        nombre: 'Actualizaciones de NB Sound',
+        envia:
+          'La versión instalada y el sistema, a GitHub, solo cuando buscas una versión nueva desde Acerca de.'
       }
     },
     iaAyuda:

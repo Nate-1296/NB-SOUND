@@ -28,6 +28,10 @@ tauri = { version = "2", features = ["tray-icon"] }
 # música (ADR-001, enmienda del 2026-10-30). Se usa desde Rust: ninguna ruta
 # cruza el puente desde el webview. La misma versión que NB Books.
 tauri-plugin-dialog = "2.7.2"
+# Las actualizaciones de la aplicación (ADR-001, enmienda del 2026-10-30, y
+# ADR-009). Su cliente HTTP es propio, así que solo se usa desde `net.rs`, detrás
+# de la misma comprobación de consentimiento y anfitriones que el resto.
+tauri-plugin-updater = "2.14.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"

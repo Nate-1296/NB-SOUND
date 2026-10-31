@@ -41,10 +41,11 @@ pub enum Servicio {
     TheAudioDb,
     ProveedorIa,
     Agregados,
+    Actualizaciones,
 }
 
 impl Servicio {
-    pub const TODOS: [Servicio; 12] = [
+    pub const TODOS: [Servicio; 13] = [
         Servicio::AcoustId,
         Servicio::MusicBrainz,
         Servicio::CoverArtArchive,
@@ -57,6 +58,7 @@ impl Servicio {
         Servicio::TheAudioDb,
         Servicio::ProveedorIa,
         Servicio::Agregados,
+        Servicio::Actualizaciones,
     ];
 
     /// Los anfitriones a los que puede ir cada servicio. Un subdominio cuenta
@@ -76,6 +78,9 @@ impl Servicio {
             Self::ProveedorIa => &["api.anthropic.com", "api.openai.com"],
             // El repositorio público de distribución se decide en F0.1.5.
             Self::Agregados => &["github.com", ".githubusercontent.com", "huggingface.co"],
+            // El manifiesto `latest.json` y los instaladores de las publicaciones; GitHub
+            // redirige las descargas a `objects.githubusercontent.com`.
+            Self::Actualizaciones => &["github.com", ".githubusercontent.com"],
         }
     }
 
@@ -341,6 +346,109 @@ impl Red {
     }
 }
 
+// --- Actualizaciones de la aplicación (F7.2.2) -----------------------------------
+
+/// El manifiesto de la última publicación, el mismo que fija `tauri.conf.json`.
+/// Se repite aquí para comprobarlo en la puerta antes de que el plugin salga.
+const MANIFIESTO: &str =
+    "https://github.com/Nate-1296/NB-SOUND/releases/latest/download/latest.json";
+
+/// El plugin de actualizaciones. Lleva su propio cliente HTTP, así que no se usa
+/// fuera de este archivo: cada consulta y cada descarga pasa antes por
+/// [`Red::autorizar`], como lo demás. Las redirecciones de GitHub las sigue el
+/// plugin; lo que llega se comprueba con la firma de la publicación.
+pub fn plugin_de_actualizaciones<R: tauri::Runtime>(
+) -> tauri::plugin::TauriPlugin<R, tauri_plugin_updater::Config> {
+    tauri_plugin_updater::Builder::new().build()
+}
+
+/// Una versión publicada más nueva que la instalada.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub struct Actualizacion {
+    pub version: String,
+    /// Las notas de la publicación, tal como se escribieron en GitHub.
+    pub notas: Option<String>,
+}
+
+async fn consultar<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    red: &Red,
+) -> NsResult<Option<tauri_plugin_updater::Update>> {
+    use tauri_plugin_updater::UpdaterExt as _;
+    red.autorizar(Servicio::Actualizaciones, MANIFIESTO)?;
+    let manifiesto = MANIFIESTO.parse().map_err(|_| NsError::Internal)?;
+    let actualizador = app
+        .updater_builder()
+        .endpoints(vec![manifiesto])
+        .and_then(tauri_plugin_updater::UpdaterBuilder::build)
+        .map_err(|_| {
+            tracing::warn!("el actualizador no está disponible");
+            NsError::ComponentUnavailable
+        })?;
+    // Los errores del plugin no se registran: pueden llevar la ruta del ejecutable.
+    let nueva = actualizador.check().await.map_err(|e| {
+        tracing::debug!("no se pudo consultar la última publicación");
+        match e {
+            // Un paquete del sistema (deb o rpm sin permisos, o un formato que el
+            // plugin no sabe instalar) se actualiza con su gestor de paquetes.
+            tauri_plugin_updater::Error::UnsupportedOs => NsError::ComponentUnavailable,
+            _ => NsError::NetworkFailure,
+        }
+    })?;
+    if let Some(n) = &nueva {
+        red.autorizar(Servicio::Actualizaciones, n.download_url.as_str())?;
+    }
+    Ok(nueva)
+}
+
+/// Mira si hay una versión más nueva publicada.
+///
+/// # Errors
+///
+/// Los de [`Red::autorizar`]; [`NsError::NetworkFailure`] si la consulta falla y
+/// [`NsError::ComponentUnavailable`] si esta instalación no se actualiza sola.
+pub async fn buscar_actualizacion<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    red: &Red,
+) -> NsResult<Option<Actualizacion>> {
+    Ok(consultar(app, red).await?.map(|n| Actualizacion {
+        version: n.version,
+        notas: n.body,
+    }))
+}
+
+/// Descarga la versión más nueva, comprueba su firma y la instala. Quien llama
+/// reinicia la aplicación. Devuelve `false` si ya no había nada que instalar.
+///
+/// # Errors
+///
+/// Los de [`buscar_actualizacion`], e [`NsError::IntegrityMismatch`] si la firma
+/// no es la de NB Sound.
+pub async fn instalar_actualizacion<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    red: &Red,
+) -> NsResult<bool> {
+    let Some(nueva) = consultar(app, red).await? else {
+        return Ok(false);
+    };
+    nueva
+        .download_and_install(|_, _| {}, || {})
+        .await
+        .map_err(|e| {
+            tracing::warn!("no se pudo instalar la actualización");
+            match e {
+                tauri_plugin_updater::Error::Minisign(_)
+                | tauri_plugin_updater::Error::SignatureUtf8(_)
+                | tauri_plugin_updater::Error::SignedVersionMismatch { .. }
+                | tauri_plugin_updater::Error::MissingSignedVersion => NsError::IntegrityMismatch,
+                _ => NsError::NetworkFailure,
+            }
+        })?;
+    Ok(true)
+}
+
 /// El anfitrión de una URL `https://`. Las demás no se admiten: nada sale en
 /// claro.
 fn anfitrion_de(url: &str) -> Option<&str> {
@@ -435,5 +543,36 @@ mod tests {
         for servicio in Servicio::TODOS {
             assert!(!servicio.anfitriones().is_empty(), "{servicio:?}");
         }
+    }
+    #[test]
+    fn las_actualizaciones_piden_su_propio_consentimiento_y_solo_van_a_github() {
+        let red = con(&[Servicio::Actualizaciones]);
+        assert_eq!(red.autorizar(Servicio::Actualizaciones, MANIFIESTO), Ok(()));
+        assert_eq!(
+            red.autorizar(
+                Servicio::Actualizaciones,
+                "https://objects.githubusercontent.com/github-production-release-asset/x"
+            ),
+            Ok(())
+        );
+        assert_eq!(
+            red.autorizar(Servicio::Actualizaciones, "https://huggingface.co/x"),
+            Err(NsError::PathNotAllowed)
+        );
+        assert_eq!(
+            con(&[Servicio::Agregados]).autorizar(Servicio::Actualizaciones, MANIFIESTO),
+            Err(NsError::ConsentRequired)
+        );
+    }
+
+    /// La puerta comprueba la URL que el plugin va a usar de verdad.
+    #[test]
+    fn el_manifiesto_es_el_de_la_configuracion() {
+        let conf: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        assert_eq!(
+            conf["plugins"]["updater"]["endpoints"],
+            serde_json::json!([MANIFIESTO])
+        );
     }
 }
