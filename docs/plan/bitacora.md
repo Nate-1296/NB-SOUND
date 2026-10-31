@@ -118,7 +118,7 @@ Ajustes); quedó en 244,3 KB.
 | Commit | Iteración | Qué se hizo | Pruebas nuevas |
 |---|---|---|---|
 | `02844a5` | F6.1.4 | `dj/equipo.rs`: el perfil (bajo, medio, alto), su clasificación por el factor de tiempo real y la medición en un hilo aparte, una a la vez. Se mide separando diez segundos de audio sintético con el modelo del agregado de karaoke (`karaoke::medir`), por el mismo camino que una pista; sin el agregado, el perfil es bajo y el DJ mezcla sin capas. No se guarda: la migración descarta la medida de la V1 y la V2 mide en cada arranque, al abrir el DJ por primera vez, como la V1 | Las propiedades de `test_dj_hardware_profile.py` salvo las de persistencia; una medición no se solapa con otra; la separación de prueba son dos segmentos |
-| (siguiente) | F6.1.5 | La capa del DJ sin audio. `dj/sesiones.rs` lee y escribe sesiones, pistas planificadas (cada una con la transición que la trae), eventos, preferencias y la sesión en curso, con los estados y JSON de la V1. `dj/servicio.rs` empieza, continúa, regenera (semilla + 17), descarta, finaliza, guarda como playlist ("DJ Privado: Music Session, Vol. N"), retoma una del historial sin repetir lo planificado y filtra el historial sin distinguir tildes. La narrativa ya estaba en F6.1.2. Sin candidatas no hay error: el resultado lo dice y la sesión queda en `error`, como en la V1 | `test_dj_privado_integracion.py` sobre una base en memoria con la biblioteca de la V1; preferencias, sesión en curso y borrado en cascada |
+| `1963ea5` | F6.1.5 | La capa del DJ sin audio. `dj/sesiones.rs` lee y escribe sesiones, pistas planificadas (cada una con la transición que la trae), eventos, preferencias y la sesión en curso, con los estados y JSON de la V1. `dj/servicio.rs` empieza, continúa, regenera (semilla + 17), descarta, finaliza, guarda como playlist ("DJ Privado: Music Session, Vol. N"), retoma una del historial sin repetir lo planificado y filtra el historial sin distinguir tildes. La narrativa ya estaba en F6.1.2. Sin candidatas no hay error: el resultado lo dice y la sesión queda en `error`, como en la V1 | `test_dj_privado_integracion.py` sobre una base en memoria con la biblioteca de la V1; preferencias, sesión en curso y borrado en cascada |
 
 **Decisiones de F6.1.5.**
 
@@ -128,3 +128,10 @@ Ajustes); quedó en 244,3 KB.
   reproductor; por eso `dj_en_curso` no necesita el id de pista que guardaba la V1.
 * El reproductor de la sesión (`reproductor_sesion.py`), que decide cuándo mezclar y con qué pista, va con las vistas
   en F6.1.6, integrado en el reproductor único: la V2 tiene un solo motor y una sola barra.
+
+| Commit | Iteración | Qué se hizo | Pruebas nuevas |
+|---|---|---|---|
+| (siguiente) | F6.1.6 (1/2) | La sesión del DJ suena en el reproductor único (`reproductor/dj.rs`), como un modo: la cola del usuario espera en pausa donde estaba, cada pista prepara al empezar la mezcla hacia la siguiente con el perfil del equipo y la fase de la sesión, y al llegar al punto de salida la arma el ejecutor. Saltar apunta la pista como saltada y mezcla ya; pedir otra música deja la sesión; al acabar la última, la sesión queda finalizada y vuelve la cola. La sesión que sonaba vuelve en pausa al abrir (`dj_en_curso`), salvo si se descartó | Una sesión de tres pistas suena entera con sus mezclas; la cola vuelve en pausa y sigue donde estaba; pedir otra música; saltar; volver al abrir y no volver si se descartó |
+
+**Aviso.** Durante esta iteración se llenó el disco de la sesión con 18,7 GB de artefactos de compilación de la propia
+caja; `cargo clean -p nb-sound` los quitó sin tocar las dependencias.

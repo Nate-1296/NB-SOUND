@@ -276,3 +276,165 @@ fn una_cola_de_pistas_muy_cortas_suena_entera_sin_saltarse_ninguna() {
         6
     );
 }
+
+// --- El DJ Privado (F6.1.6) -----------------------------------------------------------
+
+/// Una sesión del DJ con estas pistas, en este orden, con transiciones neutras.
+fn sesion_dj(db: &BaseDeDatos, pistas: &[i64], estado: &str) -> i64 {
+    let id = crate::dj::sesiones::crear(db, "de prueba", "{}", 30, "dj_v1", Some(1)).unwrap();
+    let conn = db.conexion().unwrap();
+    for (k, p) in pistas.iter().enumerate() {
+        conn.execute(
+            "INSERT INTO dj_sesion_pistas (sesion_id, posicion, pista_id) VALUES (?1, ?2, ?3)",
+            rusqlite::params![id, k as i64, p],
+        )
+        .unwrap();
+    }
+    conn.execute(
+        "UPDATE dj_sesiones SET estado = ?1 WHERE id = ?2",
+        rusqlite::params![estado, id],
+    )
+    .unwrap();
+    id
+}
+
+fn dj(s: &mut Servicio<Offline>, sesion: i64) {
+    s.atender(Orden::Dj(OrdenDj::Reproducir {
+        sesion,
+        posicion: 0,
+        desde_seg: 0.0,
+    }));
+}
+
+#[test]
+fn una_sesion_del_dj_suena_entera_mezclando_cada_pista_con_la_siguiente() {
+    let doce = 44_100 * 12;
+    let e = escenario("dj-entera", &[(1, doce), (2, doce), (3, doce)]);
+    let sesion = sesion_dj(&e.db, &[1, 2, 3], "lista");
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    dj(&mut s, sesion);
+    let i = s.instantanea();
+    assert_eq!((i.pista_id, i.estado.as_str()), (Some(1), "reproduciendo"));
+    assert_eq!(
+        i.dj.as_ref().map(|d| (d.sesion_id, d.total)),
+        Some((sesion, 3))
+    );
+    correr(&mut s, |s| s.instantanea().dj.is_none());
+    assert!(s.instantanea().dj.is_none(), "la sesión no terminó");
+    let vistas = apuntes.instantaneas.lock().unwrap().clone();
+    // Cada pista sonó, en orden, y hubo mezcla entre ellas.
+    let mut orden: Vec<i64> = vistas
+        .iter()
+        .filter(|i| i.dj.is_some())
+        .filter_map(|i| i.pista_id)
+        .collect();
+    orden.dedup();
+    assert_eq!(orden, [1, 2, 3]);
+    assert!(vistas
+        .iter()
+        .any(|i| i.dj.as_ref().is_some_and(|d| d.mezcla.is_some())));
+    assert_eq!(
+        cuenta(
+            &e.db,
+            "SELECT count(*) FROM dj_eventos WHERE tipo = 'reproducida'"
+        ),
+        3
+    );
+    assert_eq!(
+        crate::dj::sesiones::una(&e.db, sesion)
+            .unwrap()
+            .unwrap()
+            .estado,
+        "finalizada"
+    );
+    // Lo que suena en una sesión no es la cola: el historial normal no cambia.
+    assert_eq!(cuenta(&e.db, "SELECT count(*) FROM historial"), 0);
+}
+
+#[test]
+fn con_una_sesion_sonando_la_cola_espera_en_pausa_y_vuelve_al_salir() {
+    let e = escenario(
+        "dj-cola",
+        &[(1, 44_100 * 6), (2, 44_100 * 6), (3, 44_100 * 6)],
+    );
+    let sesion = sesion_dj(&e.db, &[3, 2], "lista");
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    s.atender(Orden::ReproducirPistas {
+        ids: vec![1, 2],
+        desde: 0,
+    });
+    correr(&mut s, |s| s.instantanea().posicion_seg > 1.0);
+    dj(&mut s, sesion);
+    assert_eq!(s.instantanea().pista_id, Some(3));
+    s.atender(Orden::Dj(OrdenDj::Salir));
+    let i = s.instantanea();
+    assert!(i.dj.is_none());
+    assert_eq!((i.pista_id, i.estado.as_str()), (Some(1), "pausado"));
+    s.atender(Orden::PausarReanudar);
+    correr(&mut s, |s| s.instantanea().posicion_seg > 0.0);
+    let i = s.instantanea();
+    assert_eq!((i.pista_id, i.estado.as_str()), (Some(1), "reproduciendo"));
+    assert!(
+        i.posicion_seg > 1.0,
+        "siguió donde estaba: {}",
+        i.posicion_seg
+    );
+}
+
+#[test]
+fn pedir_otra_musica_deja_la_sesion() {
+    let e = escenario("dj-otra", &[(1, 44_100 * 6), (2, 44_100 * 6)]);
+    let sesion = sesion_dj(&e.db, &[1, 2], "lista");
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    dj(&mut s, sesion);
+    s.atender(Orden::ReproducirPista(2));
+    let i = s.instantanea();
+    assert!(i.dj.is_none());
+    assert_eq!((i.pista_id, i.cola.as_slice()), (Some(2), [2].as_slice()));
+}
+
+#[test]
+fn saltar_en_una_sesion_la_apunta_y_mezcla_ya() {
+    let e = escenario("dj-saltar", &[(1, 44_100 * 20), (2, 44_100 * 20)]);
+    let sesion = sesion_dj(&e.db, &[1, 2], "lista");
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    dj(&mut s, sesion);
+    correr(&mut s, |s| s.instantanea().posicion_seg > 0.5);
+    s.atender(Orden::Siguiente);
+    assert!(s.instantanea().dj.unwrap().mezcla.is_some());
+    assert_eq!(
+        cuenta(
+            &e.db,
+            "SELECT count(*) FROM dj_eventos WHERE tipo = 'saltada'"
+        ),
+        1
+    );
+    correr(&mut s, |s| s.instantanea().pista_id == Some(2));
+    assert_eq!(s.instantanea().pista_id, Some(2));
+}
+
+#[test]
+fn la_sesion_que_sonaba_vuelve_en_pausa_al_abrir_y_una_descartada_no() {
+    let e = escenario("dj-volver", &[(1, 44_100 * 20), (2, 44_100 * 20)]);
+    let sesion = sesion_dj(&e.db, &[1, 2], "lista");
+    let apuntes = Apuntes::default();
+    {
+        let mut s = servicio(&e, &apuntes);
+        dj(&mut s, sesion);
+        correr(&mut s, |s| s.instantanea().posicion_seg > 1.0);
+        s.guardar_al_cerrar();
+    }
+    let s = servicio(&e, &apuntes);
+    let i = s.instantanea();
+    assert_eq!(i.dj.as_ref().map(|d| d.sesion_id), Some(sesion));
+    assert_eq!((i.pista_id, i.estado.as_str()), (Some(1), "pausado"));
+    drop(s);
+    crate::dj::sesiones::cambiar_estado(&e.db, sesion, "descartada", true).unwrap();
+    let s = servicio(&e, &apuntes);
+    assert!(s.instantanea().dj.is_none());
+    assert!(crate::dj::sesiones::en_curso(&e.db).unwrap().is_none());
+}

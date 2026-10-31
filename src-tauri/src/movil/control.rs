@@ -590,6 +590,7 @@ mod tests {
             normalizar: true,
             karaoke_disponible: true,
             karaoke_activo: false,
+            dj: None,
         }
     }
 

@@ -16,7 +16,8 @@ use super::transiciones::Transicion;
 
 /// `TecnicaMezcla`. Se guarda con los nombres de la V1; el texto que ve el usuario
 /// sale del diccionario de la interfaz.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ts_rs::TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
 pub enum Tecnica {
     /// Corte seco en el pulso: tempos casi iguales en el pico.
     #[serde(rename = "hard_cut")]

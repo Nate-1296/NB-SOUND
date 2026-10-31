@@ -238,6 +238,7 @@ fn instantanea(e: &Value) -> Instantanea {
         normalizar: true,
         karaoke_disponible: s["karaoke_disponible"].as_bool().unwrap(),
         karaoke_activo: s["karaoke_activo"].as_bool().unwrap(),
+        dj: None,
     }
 }
 

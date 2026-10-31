@@ -231,6 +231,9 @@ pub fn run() {
         karaoke: servicio_karaoke,
     };
     let importador_setup = importador.clone();
+    // La medida del equipo para mezclar (F6.1.4): la comparten el DJ, que la lanza
+    // al abrirse, y el reproductor, que la usa en cada mezcla.
+    let equipo = dj::equipo::Equipo::default();
 
     let aplicacion = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -269,6 +272,7 @@ pub fn run() {
                     controles: Arc::clone(&controles),
                     movil: puente.clone(),
                 }),
+                equipo.clone(),
             ) {
                 Ok(r) => {
                     let b = r.buzon();

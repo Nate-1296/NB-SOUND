@@ -251,6 +251,7 @@ mod tests {
             normalizar: true,
             karaoke_disponible: false,
             karaoke_activo: false,
+            dj: None,
         }
     }
 

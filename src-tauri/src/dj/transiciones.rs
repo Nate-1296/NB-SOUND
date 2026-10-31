@@ -192,6 +192,42 @@ impl Transicion {
     }
 }
 
+impl Transicion {
+    /// Lee lo que guardó [`Self::a_json`] (o la V1). Sin datos, una transición
+    /// neutra de 4 s, como `TransicionPlan` por defecto.
+    #[must_use]
+    pub fn desde_json(v: &serde_json::Value) -> Self {
+        let f = |k: &str, d: f64| v[k].as_f64().unwrap_or(d);
+        Self {
+            puntuacion: f("score", 0.5),
+            factor_bpm: f("factor_bpm", 0.5),
+            factor_tonalidad: f("factor_key", 0.5),
+            factor_energia: f("factor_energia", 0.5),
+            delta_bpm: v["delta_bpm"].as_f64(),
+            delta_camelot: v["delta_camelot"]
+                .as_i64()
+                .and_then(|d| i32::try_from(d).ok()),
+            delta_energia: v["delta_energia"].as_f64(),
+            razones: v["razones"]
+                .as_array()
+                .map(|r| {
+                    r.iter()
+                        .filter_map(|x| x.as_str().map(str::to_owned))
+                        .collect()
+                })
+                .unwrap_or_default(),
+            tecnica: match v["tecnica_sugerida"].as_str() {
+                Some("cut") => "cut",
+                Some("drone") => "drone",
+                Some("mix_armonico") => "mix_armonico",
+                _ => "crossfade",
+            },
+            solapamiento_seg: f("overlap_seg", 4.0),
+            estilo: v["estilo_aplicado"].as_str().unwrap_or("smooth").to_owned(),
+        }
+    }
+}
+
 fn pesos(estilo: &str) -> (f64, f64, f64) {
     match estilo {
         "smooth" => (0.45, 0.30, 0.25),
@@ -395,6 +431,16 @@ mod pruebas {
         let despues = total(&refinar(&mut orden, "smooth"));
         assert!(despues >= antes);
         assert_eq!(orden[0].id, 1);
+    }
+
+    #[test]
+    fn una_transicion_guardada_se_lee_igual_y_sin_datos_es_neutra() {
+        let a = pista(1, 120.0, "C", "major", 0.6);
+        let b = pista(2, 121.0, "G", "major", 0.65);
+        let t = planificar(&a, &b, "harmonic");
+        assert_eq!(Transicion::desde_json(&t.a_json()), t);
+        let neutra = Transicion::desde_json(&serde_json::json!({}));
+        assert_eq!((neutra.factor_bpm, neutra.solapamiento_seg), (0.5, 4.0));
     }
 
     #[test]

@@ -9,6 +9,7 @@
 //! prevista ([`Cola::prevista`]). Cuando el motor la empieza por su cuenta, el
 //! servicio avanza la cola y comprueba que coincide.
 
+mod dj;
 pub mod persistencia;
 #[cfg(test)]
 mod pruebas;
@@ -28,6 +29,7 @@ use crate::cola::{Accion, Cola, Estado, Fila, Repeticion};
 use crate::db::BaseDeDatos;
 use crate::error::{NsError, NsResult};
 
+pub use self::dj::{EstadoDj, MezclaVisible, OrdenDj};
 pub use self::persistencia::{carpeta_musica, leer_ecualizador, AjustesEcualizador};
 
 /// Lo que la interfaz puede pedir.
@@ -68,6 +70,8 @@ pub enum Orden {
     /// Vuelve a leer la sesión y las preferencias: la primera vez que se abre la
     /// V2, el importador de la V1 termina con el reproductor ya en marcha.
     Recargar,
+    /// Una sesión del DJ Privado (F6.1.6).
+    Dj(OrdenDj),
 }
 
 /// Lo que ve la interfaz. Se publica entera cada vez que cambia algo.
@@ -91,6 +95,8 @@ pub struct Instantanea {
     pub normalizar: bool,
     pub karaoke_disponible: bool,
     pub karaoke_activo: bool,
+    /// Con una sesión del DJ sonando: cuál, por dónde va y si está mezclando.
+    pub dj: Option<EstadoDj>,
 }
 
 /// Un aviso para la interfaz: el código canónico del error y la pista.
@@ -150,6 +156,12 @@ pub struct Servicio<B: Backend> {
     normalizar: bool,
     karaoke: bool,
     ultima: Option<Instantanea>,
+    dj: Option<dj::ModoDj>,
+    /// El perfil del equipo para mezclar por capas (F6.1.4).
+    equipo: crate::dj::equipo::Equipo,
+    /// La posición guardada de la cola, para devolverla tras una sesión del DJ que
+    /// empezó antes de que la cola sonara.
+    cola_seg_restaurada: f64,
 }
 
 impl<B: Backend> Servicio<B> {
@@ -181,10 +193,21 @@ impl<B: Backend> Servicio<B> {
             normalizar: true,
             karaoke: false,
             ultima: None,
+            dj: None,
+            equipo: crate::dj::equipo::Equipo::default(),
+            cola_seg_restaurada: 0.0,
         };
         s.restaurar()?;
+        s.restaurar_dj();
         s.publicar();
         Ok(s)
+    }
+
+    /// Comparte la medida del equipo con quien la hace.
+    #[must_use]
+    pub fn con_equipo(mut self, equipo: crate::dj::equipo::Equipo) -> Self {
+        self.equipo = equipo;
+        self
     }
 
     /// Lee la sesión guardada y las preferencias y las aplica sin empezar a sonar.
@@ -203,6 +226,7 @@ impl<B: Backend> Servicio<B> {
         self.motor.volumen(sesion.volumen);
         self.aplicar_ecualizador(&eq);
         self.cola.fijar_repeticion(sesion.repeticion);
+        self.cola_seg_restaurada = sesion.posicion_seg;
         self.cola
             .restaurar(sesion.cola, sesion.posicion_cola, sesion.posicion_seg);
         if sesion.aleatorio {
@@ -279,6 +303,10 @@ impl<B: Backend> Servicio<B> {
 
     /// Mantiene informado al motor de lo que viene después.
     fn preparar_siguiente(&mut self) {
+        // En una sesión del DJ, lo siguiente lo decide la mezcla.
+        if self.en_dj() {
+            return;
+        }
         // Las fichas viejas ya no van a volver en ningún evento que importe.
         let vivas = [&self.actual, &self.prevista].map(|s| s.as_ref().map(|s| s.ficha));
         self.fichas
@@ -301,7 +329,16 @@ impl<B: Backend> Servicio<B> {
 
     /// Atiende una orden de la interfaz.
     pub fn atender(&mut self, orden: Orden) {
+        if self.interceptar_dj(&orden) {
+            self.guardar();
+            self.publicar();
+            return;
+        }
         let accion = match orden {
+            Orden::Dj(o) => {
+                self.atender_dj(o);
+                Accion::Nada
+            }
             Orden::ReproducirPistas { ids, desde } => self.cola.reproducir_cola(
                 ids.into_iter().map(|pista_id| Fila { pista_id }).collect(),
                 desde,
@@ -437,6 +474,15 @@ impl<B: Backend> Servicio<B> {
     /// Atiende lo que contó el motor. Se llama a menudo desde el hilo del servicio.
     pub fn atender_motor(&mut self) {
         let eventos: Vec<EventoMotor> = self.motor.eventos().collect();
+        if self.en_dj() {
+            let hubo = !eventos.is_empty();
+            self.eventos_dj(eventos);
+            if self.tic_dj() || hubo {
+                self.guardar();
+            }
+            self.publicar();
+            return;
+        }
         let mut cambio = false;
         for evento in eventos {
             cambio = true;
@@ -496,10 +542,13 @@ impl<B: Backend> Servicio<B> {
 
     fn guardar(&self) {
         let pos = self.motor.posicion();
+        // Con una sesión del DJ, lo que suena no es la cola: la cola guarda donde se
+        // quedó, y la sesión, por dónde va.
+        let posicion_seg = self.guardar_dj().unwrap_or(pos.segundos);
         let sesion = persistencia::Sesion {
             cola: self.cola.filas().to_vec(),
             posicion_cola: self.cola.indice().unwrap_or(0),
-            posicion_seg: pos.segundos,
+            posicion_seg,
             volumen: self.volumen,
             aleatorio: self.cola.aleatorio(),
             repeticion: self.cola.repeticion(),
@@ -521,7 +570,7 @@ impl<B: Backend> Servicio<B> {
     pub fn instantanea(&self) -> Instantanea {
         let pos = self.motor.posicion();
         let actual = self.actual.as_ref();
-        Instantanea {
+        let mut i = Instantanea {
             estado: texto_estado(self.cola.estado()).to_owned(),
             pista_id: self.cola.activa().map(|f| f.pista_id),
             posicion_seg: if actual.is_some_and(|s| s.ficha == pos.ficha) {
@@ -538,7 +587,10 @@ impl<B: Backend> Servicio<B> {
             normalizar: self.normalizar,
             karaoke_disponible: actual.is_some_and(|s| s.karaoke),
             karaoke_activo: self.karaoke,
-        }
+            dj: None,
+        };
+        self.instantanea_dj(&mut i);
+        i
     }
 
     fn publicar(&mut self) {
@@ -603,7 +655,12 @@ impl Reproductor {
     ///
     /// [`NsError::ComponentUnavailable`] si no hay salida de audio;
     /// [`NsError::StorageFailure`] si no se puede leer la sesión.
-    pub fn arrancar(db: BaseDeDatos, stems: PathBuf, oyente: Box<dyn Oyente>) -> NsResult<Self> {
+    pub fn arrancar(
+        db: BaseDeDatos,
+        stems: PathBuf,
+        oyente: Box<dyn Oyente>,
+        equipo: crate::dj::equipo::Equipo,
+    ) -> NsResult<Self> {
         let instantanea = Arc::new(RwLock::new(None));
         let guardian = Guardian {
             interior: oyente,
@@ -618,6 +675,7 @@ impl Reproductor {
                 // cruza entre hilos.
                 let servicio = Motor::nuevo().and_then(|motor| {
                     Servicio::nuevo(motor, Cola::default(), db, stems, Box::new(guardian))
+                        .map(|s| s.con_equipo(equipo))
                 });
                 match servicio {
                     Ok(s) => {
