@@ -3,7 +3,8 @@
   (`VistaBusqueda.qml`): secciones de Artistas, Álbumes y Pistas con su cuenta, y
   cada resultado con su imagen, su resumen y la flecha para abrirlo. Las pistas
   van por relevancia (el título pesa más que la letra) y se reproducen desde la
-  elegida. "Háblale a tu biblioteca" llega con el asistente.
+  elegida. Si la búsqueda expresa una intención ("algo triste"), sus secciones van
+  primero (F5.3.3).
 -->
 <script lang="ts">
   import { page } from '$app/state';
@@ -81,6 +82,12 @@
     <h1>{t.titulo}</h1>
     <p>{t.subtitulo}</p>
   </header>
+
+  {#if q}
+    {#await import('$ui/descubrir/SeccionesDescubrir.svelte') then m}
+      <m.default consulta={q} />
+    {/await}
+  {/if}
 
   {#if !q}
     <p class="vacio">{t.escribe}</p>

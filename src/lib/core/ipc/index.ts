@@ -65,6 +65,7 @@ export type {
   DatosAlbum,
   DatosCompletados,
   DatosPista,
+  Descubrimiento,
   Emparejar,
   EstadoAgregado,
   EstadoCopia,

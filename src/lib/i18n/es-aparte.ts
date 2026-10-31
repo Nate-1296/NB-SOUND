@@ -6,6 +6,52 @@
  * solo los importan módulos que ya se cargan a demanda, y con ellos se cargan.
  */
 export const esAparte = {
+  descubrir: {
+    titulo: (que: string) => `Para lo que pides: ${que}`,
+    sinAnalisis:
+      'Todavía no hay canciones analizadas. Se analizan solas en segundo plano después de importarlas.',
+    nada: 'Ninguna canción encaja lo bastante con lo que pides.',
+    intenciones: {
+      triste: 'triste',
+      alegre: 'alegre',
+      fiesta: 'para fiesta',
+      entrenar: 'para entrenar',
+      concentrarse: 'para concentrarte',
+      tranquila: 'tranquila',
+      nocturna: 'nocturna',
+      intensa: 'intensa',
+      suave: 'suave',
+      rapida: 'rápida',
+      lenta: 'lenta'
+    },
+    secciones: {
+      masFiesteras: 'Más fiesteras',
+      masBailables: 'Más bailables',
+      masRapidas: 'Más rápidas',
+      energiaAlta: 'Energía alta',
+      masMelancolicas: 'Más melancólicas',
+      tristesSuaves: 'Tristes pero suaves',
+      tristesConEnergia: 'Tristes con más energía',
+      masIntensas: 'Más intensas',
+      ritmoAlto: 'Ritmo alto',
+      energiaParaMoverse: 'Energía para moverse',
+      masEnfocadas: 'Más enfocadas',
+      tranquilasParaTrabajar: 'Tranquilas para trabajar',
+      bajaDistraccion: 'Baja distracción',
+      masNocturnas: 'Más nocturnas',
+      oscurasYCalmadas: 'Oscuras y calmadas',
+      suavesDeNoche: 'Suaves de noche',
+      masTranquilas: 'Más tranquilas',
+      suavesParaBajarRitmo: 'Suaves para bajar ritmo',
+      paraLevantarAnimo: 'Para levantar ánimo',
+      alegresYLigeras: 'Alegres y ligeras',
+      masSuaves: 'Más suaves',
+      bajaEnergia: 'Baja energía',
+      masLentas: 'Más lentas',
+      bajaVelocidad: 'Baja velocidad',
+      seleccionSugerida: 'Selección sugerida'
+    } as Record<string, string>
+  },
   agregados: {
     ayuda:
       'Funciones grandes y opcionales. Se descargan de las publicaciones de NB Sound en GitHub con un clic, y quitarlas libera su espacio en el acto.',

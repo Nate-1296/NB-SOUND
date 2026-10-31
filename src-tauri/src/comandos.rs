@@ -871,6 +871,25 @@ pub async fn karaoke_preparar(estado: tauri::State<'_, Estado>, pistas: Vec<i64>
     Ok(())
 }
 
+// --- Descubrir (F5.3.3) ------------------------------------------------------------------
+
+/// "Algo triste", "para entrenar": secciones de pistas para una frase. Cota:
+/// `limite`, como mucho `descubrir::LIMITE_MAXIMO`, en secciones de ocho.
+#[tauri::command]
+pub async fn descubrir(
+    estado: tauri::State<'_, Estado>,
+    consulta: String,
+    limite: u32,
+) -> NsResult<crate::descubrir::Descubrimiento> {
+    if consulta.chars().count() > 200 {
+        return Err(NsError::InvalidInput);
+    }
+    en_segundo_plano(&estado, move |db| {
+        crate::descubrir::descubrir(db, &consulta, limite)
+    })
+    .await
+}
+
 // --- Copia de seguridad (F4.2.6) ------------------------------------------------------
 
 #[tauri::command]

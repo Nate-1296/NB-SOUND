@@ -10,6 +10,7 @@ import type {
   AjustesIa,
   DatosAlbum,
   DatosPista,
+  Descubrimiento,
   EstadoAgregado,
   EstadoCopia,
   Gpu,
@@ -20,6 +21,13 @@ import type {
 } from '$lib/bindings';
 
 import { call, escuchar } from './index';
+
+// --- Descubrir --------------------------------------------------------------------
+
+/** Lo que se pide en palabras: secciones de pistas, o `entendida: false`. */
+export function descubrir(consulta: string, limite: number): Promise<Descubrimiento> {
+  return call<Descubrimiento>('descubrir', { consulta, limite });
+}
 
 // --- Agregados -------------------------------------------------------------------
 
