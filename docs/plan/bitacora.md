@@ -144,3 +144,12 @@ caja; `cargo clean -p nb-sound` los quitó sin tocar las dependencias.
 que necesitan la instalación real: la misma sesión que la V1 sobre la base migrada (con semillas sintéticas ya coincide
 bit a bit) y la escucha de las transiciones (el render fuera de línea ya las comprueba). El agregado de karaoke, del que
 dependen las capas y la medida del equipo, sigue sin publicar (P13).
+
+## 2026-10-31: Fase 7
+
+| Commit | Iteración | Qué se hizo | Pruebas nuevas |
+|---|---|---|---|
+| `e9e5c98` | F7.1.1 a F7.1.3 | (Nathan, en local) La V1 sale del repositorio, auditoría al arrancar e inventario con el estado de cada fila | — |
+| `65b17e2` | F7.2.3 | (Nathan, en local) Tipografías y código portado en los avisos de terceros | — |
+| `276424f` | F7.2.2 (a medias) | (Nathan, en local) El actualizador detrás de la puerta de red | Dos en `net.rs` |
+| (siguiente) | F7.2.2 | Cierre: `cargo test` (548) y `pnpm verify` en verde, avisos regenerados con las dependencias del actualizador, y las enmiendas de ADR-001 (la dependencia) y ADR-009 (la excepción del cliente HTTP propio del plugin y sus límites) | — |

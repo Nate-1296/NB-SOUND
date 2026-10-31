@@ -66,3 +66,15 @@ Aprobadas por Nathan antes de añadirlas:
 "Añadir música", elegir la carpeta de música y, más adelante, la copia de seguridad. Se usa solo desde Rust: el
 diálogo lo abre un comando y las rutas elegidas se quedan en el runtime, así que ninguna cruza el puente desde el
 webview. Arrastrar y soltar tampoco las pasa por él: el evento de la ventana llega a Rust.
+
+## Enmienda del 2026-10-31: actualizaciones desde la aplicación
+
+**Aprobado por Nathan** (F7.2.2). `tauri-plugin-updater` 2.14 (el plugin oficial de Tauri) para buscar e instalar
+versiones nuevas desde Ajustes > Acerca de. Se descartó escribir la descarga y la verificación a mano sobre `ureq`:
+el plugin ya resuelve la sustitución del ejecutable en las tres plataformas y comprueba la firma minisign de cada
+paquete contra la clave pública de `tauri.conf.json` (`requireSignedVersion`), que es justo lo delicado.
+
+Trae su propio cliente HTTP, y eso choca con la puerta única de red de [ADR-009](./ADR-009-configuracion-y-red.md).
+La excepción y sus límites están en la enmienda de ese ADR. La clave privada de firma no está en el repositorio:
+vive en la máquina de Nathan y en los secretos de GitHub (`TAURI_SIGNING_PRIVATE_KEY` y su contraseña), y solo la
+usa el workflow de publicación.

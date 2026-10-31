@@ -12,8 +12,8 @@
 | F7.1.2 Borrar `legado/` y `docs/v1/` | Hecha: también los prototipos de Python y el generador de temas; `git ls-files "*.py" "*.qml"` no devuelve nada. Los enlaces apuntan a la etiqueta `v1.1.16` |
 | F7.1.3 Borrar el guardián `check-sin-python` y sus excepciones, que ya no tienen sentido | Hecha: se quitaron las excepciones; el guardián se queda, sin ninguna y también para `.qml`, porque es el mecanismo del innegociable de CLAUDE.md |
 | F7.2.1 Instaladores para Linux (AppImage, deb, rpm), Windows (MSI/NSIS) y macOS (dmg) | Pendiente |
-| F7.2.2 Actualizaciones de la aplicación desde la propia aplicación | Pendiente |
-| F7.2.3 Avisos de terceros y atribución de modelos | Pendiente |
+| F7.2.2 Actualizaciones de la aplicación desde la propia aplicación | Hecha: `tauri-plugin-updater` detrás de la puerta de red, con el servicio Actualizaciones y "Buscar actualizaciones" en Acerca de; firma obligatoria con la clave pública de `tauri.conf.json`. Enmiendas en ADR-001 y ADR-009. Que una 2.0.x real se actualice sola, a las pruebas finales |
+| F7.2.3 Avisos de terceros y atribución de modelos | Hecha: las cinco tipografías, el código portado (songrec, librosa, difflib y la V1) y los modelos; regenerados con las dependencias del actualizador |
 | F7.2.4 Publicación de la 2.0.0 | Pendiente |
 
 ## Criterios

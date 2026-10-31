@@ -36,3 +36,18 @@ y TheAudioDB. Sale a la red desde nueve clientes distintos en `external/` y `cor
 - **Negativas:** desaparece el ajuste fino por variables. Si una constante resulta mal elegida, se cambia en el
   código con su prueba.
 - **Riesgos:** que Shazam cambie su API. Afecta a una de varias fuentes, no al producto.
+
+## Enmienda del 2026-10-31: el servicio Actualizaciones
+
+**Aprobado por Nathan** (F7.2.2). Un servicio más en la puerta, **Actualizaciones**, que solo puede ir a
+`github.com` y a `*.githubusercontent.com`. Pulsar "Buscar actualizaciones" cuenta como consentimiento, igual que
+instalar un agregado; con la conexión general apagada no sale nada.
+
+**La excepción.** `tauri-plugin-updater` hace la consulta y la descarga con su propio cliente HTTP, no con el de
+`net.rs`. Se acepta con tres límites:
+
+1. El plugin solo se usa dentro de `net.rs`, y `check-network` rechaza cualquier otro uso.
+2. Antes de cada salida, el manifiesto (`latest.json` de la última publicación) y la URL de descarga que este
+   declara pasan por `Red::autorizar`, con el servicio y el dominio comprobados.
+3. Las redirecciones de GitHub hacia `objects.githubusercontent.com` las sigue el plugin sin pasar por la puerta.
+   Lo que llega por ellas no se instala si su firma no corresponde a la clave pública de la aplicación.
