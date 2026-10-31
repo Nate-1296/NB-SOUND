@@ -17,6 +17,7 @@ pub mod controles_sistema;
 pub mod copia_seguridad;
 pub mod db;
 pub mod descubrir;
+pub mod dj;
 pub mod error;
 pub mod gpu;
 pub mod identidad_movil;

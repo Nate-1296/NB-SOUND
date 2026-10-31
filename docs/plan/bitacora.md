@@ -86,3 +86,9 @@ paridad del análisis, vacíos de buffer, memoria) está en [pruebas finales](./
 **Aviso.** El arranque se mantuvo dentro de los 250 KB llevando a carga diferida todo lo que solo usan pantallas
 secundarias (textos en `es-aparte.ts`, puente en `$core/ipc/aparte.ts`, Dispositivos, Reproducción y Apariencia de
 Ajustes); quedó en 244,3 KB.
+
+## 2026-10-31: Fase 6
+
+| Commit | Iteración | Qué se hizo | Pruebas nuevas |
+|---|---|---|---|
+| (siguiente) | F6.1.1 | Ontología, intención y embeddings del DJ. La tabla de conceptos se generó desde el módulo de la V1 con un script de un solo uso fuera del repositorio, para no transcribir a mano 800 líneas de datos; las respuestas doradas (`dj/doradas_intencion.json`) salen del mismo módulo. El tokenizador de MiniLM se escribe a mano: `tokenizers` no está en ningún ADR | 14 intenciones y dos embeddings iguales a la V1; la tabla y sus cinco referencias muertas; el WordPiece |

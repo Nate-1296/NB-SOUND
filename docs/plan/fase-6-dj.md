@@ -9,7 +9,7 @@
 
 | Iteración | Estado |
 |---|---|
-| F6.1.1 Ontología, intención y embeddings (con y sin el agregado de texto) | Pendiente |
+| F6.1.1 Ontología, intención y embeddings (con y sin el agregado de texto) | Hecha: `dj/ontologia.rs` (los 81 conceptos y 24 ejes, transcritos de la V1 en su orden), `dj/intencion.rs` (negaciones, amplificadores y contradicciones, con el JSON de la V1 para `dj_sesiones.intencion`) y `dj/embeddings.rs` (el determinista y MiniLM del agregado de texto, con un WordPiece propio en vez de `tokenizers`). 14 frases y dos vectores dorados de la V1 coinciden. Se conservan cinco contradicciones de la V1 que citan conceptos inexistentes y nunca se disparan. MiniLM con el modelo real, a las pruebas finales |
 | F6.1.2 Constructor y planificador de sesiones | Pendiente |
 | F6.1.3 Transiciones y motor de mezcla: `energy_blend`, `eq_kill_bass`, `filter_sweep`, `harmonic_mix` | Pendiente |
 | F6.1.4 Perfil de hardware y degradación de técnicas | Pendiente |

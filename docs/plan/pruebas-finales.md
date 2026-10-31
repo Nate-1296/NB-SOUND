@@ -129,3 +129,8 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Con el agregado de análisis instalado: las 407 pistas que analizó la V1 dan las mismas salidas que F0.4.3 (peor
       diferencia por debajo de 0,01, con valencia y activación en la escala de DEAM llevada a 0–1), y analizar en
       segundo plano no produce vacíos de buffer (F5.3.1, F5.3.2).
+
+## Fase 6
+
+- [ ] Con el agregado de texto instalado, el tokenizador propio da los mismos ids que el `tokenizer.json` de MiniLM con
+      `tokenizers` de HuggingFace en 50 frases del DJ, y los embeddings coinciden con los de la V1 (F6.1.1).

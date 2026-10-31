@@ -28,7 +28,6 @@ import type {
   Emparejar,
   EstadoKaraoke,
   EstadoMovil,
-  Gpu,
   InformeDeSalud,
   Inicio,
   Instantanea,

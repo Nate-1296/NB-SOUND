@@ -1,0 +1,354 @@
+{
+  "intenciones": {
+    "voces femeninas cinematográfico": {
+      "prompt": "voces femeninas cinematográfico",
+      "axes": {
+        "vocal_focus": 0.8999999999999999,
+        "vocal_female": 1.35,
+        "vocal_male": -0.44999999999999996,
+        "instrumental_focus": -0.6000000000000001,
+        "cinematic_level": 0.84,
+        "orchestral_weight": 0.48,
+        "storytelling": 0.48
+      },
+      "focos": ["voces_femeninas", "cinematografico"],
+      "exclusiones": [],
+      "generos": {},
+      "generos_excluidos": [],
+      "curva_energia": "wave",
+      "estilo_transicion": {
+        "cinematic": 0.7
+      },
+      "contradicciones": [],
+      "vacio": false,
+      "notas": [],
+      "resumen": "Voy a priorizar: voces femeninas, cinematografico. Curva: energia ondulante.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "algo para concentrarme sin EDM agresivo": {
+      "prompt": "algo para concentrarme sin EDM agresivo",
+      "axes": {
+        "focus_score": 0.96,
+        "calmness": 0.48,
+        "instrumental_focus": 0.36,
+        "aggressiveness": -1.01,
+        "electronic_weight": -0.65
+      },
+      "focos": ["concentrarse"],
+      "exclusiones": ["sin_edm_agresivo"],
+      "generos": {},
+      "generos_excluidos": [],
+      "curva_energia": "stable",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": false,
+      "notas": [],
+      "resumen": "Voy a priorizar: concentrarse, sin edm agresivo.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "rock pero clásico": {
+      "prompt": "rock pero clásico",
+      "axes": {
+        "energy": 0.4,
+        "aggressiveness": 0.2,
+        "rhythmic_density": 0.3,
+        "orchestral_weight": 0.7,
+        "acoustic_weight": 0.6,
+        "cinematic_level": 0.5,
+        "calmness": 0.2,
+        "instrumental_focus": 0.4
+      },
+      "focos": [],
+      "exclusiones": [],
+      "generos": {
+        "rock": 0.25,
+        "alternative rock": 0.25,
+        "classic rock": 0.25,
+        "hard rock": 0.25,
+        "classical": 1.0
+      },
+      "generos_excluidos": [],
+      "curva_energia": "stable",
+      "estilo_transicion": {
+        "harmonic": 0.5,
+        "smooth": 0.3
+      },
+      "contradicciones": [],
+      "vacio": false,
+      "notas": [],
+      "resumen": "Voy a priorizar: rock, clasica.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "muy energético para entrenar": {
+      "prompt": "muy energético para entrenar",
+      "axes": {
+        "energy": 1.8320000000000003,
+        "rhythmic_density": 0.888,
+        "calmness": -0.528,
+        "workout_score": 0.96,
+        "danceability": 0.36
+      },
+      "focos": ["energetico", "entrenar"],
+      "exclusiones": [],
+      "generos": {},
+      "generos_excluidos": [],
+      "curva_energia": "progressive",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": false,
+      "notas": [],
+      "resumen": "Voy a priorizar: energetico, entrenar. Curva: subida progresiva.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "nada de pop, pero sí rock": {
+      "prompt": "nada de pop, pero sí rock",
+      "axes": {
+        "energy": 0.4,
+        "aggressiveness": 0.2,
+        "rhythmic_density": 0.3,
+        "vocal_focus": -0.3,
+        "brightness": -0.2,
+        "danceability": -0.2
+      },
+      "focos": [],
+      "exclusiones": ["pop"],
+      "generos": {
+        "rock": 0.25,
+        "alternative rock": 0.25,
+        "classic rock": 0.25,
+        "hard rock": 0.25
+      },
+      "generos_excluidos": ["pop", "indie pop"],
+      "curva_energia": "stable",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": false,
+      "notas": ["Evitare: pop"],
+      "resumen": "Voy a priorizar: rock. Evitare: pop.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "bajos fuertes y nocturno": {
+      "prompt": "bajos fuertes y nocturno",
+      "axes": {
+        "bass_weight": 0.96,
+        "energy": 0.24,
+        "darkness": 0.44000000000000006,
+        "night_score": 0.77,
+        "calmness": 0.22000000000000003,
+        "cinematic_level": 0.22000000000000003
+      },
+      "focos": ["bajos_fuertes", "nocturno"],
+      "exclusiones": [],
+      "generos": {},
+      "generos_excluidos": [],
+      "curva_energia": "descending",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": false,
+      "notas": [],
+      "resumen": "Voy a priorizar: bajos fuertes, nocturno. Curva: energia descendente.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "Música épica y dramática": {
+      "prompt": "Música épica y dramática",
+      "axes": {
+        "cinematic_level": 1.38,
+        "orchestral_weight": 0.65,
+        "energy": 0.52,
+        "storytelling": 1.13,
+        "tension": 1.1099999999999999,
+        "darkness": 0.36
+      },
+      "focos": ["epico", "dramatico"],
+      "exclusiones": [],
+      "generos": {},
+      "generos_excluidos": [],
+      "curva_energia": "progressive",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": false,
+      "notas": [],
+      "resumen": "Voy a priorizar: epico, dramatico. Curva: subida progresiva.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "un poco triste": {
+      "prompt": "un poco triste",
+      "axes": {
+        "melancholy": 0.42350000000000004,
+        "euphoria": -0.18150000000000002,
+        "darkness": 0.12100000000000002
+      },
+      "focos": ["triste"],
+      "exclusiones": [],
+      "generos": {},
+      "generos_excluidos": [],
+      "curva_energia": "descending",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": false,
+      "notas": [],
+      "resumen": "Voy a priorizar: triste. Curva: energia descendente.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "sin agresivo": {
+      "prompt": "sin agresivo",
+      "axes": {
+        "aggressiveness": -0.77,
+        "energy": -0.55,
+        "tension": -0.44000000000000006
+      },
+      "focos": [],
+      "exclusiones": ["agresivo"],
+      "generos": {},
+      "generos_excluidos": [],
+      "curva_energia": "stable",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": false,
+      "notas": ["Evitare: agresivo"],
+      "resumen": "Evitare: agresivo.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "tranquilo y agresivo": {
+      "prompt": "tranquilo y agresivo",
+      "axes": {
+        "aggressiveness": 0.77,
+        "energy": 0.55,
+        "tension": 0.44000000000000006
+      },
+      "focos": ["agresivo"],
+      "exclusiones": [],
+      "generos": {},
+      "generos_excluidos": [],
+      "curva_energia": "stable",
+      "estilo_transicion": {},
+      "contradicciones": [["agresivo", "tranquilo"]],
+      "vacio": false,
+      "notas": [
+        "Detecte conceptos contradictorios; aplique la prioridad mas fuerte: agresivo vs tranquilo"
+      ],
+      "resumen": "Voy a priorizar: agresivo.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "": {
+      "prompt": "",
+      "axes": {},
+      "focos": [],
+      "exclusiones": [],
+      "generos": {},
+      "generos_excluidos": [],
+      "curva_energia": "stable",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": true,
+      "notas": ["No ingresaste una indicacion; usare seleccion general."],
+      "resumen": "Sesion general sin intencion especifica.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "xyzzy": {
+      "prompt": "xyzzy",
+      "axes": {},
+      "focos": [],
+      "exclusiones": [],
+      "generos": {},
+      "generos_excluidos": [],
+      "curva_energia": "stable",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": true,
+      "notas": [
+        "Prueba con expresiones como 'algo para concentrarme', 'bajos fuertes', 'voces femeninas', 'cinematografico', 'sin EDM agresivo', 'subida progresiva para entrenar'."
+      ],
+      "resumen": "No reconoci conceptos musicales claros. Hare una seleccion general.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "fiesta electrónica con mucho bajo": {
+      "prompt": "fiesta electrónica con mucho bajo",
+      "axes": {
+        "club_energy": 0.96,
+        "danceability": 1.12,
+        "energy": 0.6,
+        "electronic_weight": 0.6,
+        "bass_weight": 0.3
+      },
+      "focos": ["club_party"],
+      "exclusiones": [],
+      "generos": {
+        "electronic": 0.25,
+        "electronica": 0.25,
+        "dance": 0.25,
+        "house": 0.25
+      },
+      "generos_excluidos": [],
+      "curva_energia": "peak",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": false,
+      "notas": [],
+      "resumen": "Voy a priorizar: club party, electronica. Curva: pico de energia.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    },
+    "no quiero pop pero si rock": {
+      "prompt": "no quiero pop pero si rock",
+      "axes": {
+        "energy": 0.4,
+        "aggressiveness": 0.2,
+        "rhythmic_density": 0.3,
+        "vocal_focus": -0.3,
+        "brightness": -0.2,
+        "danceability": -0.2
+      },
+      "focos": [],
+      "exclusiones": ["pop"],
+      "generos": {
+        "rock": 0.25,
+        "alternative rock": 0.25,
+        "classic rock": 0.25,
+        "hard rock": 0.25
+      },
+      "generos_excluidos": ["pop", "indie pop"],
+      "curva_energia": "stable",
+      "estilo_transicion": {},
+      "contradicciones": [],
+      "vacio": false,
+      "notas": ["Evitare: pop"],
+      "resumen": "Voy a priorizar: rock. Evitare: pop.",
+      "duracion_minutos": 60,
+      "motor_version": "dj_intent_v1"
+    }
+  },
+  "embeddings": {
+    "texto": [
+      0.0, 0.0, 0.8999999999999999, 1.35, -0.44999999999999996, -0.6000000000000001, 0.84, 0.48,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.48, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 1.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0
+    ],
+    "pista": [
+      0.54, 0.12, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.18, 0.0, 0.0, 0.0, 0.0, -0.4, 0.0,
+      -0.08000000000000002, 0.13999999999999999, 0.0, 0.09, 0.0, 0.8, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+      0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.44000000000000006, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    ],
+    "dim": 105
+  }
+}
