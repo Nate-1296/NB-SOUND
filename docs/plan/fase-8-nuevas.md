@@ -19,7 +19,7 @@ Cada una exige su ficha completa (objetivo, criterio, dependencias) antes de emp
 | Iteración | Estado |
 |---|---|
 | F8.1 Forma de onda | Hecha: 1.000 picos por pista en `sonoridad.picos` (migración V10), calculados en la misma decodificación que los LUFS (`audio/sonoridad.rs`, `medicion.rs`), servidos por `forma_de_onda` y dibujados en `FormaDeOnda.svelte` sobre la barra y en la sesión activa del DJ con los puntos de entrada y salida de `EstadoDj` |
-| F8.2 Listas inteligentes vivas | Pendiente: sin ficha |
+| F8.2 Listas inteligentes vivas | En curso |
 | F8.3 Resumen local de escucha | Pendiente: sin ficha |
 | F8.4 Copia a dispositivos | Pendiente: sin ficha |
 | F8.5 Modo fiesta | Bloqueada: necesita un ADR del modelo de confianza aprobado por Nathan |
@@ -64,3 +64,52 @@ del DJ en el reproductor único).
 
 **A las pruebas finales.** Que la forma de onda se corresponda a la vista con lo que suena en diez pistas del
 corpus, y que la nueva medida de la biblioteca entera no se note en el equipo.
+
+## F8.2 Listas inteligentes vivas
+
+**Objetivo.** El usuario puede crear y editar listas inteligentes cuyas reglas sobre rasgos (BPM, energía,
+instrumental listo, ánimo) y uso (favoritas, reproducciones, última escucha, año, género) se evalúan en SQLite y se
+mantienen vivas al cambiar la biblioteca o el historial, convergiendo en el mismo mecanismo con las playlists
+automáticas de la V1 ("Crear para mí").
+
+**Depende de.** F2.2.4 (playlists manuales y clasificación móvil), F5.2.1 (instrumentales del karaoke), F5.3.1
+(rasgos, análisis profundo y etiquetas de ambiente) y F5.3.3 (`descubrir.rs`).
+
+**Decisiones.**
+
+* **Un solo modelo en `playlists`:** no se añade otra tabla. Una lista inteligente del usuario es una fila de
+  `playlists` con `tipo = 'automatica'`, `subtipo = 'inteligente'`, `origen = 'usuario'`, `auto_actualizable = 1` y
+  su `ReglaInteligente` en JSON dentro de `regla`. `clasificar` la agrupa en `Categoria::Inteligente` con etiqueta
+  `"Inteligente"`, de modo que NB Sound Mobile la recibe como cualquier playlist sin tocar su contrato (ADR-005).
+* **Evaluación en SQLite y sincronización sin ruido:** la regla se traduce a una consulta parametrizada sobre
+  `pistas`, `rasgos`, `analisis_profundo`, `etiquetas_ambiente` (umbral ≥ 0,5) e `instrumentales` (`estado = 'listo'`).
+  Al listar, abrir o reproducir una lista inteligente viva se evalúa su regla y solo se reescribe `playlist_pistas`
+  cuando la lista de `id` resultante cambió: así la lista está siempre al día y `sync_version` solo sube cuando de
+  verdad entraron, salieron o cambiaron de orden sus canciones.
+* **Convergencia con las automáticas de la V1 (F7.1.1):** el mismo módulo regenera las playlists automáticas que la
+  V1 creaba en `servicios/biblioteca.py` (`auto:favoritas_sonando`, `auto:redescubrir`, `auto:recientes_biblioteca`,
+  `auto:descubrir:canciones`, `auto:recientes_sin_escuchar`, `auto:favoritas_olvidadas`, `auto:top_canciones`,
+  `auto:artist_mix_frecuentes`, `auto:album_mix_frecuentes`, `auto:albumes_para_volver`, `auto:this_is:<artista_id>`
+  y las siete `auto:mood:*` apoyadas en `descubrir`), respetando `editada = 1` y `visible = 0`.
+* **Edición y borrado:** las listas inteligentes creadas por el usuario (`subtipo = 'inteligente'` y
+  `origen = 'usuario'`) se pueden editar (nombre, descripción y regla) y borrar; sus canciones las decide la regla,
+  no se añaden ni mueven a mano.
+
+**Criterio de aceptación.**
+
+1. `ReglaInteligente` permite filtrar combinando rango de BPM (`rasgos.bpm`), rango de energía
+   (`coalesce(analisis_profundo.activacion, rasgos.energia)`), ánimo (`etiquetas_ambiente`), instrumental listo para
+   cantar (`instrumentales`), solo favoritas, mínimo y máximo de reproducciones, escuchadas en los últimos $N$ días
+   o sin escuchar desde hace al menos $N$ días (incluidas las nunca escuchadas), rango de año y género, con orden y
+   límite (1 a 200).
+2. Una lista inteligente es **viva**: si una pista pasa a cumplir la regla (por ejemplo, se marca como favorita, se
+   reproduce, recibe sus rasgos o su instrumental), al abrir o listar la playlist la pista aparece en ella y
+   `playlist_pistas` se actualiza; si el resultado no cambia, `sync_version` no sube.
+3. `regenerar_automaticas` crea o actualiza las playlists automáticas de la V1 que alcanzan su mínimo de pistas,
+   respeta las que el usuario editó (`editada = 1`) y actualiza las inteligentes vivas.
+4. En la vista de Playlists, el usuario puede crear y editar una lista inteligente con su diálogo de reglas, borrarla
+   y pulsar "Crear para mí" para regenerar las automáticas.
+
+**A las pruebas finales.** Crear en la instalación real una lista inteligente por BPM + ánimo + favoritas y comprobar
+que el teléfono la sincroniza y que al marcar una nueva favorita entra sola; pulsar "Crear para mí" sobre la
+biblioteca migrada de la V1 y verificar las listas generadas.
