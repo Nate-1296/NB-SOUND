@@ -14,20 +14,41 @@ import type {
   Descubrimiento,
   EstadoAgregado,
   EstadoCopia,
+  EstructuraCarpetas,
   Gpu,
   IdAgregado,
+  OpcionesCopiaDispositivo,
   OrdenInteligente,
+  OrigenCopia,
   PoliticaDeRed,
   ProveedorIa,
   RadarAnimos,
   ReglaInteligente,
   ResumenCopia,
+  ResumenCopiaDispositivo,
   ResumenEscucha
 } from '$lib/bindings';
 
 import { call, escuchar } from './index';
 
-export type { OrdenInteligente, RadarAnimos, ReglaInteligente, ResumenEscucha };
+export type {
+  EstructuraCarpetas,
+  OpcionesCopiaDispositivo,
+  OrdenInteligente,
+  OrigenCopia,
+  RadarAnimos,
+  ReglaInteligente,
+  ResumenCopiaDispositivo,
+  ResumenEscucha
+};
+
+// --- Copia a dispositivos externos (F8.4) ----------------------------------------
+
+export function copiaDispositivoEjecutar(
+  opciones: OpcionesCopiaDispositivo
+): Promise<ResumenCopiaDispositivo | null> {
+  return call<ResumenCopiaDispositivo | null>('copia_dispositivo_ejecutar', { opciones });
+}
 
 // --- Resumen local de escucha (F8.3) ---------------------------------------------
 

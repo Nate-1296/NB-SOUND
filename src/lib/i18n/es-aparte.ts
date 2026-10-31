@@ -331,6 +331,33 @@ export const esAparte = {
       '11': 'Nov',
       '12': 'Dic'
     } as Record<string, string>
+  },
+
+  copiaDispositivo: {
+    titulo: 'Copiar a tarjeta microSD, USB o reproductor portátil',
+    ayuda:
+      'Exporta tu música con nombres válidos para FAT32/exFAT, portada incrustada y archivo de lista .m3u8.',
+    origen: 'Qué copiar',
+    origenes: {
+      biblioteca: 'Toda la biblioteca',
+      favoritas: 'Mis canciones favoritas',
+      playlist: 'Una playlist'
+    },
+    playlist: 'Playlist a copiar',
+    sinPlaylists: 'Aún no hay playlists creadas.',
+    estructura: 'Estructura de carpetas',
+    estructuras: {
+      artistaAlbum: 'Artista / Álbum / 01 - Canción',
+      artista: 'Artista / 01 - Canción',
+      plana: 'Todo en una carpeta (Artista - Canción)'
+    },
+    incrustarPortada: 'Incrustar portada y etiquetas en las copias',
+    convertirWav: 'Convertir a WAV PCM (16 bits, 44,1 kHz) para máxima compatibilidad',
+    botonCopiar: 'Elegir carpeta y copiar',
+    copiando: 'Copiando al dispositivo…',
+    resumen: (copiadas: number, omitidas: number, mb: string, m3u: string | null) =>
+      `${copiadas.toLocaleString('es')} ${copiadas === 1 ? 'pista copiada' : 'pistas copiadas'}${omitidas > 0 ? `, ${omitidas.toLocaleString('es')} ya existentes` : ''} (${mb} MB)${m3u ? ` · ${m3u}` : ''}.`,
+    error: 'No se pudo completar la copia al dispositivo.'
   }
 };
 

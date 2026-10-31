@@ -15,6 +15,7 @@ pub mod catalogo;
 pub mod cola;
 pub mod comandos;
 pub mod controles_sistema;
+pub mod copia_dispositivo;
 pub mod copia_seguridad;
 pub mod db;
 pub mod descubrir;
@@ -458,6 +459,7 @@ pub fn run() {
             comandos::movil_emparejar,
             comandos::movil_telefonos,
             comandos::movil_quitar,
+            comandos::copia_dispositivo_ejecutar,
             comandos::importacion_progreso,
             comandos::anadir_musica,
             comandos::por_revisar_listar,

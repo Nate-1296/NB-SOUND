@@ -5,20 +5,69 @@
   con quitar. Sustituye a la vista Sincronización de la V1.
 -->
 <script lang="ts">
+  import { type PlaylistResumen, playlistsListar } from '$core/ipc';
+  import {
+    copiaDispositivoEjecutar,
+    type EstructuraCarpetas,
+    type OrigenCopia
+  } from '$core/ipc/aparte';
   import { telefonos } from '$core/movil.svelte';
   import { textos } from '$lib/i18n';
+  import { textosAparte } from '$lib/i18n/aparte';
   import Icon from '$ui/Icon.svelte';
 
   import DialogoConectar from './DialogoConectar.svelte';
 
   const t = textos.ajustes;
+  const tc = textosAparte.copiaDispositivo;
   let conectando = $state(false);
   let quitando = $state<{ id: number; nombre: string } | null>(null);
   let confirmar: HTMLDialogElement | undefined = $state();
 
+  let origen = $state<OrigenCopia>('favoritas');
+  let playlistId = $state<number | null>(null);
+  let playlists = $state<PlaylistResumen[]>([]);
+  let estructura = $state<EstructuraCarpetas>('artistaAlbum');
+  let incrustarPortada = $state(true);
+  let convertirAWav = $state(false);
+  let copiando = $state(false);
+  let mensajeCopia = $state<string | null>(null);
+
   $effect(() => {
     void telefonos.refrescar();
+    void playlistsListar({ texto: null, categoria: null, orden: 'recientes' }).then((lista) => {
+      playlists = lista;
+      if (playlistId === null && lista[0]) {
+        playlistId = lista[0].id;
+      }
+    });
   });
+
+  async function iniciarCopiaDispositivo() {
+    if (copiando) return;
+    if (origen === 'playlist' && playlistId === null) return;
+    copiando = true;
+    mensajeCopia = tc.copiando;
+    try {
+      const r = await copiaDispositivoEjecutar({
+        origen,
+        playlistId: origen === 'playlist' ? playlistId : null,
+        estructura,
+        incrustarPortada,
+        convertirAWav
+      });
+      if (r) {
+        const mb = (r.bytesEscritos / 1_048_576).toFixed(1);
+        mensajeCopia = tc.resumen(r.copiadas, r.omitidas, mb, r.listaM3u8);
+      } else {
+        mensajeCopia = null;
+      }
+    } catch {
+      mensajeCopia = tc.error;
+    } finally {
+      copiando = false;
+    }
+  }
 
   $effect(() => {
     if (!confirmar) return;
@@ -100,6 +149,69 @@
       {/each}
     </ul>
   {/if}
+
+  <div class="bloque-externo">
+    <h3>{tc.titulo}</h3>
+    <p>{tc.ayuda}</p>
+
+    <label class="ajuste">
+      <span class="rotulo">{tc.origen}</span>
+      <select class="selector" bind:value={origen}>
+        <option value="favoritas">{tc.origenes.favoritas}</option>
+        <option value="playlist">{tc.origenes.playlist}</option>
+        <option value="biblioteca">{tc.origenes.biblioteca}</option>
+      </select>
+    </label>
+
+    {#if origen === 'playlist'}
+      <label class="ajuste">
+        <span class="rotulo">{tc.playlist}</span>
+        {#if playlists.length === 0}
+          <small>{tc.sinPlaylists}</small>
+        {:else}
+          <select class="selector" bind:value={playlistId}>
+            {#each playlists as pl (pl.id)}
+              <option value={pl.id}>{pl.nombre}</option>
+            {/each}
+          </select>
+        {/if}
+      </label>
+    {/if}
+
+    <label class="ajuste">
+      <span class="rotulo">{tc.estructura}</span>
+      <select class="selector" bind:value={estructura}>
+        <option value="artistaAlbum">{tc.estructuras.artistaAlbum}</option>
+        <option value="artista">{tc.estructuras.artista}</option>
+        <option value="plana">{tc.estructuras.plana}</option>
+      </select>
+    </label>
+
+    <label class="ajuste interruptor">
+      <span class="rotulo">{tc.incrustarPortada}</span>
+      <input type="checkbox" role="switch" bind:checked={incrustarPortada} />
+    </label>
+
+    <label class="ajuste interruptor">
+      <span class="rotulo">{tc.convertirWav}</span>
+      <input type="checkbox" role="switch" bind:checked={convertirAWav} />
+    </label>
+
+    <div class="fila-accion">
+      <button
+        type="button"
+        class="boton"
+        disabled={copiando || (origen === 'playlist' && playlistId === null)}
+        onclick={iniciarCopiaDispositivo}
+      >
+        <Icon nombre="carpeta" tamano={18} />
+        {copiando ? tc.copiando : tc.botonCopiar}
+      </button>
+      {#if mensajeCopia}
+        <small class="estado-copia">{mensajeCopia}</small>
+      {/if}
+    </div>
+  </div>
 </section>
 
 <DialogoConectar abierto={conectando} oncerrar={() => (conectando = false)} />
@@ -257,5 +369,41 @@
     justify-content: flex-end;
     gap: var(--ns-espacio-2);
     margin-top: var(--ns-espacio-4);
+  }
+
+  .bloque-externo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-3);
+    padding-top: var(--ns-espacio-4);
+    border-top: 1px solid var(--m3c-outline-variant);
+  }
+
+  .bloque-externo h3 {
+    margin: 0;
+    font-size: var(--ns-texto-md);
+  }
+
+  .selector {
+    min-width: 15rem;
+    padding: var(--ns-espacio-2) var(--ns-espacio-3);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-md);
+    background: var(--m3c-surface-container);
+    color: var(--m3c-on-surface);
+    font: inherit;
+    font-size: var(--ns-texto-sm);
+  }
+
+  .fila-accion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ns-espacio-3);
+  }
+
+  .estado-copia {
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-sm);
   }
 </style>

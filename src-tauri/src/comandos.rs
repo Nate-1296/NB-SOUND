@@ -726,6 +726,35 @@ pub async fn movil_quitar(estado: tauri::State<'_, Estado>, id: i64) -> NsResult
     con_movil(&estado, move |m| m.quitar(id)).await
 }
 
+/// Copia música a una carpeta o dispositivo externo elegido con el selector
+/// nativo (F8.4). Devuelve `None` si el usuario cancela el selector. La ruta no
+/// cruza el puente IPC.
+#[tauri::command]
+pub async fn copia_dispositivo_ejecutar(
+    app: AppHandle,
+    opciones: crate::copia_dispositivo::OpcionesCopiaDispositivo,
+) -> NsResult<Option<crate::copia_dispositivo::ResumenCopiaDispositivo>> {
+    use tauri_plugin_dialog::DialogExt;
+    let (db, rutas) = {
+        let e = app.state::<Estado>();
+        (e.db.clone(), e.rutas.clone())
+    };
+    tauri::async_runtime::spawn_blocking(move || {
+        let Some(destino) = app
+            .dialog()
+            .file()
+            .set_title("Elegir carpeta del dispositivo externo")
+            .blocking_pick_folder()
+            .and_then(|f| f.into_path().ok())
+        else {
+            return Ok(None);
+        };
+        crate::copia_dispositivo::copiar(&db, &rutas, &opciones, &destino).map(Some)
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
 // --- Importar (F4.2) ----------------------------------------------------------
 
 #[tauri::command]
