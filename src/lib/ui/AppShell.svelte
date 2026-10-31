@@ -11,7 +11,8 @@
   import { onMount, type Snippet } from 'svelte';
 
   import { accionDeTecla, esCampoDeTexto } from '$core/atajos';
-  import { abrirMinirreproductor } from '$core/ipc';
+  import { aparienciaActual } from '$core/apariencia.svelte';
+  import { abrirMinirreproductor, alternarPantallaCompleta } from '$core/ipc';
   import { importacion } from '$core/importacion.svelte';
   import { telefonos } from '$core/movil.svelte';
   import { reproductor } from '$core/reproductor.svelte';
@@ -67,7 +68,11 @@
       ampliada: () =>
         window.dispatchEvent(new CustomEvent('ns:vista', { detail: { letras: false } })),
       cola: () => window.dispatchEvent(new CustomEvent('ns:cola')),
-      mini: abrirMinirreproductor
+      mini: abrirMinirreproductor,
+      pantallaCompleta: async () => {
+        await alternarPantallaCompleta();
+        window.dispatchEvent(new CustomEvent('ns:pantalla-completa'));
+      }
     };
     void acciones[accion]();
   }
@@ -75,7 +80,12 @@
 
 <svelte:window onkeydown={alPulsar} />
 
-<div class="carcasa" data-ancho={clase} bind:clientWidth={ancho}>
+<div
+  class="carcasa"
+  class:compacta={aparienciaActual.barraLateralCompacta}
+  data-ancho={clase}
+  bind:clientWidth={ancho}
+>
   <div class="lateral"><NavLateral pendientes={importacion.pendientes} /></div>
   <div class="superior"><BarraSuperior /></div>
   <main class="contenido">{@render children()}</main>
@@ -119,7 +129,8 @@
     min-width: 0;
   }
 
-  .carcasa:not([data-ancho='amplio']) {
+  .carcasa:not([data-ancho='amplio']),
+  .carcasa.compacta {
     grid-template-columns: var(--ns-ancho-riel) minmax(0, 1fr);
   }
 </style>

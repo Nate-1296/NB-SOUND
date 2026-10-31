@@ -19,7 +19,8 @@ export type AccionDeAtajo =
   | 'ampliada'
   | 'karaoke'
   | 'subirVolumen'
-  | 'bajarVolumen';
+  | 'bajarVolumen'
+  | 'pantallaCompleta';
 
 export interface Tecla {
   key: string;
@@ -43,7 +44,8 @@ const SIMPLES: Readonly<Record<string, AccionDeAtajo>> = {
   k: 'karaoke',
   '+': 'subirVolumen',
   '=': 'subirVolumen',
-  '-': 'bajarVolumen'
+  '-': 'bajarVolumen',
+  F11: 'pantallaCompleta'
 };
 
 const CON_CONTROL: Readonly<Record<string, AccionDeAtajo>> = {
@@ -54,6 +56,7 @@ const CON_CONTROL: Readonly<Record<string, AccionDeAtajo>> = {
 /** La acción de una pulsación, o `null` si no es un atajo. */
 export function accionDeTecla(t: Tecla): AccionDeAtajo | null {
   if (t.altKey) return null;
+  if (t.key === 'F11') return 'pantallaCompleta';
   const tecla = t.key.length === 1 ? t.key.toLowerCase() : t.key;
   if (t.ctrlKey || t.metaKey) return CON_CONTROL[tecla] ?? null;
   if (t.escribiendo) return null;

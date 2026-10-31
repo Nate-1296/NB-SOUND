@@ -447,6 +447,7 @@ pub fn run() {
             comandos::biblioteca_artistas,
             comandos::reproducir_lista,
             comandos::fijar_favorita,
+            comandos::borrar_pista,
             comandos::biblioteca_album,
             comandos::biblioteca_artista,
             comandos::playlists_listar,

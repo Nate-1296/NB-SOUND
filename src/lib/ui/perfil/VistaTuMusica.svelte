@@ -162,23 +162,29 @@
     <p class="sub">{t.actividadSub}</p>
     <ul class="cifras">
       <li>
-        <span>{t.escuchadas}</span><strong>{datos.pistasDistintas.toLocaleString('es')}</strong
-        ><Icon nombre="cancion" tamano={16} />
+        <a class="cifra-enlace" href="/biblioteca?vista=pistas">
+          <span>{t.escuchadas}</span><strong>{datos.pistasDistintas.toLocaleString('es')}</strong
+          ><Icon nombre="cancion" tamano={16} />
+        </a>
       </li>
       <li>
-        <span>{t.artistas}</span><strong>{datos.artistasDistintos.toLocaleString('es')}</strong
-        ><Icon nombre="artista" tamano={16} />
+        <a class="cifra-enlace" href="/biblioteca?vista=artistas">
+          <span>{t.artistas}</span><strong>{datos.artistasDistintos.toLocaleString('es')}</strong
+          ><Icon nombre="artista" tamano={16} />
+        </a>
       </li>
       <li>
-        <span>{t.albumes}</span><strong>{datos.albumesDistintos.toLocaleString('es')}</strong><Icon
-          nombre="album"
-          tamano={16}
-        />
+        <a class="cifra-enlace" href="/biblioteca?vista=albumes">
+          <span>{t.albumes}</span><strong>{datos.albumesDistintos.toLocaleString('es')}</strong
+          ><Icon nombre="album" tamano={16} />
+        </a>
       </li>
       <li>
-        <span>{t.tiempo}</span><strong
-          >{duracionDetallada(datos.segundosEscuchados).split(' ').slice(0, 2).join(' ')}</strong
-        ><Icon nombre="reloj" tamano={16} />
+        <div class="cifra-enlace estatica">
+          <span>{t.tiempo}</span><strong
+            >{duracionDetallada(datos.segundosEscuchados).split(' ').slice(0, 2).join(' ')}</strong
+          ><Icon nombre="reloj" tamano={16} />
+        </div>
       </li>
     </ul>
 
@@ -327,14 +333,14 @@
         <article class="tarjeta">
           <span class="etiqueta">{tr.radarTitulo}</span>
           <p class="sub">{tr.radarSub}</p>
-          <svg class="radar-svg" viewBox="0 0 220 220" aria-label={tr.radarTitulo}>
+          <svg class="radar-svg" viewBox="-55 -10 330 240" aria-label={tr.radarTitulo}>
             <polygon points={puntosGuiaRadar(1)} class="guia-ext" />
             <polygon points={puntosGuiaRadar(0.5)} class="guia-int" />
             <polygon points={puntosPoligonoRadar(resumen.radar)} class="area-radar" />
-            <text x="110" y="22" text-anchor="middle">{tr.ejes.energia}</text>
+            <text x="110" y="18" text-anchor="middle">{tr.ejes.energia}</text>
             <text x="184" y="68" text-anchor="start">{tr.ejes.bailable}</text>
             <text x="184" y="158" text-anchor="start">{tr.ejes.alegre}</text>
-            <text x="110" y="206" text-anchor="middle">{tr.ejes.calma}</text>
+            <text x="110" y="210" text-anchor="middle">{tr.ejes.calma}</text>
             <text x="36" y="158" text-anchor="end">{tr.ejes.nocturna}</text>
             <text x="36" y="68" text-anchor="end">{tr.ejes.melancolica}</text>
           </svg>
@@ -500,7 +506,6 @@
     list-style: none;
   }
 
-  .cifras li,
   .tarjeta {
     padding: var(--ns-espacio-4);
     border: 1px solid var(--m3c-outline-variant);
@@ -509,11 +514,28 @@
   }
 
   .cifras li {
+    padding: 0;
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-md);
+    background: var(--m3c-surface-container-low);
+    overflow: hidden;
+  }
+
+  .cifra-enlace {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: var(--ns-espacio-1);
+    width: 100%;
+    height: 100%;
+    padding: var(--ns-espacio-4);
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
+    text-decoration: none;
+    transition: background-color var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .cifra-enlace:not(.estatica):hover {
+    background: var(--m3c-surface-container);
   }
 
   .cifras strong {
@@ -694,7 +716,7 @@
 
   .radar-svg {
     width: 100%;
-    max-width: 16rem;
+    max-width: 18rem;
     height: auto;
     align-self: center;
   }
@@ -720,8 +742,9 @@
   }
 
   .radar-svg text {
-    fill: var(--m3c-on-surface-variant);
+    fill: var(--m3c-on-surface);
     font-size: var(--ns-texto-xs);
+    font-weight: 500;
   }
 
   .rejilla-calor {

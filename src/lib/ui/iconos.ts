@@ -86,6 +86,7 @@ export const ICONOS = {
   noDisponible: '<circle cx="12" cy="12" r="8.5"/><path d="m6 6 12 12"/>',
   ordenar:
     '<path d="M6.5 3.5v17M3.5 17.5 6.5 20.5l3-3"/><path d="M13 6.5h7.5M13 12h5.5M13 17.5h3.5"/>',
+  pantallaCompleta: '<path d="M3.5 8.5v-5h5M20.5 8.5v-5h-5M3.5 15.5v5h5M20.5 15.5v5h-5"/>',
   pausa: '<path d="M9 4.5v15M15 4.5v15"/>',
   playlists:
     '<path d="M3.5 6h11M3.5 10.5h11M3.5 15h6.5"/><circle cx="16.5" cy="17" r="2.25"/><path d="M18.75 17V7.5l2 .75"/>',
@@ -100,6 +101,7 @@ export const ICONOS = {
   repetirUna:
     '<path d="M4.5 11V9a2 2 0 0 1 2-2h13"/><path d="m17 4.5 2.5 2.5L17 9.5"/><path d="M19.5 13v2a2 2 0 0 1-2 2h-13"/><path d="m7 19.5-2.5-2.5L7 14.5"/><path d="M11.25 10.75 12.5 10v4"/>',
   reproducir: '<path d="M7.5 4.75 19.5 12l-12 7.25z"/>',
+  salirPantallaCompleta: '<path d="M8.5 3.5v5h-5M15.5 3.5v5h5M8.5 20.5v-5h-5M15.5 20.5v5h5"/>',
   siguiente: '<path d="M18 5v14"/><path d="M5.5 5.5 15 12l-9.5 6.5z"/>',
   silencio: '<path d="M3.5 9.5h3.5L12 5v14l-5-4.5H3.5z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/>',
   telefono: '<rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M11 18.5h2"/>',

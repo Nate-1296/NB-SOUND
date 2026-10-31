@@ -21,6 +21,8 @@ export const es = {
     ajustes: 'Ajustes',
     porRevisar: 'Por revisar',
     pendientes: (n: number) => (n === 1 ? '1 pendiente' : `${n} pendientes`),
+    colapsarLateral: 'Contraer barra lateral',
+    expandirLateral: 'Expandir barra lateral',
     secciones: {
       explorar: 'Explorar',
       tuMusica: 'Tu música',
@@ -63,7 +65,9 @@ export const es = {
     volumen: 'Volumen',
     silenciar: 'Silenciar',
     quitarSilencio: 'Quitar silencio',
-    expandir: 'Reproducción a pantalla completa',
+    expandir: 'Reproducción ampliada',
+    pantallaCompleta: 'Pantalla completa (F11)',
+    salirPantallaCompleta: 'Salir de pantalla completa (F11)',
     mini: 'Minirreproductor',
     cerrarMini: 'Cerrar el minirreproductor',
     progreso: 'Progreso de la canción',
@@ -125,6 +129,13 @@ export const es = {
     sinVerificarInsignia: 'Sin verificar',
     completarDatos: 'Completar datos',
     editarDatos: 'Editar datos',
+    borrarCancion: 'Eliminar canción',
+    confirmarBorrarTitulo: '¿Eliminar canción?',
+    confirmarBorrarDetalle: (titulo: string) => `Elige cómo deseas eliminar «${titulo}»:`,
+    borrarSoloBiblioteca: 'Quitar solo de la biblioteca',
+    borrarTambienArchivo: 'Eliminar también el archivo del equipo',
+    cancelar: 'Cancelar',
+    sonando: 'Reproduciéndose actualmente',
     completando: 'Buscando sus datos',
     completado: (r: { identificada: boolean; portada: boolean; letra: boolean }) => {
       const nuevas = [r.portada && 'la portada', r.letra && 'la letra'].filter(Boolean);
@@ -151,6 +162,7 @@ export const es = {
     artista: {
       albumes: 'Álbumes',
       canciones: 'Canciones',
+      aleatorio: 'Aleatorio',
       resumen: (albumes: number, pistas: number) =>
         `${albumes === 1 ? '1 álbum' : `${albumes} álbumes`} · ${pistas === 1 ? '1 pista' : `${pistas} pistas`}`,
       noEncontrado: 'Este artista ya no está en la biblioteca.'
@@ -317,7 +329,9 @@ export const es = {
     letras: 'Letras',
     sinLetra: 'Esta canción no tiene letra guardada.',
     nadaSonando: 'No suena nada. Elige una canción en tu biblioteca.',
-    irA: (t: string) => `Ir a ${t}`
+    irA: (t: string) => `Ir a ${t}`,
+    modoDividido: 'Vista dividida',
+    modoCentrado: 'Letras centradas'
   },
   playlists: {
     titulo: 'Playlists',
@@ -347,6 +361,7 @@ export const es = {
     anclar: 'Anclar',
     desanclar: 'Desanclar',
     reproducir: 'Reproducir',
+    aleatorio: 'Aleatorio',
     renombrar: 'Renombrar',
     borrar: 'Borrar',
     confirmarBorrar: (nombre: string) =>
@@ -437,6 +452,7 @@ export const es = {
     soltarAyuda:
       'Canciones o carpetas enteras. Lo que no se pueda identificar queda en Por revisar.',
     anadir: 'Añadir música',
+    anadirArchivos: 'Añadir archivos',
     anadirCarpeta: 'Añadir carpeta',
     catalogando: (n: number) => (n === 1 ? 'Catalogando 1 canción' : `Catalogando ${n} canciones`),
     deTotal: (hechos: number, total: number) => `${hechos} de ${total}`,

@@ -103,6 +103,18 @@
           <button
             type="button"
             class="boton"
+            disabled={pistas.length === 0}
+            onclick={async () => {
+              if (pistas.length === 0) return;
+              if (!reproductor.instantanea.aleatorio) void reproductor.alternarAleatorio();
+              await reproducirPlaylist(id, Math.floor(Math.random() * pistas.length));
+            }}
+          >
+            <Icon nombre="aleatorio" tamano={16} />{t.aleatorio}
+          </button>
+          <button
+            type="button"
+            class="boton"
             onclick={async () => {
               if (!datos) return;
               await anclarPlaylist(id, !datos.anclada);
@@ -137,6 +149,7 @@
         {#each pistas as p, i (p.id)}
           <li class:editable={datos.editable}>
             <FilaPista
+              contexto="playlist"
               pista={p}
               numero={i + 1}
               sonando={reproductor.instantanea.pistaId === p.id}

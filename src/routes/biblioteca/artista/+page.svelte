@@ -84,11 +84,46 @@
       <div class="datos">
         <h1>{artista.nombre}</h1>
         <span class="sub">{t.artista.resumen(artista.numAlbumes, artista.numPistas)}</span>
-        <button type="button" class="boton" onclick={() => reproducirLista(consulta, 0)}>
-          <Icon nombre="reproducir" tamano={16} />{t.reproducir}
-        </button>
+        <div class="acciones">
+          <button type="button" class="boton relleno" onclick={() => reproducirLista(consulta, 0)}>
+            <Icon nombre="reproducir" tamano={16} />{t.reproducir}
+          </button>
+          <button
+            type="button"
+            class="boton"
+            onclick={async () => {
+              await reproductor.orden({ tipo: 'aleatorio', activo: true });
+              await reproducirLista(consulta, 0);
+            }}
+          >
+            <Icon nombre="aleatorio" tamano={16} />{t.artista.aleatorio}
+          </button>
+        </div>
       </div>
     </header>
+
+    <h2>{t.artista.canciones}</h2>
+    {#if total > 0}
+      <div class="lista">
+        {#key id}
+          <ListaVirtual {total} altoFila={66} {cargarBloque} etiqueta={t.artista.canciones}>
+            {#snippet fila(p: PistaResumen, i: number, rapido: boolean)}
+              <FilaPista
+                contexto="artista"
+                pista={{ ...p, favorita: favoritas.get(p.id) ?? p.favorita }}
+                numero={i + 1}
+                {rapido}
+                sonando={reproductor.instantanea.pistaId === p.id}
+                onreproducir={() => reproducirLista(consulta, i)}
+                onanadir={() =>
+                  reproductor.orden({ tipo: 'agregar', ids: [p.id], justoDespues: false })}
+                onfavorita={() => alternarFavorita(p)}
+              />
+            {/snippet}
+          </ListaVirtual>
+        {/key}
+      </div>
+    {/if}
 
     {#if albumes.length > 0}
       <h2>{t.artista.albumes}</h2>
@@ -109,28 +144,6 @@
           </li>
         {/each}
       </ul>
-    {/if}
-
-    <h2>{t.artista.canciones}</h2>
-    {#if total > 0}
-      <div class="lista">
-        {#key id}
-          <ListaVirtual {total} altoFila={66} {cargarBloque} etiqueta={t.artista.canciones}>
-            {#snippet fila(p: PistaResumen, i: number, rapido: boolean)}
-              <FilaPista
-                pista={{ ...p, favorita: favoritas.get(p.id) ?? p.favorita }}
-                numero={i + 1}
-                {rapido}
-                sonando={reproductor.instantanea.pistaId === p.id}
-                onreproducir={() => reproducirLista(consulta, i)}
-                onanadir={() =>
-                  reproductor.orden({ tipo: 'agregar', ids: [p.id], justoDespues: false })}
-                onfavorita={() => alternarFavorita(p)}
-              />
-            {/snippet}
-          </ListaVirtual>
-        {/key}
-      </div>
     {/if}
   {/if}
 </section>
@@ -197,19 +210,42 @@
     font-size: var(--ns-texto-sm);
   }
 
+  .acciones {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-3);
+    margin-top: var(--ns-espacio-2);
+  }
+
   .boton {
     display: inline-flex;
     align-items: center;
     gap: var(--ns-espacio-2);
     height: 2.75rem;
     padding: 0 var(--ns-espacio-5);
-    border: 1px solid var(--m3c-primary);
+    border: 1px solid var(--m3c-outline);
     border-radius: var(--ns-radio-pleno);
-    background: var(--m3c-primary);
-    color: var(--m3c-on-primary);
+    background: transparent;
+    color: var(--m3c-on-surface);
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+    transition: background-color var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .boton:hover {
+    background: var(--m3c-surface-container-high);
+  }
+
+  .boton.relleno {
+    border-color: var(--m3c-primary);
+    background: var(--m3c-primary);
+    color: var(--m3c-on-primary);
+  }
+
+  .boton.relleno:hover {
+    background: var(--m3c-primary);
+    opacity: 0.9;
   }
 
   .rejilla {

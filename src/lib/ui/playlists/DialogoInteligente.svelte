@@ -197,146 +197,151 @@
 
 <dialog bind:this={dialogo} onclose={oncerrar} aria-labelledby="titulo-dialogo-inteligente">
   <form onsubmit={enviar}>
-    <h2 id="titulo-dialogo-inteligente">{editar ? ti.editar : ti.nueva}</h2>
-    <p class="ayuda">{ti.ayuda}</p>
+    <header class="cabecera">
+      <h2 id="titulo-dialogo-inteligente">{editar ? ti.editar : ti.nueva}</h2>
+      <p class="ayuda">{ti.ayuda}</p>
+    </header>
 
-    <div class="fila">
-      <label>
-        <span>{t.nombre}</span>
-        <!-- svelte-ignore a11y_autofocus -->
-        <input
-          bind:value={nombre}
-          maxlength="120"
-          required
-          autofocus
-          aria-invalid={error !== null}
-        />
-      </label>
-      <label>
-        <span>{t.descripcion}</span>
-        <input bind:value={descripcion} maxlength="240" />
-      </label>
-    </div>
-
-    <div class="fila">
-      <label>
-        <span>{ti.animo}</span>
-        <select bind:value={animo}>
-          <option value="">{ti.cualquierAnimo}</option>
-          {#each ANIMOS as a (a)}
-            <option value={a}>{ti.animos[a] ?? a}</option>
-          {/each}
-        </select>
-      </label>
-      <label>
-        <span>{ti.instrumental}</span>
-        <select bind:value={instrumental}>
-          <option value="cualquiera">{ti.instrumentalOpciones.cualquiera}</option>
-          <option value="con">{ti.instrumentalOpciones.con}</option>
-          <option value="sin">{ti.instrumentalOpciones.sin}</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="fila">
-      <label>
-        <span>{ti.bpmMin}</span>
-        <input type="number" min="1" max="400" step="1" bind:value={bpmMin} />
-      </label>
-      <label>
-        <span>{ti.bpmMax}</span>
-        <input type="number" min="1" max="400" step="1" bind:value={bpmMax} />
-      </label>
-      <label>
-        <span>{ti.energiaMin}</span>
-        <input type="number" min="0" max="100" step="1" bind:value={energiaMin} />
-      </label>
-      <label>
-        <span>{ti.energiaMax}</span>
-        <input type="number" min="0" max="100" step="1" bind:value={energiaMax} />
-      </label>
-    </div>
-
-    <div class="fila">
-      <label>
-        <span>{ti.reproduccionesMin}</span>
-        <input type="number" min="0" step="1" bind:value={reproduccionesMin} />
-      </label>
-      <label>
-        <span>{ti.reproduccionesMax}</span>
-        <input type="number" min="0" step="1" bind:value={reproduccionesMax} />
-      </label>
-      <label>
-        <span>{ti.anioMin}</span>
-        <input type="number" min="1000" max="9999" step="1" bind:value={anioMin} />
-      </label>
-      <label>
-        <span>{ti.anioMax}</span>
-        <input type="number" min="1000" max="9999" step="1" bind:value={anioMax} />
-      </label>
-    </div>
-
-    <div class="fila">
-      <label>
-        <span>{ti.frecuencia}</span>
-        <select bind:value={modoEscucha}>
-          <option value="cualquiera">{ti.frecuenciaOpciones.cualquiera}</option>
-          <option value="reciente">{ti.frecuenciaOpciones.reciente}</option>
-          <option value="olvidada">{ti.frecuenciaOpciones.olvidada}</option>
-        </select>
-      </label>
-      {#if modoEscucha !== 'cualquiera'}
+    <div class="cuerpo-formulario">
+      <div class="fila">
         <label>
-          <span>{ti.dias}</span>
-          <input type="number" min="1" max="3650" step="1" bind:value={diasEscucha} />
+          <span>{t.nombre}</span>
+          <!-- svelte-ignore a11y_autofocus -->
+          <input
+            bind:value={nombre}
+            maxlength="120"
+            required
+            autofocus
+            aria-invalid={error !== null}
+          />
         </label>
-      {/if}
-      <label>
-        <span>{ti.genero}</span>
-        <input bind:value={genero} maxlength="80" />
+        <label>
+          <span>{t.descripcion}</span>
+          <input bind:value={descripcion} maxlength="240" />
+        </label>
+      </div>
+
+      <div class="fila">
+        <label>
+          <span>{ti.animo}</span>
+          <select bind:value={animo}>
+            <option value="">{ti.cualquierAnimo}</option>
+            {#each ANIMOS as a (a)}
+              <option value={a}>{ti.animos[a] ?? a}</option>
+            {/each}
+          </select>
+        </label>
+        <label>
+          <span>{ti.instrumental}</span>
+          <select bind:value={instrumental}>
+            <option value="cualquiera">{ti.instrumentalOpciones.cualquiera}</option>
+            <option value="con">{ti.instrumentalOpciones.con}</option>
+            <option value="sin">{ti.instrumentalOpciones.sin}</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="fila">
+        <label>
+          <span>{ti.bpmMin}</span>
+          <input type="number" min="1" max="400" step="1" bind:value={bpmMin} />
+        </label>
+        <label>
+          <span>{ti.bpmMax}</span>
+          <input type="number" min="1" max="400" step="1" bind:value={bpmMax} />
+        </label>
+        <label>
+          <span>{ti.energiaMin}</span>
+          <input type="number" min="0" max="100" step="1" bind:value={energiaMin} />
+        </label>
+        <label>
+          <span>{ti.energiaMax}</span>
+          <input type="number" min="0" max="100" step="1" bind:value={energiaMax} />
+        </label>
+      </div>
+
+      <div class="fila">
+        <label>
+          <span>{ti.reproduccionesMin}</span>
+          <input type="number" min="0" step="1" bind:value={reproduccionesMin} />
+        </label>
+        <label>
+          <span>{ti.reproduccionesMax}</span>
+          <input type="number" min="0" step="1" bind:value={reproduccionesMax} />
+        </label>
+        <label>
+          <span>{ti.anioMin}</span>
+          <input type="number" min="1000" max="9999" step="1" bind:value={anioMin} />
+        </label>
+        <label>
+          <span>{ti.anioMax}</span>
+          <input type="number" min="1000" max="9999" step="1" bind:value={anioMax} />
+        </label>
+      </div>
+
+      <div class="fila">
+        <label>
+          <span>{ti.frecuencia}</span>
+          <select bind:value={modoEscucha}>
+            <option value="cualquiera">{ti.frecuenciaOpciones.cualquiera}</option>
+            <option value="reciente">{ti.frecuenciaOpciones.reciente}</option>
+            <option value="olvidada">{ti.frecuenciaOpciones.olvidada}</option>
+          </select>
+        </label>
+        {#if modoEscucha !== 'cualquiera'}
+          <label>
+            <span>{ti.dias}</span>
+            <input type="number" min="1" max="3650" step="1" bind:value={diasEscucha} />
+          </label>
+        {/if}
+        <label>
+          <span>{ti.genero}</span>
+          <input bind:value={genero} maxlength="80" />
+        </label>
+      </div>
+
+      <div class="fila">
+        <label>
+          <span>{ti.orden}</span>
+          <select bind:value={orden}>
+            {#each ORDENES as o (o)}
+              <option value={o}>{ti.ordenes[o]}</option>
+            {/each}
+          </select>
+        </label>
+        <label>
+          <span>{ti.limite}</span>
+          <input type="number" min="1" max="200" step="1" required bind:value={limite} />
+        </label>
+      </div>
+
+      <label class="casilla">
+        <input type="checkbox" bind:checked={soloFavoritas} />
+        <span>{ti.soloFavoritas}</span>
       </label>
+
+      {#if error}<p class="error" role="alert">{error}</p>{/if}
     </div>
 
-    <div class="fila">
-      <label>
-        <span>{ti.orden}</span>
-        <select bind:value={orden}>
-          {#each ORDENES as o (o)}
-            <option value={o}>{ti.ordenes[o]}</option>
-          {/each}
-        </select>
-      </label>
-      <label>
-        <span>{ti.limite}</span>
-        <input type="number" min="1" max="200" step="1" required bind:value={limite} />
-      </label>
-    </div>
-
-    <label class="casilla">
-      <input type="checkbox" bind:checked={soloFavoritas} />
-      <span>{ti.soloFavoritas}</span>
-    </label>
-
-    {#if error}<p class="error" role="alert">{error}</p>{/if}
-
-    <div class="botones">
+    <footer class="pie">
       <button type="button" class="boton" onclick={oncerrar}>{t.cancelar}</button>
       <button type="submit" class="boton principal" disabled={enviando}>
         {editar ? t.guardar : t.crear}
       </button>
-    </div>
+    </footer>
   </form>
 </dialog>
 
 <style>
   dialog {
     width: min(38rem, 92vw);
-    max-height: 90vh;
-    padding: var(--ns-espacio-5);
+    max-height: 85vh;
+    padding: 0;
     border: 1px solid var(--m3c-outline-variant);
     border-radius: var(--ns-radio-lg);
     background: var(--m3c-surface-container-high);
     color: var(--m3c-on-surface);
+    overflow: hidden;
   }
 
   dialog::backdrop {
@@ -347,7 +352,35 @@
   form {
     display: flex;
     flex-direction: column;
+    max-height: 85vh;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .cabecera {
+    flex: 0 0 auto;
+    padding: var(--ns-espacio-4) var(--ns-espacio-5);
+    border-bottom: 1px solid var(--m3c-outline-variant);
+  }
+
+  .cuerpo-formulario {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--ns-espacio-4) var(--ns-espacio-5);
+    display: flex;
+    flex-direction: column;
     gap: var(--ns-espacio-3);
+  }
+
+  .pie {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ns-espacio-2);
+    padding: var(--ns-espacio-3) var(--ns-espacio-5);
+    border-top: 1px solid var(--m3c-outline-variant);
+    background: var(--m3c-surface-container-high);
   }
 
   h2 {
@@ -398,12 +431,6 @@
     margin: 0;
     color: var(--m3c-error);
     font-size: var(--ns-texto-sm);
-  }
-
-  .botones {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--ns-espacio-2);
   }
 
   .boton {

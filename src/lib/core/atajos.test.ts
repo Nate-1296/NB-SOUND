@@ -18,6 +18,8 @@ describe('los atajos de la V1', () => {
     expect(accionDeTecla(t('S'))).toBe('aleatorio');
     expect(accionDeTecla(t('q', { ctrlKey: true }))).toBe('cola');
     expect(accionDeTecla(t('m', { metaKey: true }))).toBe('mini');
+    expect(accionDeTecla(t('F11'))).toBe('pantallaCompleta');
+    expect(accionDeTecla(t('F11', { escribiendo: true }))).toBe('pantallaCompleta');
   });
 
   it('no actúan mientras se escribe, salvo los de Ctrl', () => {

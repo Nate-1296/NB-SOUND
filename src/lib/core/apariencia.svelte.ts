@@ -40,10 +40,24 @@ function aplicarTipografia(raiz: HTMLElement, familia: string, escala: number): 
 
 class EstadoDeApariencia {
   actual = $state<Apariencia>(DE_FABRICA);
+  barraLateralCompacta = $state(
+    typeof localStorage !== 'undefined' &&
+      localStorage.getItem('ns-barra-lateral-compacta') === 'true'
+  );
+
+  alternarBarraLateral(): void {
+    this.barraLateralCompacta = !this.barraLateralCompacta;
+    try {
+      localStorage.setItem('ns-barra-lateral-compacta', String(this.barraLateralCompacta));
+    } catch {
+      // Sin almacenamiento disponible
+    }
+  }
 
   /** Lo que haya en caché, sin esperar a nada. Se llama antes del primer pintado. */
   aplicarCache(raiz: HTMLElement): void {
     try {
+      this.barraLateralCompacta = localStorage.getItem('ns-barra-lateral-compacta') === 'true';
       const guardado = localStorage.getItem(CACHE);
       if (!guardado) return;
       const c = JSON.parse(guardado) as EnCache;

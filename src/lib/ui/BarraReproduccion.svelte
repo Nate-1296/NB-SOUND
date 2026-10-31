@@ -11,6 +11,8 @@
   import {
     abrirMinirreproductor,
     alCambiarElKaraoke,
+    alternarPantallaCompleta,
+    estaEnPantallaCompleta,
     karaokeEstado,
     karaokePreparar,
     urlPortada
@@ -84,6 +86,7 @@
 
   /** Letras y pantalla completa abren la vista de reproducción; otra vez, vuelven. */
   function abrirVista(letras: boolean) {
+    if (i.ciego) return;
     const ruta = page.url.pathname === '/reproduciendo';
     const tieneLetras = page.url.searchParams.has('letras');
     if (ruta && tieneLetras === letras) {
@@ -95,14 +98,29 @@
 
   // Los atajos de la carcasa (`atajos.ts`) piden la cola y la vista ampliada con
   // estos eventos: la barra es la dueña de las dos.
+  let enPantallaCompleta = $state(false);
+  async function conmutarPantallaCompleta() {
+    enPantallaCompleta = await alternarPantallaCompleta();
+  }
+
   $effect(() => {
     const cola = () => alternarCola();
     const vista = (e: Event) => abrirVista((e as CustomEvent<{ letras: boolean }>).detail.letras);
+    const actualizarPantalla = () => {
+      void estaEnPantallaCompleta().then((v) => (enPantallaCompleta = v));
+    };
+    actualizarPantalla();
     window.addEventListener('ns:cola', cola);
     window.addEventListener('ns:vista', vista);
+    window.addEventListener('ns:pantalla-completa', actualizarPantalla);
+    window.addEventListener('resize', actualizarPantalla);
+    window.addEventListener('fullscreenchange', actualizarPantalla);
     return () => {
       window.removeEventListener('ns:cola', cola);
       window.removeEventListener('ns:vista', vista);
+      window.removeEventListener('ns:pantalla-completa', actualizarPantalla);
+      window.removeEventListener('resize', actualizarPantalla);
+      window.removeEventListener('fullscreenchange', actualizarPantalla);
     };
   });
 
@@ -115,8 +133,16 @@
 
 <section class="reproductor" aria-label={t.region}>
   <div class="pista">
-    <div class="portada" aria-hidden="true">
-      {#if pista?.tienePortada && !portadaRota}
+    <button
+      type="button"
+      class="portada"
+      disabled={!hayPista || i.ciego}
+      onclick={() => abrirVista(false)}
+      aria-label={t.expandir}
+    >
+      {#if i.ciego}
+        <Icon nombre="aCiegas" tamano={24} />
+      {:else if pista?.tienePortada && !portadaRota}
         <img
           src={urlPortada('pista', pista.id, 160)}
           alt=""
@@ -127,15 +153,38 @@
       {:else}
         <Icon nombre="cancion" tamano={24} />
       {/if}
-    </div>
+    </button>
     <div class="datos">
-      {#if pista}
-        <span class="titulo" title={pista.titulo}>{pista.titulo}</span>
-        <span class="artista" title={pista.artista}>{pista.artista}</span>
-        <span class="album" title={pista.album}>{pista.album}</span>
-      {:else if i.ciego}
+      {#if i.ciego}
         <span class="titulo">{t.aCiegas}</span>
         <span class="artista">{t.adivina}</span>
+      {:else if pista}
+        <button
+          type="button"
+          class="titulo enlace-titulo"
+          title={pista.titulo}
+          onclick={() => abrirVista(false)}
+        >
+          {pista.titulo}
+        </button>
+        {#if pista.artistaId !== null}
+          <a
+            href="/biblioteca/artista?id={pista.artistaId}"
+            class="artista enlace"
+            title={pista.artista}
+          >
+            {pista.artista}
+          </a>
+        {:else}
+          <span class="artista" title={pista.artista}>{pista.artista}</span>
+        {/if}
+        {#if pista.albumId !== null}
+          <a href="/biblioteca/album?id={pista.albumId}" class="album enlace" title={pista.album}>
+            {pista.album}
+          </a>
+        {:else}
+          <span class="album" title={pista.album}>{pista.album}</span>
+        {/if}
       {:else}
         <span class="titulo">{t.nadaSonando}</span>
         <span class="artista">{t.eligeAlgo}</span>
@@ -235,7 +284,7 @@
       class:activo={page.url.pathname === '/reproduciendo' && page.url.searchParams.has('letras')}
       aria-label={t.letras}
       title={t.letras}
-      disabled={!hayPista}
+      disabled={!hayPista || i.ciego}
       onclick={() => abrirVista(true)}
     >
       <Icon nombre="letras" tamano={20} />
@@ -312,10 +361,24 @@
       class="control"
       aria-label={t.mini}
       title={t.mini}
-      disabled={!hayPista}
+      disabled={!hayPista || i.ciego}
       onclick={abrirMinirreproductor}
     >
       <Icon nombre="minirreproductor" tamano={20} />
+    </button>
+    <button
+      type="button"
+      class="control conmutador"
+      class:activo={enPantallaCompleta}
+      aria-label={enPantallaCompleta ? t.salirPantallaCompleta : t.pantallaCompleta}
+      aria-pressed={enPantallaCompleta}
+      title={enPantallaCompleta ? t.salirPantallaCompleta : t.pantallaCompleta}
+      onclick={conmutarPantallaCompleta}
+    >
+      <Icon
+        nombre={enPantallaCompleta ? 'salirPantallaCompleta' : 'pantallaCompleta'}
+        tamano={20}
+      />
     </button>
     <button
       type="button"
@@ -323,7 +386,7 @@
       class:activo={page.url.pathname === '/reproduciendo' && !page.url.searchParams.has('letras')}
       aria-label={t.expandir}
       title={t.expandir}
-      disabled={!hayPista}
+      disabled={!hayPista || i.ciego}
       onclick={() => abrirVista(false)}
     >
       <Icon nombre="expandir" tamano={20} />
@@ -356,10 +419,17 @@
     flex: 0 0 auto;
     width: 3.5rem;
     height: 3.5rem;
+    padding: 0;
+    border: none;
     overflow: hidden;
     border-radius: var(--ns-radio-sm);
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-primary);
+    cursor: pointer;
+  }
+
+  .portada:disabled {
+    cursor: default;
   }
 
   .portada img {
@@ -387,6 +457,20 @@
     font-weight: 700;
   }
 
+  .enlace-titulo {
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .enlace-titulo:hover {
+    text-decoration: underline;
+  }
+
   .artista {
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-sm);
@@ -395,6 +479,15 @@
   .album {
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
+  }
+
+  .enlace {
+    text-decoration: none;
+  }
+
+  .enlace:hover {
+    color: var(--m3c-on-surface);
+    text-decoration: underline;
   }
 
   .centro {

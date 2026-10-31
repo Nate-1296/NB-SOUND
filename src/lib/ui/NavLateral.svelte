@@ -11,6 +11,7 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
+  import { aparienciaActual } from '$core/apariencia.svelte';
   import { AJUSTES, estaActivo, POR_REVISAR, SECCIONES, type Destino } from '$core/navegacion';
   import { textos } from '$lib/i18n';
 
@@ -66,6 +67,32 @@
       {@render enlace(destino)}
     {/each}
   </ul>
+
+  <div class="pie-colapso">
+    <button
+      type="button"
+      class="boton-colapso"
+      onclick={() => aparienciaActual.alternarBarraLateral()}
+      title={aparienciaActual.barraLateralCompacta
+        ? textos.nav.expandirLateral
+        : textos.nav.colapsarLateral}
+      aria-label={aparienciaActual.barraLateralCompacta
+        ? textos.nav.expandirLateral
+        : textos.nav.colapsarLateral}
+    >
+      <span class="icono">
+        <Icon
+          nombre={aparienciaActual.barraLateralCompacta ? 'derecha' : 'izquierda'}
+          tamano={20}
+        />
+      </span>
+      <span class="etiqueta">
+        {aparienciaActual.barraLateralCompacta
+          ? textos.nav.expandirLateral
+          : textos.nav.colapsarLateral}
+      </span>
+    </button>
+  </div>
 </nav>
 
 <style>
@@ -172,8 +199,39 @@
     text-align: center;
   }
 
-  /* En riel: la carcasa no es amplia (ver anchos.ts). */
-  :global(.carcasa:not([data-ancho='amplio'])) {
+  .pie-colapso {
+    margin-top: var(--ns-espacio-2);
+    padding-top: var(--ns-espacio-2);
+    border-top: 1px solid var(--m3c-outline-variant);
+  }
+
+  .boton-colapso {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-3);
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0 var(--ns-espacio-3);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--ns-radio-sm);
+    color: var(--m3c-on-surface-variant);
+    cursor: pointer;
+    font-size: var(--ns-texto-sm);
+    font-weight: 500;
+    transition:
+      background-color var(--ns-duracion-corta) var(--ns-curva),
+      color var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .boton-colapso:hover {
+    background: var(--m3c-surface-container-high);
+    color: var(--m3c-on-surface);
+  }
+
+  /* En riel: la carcasa no es amplia (ver anchos.ts) o está en modo compacto manual. */
+  :global(.carcasa:not([data-ancho='amplio'])),
+  :global(.carcasa.compacta) {
     .lateral {
       align-items: center;
       padding-inline: var(--ns-espacio-2);
@@ -193,11 +251,18 @@
       clip-path: inset(50%);
     }
 
-    .destino {
+    .destino,
+    .boton-colapso {
       position: relative;
       justify-content: center;
       width: 3.25rem;
       padding: 0;
+    }
+
+    .pie-colapso {
+      width: 100%;
+      display: flex;
+      justify-content: center;
     }
 
     .contador {

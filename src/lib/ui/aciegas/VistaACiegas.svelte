@@ -51,7 +51,9 @@
   let texto = $state('');
   let intento = $state<ResultadoIntento['intento'] | null>(null);
   let aviso = $state<string | null>(null);
+  let avisoEsError = $state(false);
   let enCola = $state(false);
+  let iniciando = $state(false);
 
   const reto = $derived(ronda?.reto ?? null);
   const resuelto = $derived(reto?.titulo != null);
@@ -86,15 +88,26 @@
   }
 
   async function empezar(m: Modo) {
+    if (iniciando) return;
     aviso = null;
-    const r = await aciegasIniciar(m, retos, jugadas);
-    if (!r.modo) {
-      aviso = t.sinCanciones;
-      return;
+    avisoEsError = false;
+    iniciando = true;
+    try {
+      const r = await aciegasIniciar(m, retos, jugadas);
+      if (!r.modo) {
+        aviso = t.sinCanciones;
+        avisoEsError = true;
+        return;
+      }
+      texto = '';
+      intento = null;
+      ronda = r;
+    } catch {
+      aviso = t.errorAlIniciar;
+      avisoEsError = true;
+    } finally {
+      iniciando = false;
     }
-    texto = '';
-    intento = null;
-    ronda = r;
   }
 
   async function jugar(j: Jugada) {
@@ -155,13 +168,13 @@
       <button
         type="button"
         class="boton relleno"
-        disabled={cuenta(modo) === 0}
+        disabled={cuenta(modo) === 0 || iniciando}
         onclick={() => empezar(modo)}
       >
-        <Icon nombre="aCiegas" tamano={16} />{t.empezar}
+        <Icon nombre="aCiegas" tamano={16} />{iniciando ? t.cargando : t.empezar}
       </button>
     </div>
-    {#if aviso}<p class="aviso" role="status">{aviso}</p>{/if}
+    {#if aviso}<p class="aviso" class:error={avisoEsError} role="status">{aviso}</p>{/if}
   {:else if ronda.terminada}
     <div class="tarjeta resumen">
       <h2>{t.resumen.titulo}</h2>
@@ -170,8 +183,11 @@
         <button
           type="button"
           class="boton relleno"
-          onclick={() => ronda?.modo && empezar(ronda.modo)}>{t.resumen.otra}</button
+          disabled={iniciando}
+          onclick={() => ronda?.modo && empezar(ronda.modo)}
         >
+          {iniciando ? t.cargando : t.resumen.otra}
+        </button>
         <button type="button" class="boton" onclick={cambiarDeModo}>{t.resumen.cambiar}</button>
       </div>
     </div>
@@ -371,6 +387,10 @@
   .aviso {
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-sm);
+  }
+
+  .aviso.error {
+    color: var(--m3c-error);
   }
 
   .exito {

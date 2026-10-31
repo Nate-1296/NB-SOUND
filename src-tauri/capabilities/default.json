@@ -3,5 +3,9 @@
   "identifier": "default",
   "description": "Permisos de la ventana principal. Mínimo privilegio: cada permiso nuevo se justifica en el commit que lo añade.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-is-fullscreen"
+  ]
 }

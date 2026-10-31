@@ -24,6 +24,7 @@
     numero: number;
     rapido?: boolean;
     sonando?: boolean;
+    contexto?: 'biblioteca' | 'album' | 'artista' | 'playlist';
     onreproducir: () => void;
     onanadir: () => void;
     onfavorita: () => void;
@@ -36,6 +37,7 @@
     numero,
     rapido = false,
     sonando = false,
+    contexto = 'biblioteca',
     onreproducir,
     onanadir,
     onfavorita,
@@ -61,6 +63,7 @@
     menu?.hidePopover();
   }
   let editando = $state(false);
+  let borrando = $state(false);
   let completando = $state(false);
   let resultado = $state<string | null>(null);
   async function completar() {
@@ -81,26 +84,55 @@
   }
 
   const subtitulo = $derived(
-    [pista.artista, pista.album, pista.anio ?? ''].filter((x) => x !== '').join(' · ')
+    contexto === 'album'
+      ? [pista.artista, pista.anio ?? ''].filter((x) => x !== '').join(' · ')
+      : [pista.artista, pista.album, pista.anio ?? ''].filter((x) => x !== '').join(' · ')
   );
 </script>
 
-<div class="fila" class:sonando>
-  <span class="numero">{numero}</span>
-  <span class="portada" aria-hidden="true">
-    {#if pista.tienePortada && !rapido && !rota}
-      <img
-        src={urlPortada('pista', pista.id, 64)}
-        alt=""
-        width="42"
-        height="42"
-        loading="lazy"
-        onerror={() => (rota = true)}
-      />
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<div
+  class="fila"
+  class:sonando
+  class:contexto-album={contexto === 'album'}
+  role="row"
+  tabindex="0"
+  ondblclick={(e) => {
+    if ((e.target as HTMLElement).closest('button, a, [popover]')) return;
+    onreproducir();
+  }}
+  onkeydown={(e) => {
+    if (e.key === 'Enter' && e.target === e.currentTarget) {
+      e.preventDefault();
+      onreproducir();
+    }
+  }}
+>
+  <span class="numero">
+    {#if sonando}
+      <span class="icono-sonando" title={t.sonando} aria-label={t.sonando}>
+        <Icon nombre="ecualizador" tamano={16} />
+      </span>
     {:else}
-      <Icon nombre="cancion" tamano={18} />
+      {numero}
     {/if}
   </span>
+  {#if contexto !== 'album'}
+    <span class="portada" aria-hidden="true">
+      {#if pista.tienePortada && !rapido && !rota}
+        <img
+          src={urlPortada('pista', pista.id, 64)}
+          alt=""
+          width="42"
+          height="42"
+          loading="lazy"
+          onerror={() => (rota = true)}
+        />
+      {:else}
+        <Icon nombre="cancion" tamano={18} />
+      {/if}
+    </span>
+  {/if}
   <span class="datos">
     <span class="titulo" title={pista.titulo}>
       {pista.titulo}
@@ -112,7 +144,9 @@
       <span class="sub" title={subtitulo}>{subtitulo}</span>
     {/if}
   </span>
-  <span class="album" title={pista.album}>{pista.album}</span>
+  {#if contexto !== 'album'}
+    <span class="album" title={pista.album}>{pista.album}</span>
+  {/if}
   <span class="duracion">{formatoTiempo(pista.duracionSeg)}</span>
   <span class="acciones">
     <button
@@ -159,6 +193,15 @@
     >
       <Icon nombre="editar" tamano={18} />
     </button>
+    <button
+      type="button"
+      class="icono"
+      aria-label={t.borrarCancion}
+      title={t.borrarCancion}
+      onclick={() => (borrando = true)}
+    >
+      <Icon nombre="borrar" tamano={18} />
+    </button>
     {#if editando}
       {#await import('../edicion/DialogoEditar.svelte') then m}
         <m.default
@@ -172,27 +215,44 @@
         />
       {/await}
     {/if}
+    {#if borrando}
+      {#await import('./DialogoBorrarPista.svelte') then m}
+        <m.default
+          pistaId={pista.id}
+          titulo={pista.titulo}
+          oneliminada={() => {
+            borrando = false;
+            oncambiada?.();
+          }}
+          oncerrar={() => (borrando = false)}
+        />
+      {/await}
+    {/if}
     {#if !pista.verificada}
       <button type="button" class="boton" disabled={completando} onclick={completar}>
         {t.completarDatos}
       </button>
     {/if}
-    <button
-      type="button"
-      class="boton"
-      disabled={pista.albumId === null}
-      onclick={() => goto(`/biblioteca/album?id=${pista.albumId}`)}
-    >
-      {t.abrirAlbum}
-    </button>
-    <button
-      type="button"
-      class="boton"
-      disabled={pista.artistaId === null}
-      onclick={() => goto(`/biblioteca/artista?id=${pista.artistaId}`)}
-    >
-      {t.abrirArtista}
-    </button>
+    {#if contexto !== 'album'}
+      <button
+        type="button"
+        class="boton"
+        disabled={pista.albumId === null}
+        onclick={() => goto(`/biblioteca/album?id=${pista.albumId}`)}
+      >
+        {t.abrirAlbum}
+      </button>
+    {/if}
+    {#if contexto !== 'artista'}
+      <button
+        type="button"
+        class="boton"
+        disabled={pista.artistaId === null}
+        onclick={() => goto(`/biblioteca/artista?id=${pista.artistaId}`)}
+      >
+        {t.abrirArtista}
+      </button>
+    {/if}
   </span>
 </div>
 
@@ -205,6 +265,17 @@
     height: 100%;
     padding: 0 var(--ns-espacio-3);
     border-radius: var(--ns-radio-sm);
+  }
+
+  .fila.contexto-album {
+    grid-template-columns: 2.5rem minmax(10rem, 2fr) 3.5rem auto;
+  }
+
+  .icono-sonando {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--m3c-primary);
   }
 
   .fila:hover {

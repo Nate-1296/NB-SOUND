@@ -242,6 +242,45 @@ pub async fn fijar_favorita(
     .await
 }
 
+/// Borra una pista de la biblioteca y opcionalmente su archivo del disco.
+#[tauri::command]
+pub async fn borrar_pista(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    borrar_archivo: bool,
+) -> NsResult<()> {
+    let db = estado.db.clone();
+    let importador = estado.importador.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut conn = db.conexion()?;
+        let ruta: String = conn
+            .query_row("SELECT ruta FROM pistas WHERE id = ?1", [id], |f| f.get(0))
+            .map_err(|_| NsError::FileNotFound)?;
+
+        let tx = crate::db::transaccion_de_escritura(&mut conn)?;
+        tx.execute("DELETE FROM pistas WHERE id = ?1", [id])
+            .map_err(|_| NsError::StorageFailure)?;
+        tx.commit().map_err(|_| NsError::StorageFailure)?;
+
+        if borrar_archivo {
+            let _ = importador.con_entorno(|entorno| {
+                if let Ok(archivo) =
+                    crate::security::resolve_within(&entorno.musica, std::path::Path::new(&ruta))
+                {
+                    if archivo.is_file() {
+                        let _ = std::fs::remove_file(&archivo);
+                    }
+                }
+                Ok(())
+            });
+        }
+        tracing::info!(id = id, "pista borrada de la biblioteca");
+        Ok(())
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
 #[tauri::command]
 pub async fn biblioteca_album(
     estado: tauri::State<'_, Estado>,

@@ -110,6 +110,7 @@
       {#each pistas as p, i (p.id)}
         <li>
           <FilaPista
+            contexto="album"
             pista={p}
             numero={i + 1}
             sonando={reproductor.instantanea.pistaId === p.id}

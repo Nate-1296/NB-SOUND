@@ -22,6 +22,7 @@
   const conLetras = $derived(page.url.searchParams.has('letras'));
   const pista = $derived(reproductor.pista);
 
+  let modoLetras = $state<'dividido' | 'centrado'>('dividido');
   let vista: HTMLElement | undefined = $state();
   let letra = $state<Letra>({ sincronizada: [], plana: [] });
   let rota = $state(false);
@@ -54,19 +55,48 @@
     return i;
   });
 
+  let contenedorLetras: HTMLElement | undefined = $state();
   let lista: HTMLOListElement | undefined = $state();
   $effect(() => {
     const i = activa;
-    const nodo = lista?.children[i] as HTMLElement | undefined;
-    // Solo cuando cambia la línea: no hay movimiento en reposo.
-    nodo?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (i < 0 || !lista || !contenedorLetras) return;
+    const nodo = lista.children[i] as HTMLElement | undefined;
+    if (!nodo) return;
+    const objetivo = nodo.offsetTop - contenedorLetras.clientHeight / 2 + nodo.clientHeight / 2;
+    contenedorLetras.scrollTo({ top: Math.max(0, objetivo), behavior: 'smooth' });
   });
 </script>
 
-<section class="vista" class:con-letras={conLetras} bind:this={vista}>
-  <button type="button" class="volver" onclick={() => history.back()}>
-    <Icon nombre="atras" tamano={18} />{t.volver}
-  </button>
+<section
+  class="vista"
+  class:con-letras={conLetras}
+  class:letras-centradas={conLetras && modoLetras === 'centrado'}
+  bind:this={vista}
+>
+  <div class="cabecera-vista">
+    <button type="button" class="volver" onclick={() => history.back()}>
+      <Icon nombre="atras" tamano={18} />{t.volver}
+    </button>
+    {#if conLetras && modoLetras === 'centrado' && pista}
+      <div class="pista-compacta" aria-hidden="true">
+        <span class="titulo-compacto">{pista.titulo}</span>
+        <span>·</span>
+        <span>{pista.artista}</span>
+      </div>
+    {/if}
+    {#if conLetras}
+      <button
+        type="button"
+        class="conmutador-modo"
+        onclick={() => (modoLetras = modoLetras === 'dividido' ? 'centrado' : 'dividido')}
+        aria-label={modoLetras === 'centrado' ? t.modoDividido : t.modoCentrado}
+        title={modoLetras === 'centrado' ? t.modoDividido : t.modoCentrado}
+      >
+        <Icon nombre={modoLetras === 'centrado' ? 'cuadricula' : 'lista'} tamano={18} />
+        <span>{modoLetras === 'centrado' ? t.modoDividido : t.modoCentrado}</span>
+      </button>
+    {/if}
+  </div>
 
   {#if !pista}
     <p class="vacio">{t.nadaSonando}</p>
@@ -99,7 +129,7 @@
     </div>
 
     {#if conLetras}
-      <aside class="letras" aria-label={t.letras}>
+      <aside class="letras" aria-label={t.letras} bind:this={contenedorLetras}>
         {#if letra.sincronizada.length > 0}
           <ol bind:this={lista}>
             {#each letra.sincronizada as linea, i (`${linea.ms}-${i}`)}
@@ -136,14 +166,17 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
     gap: var(--ns-espacio-4);
-    min-height: 100%;
+    height: calc(100% + var(--ns-espacio-2) + var(--ns-espacio-6));
+    max-height: calc(100% + var(--ns-espacio-2) + var(--ns-espacio-6));
+    box-sizing: border-box;
+    overflow: hidden;
     margin: calc(-1 * var(--ns-espacio-2)) calc(-1 * var(--ns-espacio-5))
       calc(-1 * var(--ns-espacio-6));
     padding: var(--ns-espacio-4) var(--ns-espacio-6);
-    background: linear-gradient(
-      180deg,
-      var(--m3c-surface-container-low),
-      var(--m3c-primary-container)
+    background: radial-gradient(
+      circle at 50% 25%,
+      var(--m3c-primary-container),
+      var(--m3c-surface-container-low)
     );
     color: var(--m3c-on-surface);
   }
@@ -152,9 +185,53 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .volver {
+  .vista.letras-centradas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cabecera-vista {
     grid-column: 1 / -1;
-    justify-self: start;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ns-espacio-4);
+  }
+
+  .pista-compacta {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    font-size: var(--ns-texto-sm);
+    color: var(--m3c-on-surface-variant);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .titulo-compacto {
+    color: var(--m3c-on-surface);
+    font-weight: 700;
+  }
+
+  .conmutador-modo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    padding: var(--ns-espacio-1) var(--ns-espacio-3);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container);
+    color: var(--m3c-on-surface);
+    font: inherit;
+    font-size: var(--ns-texto-xs);
+    cursor: pointer;
+  }
+
+  .conmutador-modo:hover {
+    background: var(--m3c-surface-container-high);
+  }
+
+  .volver {
     display: inline-flex;
     align-items: center;
     gap: var(--ns-espacio-2);
@@ -244,8 +321,10 @@
   }
 
   .letras {
+    position: relative;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 30vh 0;
   }
 
@@ -289,5 +368,25 @@
 
   .vacio {
     color: var(--m3c-on-surface-variant);
+  }
+
+  .vista.letras-centradas .principal {
+    display: none;
+  }
+
+  .vista.letras-centradas .letras {
+    max-width: 48rem;
+    margin: 0 auto;
+    width: 100%;
+    text-align: center;
+  }
+
+  .vista.letras-centradas .linea {
+    font-size: var(--ns-texto-2xl);
+    text-align: center;
+  }
+
+  .vista.letras-centradas .plana p {
+    text-align: center;
   }
 </style>

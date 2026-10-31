@@ -221,6 +221,11 @@ export function fijarFavorita(pistaId: number, favorita: boolean): Promise<void>
   return call<void>('fijar_favorita', { pistaId, favorita });
 }
 
+/** Borra una pista de la biblioteca y opcionalmente su archivo del disco. */
+export function borrarPista(id: number, borrarArchivo: boolean): Promise<void> {
+  return call<void>('borrar_pista', { id, borrarArchivo });
+}
+
 export function bibliotecaAlbum(id: number): Promise<AlbumResumen | null> {
   return call<AlbumResumen | null>('biblioteca_album', { id });
 }
@@ -305,6 +310,35 @@ export function abrirMinirreproductor(): Promise<void> {
 /** Cierra la ventana desde la que se llama (el minirreproductor). */
 export function cerrarEstaVentana(): Promise<void> {
   return getCurrentWindow().close();
+}
+
+/** Alterna el modo de pantalla completa de la ventana actual. Devuelve si quedó en pantalla completa. */
+export async function alternarPantallaCompleta(): Promise<boolean> {
+  try {
+    const win = getCurrentWindow();
+    const actual = await win.isFullscreen();
+    await win.setFullscreen(!actual);
+    return !actual;
+  } catch {
+    if (typeof document !== 'undefined') {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen?.();
+        return true;
+      }
+      await document.exitFullscreen?.();
+      return false;
+    }
+    return false;
+  }
+}
+
+/** Devuelve si la ventana actual está en pantalla completa. */
+export async function estaEnPantallaCompleta(): Promise<boolean> {
+  try {
+    return await getCurrentWindow().isFullscreen();
+  } catch {
+    return typeof document !== 'undefined' && Boolean(document.fullscreenElement);
+  }
 }
 
 // --- Preferencias -------------------------------------------------------------------

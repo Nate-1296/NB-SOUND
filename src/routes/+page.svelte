@@ -61,24 +61,32 @@
       <div class="izquierda">
         <ul class="cifras">
           <li>
-            <Icon nombre="cancion" tamano={18} /><strong
-              >{datos.cifras.pistas.toLocaleString('es')}</strong
-            ><span>{t.pistas}</span>
+            <a class="cifra-enlace" href="/biblioteca?vista=pistas">
+              <Icon nombre="cancion" tamano={18} /><strong
+                >{datos.cifras.pistas.toLocaleString('es')}</strong
+              ><span>{t.pistas}</span>
+            </a>
           </li>
           <li>
-            <Icon nombre="artista" tamano={18} /><strong
-              >{datos.cifras.artistas.toLocaleString('es')}</strong
-            ><span>{t.artistas}</span>
+            <a class="cifra-enlace" href="/biblioteca?vista=artistas">
+              <Icon nombre="artista" tamano={18} /><strong
+                >{datos.cifras.artistas.toLocaleString('es')}</strong
+              ><span>{t.artistas}</span>
+            </a>
           </li>
           <li>
-            <Icon nombre="album" tamano={18} /><strong
-              >{datos.cifras.albumes.toLocaleString('es')}</strong
-            ><span>{t.albumes}</span>
+            <a class="cifra-enlace" href="/biblioteca?vista=albumes">
+              <Icon nombre="album" tamano={18} /><strong
+                >{datos.cifras.albumes.toLocaleString('es')}</strong
+              ><span>{t.albumes}</span>
+            </a>
           </li>
           <li>
-            <Icon nombre="reloj" tamano={18} /><strong
-              >{duracionDetallada(datos.cifras.duracionSeg)}</strong
-            ><span>{t.duracion}</span>
+            <div class="cifra-estatica">
+              <Icon nombre="reloj" tamano={18} /><strong
+                >{duracionDetallada(datos.cifras.duracionSeg)}</strong
+              ><span>{t.duracion}</span>
+            </div>
           </li>
         </ul>
 
@@ -361,13 +369,29 @@
 
   .cifras li {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--ns-espacio-1);
-    padding: var(--ns-espacio-4);
+    padding: 0;
     border-radius: var(--ns-radio-md);
     background: var(--m3c-surface-container);
     color: var(--m3c-primary);
+    overflow: hidden;
+  }
+
+  .cifra-enlace,
+  .cifra-estatica {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ns-espacio-1);
+    width: 100%;
+    height: 100%;
+    padding: var(--ns-espacio-4);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .cifra-enlace:hover {
+    background: var(--m3c-surface-container-high);
   }
 
   .cifras strong {
