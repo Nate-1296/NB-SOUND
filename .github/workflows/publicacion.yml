@@ -1,0 +1,76 @@
+name: Publicación
+
+# Los instaladores de las tres plataformas (F7.2.1) y los artefactos firmados del
+# actualizador (F7.2.2). Se lanza al empujar una etiqueta `v*` o a mano, y deja la
+# publicación como **borrador**: nada llega a los usuarios hasta que Nathan la
+# revisa y la publica en GitHub (CLAUDE.md, "Publicar una versión" requiere
+# preguntar).
+#
+# `createUpdaterArtifacts` se activa solo aquí: firmar exige la clave privada, que
+# vive en los secretos del repositorio, y una compilación local sin ella fallaría.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  instaladores:
+    name: Instaladores (${{ matrix.plataforma }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # La 22.04, y no la última: el AppImage hereda la glibc del sistema que lo
+          # compila, y con la más vieja arranca en más distribuciones.
+          - plataforma: Linux (AppImage, deb, rpm)
+            os: ubuntu-22.04
+          - plataforma: Windows (MSI, NSIS)
+            os: windows-latest
+          # Solo Apple Silicon: ONNX Runtime 1.31 no publica binario para Intel
+          # (scripts/binarios.json).
+          - plataforma: macOS (dmg)
+            os: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencias del sistema (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libasound2-dev rpm
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@1.98.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: pnpm install --frozen-lockfile
+      - name: Binarios del instalador, con su SHA-256 comprobado
+        run: pnpm binarios
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
+          releaseName: NB Sound __VERSION__
+          releaseBody: Ver CHANGELOG.md.
+          releaseDraft: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          includeUpdaterJson: true
+          args: --config {"bundle":{"createUpdaterArtifacts":true}}
