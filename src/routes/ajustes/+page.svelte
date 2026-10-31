@@ -110,6 +110,9 @@
           onchange={() => aparienciaActual.cambiar('nombreUsuario', nombre.trim() || null)}
         />
       </label>
+      {#await import('$ui/copia/BloqueCopia.svelte') then m}
+        <m.default />
+      {/await}
     </section>
 
     <section id="reproduccion" aria-labelledby="t-reproduccion">

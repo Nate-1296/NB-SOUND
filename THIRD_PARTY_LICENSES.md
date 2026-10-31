@@ -18,7 +18,7 @@ Regenerar: `node scripts/generate-notices.mjs`
 Los modelos de los agregados no viajan en el instalador: cada uno muestra su licencia en Ajustes > Agregados
 (ADR-010).
 
-## Componentes de Rust (655)
+## Componentes de Rust (660)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -84,6 +84,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `cc` | 1.10.0 | MIT OR Apache-2.0 | https://github.com/rust-lang/cc-rs |
 | `cesu8` | 1.1.0 | Apache-2.0/MIT | https://github.com/emk/cesu8-rs |
 | `cfb` | 0.14.0 | MIT | https://github.com/mdsteele/rust-cfb |
+| `cfg_aliases` | 0.2.2 | MIT | https://github.com/katharostech/cfg_aliases |
 | `cfg-expr` | 0.15.8 | MIT OR Apache-2.0 | https://github.com/EmbarkStudios/cfg-expr |
 | `cfg-if` | 1.0.5 | MIT OR Apache-2.0 | https://github.com/rust-lang/cfg-if |
 | `chacha20` | 0.10.2 | MIT OR Apache-2.0 | https://github.com/RustCrypto/stream-ciphers |
@@ -299,6 +300,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `ndk-context` | 0.1.1 | MIT OR Apache-2.0 | https://github.com/rust-windowing/android-ndk-rs |
 | `ndk-sys` | 0.6.0+11769913 | MIT OR Apache-2.0 | https://github.com/rust-mobile/ndk |
 | `new_debug_unreachable` | 1.0.6 | MIT | https://github.com/mbrubeck/rust-debug-unreachable |
+| `nix` | 0.31.3 | MIT | https://github.com/nix-rust/nix |
 | `nom` | 7.1.3 | MIT | https://github.com/Geal/nom |
 | `notify` | 8.2.1 | CC0-1.0 | https://github.com/notify-rs/notify.git |
 | `notify-types` | 2.2.0 | MIT OR Apache-2.0 | https://github.com/notify-rs/notify.git |
@@ -561,6 +563,7 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `ts-rs` | 12.0.1 | MIT | https://github.com/Aleph-Alpha/ts-rs |
 | `ts-rs-macros` | 12.0.1 | MIT | https://github.com/Aleph-Alpha/ts-rs |
 | `tungstenite` | 0.29.0 | MIT OR Apache-2.0 | https://github.com/snapview/tungstenite-rs |
+| `typed-path` | 0.13.0 | MIT OR Apache-2.0 | https://github.com/chipsenkbeil/typed-path |
 | `typeid` | 1.0.3 | MIT OR Apache-2.0 | https://github.com/dtolnay/typeid |
 | `typenum` | 1.20.1 | MIT OR Apache-2.0 | https://github.com/paholg/typenum |
 | `uds_windows` | 1.2.1 | MIT | https://github.com/haraldh/rust_uds_windows |
@@ -669,8 +672,10 @@ Los modelos de los agregados no viajan en el instalador: cada uno muestra su lic
 | `zerotrie` | 0.2.5 | Unicode-3.0 | https://github.com/unicode-org/icu4x |
 | `zerovec` | 0.11.9 | Unicode-3.0 | https://github.com/unicode-org/icu4x |
 | `zerovec-derive` | 0.11.7 | Unicode-3.0 | https://github.com/unicode-org/icu4x |
+| `zip` | 9.1.3 | MIT | https://github.com/zip-rs/zip2 |
 | `zlib-rs` | 0.6.8 | Zlib | https://github.com/trifectatechfoundation/zlib-rs |
 | `zmij` | 1.0.23 | MIT | https://github.com/dtolnay/zmij |
+| `zopfli` | 0.8.4 | Apache-2.0 | https://github.com/zopfli-rs/zopfli |
 | `zruntime` | 0.2.1 | MIT | https://github.com/z-galaxy/zruntime |
 | `zune-core` | 0.5.3 | MIT OR Apache-2.0 OR Zlib | https://github.com/etemesi254/zune-image |
 | `zune-jpeg` | 0.5.15 | MIT OR Apache-2.0 OR Zlib | https://github.com/etemesi254/zune-image/tree/dev/crates/zune-jpeg |

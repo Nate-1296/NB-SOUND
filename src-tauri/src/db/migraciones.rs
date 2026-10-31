@@ -83,6 +83,12 @@ pub fn version_actual(conn: &Connection) -> NsResult<u32> {
         .map_err(|_| NsError::StorageFailure)
 }
 
+/// La versión de esquema que deja esta compilación: la de su última migración.
+#[must_use]
+pub fn version_esperada() -> u32 {
+    MIGRACIONES.last().map_or(0, |m| m.version)
+}
+
 /// Aplica las migraciones pendientes. `ruta` es la del archivo, para el
 /// respaldo; `None` en las bases en memoria de las pruebas.
 ///

@@ -12,6 +12,7 @@ pub mod catalogo;
 pub mod cola;
 pub mod comandos;
 pub mod controles_sistema;
+pub mod copia_seguridad;
 pub mod db;
 pub mod error;
 pub mod identidad_movil;
@@ -158,6 +159,9 @@ pub fn run() {
     let _registro = telemetry::init(&rutas.registros);
     tracing::info!(version = env!("CARGO_PKG_VERSION"), "arranca NB Sound");
 
+    // Una copia de seguridad preparada se pone antes de abrir la base, nunca con
+    // la base abierta (F4.2.6).
+    copia_seguridad::aplicar_restauracion_pendiente(&rutas);
     let db = BaseDeDatos::abrir(&rutas.base_de_datos()).expect("no se pudo abrir la base de datos");
     let red = Arc::new(Red::new(politica_guardada(&db)));
     let puente = movil::Puente::default();
@@ -253,6 +257,12 @@ pub fn run() {
             medicion::arrancar(db.clone());
             // La carpeta de música vigilada (F4.2.2).
             catalogo::vigilancia::vigilar(db.clone(), importador_setup.clone());
+            // La copia automática, si toca (F4.2.6). Comprimir las portadas tarda:
+            // en su hilo.
+            let (d, r) = (db.clone(), rutas.clone());
+            let _ = std::thread::Builder::new()
+                .name("copia-automatica".into())
+                .spawn(move || copia_seguridad::automatica_si_toca(&d, &r));
             let (d, s) = (db.clone(), Arc::clone(&servidor_movil));
             let _ = std::thread::Builder::new()
                 .name("encender-movil".into())
@@ -368,7 +378,13 @@ pub fn run() {
             comandos::datos_pista,
             comandos::editar_pista,
             comandos::datos_album,
-            comandos::editar_album
+            comandos::editar_album,
+            comandos::copia_estado,
+            comandos::copia_crear,
+            comandos::copia_restaurar,
+            comandos::copia_frecuencia,
+            comandos::copia_elegir_carpeta,
+            comandos::reiniciar
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

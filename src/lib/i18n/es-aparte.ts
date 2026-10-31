@@ -6,6 +6,39 @@
  * solo los importan módulos que ya se cargan a demanda, y con ellos se cargan.
  */
 export const esAparte = {
+  copia: {
+    titulo: 'Copia de seguridad',
+    ayuda:
+      'Guarda tu biblioteca, playlists, historial y portadas en un solo archivo. No incluye la música ni tus claves.',
+    crear: 'Crear una copia ahora',
+    creando: 'Creando la copia',
+    creada: (megas: string, portadas: number) =>
+      `Copia guardada: ${megas} MB, con ${portadas === 1 ? '1 portada' : `${portadas} portadas`}.`,
+    restaurar: 'Restaurar una copia',
+    confirmarTitulo: '¿Restaurar una copia?',
+    confirmarTexto:
+      'Tu biblioteca actual se sustituirá por la de la copia al reiniciar NB Sound. La de ahora se aparta, por si hay que volver atrás. Tu música no se toca.',
+    elegirCopia: 'Elegir la copia',
+    cancelar: 'Cancelar',
+    pendiente: 'La copia está lista. Se aplicará al reiniciar NB Sound.',
+    reiniciar: 'Reiniciar ahora',
+    errorFormato:
+      'Este archivo no es una copia de esta versión de NB Sound. Las copias de la versión anterior todavía no se pueden abrir aquí.',
+    errorNueva:
+      'La copia es de una versión más nueva de NB Sound. Actualiza la aplicación para restaurarla.',
+    errorDanada: 'La copia está dañada o incompleta.',
+    error: 'No se pudo completar. Vuelve a intentarlo.',
+    automaticas: 'Copias automáticas',
+    frecuencias: { 0: 'Nunca', 1: 'Cada día', 7: 'Cada semana', 30: 'Cada mes' } as Record<
+      number,
+      string
+    >,
+    carpeta: 'Carpeta de las copias',
+    sinCarpeta: 'Elige una carpeta para que se hagan.',
+    elegirCarpeta: 'Elegir carpeta',
+    ultima: (fecha: string) => `Última copia: ${fecha}`,
+    ninguna: 'Todavía no se ha hecho ninguna copia.'
+  },
   edicion: {
     tituloPista: 'Editar datos de la canción',
     tituloAlbum: 'Editar datos del álbum',

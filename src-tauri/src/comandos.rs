@@ -735,6 +735,122 @@ pub async fn por_revisar_descartar(
 }
 
 /// Vuelve a buscarlo: a la cola de importación.
+// --- Copia de seguridad (F4.2.6) ------------------------------------------------------
+
+#[tauri::command]
+pub async fn copia_estado(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::copia_seguridad::EstadoCopia> {
+    let rutas = estado.rutas.clone();
+    en_segundo_plano(&estado, move |db| {
+        crate::copia_seguridad::estado(db, &rutas)
+    })
+    .await
+}
+
+/// Crea una copia donde diga el selector nativo. `None` si se canceló. La ruta no
+/// cruza el puente: la elige el sistema y se queda en Rust.
+#[tauri::command]
+pub async fn copia_crear(app: AppHandle) -> NsResult<Option<crate::copia_seguridad::ResumenCopia>> {
+    use tauri_plugin_dialog::DialogExt;
+    let (db, rutas) = {
+        let e = app.state::<Estado>();
+        (e.db.clone(), e.rutas.clone())
+    };
+    tauri::async_runtime::spawn_blocking(move || {
+        let fecha: String = db
+            .conexion()?
+            .query_row("SELECT date('now', 'localtime')", [], |f| f.get(0))
+            .map_err(|_| NsError::StorageFailure)?;
+        let Some(destino) = app
+            .dialog()
+            .file()
+            .set_title("Guardar una copia de seguridad")
+            .add_filter("Copia de NB Sound", &[crate::copia_seguridad::EXTENSION])
+            .set_file_name(format!(
+                "nb-sound-{fecha}.{}",
+                crate::copia_seguridad::EXTENSION
+            ))
+            .blocking_save_file()
+            .and_then(|f| f.into_path().ok())
+        else {
+            return Ok(None);
+        };
+        crate::copia_seguridad::crear(&db, &rutas, &destino).map(Some)
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
+/// Elige una copia con el selector nativo, la valida entera y la deja lista para
+/// el próximo arranque. `false` si se canceló.
+#[tauri::command]
+pub async fn copia_restaurar(app: AppHandle) -> NsResult<bool> {
+    use tauri_plugin_dialog::DialogExt;
+    let rutas = app.state::<Estado>().rutas.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let Some(copia) = app
+            .dialog()
+            .file()
+            .set_title("Restaurar una copia de seguridad")
+            .add_filter("Copia de NB Sound", &[crate::copia_seguridad::EXTENSION])
+            .blocking_pick_file()
+            .and_then(|f| f.into_path().ok())
+        else {
+            return Ok(false);
+        };
+        crate::copia_seguridad::preparar_restauracion(&rutas, &copia).map(|()| true)
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
+#[tauri::command]
+pub async fn copia_frecuencia(
+    estado: tauri::State<'_, Estado>,
+    dias: u32,
+) -> NsResult<crate::copia_seguridad::EstadoCopia> {
+    let rutas = estado.rutas.clone();
+    en_segundo_plano(&estado, move |db| {
+        crate::copia_seguridad::fijar_frecuencia(db, dias)?;
+        crate::copia_seguridad::estado(db, &rutas)
+    })
+    .await
+}
+
+/// La carpeta de las copias automáticas, con el selector nativo.
+#[tauri::command]
+pub async fn copia_elegir_carpeta(app: AppHandle) -> NsResult<crate::copia_seguridad::EstadoCopia> {
+    use tauri_plugin_dialog::DialogExt;
+    let (db, rutas) = {
+        let e = app.state::<Estado>();
+        (e.db.clone(), e.rutas.clone())
+    };
+    tauri::async_runtime::spawn_blocking(move || {
+        if let Some(carpeta) = app
+            .dialog()
+            .file()
+            .set_title("Carpeta de las copias de seguridad")
+            .blocking_pick_folder()
+            .and_then(|f| f.into_path().ok())
+        {
+            crate::copia_seguridad::fijar_carpeta(&db, &carpeta)?;
+        }
+        crate::copia_seguridad::estado(&db, &rutas)
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
+/// Reinicia la aplicación: lo pide restaurar una copia, que se aplica al
+/// arrancar. Cerrar pasa por el mismo camino que salir (sesión guardada, audio
+/// parado, teléfonos avisados).
+#[tauri::command]
+pub async fn reiniciar(app: AppHandle) -> NsResult<()> {
+    app.request_restart();
+    Ok(())
+}
+
 // --- Editar metadatos (F4.2.5) -------------------------------------------------------
 
 #[tauri::command]

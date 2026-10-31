@@ -29,6 +29,7 @@ import type {
   DatosCompletados,
   DatosPista,
   Emparejar,
+  EstadoCopia,
   EstadoMovil,
   InformeDeSalud,
   Inicio,
@@ -46,6 +47,7 @@ import type {
   PreseleccionEcualizador,
   ProgresoImportacion,
   ProveedorIa,
+  ResumenCopia,
   Telefono
 } from '$lib/bindings';
 
@@ -68,6 +70,7 @@ export type {
   DatosCompletados,
   DatosPista,
   Emparejar,
+  EstadoCopia,
   EstadoMovil,
   InformeDeSalud,
   Inicio,
@@ -92,6 +95,7 @@ export type {
   ProgresoImportacion,
   ProveedorIa,
   Qr,
+  ResumenCopia,
   Servicio,
   Telefono
 } from '$lib/bindings';
@@ -327,6 +331,36 @@ export function carpetaMusica(): Promise<string | null> {
  */
 export function completarDatos(pista: number): Promise<DatosCompletados> {
   return call<DatosCompletados>('completar_datos', { pista });
+}
+
+// --- Copia de seguridad ----------------------------------------------------------
+
+export function copiaEstado(): Promise<EstadoCopia> {
+  return call<EstadoCopia>('copia_estado');
+}
+
+/** Abre el selector nativo para guardar; `null` si se canceló. */
+export function copiaCrear(): Promise<ResumenCopia | null> {
+  return call<ResumenCopia | null>('copia_crear');
+}
+
+/** Abre el selector nativo, valida la copia y la deja lista para el próximo arranque. */
+export function copiaRestaurar(): Promise<boolean> {
+  return call<boolean>('copia_restaurar');
+}
+
+/** 0, 1, 7 o 30 días. */
+export function copiaFrecuencia(dias: number): Promise<EstadoCopia> {
+  return call<EstadoCopia>('copia_frecuencia', { dias });
+}
+
+export function copiaElegirCarpeta(): Promise<EstadoCopia> {
+  return call<EstadoCopia>('copia_elegir_carpeta');
+}
+
+/** Reinicia la aplicación, con el mismo cierre ordenado que al salir. */
+export function reiniciar(): Promise<void> {
+  return call<void>('reiniciar');
 }
 
 // --- Editar metadatos --------------------------------------------------------------
