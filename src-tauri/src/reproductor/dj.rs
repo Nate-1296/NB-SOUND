@@ -53,6 +53,11 @@ pub struct EstadoDj {
     /// La posición en la sesión de la pista que suena.
     pub posicion: u32,
     pub total: u32,
+    /// Desde dónde entró la pista que suena, en segundos (F8.1).
+    pub entrada_seg: f64,
+    /// Cuándo empieza a irse hacia la siguiente, en segundos; `None` en la última
+    /// pista de la sesión (F8.1).
+    pub salida_seg: Option<f64>,
     pub mezcla: Option<MezclaVisible>,
 }
 
@@ -92,6 +97,8 @@ struct Mezcla {
     sonando: Sonando,
     tecnica: Tecnica,
     progreso: f32,
+    salida_a_seg: f64,
+    entrada_b_seg: f64,
 }
 
 pub(super) struct ModoDj {
@@ -101,6 +108,8 @@ pub(super) struct ModoDj {
     indice: usize,
     sonando: Option<Sonando>,
     pausado: bool,
+    /// Desde dónde entró la pista `indice` (0 en la primera o al saltar a una).
+    entrada_seg: f64,
     proxima: Option<Proxima>,
     mezcla: Option<Mezcla>,
     /// Las que no se pudieron abrir: no se vuelven a intentar en esta sesión.
@@ -223,6 +232,7 @@ impl<B: kira::backend::Backend> Servicio<B> {
             indice,
             sonando: None,
             pausado,
+            entrada_seg: 0.0,
             proxima: None,
             mezcla: None,
             ilegibles: HashSet::new(),
@@ -254,6 +264,12 @@ impl<B: kira::backend::Backend> Servicio<B> {
                 let d = self.dj.as_mut().expect("modo DJ");
                 d.indice = indice;
                 d.sonando = Some(sonando);
+                d.entrada_seg = 0.0;
+                d.proxima = None;
+                let proxima = self.proxima_dj();
+                if let Some(d) = self.dj.as_mut() {
+                    d.proxima = proxima;
+                }
                 return;
             }
             self.avisar(NsError::FileNotFound, Some(p.pista_id));
@@ -293,6 +309,12 @@ impl<B: kira::backend::Backend> Servicio<B> {
         }
         d.pistas = pistas;
         d.perfil = perfil;
+        if d.proxima.as_ref().is_none_or(|p| p.desde != d.indice) {
+            let proxima = self.proxima_dj();
+            if let Some(d) = self.dj.as_mut() {
+                d.proxima = proxima;
+            }
+        }
     }
 
     /// La sesión acabó de sonar: queda finalizada y vuelve la cola.
@@ -440,6 +462,8 @@ impl<B: kira::backend::Backend> Servicio<B> {
             return;
         };
         let tecnica = p.plan.tecnica;
+        let salida_a_seg = p.plan.salida_a_seg;
+        let entrada_b_seg = p.plan.entrada_b_seg;
         let ejecutor = Ejecutor::armar(&mut self.motor, p.plan, p.pista, Instant::now());
         if let Some(d) = self.dj.as_mut() {
             d.mezcla = Some(Mezcla {
@@ -448,6 +472,8 @@ impl<B: kira::backend::Backend> Servicio<B> {
                 sonando: p.sonando,
                 tecnica,
                 progreso: 0.0,
+                salida_a_seg,
+                entrada_b_seg,
             });
         }
     }
@@ -465,6 +491,8 @@ impl<B: kira::backend::Backend> Servicio<B> {
                     let anterior = d.pistas.get(d.indice).cloned();
                     d.indice = m.indice;
                     d.sonando = Some(m.sonando);
+                    d.entrada_seg = m.entrada_b_seg;
+                    d.proxima = None;
                     if let Some(p) = anterior {
                         let _ = sesiones::registrar(
                             &self.db,
@@ -474,6 +502,10 @@ impl<B: kira::backend::Backend> Servicio<B> {
                             Evento::Reproducida,
                             &serde_json::json!({}),
                         );
+                    }
+                    let proxima = self.proxima_dj();
+                    if let Some(d) = self.dj.as_mut() {
+                        d.proxima = proxima;
                     }
                     return true;
                 }
@@ -569,10 +601,18 @@ impl<B: kira::backend::Backend> Servicio<B> {
         .to_owned();
         i.karaoke_disponible = false;
         i.karaoke_activo = false;
+        let salida_seg = d.mezcla.as_ref().map(|m| m.salida_a_seg).or_else(|| {
+            d.proxima
+                .as_ref()
+                .filter(|p| p.desde == d.indice)
+                .map(|p| p.plan.salida_a_seg)
+        });
         i.dj = Some(EstadoDj {
             sesion_id: d.sesion,
             posicion: p.map_or(0, |p| p.posicion),
             total: d.pistas.len() as u32,
+            entrada_seg: d.entrada_seg,
+            salida_seg,
             mezcla: d.mezcla.as_ref().map(|m| MezclaVisible {
                 tecnica: m.tecnica,
                 progreso: m.progreso,

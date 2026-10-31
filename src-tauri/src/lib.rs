@@ -433,6 +433,7 @@ pub fn run() {
             comandos::anclar_playlist,
             comandos::letra_de_pista,
             comandos::ambiente_de_pista,
+            comandos::forma_de_onda,
             comandos::abrir_minirreproductor,
             comandos::apariencia,
             comandos::guardar_preferencia,

@@ -439,6 +439,49 @@ fn la_sesion_que_sonaba_vuelve_en_pausa_al_abrir_y_una_descartada_no() {
     assert!(crate::dj::sesiones::en_curso(&e.db).unwrap().is_none());
 }
 
+#[test]
+fn cada_pista_del_dj_anuncia_su_punto_de_entrada_y_el_de_salida_del_plan() {
+    use crate::dj::mezcla::{self, Lado, Perfil};
+    use crate::dj::transiciones::Transicion;
+
+    let doce = 44_100 * 12;
+    let e = escenario("dj-puntos", &[(1, doce), (2, doce), (3, doce)]);
+    let sesion = sesion_dj(&e.db, &[1, 2, 3], "lista");
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    dj(&mut s, sesion);
+
+    // La primera pista entra en 0 y su salida es la del plan hacia la segunda;
+    // la sesión de prueba tiene tres pistas de 12 s sin BPM y transiciones vacías,
+    // así que al acabar la primera va por un tercio ("warmup").
+    let lado = Lado {
+        duracion_seg: 12.0,
+        bpm: None,
+    };
+    let vacia = Transicion::desde_json(&serde_json::json!({}));
+    let plan_1_a_2 = mezcla::preparar(&vacia, Perfil::Bajo, "warmup", lado, lado, false);
+    let d1 = s.instantanea().dj.expect("en DJ");
+    assert_eq!(d1.posicion, 0);
+    assert_eq!(d1.entrada_seg, 0.0);
+    assert_eq!(d1.salida_seg, Some(plan_1_a_2.salida_a_seg));
+
+    // Al terminar la primera mezcla, la segunda pista anuncia la entrada del plan
+    // que la trajo y la salida del plan hacia la tercera (dos tercios: "groove").
+    let plan_2_a_3 = mezcla::preparar(&vacia, Perfil::Bajo, "groove", lado, lado, false);
+    correr(&mut s, |s| s.instantanea().pista_id == Some(2));
+    let d2 = s.instantanea().dj.expect("en DJ");
+    assert_eq!(d2.posicion, 1);
+    assert_eq!(d2.entrada_seg, plan_1_a_2.entrada_b_seg);
+    assert_eq!(d2.salida_seg, Some(plan_2_a_3.salida_a_seg));
+
+    // La última pista entra donde dijo el plan y no tiene punto de salida.
+    correr(&mut s, |s| s.instantanea().pista_id == Some(3));
+    let d3 = s.instantanea().dj.expect("en DJ");
+    assert_eq!(d3.posicion, 2);
+    assert_eq!(d3.entrada_seg, plan_2_a_3.entrada_b_seg);
+    assert_eq!(d3.salida_seg, None);
+}
+
 // --- A ciegas (F6.2.2) ------------------------------------------------------------------
 
 #[test]

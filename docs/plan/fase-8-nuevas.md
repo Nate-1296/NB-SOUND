@@ -18,7 +18,7 @@ Cada una exige su ficha completa (objetivo, criterio, dependencias) antes de emp
 
 | Iteración | Estado |
 |---|---|
-| F8.1 Forma de onda | En curso |
+| F8.1 Forma de onda | Hecha: 1.000 picos por pista en `sonoridad.picos` (migración V10), calculados en la misma decodificación que los LUFS (`audio/sonoridad.rs`, `medicion.rs`), servidos por `forma_de_onda` y dibujados en `FormaDeOnda.svelte` sobre la barra y en la sesión activa del DJ con los puntos de entrada y salida de `EstadoDj` |
 | F8.2 Listas inteligentes vivas | Pendiente: sin ficha |
 | F8.3 Resumen local de escucha | Pendiente: sin ficha |
 | F8.4 Copia a dispositivos | Pendiente: sin ficha |

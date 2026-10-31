@@ -158,3 +158,10 @@ dependen las capas y la medida del equipo, sigue sin publicar (P13).
 
 **Cierre de la Fase 7.** Informe en [2026-10-31-cierre-fase-7.md](../audit/2026-10-31-cierre-fase-7.md), con lo que
 falta para publicar y el prompt de la Fase 8.
+
+## 2026-10-31: Fase 8
+
+| Commit | Iteración | Qué se hizo | Pruebas nuevas |
+|---|---|---|---|
+| `44b7f1c` | F8.1 (ficha) | Ficha de la forma de onda en `fase-8-nuevas.md` y tabla de estado de la Fase 8 | — |
+| (siguiente) | F8.1 | La forma de onda sale de la misma decodificación que mide la sonoridad (`audio/sonoridad.rs`), con 1.000 picos de un byte por pista guardados en `sonoridad.picos` (migración V10). Lo medido antes de V10 se vuelve a medir una vez en `medicion.rs`; el silencio queda con picos a cero y los archivos ilegibles con picos vacíos para no reintentarse. `EstadoDj` anuncia desde dónde entró la pista que suena y dónde empezará a irse, y `FormaDeOnda.svelte` dibuja la onda sobre la barra de reproducción y en la sesión activa del DJ | Picos crecientes, hueco de silencio y pistas cortas en `sonoridad.rs`; silencio, ilegible, remedición tras V10 y caducidad en `medicion.rs`; presupuesto de 16 KB con picos en `pruebas_esquema.rs`; puntos de entrada y salida por pista en `reproductor/pruebas.rs` |

@@ -19,6 +19,7 @@
   import { textos } from '$lib/i18n';
 
   import SelectorDestino from './dispositivos/SelectorDestino.svelte';
+  import FormaDeOnda from './FormaDeOnda.svelte';
   import Icon from './Icon.svelte';
   import PanelCola from './PanelCola.svelte';
 
@@ -198,19 +199,31 @@
     </div>
     <div class="progreso">
       <span class="tiempo">{formatoTiempo(posicion)}</span>
-      <input
-        type="range"
-        class="deslizador"
-        aria-label={t.progreso}
-        min="0"
-        max={Math.max(i.duracionSeg, 0.001)}
-        step="0.1"
-        value={posicion}
-        disabled={!hayPista || i.duracionSeg <= 0}
-        style:--relleno={`${i.duracionSeg > 0 ? (posicion / i.duracionSeg) * 100 : 0}%`}
-        oninput={(e) => (arrastrando = Number(e.currentTarget.value))}
-        onchange={soltar}
-      />
+      <div class="barra-onda">
+        {#if reproductor.picos.length > 0}
+          <FormaDeOnda
+            picos={reproductor.picos}
+            {posicion}
+            duracion={i.duracionSeg}
+            entradaSeg={i.dj?.entradaSeg ?? null}
+            salidaSeg={i.dj?.salidaSeg ?? null}
+          />
+        {/if}
+        <input
+          type="range"
+          class="deslizador"
+          class:sobre-onda={reproductor.picos.length > 0}
+          aria-label={t.progreso}
+          min="0"
+          max={Math.max(i.duracionSeg, 0.001)}
+          step="0.1"
+          value={posicion}
+          disabled={!hayPista || i.duracionSeg <= 0}
+          style:--relleno={`${i.duracionSeg > 0 ? (posicion / i.duracionSeg) * 100 : 0}%`}
+          oninput={(e) => (arrastrando = Number(e.currentTarget.value))}
+          onchange={soltar}
+        />
+      </div>
       <span class="tiempo">{formatoTiempo(i.duracionSeg)}</span>
     </div>
   </div>
@@ -486,6 +499,13 @@
     text-align: center;
   }
 
+  .barra-onda {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 1.5rem;
+  }
+
   .deslizador {
     appearance: none;
     width: 100%;
@@ -497,6 +517,14 @@
       var(--m3c-surface-container-highest) var(--relleno, 0%)
     );
     cursor: pointer;
+  }
+
+  .deslizador.sobre-onda {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    margin: 0;
+    background: none;
   }
 
   .deslizador:disabled {

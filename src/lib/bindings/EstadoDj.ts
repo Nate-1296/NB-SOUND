@@ -8,4 +8,13 @@ export type EstadoDj = { sesionId: number,
 /**
  * La posición en la sesión de la pista que suena.
  */
-posicion: number, total: number, mezcla: MezclaVisible | null, };
+posicion: number, total: number, 
+/**
+ * Desde dónde entró la pista que suena, en segundos (F8.1).
+ */
+entradaSeg: number, 
+/**
+ * Cuándo empieza a irse hacia la siguiente, en segundos; `None` en la última
+ * pista de la sesión (F8.1).
+ */
+salidaSeg: number | null, mezcla: MezclaVisible | null, };

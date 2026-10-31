@@ -19,6 +19,7 @@
   } from '$core/ipc/dj';
   import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
   import { textosDj } from '$lib/i18n/dj';
+  import FormaDeOnda from '$ui/FormaDeOnda.svelte';
   import Icon from '$ui/Icon.svelte';
 
   interface Props {
@@ -106,6 +107,27 @@
         <p class="sin-analisis"><Icon nombre="informacion" tamano={16} />{t.sinAnalisis}</p>
       {/if}
     </header>
+
+    {#if sonando}
+      <div class="pista-sonando">
+        {#if reproductor.picos.length > 0}
+          <FormaDeOnda
+            picos={reproductor.picos}
+            posicion={reproductor.posicion}
+            duracion={reproductor.instantanea.duracionSeg}
+            entradaSeg={sonando.entradaSeg}
+            salidaSeg={sonando.salidaSeg}
+          />
+        {/if}
+        <p class="puntos-dj">
+          <span class="punto-entrada">{t.entrada(formatoTiempo(sonando.entradaSeg))}</span>
+          {#if sonando.salidaSeg !== null}
+            <span>·</span>
+            <span class="punto-salida">{t.salida(formatoTiempo(sonando.salidaSeg))}</span>
+          {/if}
+        </p>
+      </div>
+    {/if}
 
     {#if sonando?.mezcla}
       <div class="mezcla" role="status">
@@ -238,6 +260,28 @@
     gap: var(--ns-espacio-1);
     font-size: var(--ns-texto-sm);
     font-weight: 600;
+  }
+
+  .pista-sonando {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-1);
+  }
+
+  .puntos-dj {
+    display: flex;
+    gap: var(--ns-espacio-2);
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .punto-entrada {
+    color: var(--m3c-tertiary);
+  }
+
+  .punto-salida {
+    color: var(--m3c-secondary);
   }
 
   .barra {

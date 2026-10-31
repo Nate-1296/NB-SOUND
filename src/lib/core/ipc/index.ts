@@ -292,6 +292,11 @@ export function ambienteDePista(pistaId: number): Promise<Ambiente> {
   return call<Ambiente>('ambiente_de_pista', { pistaId });
 }
 
+/** La forma de onda de una pista: mil picos de 0 a 255, o ninguno si aún no se ha medido. */
+export function formaDeOnda(pistaId: number): Promise<number[]> {
+  return call<number[]>('forma_de_onda', { pistaId });
+}
+
 /** Abre el minirreproductor flotante, o lo trae delante. */
 export function abrirMinirreproductor(): Promise<void> {
   return call<void>('abrir_minirreproductor');

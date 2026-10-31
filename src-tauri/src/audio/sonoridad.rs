@@ -5,6 +5,9 @@
 //! la sonoridad integrada de cada pista (al importar o analizar) y aplica una
 //! ganancia fija al decodificarla: dentro de una pista no cambia nada, y entre
 //! pistas el nivel se iguala.
+//!
+//! La misma pasada deja la forma de onda de la pista (F8.1), que la barra de
+//! progreso y el DJ dibujan.
 
 use std::path::Path;
 
@@ -32,18 +35,43 @@ pub struct Sonoridad {
     pub rango: f64,
 }
 
-/// Mide una pista entera.
+/// Cuántos picos tiene la forma de onda de una pista, sea cual sea su duración
+/// (F8.1): lo que se pinta es siempre la pista entera, y 1.000 dan para la barra
+/// más ancha.
+pub const PICOS: usize = 1000;
+
+/// Los fotogramas de cada tramo mientras se decodifica. La duración no se sabe
+/// hasta el final, así que se guardan los picos de tramos cortos y al acabar se
+/// reducen a [`PICOS`]: 512 fotogramas son unos 11 ms, y una pista de diez
+/// minutos deja 56.000 tramos, 225 KB que se sueltan en cuanto se reducen.
+const TRAMO: usize = 512;
+
+/// Lo que deja una pasada por la pista: su sonoridad, si la tiene, y su forma de
+/// onda, que la tiene también el silencio.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Medida {
+    pub sonoridad: Option<Sonoridad>,
+    /// [`PICOS`] valores de 0 a 255: el máximo absoluto de las dos voces en su
+    /// tramo de la pista.
+    pub picos: Vec<u8>,
+}
+
+/// Mide una pista entera: la sonoridad y la forma de onda salen de la misma
+/// decodificación (F8.1), así que el archivo se lee una sola vez.
 ///
 /// # Errors
 ///
-/// Los de [`Decodificador::abrir`]; [`NsError::AudioCorrupted`] si la pista es
-/// silencio o demasiado corta para medirse.
-pub fn medir(ruta: &Path) -> NsResult<Sonoridad> {
+/// Los de [`Decodificador::abrir`]; [`NsError::AudioCorrupted`] si la pista no
+/// tiene ni un fotograma. El silencio no es un error: no tiene sonoridad, pero sí
+/// forma de onda (plana).
+pub fn medir(ruta: &Path) -> NsResult<Medida> {
     let mut d = Decodificador::abrir(ruta, 0.0)?;
     let mut medidor = EbuR128::new(2, d.tasa, Mode::I | Mode::TRUE_PEAK | Mode::LRA)
         .map_err(|_| NsError::Internal)?;
     let mut bloque = Vec::with_capacity(16_384);
     let mut entrelazado = Vec::with_capacity(32_768);
+    let mut tramos: Vec<f32> = Vec::new();
+    let (mut maximo, mut en_tramo) = (0.0f32, 0usize);
     loop {
         bloque.clear();
         if d.leer(&mut bloque, 16_384)? == 0 {
@@ -54,25 +82,58 @@ pub fn medir(ruta: &Path) -> NsResult<Sonoridad> {
         medidor
             .add_frames_f32(&entrelazado)
             .map_err(|_| NsError::AudioCorrupted)?;
+        for f in &bloque {
+            maximo = maximo.max(f.left.abs()).max(f.right.abs());
+            en_tramo += 1;
+            if en_tramo == TRAMO {
+                tramos.push(maximo);
+                (maximo, en_tramo) = (0.0, 0);
+            }
+        }
     }
-    let lufs = medidor
-        .loudness_global()
-        .map_err(|_| NsError::AudioCorrupted)?;
-    if !lufs.is_finite() {
+    if en_tramo > 0 {
+        tramos.push(maximo);
+    }
+    if tramos.is_empty() {
         return Err(NsError::AudioCorrupted);
     }
-    let pico = (0..2)
-        .filter_map(|c| medidor.true_peak(c).ok())
-        .fold(0.0f64, f64::max);
-    Ok(Sonoridad {
-        lufs,
-        pico_verdadero: if pico > 0.0 {
-            20.0 * pico.log10()
-        } else {
-            f64::NEG_INFINITY
-        },
-        rango: medidor.loudness_range().unwrap_or(0.0),
+    let sonoridad = medidor
+        .loudness_global()
+        .ok()
+        .filter(|l| l.is_finite())
+        .map(|lufs| {
+            let pico = (0..2)
+                .filter_map(|c| medidor.true_peak(c).ok())
+                .fold(0.0f64, f64::max);
+            Sonoridad {
+                lufs,
+                pico_verdadero: if pico > 0.0 {
+                    20.0 * pico.log10()
+                } else {
+                    f64::NEG_INFINITY
+                },
+                rango: medidor.loudness_range().unwrap_or(0.0),
+            }
+        });
+    Ok(Medida {
+        sonoridad,
+        picos: reducir(&tramos),
     })
+}
+
+/// Reduce los picos de los tramos a [`PICOS`], cada uno el máximo de los suyos.
+/// Con menos tramos que picos (una pista de menos de 12 s), un tramo ocupa
+/// varios picos seguidos.
+fn reducir(tramos: &[f32]) -> Vec<u8> {
+    let n = tramos.len();
+    (0..PICOS)
+        .map(|i| {
+            let desde = (i * n / PICOS).min(n - 1);
+            let hasta = ((i + 1) * n / PICOS).clamp(desde + 1, n);
+            let m = tramos[desde..hasta].iter().fold(0.0f32, |a, &b| a.max(b));
+            (m.clamp(0.0, 1.0) * 255.0).round() as u8
+        })
+        .collect()
 }
 
 /// La ganancia que lleva una pista al objetivo, en dB. Bajar no tiene tope; subir
@@ -115,8 +176,8 @@ mod tests {
             44_100 * 6,
             ruido(0.4 / 10f32.powf(10.0 / 20.0)),
         );
-        let a = medir(&alta).unwrap();
-        let b = medir(&baja).unwrap();
+        let a = medir(&alta).unwrap().sonoridad.unwrap();
+        let b = medir(&baja).unwrap().sonoridad.unwrap();
         assert!((a.lufs - b.lufs - 10.0).abs() < 0.2, "{a:?} {b:?}");
 
         // La misma medida, sobre lo que entrega el decodificador con la ganancia.
@@ -163,12 +224,73 @@ mod tests {
     }
 
     #[test]
-    fn el_silencio_no_tiene_sonoridad() {
+    fn el_silencio_no_tiene_sonoridad_pero_si_forma_de_onda_plana() {
         let dir = std::env::temp_dir().join(format!("ns-silencio-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let ruta = dir.join("s.wav");
         let _ = wav(&ruta, 44_100, 44_100, |_, _| 0.0);
-        assert_eq!(medir(&ruta), Err(NsError::AudioCorrupted));
+        let m = medir(&ruta).unwrap();
+        assert_eq!(m.sonoridad, None);
+        assert_eq!(m.picos, vec![0; PICOS]);
         let _ = std::fs::remove_dir_all(dir);
+    }
+
+    fn tono(i: usize, amplitud: f32) -> f32 {
+        (2.0 * std::f32::consts::PI * 440.0 * i as f32 / 44_100.0).sin() * amplitud
+    }
+
+    #[test]
+    fn los_picos_siguen_al_volumen_de_la_pista() {
+        let dir = std::env::temp_dir().join(format!("ns-picos-sube-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let ruta = dir.join("sube.wav");
+        let frames = 44_100 * 20;
+        let _ = wav(&ruta, 44_100, frames, |i, _| {
+            tono(i, 0.05 + 0.9 * i as f32 / frames as f32)
+        });
+        let m = medir(&ruta).unwrap();
+        assert!(m.sonoridad.is_some(), "la misma pasada mide la sonoridad");
+        assert_eq!(m.picos.len(), PICOS);
+        // Cada décima parte sube respecto a la anterior.
+        let decimos: Vec<u32> = m
+            .picos
+            .chunks(PICOS / 10)
+            .map(|c| c.iter().map(|&v| u32::from(v)).max().unwrap())
+            .collect();
+        assert!(decimos.windows(2).all(|w| w[1] > w[0]), "{decimos:?}");
+        assert!(decimos[0] < 50 && decimos[9] > 220, "{decimos:?}");
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn un_silencio_en_medio_deja_sus_picos_a_cero() {
+        let dir = std::env::temp_dir().join(format!("ns-picos-hueco-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let ruta = dir.join("hueco.wav");
+        // 30 s: suena, 10 s de silencio entre el segundo 10 y el 20, y vuelve.
+        let frames = 44_100 * 30;
+        let _ = wav(&ruta, 44_100, frames, |i, _| {
+            if (44_100 * 10..44_100 * 20).contains(&i) {
+                0.0
+            } else {
+                tono(i, 0.6)
+            }
+        });
+        let m = medir(&ruta).unwrap();
+        // Lejos de los bordes del hueco, que comparten tramo con lo que suena.
+        assert!(m.picos[350..650].iter().all(|&v| v == 0));
+        assert!(m.picos[..320].iter().all(|&v| v > 140));
+        assert!(m.picos[680..].iter().all(|&v| v > 140));
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn una_pista_mas_corta_que_los_picos_los_llena_todos() {
+        let tramos = [0.5f32, 1.0, 0.0];
+        let picos = reducir(&tramos);
+        assert_eq!(picos.len(), PICOS);
+        assert_eq!(picos[0], 128);
+        assert_eq!(picos[PICOS / 2], 255);
+        assert_eq!(picos[PICOS - 1], 0);
     }
 }

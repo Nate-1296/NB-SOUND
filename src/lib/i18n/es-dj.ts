@@ -46,6 +46,8 @@ export const esDj = {
     valorada: 'Lo tendré en cuenta.',
     pistas: 'Canciones de la sesión',
     tocarDesde: (titulo: string) => `Escuchar desde ${titulo}`,
+    entrada: (tiempo: string) => `Entrada ${tiempo}`,
+    salida: (tiempo: string) => `Salida ${tiempo}`,
     mezclando: (tecnica: string, progreso: number) =>
       `${tecnica} · ${Math.round(progreso * 100)} %`,
     tecnicas: {

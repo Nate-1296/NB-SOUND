@@ -11,6 +11,7 @@ import {
   type AvisoReproductor,
   alAvisarElReproductor,
   alCambiarElReproductor,
+  formaDeOnda,
   type Instantanea,
   type OrdenReproductor,
   type PistaResumen,
@@ -40,6 +41,8 @@ class EstadoDelReproductor {
   instantanea = $state<Instantanea>(VACIA);
   /** Los datos de la pista que suena. */
   pista = $state<PistaResumen | null>(null);
+  /** Los picos de la forma de onda de la pista que suena (F8.1). */
+  picos = $state<number[]>([]);
   /** El último aviso, para mostrarlo y descartarlo. */
   aviso = $state<AvisoReproductor | null>(null);
   /** Segundos desde que llegó la instantánea, mientras suena. */
@@ -80,13 +83,20 @@ class EstadoDelReproductor {
   }
 
   async #cargarPista(id: number | null): Promise<void> {
+    this.picos = [];
     if (id === null) {
       this.pista = null;
       return;
     }
-    const [p] = await pistasResumen([id]).catch(() => []);
+    const [[p], picos] = await Promise.all([
+      pistasResumen([id]).catch(() => []),
+      formaDeOnda(id).catch(() => [])
+    ]);
     // Si mientras tanto cambió de pista, esta respuesta ya no vale.
-    if (this.instantanea.pistaId === id) this.pista = p ?? null;
+    if (this.instantanea.pistaId === id) {
+      this.pista = p ?? null;
+      this.picos = picos;
+    }
   }
 
   /** El reloj solo corre mientras suena: en reposo no se anima nada (ADR-008). */

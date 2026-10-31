@@ -1,5 +1,6 @@
-//! La sonoridad de la biblioteca, medida en segundo plano (F2.1.4), y en el mismo
-//! hilo los rasgos básicos de lo importado (F4.1.12).
+//! La sonoridad de la biblioteca, medida en segundo plano (F2.1.4), con la forma
+//! de onda que sale de la misma pasada (F8.1), y en el mismo hilo los rasgos
+//! básicos de lo importado (F4.1.12).
 //!
 //! La V1 nunca midió la sonoridad, así que al llegar de ella ninguna pista la
 //! tiene, y la normalización no haría nada. Medirla entera en la importación
@@ -33,7 +34,8 @@ struct Pendiente {
     sha256: Option<String>,
 }
 
-/// Las pistas sin medida, o cuya medida es de otro archivo. Cota: `LOTE`.
+/// Las pistas sin medida, cuya medida es de otro archivo o anterior a la forma de
+/// onda (V10). Cota: `LOTE`.
 fn pendientes(db: &BaseDeDatos, saltar: &HashSet<i64>) -> NsResult<Vec<Pendiente>> {
     let conn = db.conexion()?;
     let musica = persistencia::carpeta_musica(&conn)?;
@@ -42,7 +44,7 @@ fn pendientes(db: &BaseDeDatos, saltar: &HashSet<i64>) -> NsResult<Vec<Pendiente
             "SELECT p.id, p.ruta, p.sha256 FROM pistas p
              LEFT JOIN sonoridad so ON so.pista_id = p.id
              WHERE p.estado = 'biblioteca'
-               AND (so.pista_id IS NULL OR so.sha256 IS NOT p.sha256)
+               AND (so.pista_id IS NULL OR so.sha256 IS NOT p.sha256 OR so.picos IS NULL)
              ORDER BY p.id LIMIT ?1",
         )
         .map_err(|_| NsError::StorageFailure)?;
@@ -71,22 +73,27 @@ fn pendientes(db: &BaseDeDatos, saltar: &HashSet<i64>) -> NsResult<Vec<Pendiente
         .collect())
 }
 
-fn guardar(db: &BaseDeDatos, p: &Pendiente, medida: Option<&sonoridad::Sonoridad>) -> NsResult<()> {
+/// Apunta una medida. Sin ella (archivo ilegible), sin valores y con los picos
+/// vacíos: así no se vuelve a intentar.
+fn guardar(db: &BaseDeDatos, p: &Pendiente, medida: Option<&sonoridad::Medida>) -> NsResult<()> {
+    let picos: &[u8] = medida.map_or(&[], |m| &m.picos);
+    let medida = medida.and_then(|m| m.sonoridad.as_ref());
     let finito = |v: f64| v.is_finite().then_some(v);
     let mut conn = db.conexion()?;
     let tx = db::transaccion_de_escritura(&mut conn)?;
     tx.execute(
-        "INSERT INTO sonoridad (pista_id, sha256, lufs, pico_verdadero, rango)
-         VALUES (?1, ?2, ?3, ?4, ?5)
+        "INSERT INTO sonoridad (pista_id, sha256, lufs, pico_verdadero, rango, picos)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)
          ON CONFLICT (pista_id) DO UPDATE SET sha256 = excluded.sha256, lufs = excluded.lufs,
              pico_verdadero = excluded.pico_verdadero, rango = excluded.rango,
-             medida_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
+             picos = excluded.picos, medida_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
         params![
             p.id,
             p.sha256,
             medida.and_then(|m| finito(m.lufs)),
             medida.and_then(|m| finito(m.pico_verdadero)),
             medida.and_then(|m| finito(m.rango).map(|r| r.max(0.0))),
+            picos,
         ],
     )
     .map_err(|_| NsError::StorageFailure)?;
@@ -95,7 +102,7 @@ fn guardar(db: &BaseDeDatos, p: &Pendiente, medida: Option<&sonoridad::Sonoridad
 
 /// Mide lo pendiente hasta que no quede nada. Devuelve cuántas pistas apuntó.
 ///
-/// Un archivo que no se puede medir (silencio, dañado, formato raro) se apunta sin
+/// Un archivo que no se puede medir (dañado, formato raro) se apunta sin
 /// valores para no reintentarlo en cada arranque. Uno que no está (un disco sin
 /// montar) solo se salta en esta pasada: cuando vuelva, se medirá.
 pub fn medir_pendientes(db: &BaseDeDatos, pausa: Duration) -> NsResult<usize> {
@@ -123,11 +130,34 @@ pub fn medir_pendientes(db: &BaseDeDatos, pausa: Duration) -> NsResult<usize> {
     }
 }
 
-fn medir(ruta: &Path) -> NsResult<sonoridad::Sonoridad> {
+fn medir(ruta: &Path) -> NsResult<sonoridad::Medida> {
     if !ruta.is_file() {
         return Err(NsError::FileNotFound);
     }
     sonoridad::medir(ruta)
+}
+
+/// La forma de onda de una pista (F8.1): [`sonoridad::PICOS`] valores de 0 a 255,
+/// o ninguno si aún no se ha medido o no se pudo.
+///
+/// # Errors
+///
+/// [`NsError::StorageFailure`] si la base no responde.
+pub fn picos(db: &BaseDeDatos, pista_id: i64) -> NsResult<Vec<u8>> {
+    let conn = db.conexion()?;
+    let picos = conn
+        .query_row(
+            "SELECT so.picos FROM sonoridad so JOIN pistas p ON p.id = so.pista_id
+             WHERE so.pista_id = ?1 AND so.sha256 IS p.sha256",
+            [pista_id],
+            |f| f.get::<_, Option<Vec<u8>>>(0),
+        )
+        .map(Option::unwrap_or_default);
+    match picos {
+        Ok(p) => Ok(p),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(Vec::new()),
+        Err(_) => Err(NsError::StorageFailure),
+    }
 }
 
 /// Lanza el hilo que mide la biblioteca mientras la aplicación esté abierta.
@@ -209,13 +239,74 @@ mod tests {
     }
 
     #[test]
-    fn un_archivo_que_no_se_puede_medir_se_apunta_sin_valores() {
+    fn el_silencio_se_apunta_sin_sonoridad_y_con_su_forma_de_onda_plana() {
         let d = dir("silencio");
         let ruta = d.join("silencio.wav");
         let _ = wav(&ruta, 44_100, 44_100, |_, _| 0.0);
         let db = base_con(&[(1, ruta.to_str().unwrap(), None)]);
         assert_eq!(medir_pendientes(&db, Duration::ZERO).unwrap(), 1);
         assert_eq!(medida(&db, 1), Some(None));
+        assert_eq!(picos(&db, 1).unwrap(), vec![0; sonoridad::PICOS]);
+        assert_eq!(medir_pendientes(&db, Duration::ZERO).unwrap(), 0);
+    }
+
+    #[test]
+    fn un_archivo_ilegible_se_apunta_sin_picos_y_no_se_reintenta() {
+        let d = dir("ilegible");
+        let ruta = d.join("roto.wav");
+        std::fs::write(&ruta, b"esto no es audio de ninguna clase").unwrap();
+        let db = base_con(&[(1, ruta.to_str().unwrap(), None)]);
+        assert_eq!(medir_pendientes(&db, Duration::ZERO).unwrap(), 1);
+        assert_eq!(medida(&db, 1), Some(None));
+        assert_eq!(picos(&db, 1).unwrap(), Vec::<u8>::new());
+        assert_eq!(medir_pendientes(&db, Duration::ZERO).unwrap(), 0);
+    }
+
+    #[test]
+    fn lo_medido_antes_de_la_forma_de_onda_se_vuelve_a_medir_una_vez() {
+        let d = dir("antes-v10");
+        let ruta = d.join("tono.wav");
+        let _ = wav(&ruta, 44_100, 44_100 * 3, |i, _| {
+            (2.0 * std::f32::consts::PI * 440.0 * i as f32 / 44_100.0).sin() * 0.3
+        });
+        let db = base_con(&[(1, ruta.to_str().unwrap(), None)]);
+        db.conexion()
+            .unwrap()
+            .execute(
+                "INSERT INTO sonoridad (pista_id, lufs, pico_verdadero, rango) VALUES (1, -9.0, -1.0, 3.0)",
+                [],
+            )
+            .unwrap();
+        assert!(picos(&db, 1).unwrap().is_empty(), "sin picos todavía");
+        assert_eq!(medir_pendientes(&db, Duration::ZERO).unwrap(), 1);
+        let p = picos(&db, 1).unwrap();
+        assert_eq!(p.len(), sonoridad::PICOS);
+        assert!(p.iter().all(|&v| (70..=80).contains(&v)), "un tono de 0,3");
+        assert_eq!(medir_pendientes(&db, Duration::ZERO).unwrap(), 0);
+    }
+
+    #[test]
+    fn los_picos_de_otro_archivo_no_se_sirven() {
+        let d = dir("picos-caducos");
+        let ruta = d.join("tono.wav");
+        let _ = wav(&ruta, 44_100, 44_100, |i, _| {
+            ((i % 50) as f32 / 50.0 - 0.5) * 0.4
+        });
+        let db = base_con(&[(1, ruta.to_str().unwrap(), Some(&"a".repeat(64)))]);
+        medir_pendientes(&db, Duration::ZERO).unwrap();
+        assert_eq!(picos(&db, 1).unwrap().len(), sonoridad::PICOS);
+        db.conexion()
+            .unwrap()
+            .execute(
+                "UPDATE pistas SET sha256 = ?1 WHERE id = 1",
+                [&"b".repeat(64)],
+            )
+            .unwrap();
+        assert!(picos(&db, 1).unwrap().is_empty());
+        assert!(
+            picos(&db, 99).unwrap().is_empty(),
+            "una pista que no existe"
+        );
     }
 
     #[test]

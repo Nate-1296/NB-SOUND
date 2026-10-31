@@ -70,6 +70,11 @@ const MIGRACIONES: &[Migracion] = &[
         nombre: "importacion",
         sql: include_str!("../../migrations/V9__importacion.sql"),
     },
+    Migracion {
+        version: 10,
+        nombre: "forma de onda",
+        sql: include_str!("../../migrations/V10__forma_de_onda.sql"),
+    },
 ];
 
 /// Versión de esquema aplicada (`PRAGMA user_version`).

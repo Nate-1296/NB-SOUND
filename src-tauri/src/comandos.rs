@@ -407,6 +407,13 @@ pub async fn ambiente_de_pista(
     .await
 }
 
+/// La forma de onda de una pista (F8.1): mil picos de 0 a 255, o ninguno si aún
+/// no se ha medido. Cota: `sonoridad::PICOS` (1.000 bytes).
+#[tauri::command]
+pub async fn forma_de_onda(estado: tauri::State<'_, Estado>, pista_id: i64) -> NsResult<Vec<u8>> {
+    en_segundo_plano(&estado, move |db| crate::medicion::picos(db, pista_id)).await
+}
+
 /// Abre el minirreproductor flotante, o lo trae delante si ya está abierto.
 #[tauri::command]
 pub async fn abrir_minirreproductor(app: AppHandle) -> NsResult<()> {

@@ -364,6 +364,8 @@ fn el_analisis_de_una_pista_cabe_en_16_kb() {
     let etiquetas = format!("[{}]", vec!["[\"classic rock\",0.123456789]"; 70].join(","));
     assert!(etiquetas.len() <= 2048, "{}", etiquetas.len());
     let sha = "f".repeat(64);
+    // La forma de onda (F8.1), con valores distintos para que no se comprima.
+    let picos: Vec<u8> = (0..1000u32).map(|i| (i * 37 % 256) as u8).collect();
     {
         let tx = super::transaccion_de_escritura(&mut conn).unwrap();
         for id in 1..=PISTAS {
@@ -382,8 +384,8 @@ fn el_analisis_de_una_pista_cabe_en_16_kb() {
             )
             .unwrap();
             tx.execute(
-                "INSERT INTO sonoridad VALUES (?1, ?2, -9.5, -0.3, 7.2, '2026-10-30T00:00:00.000Z')",
-                rusqlite::params![id, sha],
+                "INSERT INTO sonoridad VALUES (?1, ?2, -9.5, -0.3, 7.2, '2026-10-30T00:00:00.000Z', ?3)",
+                rusqlite::params![id, sha, picos],
             )
             .unwrap();
             for etiqueta in ETIQUETAS {
