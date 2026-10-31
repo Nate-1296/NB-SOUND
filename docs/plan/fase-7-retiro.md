@@ -14,7 +14,7 @@
 | F7.2.1 Instaladores para Linux (AppImage, deb, rpm), Windows (MSI/NSIS) y macOS (dmg) | Hecha a falta de ejecutarla: `.github/workflows/publicacion.yml` compila las tres plataformas con `tauri-action`, firma los artefactos del actualizador (`createUpdaterArtifacts` solo ahí), sube `latest.json` y deja la publicación en **borrador**. La primera ejecución real y la puerta de empaquetado en máquina limpia, a las pruebas finales |
 | F7.2.2 Actualizaciones de la aplicación desde la propia aplicación | Hecha: `tauri-plugin-updater` detrás de la puerta de red, con el servicio Actualizaciones y "Buscar actualizaciones" en Acerca de; firma obligatoria con la clave pública de `tauri.conf.json`. Enmiendas en ADR-001 y ADR-009. Que una 2.0.x real se actualice sola, a las pruebas finales |
 | F7.2.3 Avisos de terceros y atribución de modelos | Hecha: las cinco tipografías, el código portado (songrec, librosa, difflib y la V1) y los modelos; regenerados con las dependencias del actualizador |
-| F7.2.4 Publicación de la 2.0.0 | Pendiente |
+| F7.2.4 Publicación de la 2.0.0 | Preparada, sin publicar: versión 2.0.0 en `Cargo.toml`, `tauri.conf.json` y `package.json`, y `CHANGELOG.md`. Publicar exige a Nathan: pasar las pruebas finales, empujar la etiqueta `v2.0.0` (que lanza `publicacion.yml`) y publicar el borrador en GitHub |
 
 ## Criterios
 

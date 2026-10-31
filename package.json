@@ -1,6 +1,6 @@
 {
   "name": "nb-sound",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0",
   "description": "Aplicación de escritorio para la música local: reproducir, catalogar, karaoke y DJ",
   "license": "GPL-3.0-or-later",
   "type": "module",
