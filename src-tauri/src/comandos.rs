@@ -1346,3 +1346,175 @@ pub async fn dj_eliminar(
     salir_si_suena(&app, sesion_id);
     con_dj(&estado, move |dj| dj.eliminar(sesion_id)).await
 }
+
+// --- A ciegas (F6.2.2) -------------------------------------------------------------------
+
+/// Cuántas canciones tiene cada modo.
+#[derive(Debug, Clone, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+pub struct ModoDisponible {
+    pub modo: crate::a_ciegas::Modo,
+    pub canciones: u32,
+}
+
+/// Una jugada sobre el reto en curso.
+#[derive(Debug, Deserialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(
+    tag = "tipo",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
+pub enum Jugada {
+    RevelarArtista,
+    RevelarAlbum,
+    RevelarTodo,
+    /// "¡La sé!": para los títulos que no se pueden escribir.
+    LaSe,
+    Indicio {
+        indicio: crate::a_ciegas::indicios::Indicio,
+    },
+    Pasar,
+    Avanzar,
+    Retroceder,
+    Cerrar,
+    SegundosFragmento {
+        segundos: f64,
+    },
+}
+
+/// Lo que devuelve escribir el título: cómo de cerca, y la ronda tras el intento.
+#[derive(Debug, Clone, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+pub struct ResultadoIntento {
+    pub intento: crate::a_ciegas::indicios::Intento,
+    pub ronda: crate::a_ciegas::Ronda,
+}
+
+/// Cuántas canciones tiene cada modo, para elegir. Cota: los cuatro modos.
+#[tauri::command]
+pub async fn aciegas_disponibles(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<Vec<ModoDisponible>> {
+    en_segundo_plano(&estado, |db| {
+        Ok(crate::a_ciegas::disponibles(db)?
+            .into_iter()
+            .map(|(modo, canciones)| ModoDisponible { modo, canciones })
+            .collect())
+    })
+    .await
+}
+
+/// La ronda tal como está, para volver a la vista.
+#[tauri::command]
+pub async fn aciegas_ronda(estado: tauri::State<'_, Estado>) -> NsResult<crate::a_ciegas::Ronda> {
+    let j = std::sync::Arc::clone(&estado.a_ciegas);
+    let r = j.lock().map_err(|_| NsError::Internal)?.ronda();
+    Ok(r)
+}
+
+/// Empieza una ronda de `retos` (1 a 25) del modo, evitando las ya jugadas en esta
+/// sesión si quedan otras. Sin canciones, la ronda no empieza (`modo` nulo).
+#[tauri::command]
+pub async fn aciegas_iniciar(
+    estado: tauri::State<'_, Estado>,
+    modo: crate::a_ciegas::Modo,
+    retos: u32,
+    evitar: Vec<i64>,
+) -> NsResult<crate::a_ciegas::Ronda> {
+    if evitar.len() > 10_000 {
+        return Err(NsError::InvalidInput);
+    }
+    let j = std::sync::Arc::clone(&estado.a_ciegas);
+    en_segundo_plano(&estado, move |db| {
+        let mut j = j.lock().map_err(|_| NsError::Internal)?;
+        j.iniciar(db, modo, retos, &evitar)?;
+        Ok(j.ronda())
+    })
+    .await
+}
+
+/// Calla el fragmento a ciegas si suena: al cambiar de reto, al revelarlo o al
+/// cerrar la ronda, para que no se oiga una canción con la pantalla de otra.
+fn callar_fragmento(app: &AppHandle) {
+    if let Ok(r) = reproductor(app) {
+        if r.instantanea().is_some_and(|i| i.ciego) {
+            r.enviar(Orden::PausarReanudar);
+        }
+    }
+}
+
+/// Si la jugada deja otro reto, ninguno o el mismo ya resuelto.
+fn cambio_de_reto(antes: &crate::a_ciegas::Ronda, despues: &crate::a_ciegas::Ronda) -> bool {
+    antes.indice != despues.indice || despues.reto.as_ref().is_none_or(|v| v.titulo.is_some())
+}
+
+/// Una jugada sobre el reto en curso.
+#[tauri::command]
+pub async fn aciegas_jugar(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    jugada: Jugada,
+) -> NsResult<crate::a_ciegas::Ronda> {
+    let j = std::sync::Arc::clone(&estado.a_ciegas);
+    let mut j = j.lock().map_err(|_| NsError::Internal)?;
+    let antes = j.ronda();
+    match jugada {
+        Jugada::RevelarArtista => j.revelar_artista(),
+        Jugada::RevelarAlbum => j.revelar_album(),
+        Jugada::RevelarTodo => j.revelar_todo(),
+        Jugada::LaSe => j.la_se(),
+        Jugada::Indicio { indicio } => j.revelar_indicio(indicio),
+        Jugada::Pasar => j.pasar(),
+        Jugada::Avanzar => j.avanzar(),
+        Jugada::Retroceder => j.retroceder(),
+        Jugada::Cerrar => j.cerrar(),
+        Jugada::SegundosFragmento { segundos } => j.fijar_segundos_fragmento(segundos),
+    }
+    let r = j.ronda();
+    drop(j);
+    if cambio_de_reto(&antes, &r) {
+        callar_fragmento(&app);
+    }
+    Ok(r)
+}
+
+/// Escribe el título: acierta con los umbrales de la V1 o suma un fallo.
+#[tauri::command]
+pub async fn aciegas_intentar(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    texto: String,
+) -> NsResult<ResultadoIntento> {
+    if texto.chars().count() > 300 {
+        return Err(NsError::InvalidInput);
+    }
+    let j = std::sync::Arc::clone(&estado.a_ciegas);
+    let mut j = j.lock().map_err(|_| NsError::Internal)?;
+    let intento = j.intentar(&texto);
+    let ronda = j.ronda();
+    drop(j);
+    if intento.acierto {
+        callar_fragmento(&app);
+    }
+    Ok(ResultadoIntento { intento, ronda })
+}
+
+/// Toca el fragmento del reto en curso, a ciegas.
+#[tauri::command]
+pub async fn aciegas_fragmento(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::a_ciegas::Ronda> {
+    let j = std::sync::Arc::clone(&estado.a_ciegas);
+    let mut j = j.lock().map_err(|_| NsError::Internal)?;
+    let (pista_id, duracion) = j.pista_en_curso().ok_or(NsError::InvalidInput)?;
+    let segundos = j.ronda().segundos_fragmento;
+    j.fragmento_escuchado();
+    reproductor(&app)?.enviar(Orden::Fragmento {
+        pista_id,
+        desde_seg: crate::a_ciegas::Juego::inicio_fragmento(duracion),
+        segundos,
+    });
+    Ok(j.ronda())
+}

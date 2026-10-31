@@ -59,6 +59,8 @@ pub struct Estado {
     pub karaoke: karaoke::Karaoke,
     pub dj: dj::director::Director,
     pub equipo: dj::equipo::Equipo,
+    /// La ronda de A ciegas: vive en memoria, como en la V1.
+    pub a_ciegas: Arc<std::sync::Mutex<a_ciegas::Juego>>,
 }
 
 /// La política de red que el usuario dejó guardada; la de fábrica, que no deja
@@ -260,6 +262,7 @@ pub fn run() {
         karaoke: servicio_karaoke,
         dj: director,
         equipo: equipo.clone(),
+        a_ciegas: Arc::default(),
     };
     let importador_setup = importador.clone();
 
@@ -481,7 +484,13 @@ pub fn run() {
             comandos::dj_descartar,
             comandos::dj_guardar,
             comandos::dj_historial,
-            comandos::dj_eliminar
+            comandos::dj_eliminar,
+            comandos::aciegas_disponibles,
+            comandos::aciegas_ronda,
+            comandos::aciegas_iniciar,
+            comandos::aciegas_jugar,
+            comandos::aciegas_intentar,
+            comandos::aciegas_fragmento
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

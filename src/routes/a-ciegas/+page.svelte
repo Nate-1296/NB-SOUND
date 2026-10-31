@@ -1,6 +1,8 @@
-<script lang="ts">
-  import { textos } from '$lib/i18n';
-  import VistaPendiente from '$ui/VistaPendiente.svelte';
-</script>
+<!--
+  A ciegas. Su contenido se carga a demanda: los nodos de ruta entran en el
+  arranque (`check-paquete`).
+-->
 
-<VistaPendiente titulo={textos.nav.aCiegas} icono="aCiegas" />
+{#await import('$ui/aciegas/VistaACiegas.svelte') then m}
+  <m.default />
+{/await}

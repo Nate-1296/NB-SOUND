@@ -438,3 +438,73 @@ fn la_sesion_que_sonaba_vuelve_en_pausa_al_abrir_y_una_descartada_no() {
     assert!(s.instantanea().dj.is_none());
     assert!(crate::dj::sesiones::en_curso(&e.db).unwrap().is_none());
 }
+
+// --- A ciegas (F6.2.2) ------------------------------------------------------------------
+
+#[test]
+fn un_fragmento_suena_sin_decir_que_es_y_la_cola_vuelve_en_pausa() {
+    let seis = 44_100 * 6;
+    let e = escenario("fragmento", &[(1, seis), (2, seis)]);
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    s.atender(Orden::ReproducirPistas {
+        ids: vec![1],
+        desde: 0,
+    });
+    correr(&mut s, |s| s.instantanea().posicion_seg > 1.0);
+    s.atender(Orden::Fragmento {
+        pista_id: 2,
+        desde_seg: 1.0,
+        segundos: 1.5,
+    });
+    let i = s.instantanea();
+    assert!(i.ciego);
+    assert_eq!((i.pista_id, i.duracion_seg), (None, 1.5));
+    correr(&mut s, |s| !s.instantanea().ciego);
+    // Nada de lo que vio la interfaz durante el fragmento decía la pista 2.
+    assert!(apuntes
+        .instantaneas
+        .lock()
+        .unwrap()
+        .iter()
+        .all(|i| i.pista_id != Some(2)));
+    let i = s.instantanea();
+    assert_eq!((i.pista_id, i.estado.as_str()), (Some(1), "pausado"));
+    s.atender(Orden::PausarReanudar);
+    correr(&mut s, |s| s.instantanea().posicion_seg > 0.0);
+    assert!(s.instantanea().posicion_seg > 1.0, "siguió donde estaba");
+    // Lo que suena a ciegas no cuenta como escuchado.
+    assert_eq!(
+        cuenta(&e.db, "SELECT count(*) FROM historial WHERE pista_id = 2"),
+        0
+    );
+}
+
+#[test]
+fn pedir_otra_musica_o_pausar_acaba_el_fragmento() {
+    let seis = 44_100 * 6;
+    let e = escenario("fragmento-otra", &[(1, seis), (2, seis), (3, seis)]);
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    s.atender(Orden::Fragmento {
+        pista_id: 2,
+        desde_seg: 0.0,
+        segundos: 4.0,
+    });
+    s.atender(Orden::Siguiente);
+    assert!(s.instantanea().ciego, "saltar no hace nada a ciegas");
+    s.atender(Orden::ReproducirPista(3));
+    let i = s.instantanea();
+    assert!(!i.ciego);
+    assert_eq!(i.pista_id, Some(3));
+    s.atender(Orden::Fragmento {
+        pista_id: 2,
+        desde_seg: 0.0,
+        segundos: 4.0,
+    });
+    s.atender(Orden::PausarReanudar);
+    correr(&mut s, |s| !s.instantanea().ciego);
+    let i = s.instantanea();
+    assert!(!i.ciego);
+    assert_eq!((i.pista_id, i.estado.as_str()), (Some(3), "pausado"));
+}

@@ -345,6 +345,13 @@ impl<B: Backend> Motor<B> {
         self.maestra.resume(tween(SUAVE));
     }
 
+    /// Deja una pista cargada en `desde_seg` sin que suene: la cola que vuelve tras
+    /// una sesión del DJ o un fragmento a ciegas, que espera a que se reanude.
+    pub fn preparar(&mut self, pista: PistaEnCola, desde_seg: f64) {
+        self.cancelar_mezcla();
+        self.plato().reproducir(pista, desde_seg);
+    }
+
     /// La pista que sonará al acabar la actual, sin hueco. `None` para que la cola
     /// termine ahí.
     pub fn siguiente(&self, pista: Option<PistaEnCola>) {

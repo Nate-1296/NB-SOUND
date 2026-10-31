@@ -10,6 +10,7 @@
 //! servicio avanza la cola y comprueba que coincide.
 
 mod dj;
+mod fragmento;
 pub mod persistencia;
 #[cfg(test)]
 mod pruebas;
@@ -72,6 +73,12 @@ pub enum Orden {
     Recargar,
     /// Una sesión del DJ Privado (F6.1.6).
     Dj(OrdenDj),
+    /// Unos segundos de una canción sin decir cuál es (A ciegas, F6.2.2).
+    Fragmento {
+        pista_id: i64,
+        desde_seg: f64,
+        segundos: f64,
+    },
 }
 
 /// Lo que ve la interfaz. Se publica entera cada vez que cambia algo.
@@ -97,6 +104,9 @@ pub struct Instantanea {
     pub karaoke_activo: bool,
     /// Con una sesión del DJ sonando: cuál, por dónde va y si está mezclando.
     pub dj: Option<EstadoDj>,
+    /// Suena un fragmento a ciegas: la pista no se dice, y la posición y la
+    /// duración son las del fragmento.
+    pub ciego: bool,
 }
 
 /// Un aviso para la interfaz: el código canónico del error y la pista.
@@ -157,6 +167,7 @@ pub struct Servicio<B: Backend> {
     karaoke: bool,
     ultima: Option<Instantanea>,
     dj: Option<dj::ModoDj>,
+    fragmento: Option<fragmento::Fragmento>,
     /// El perfil del equipo para mezclar por capas (F6.1.4).
     equipo: crate::dj::equipo::Equipo,
     /// La posición guardada de la cola, para devolverla tras una sesión del DJ que
@@ -194,6 +205,7 @@ impl<B: Backend> Servicio<B> {
             karaoke: false,
             ultima: None,
             dj: None,
+            fragmento: None,
             equipo: crate::dj::equipo::Equipo::default(),
             cola_seg_restaurada: 0.0,
         };
@@ -303,8 +315,9 @@ impl<B: Backend> Servicio<B> {
 
     /// Mantiene informado al motor de lo que viene después.
     fn preparar_siguiente(&mut self) {
-        // En una sesión del DJ, lo siguiente lo decide la mezcla.
-        if self.en_dj() {
+        // En una sesión del DJ, lo siguiente lo decide la mezcla; en un fragmento,
+        // no hay siguiente.
+        if self.en_dj() || self.fragmento.is_some() {
             return;
         }
         // Las fichas viejas ya no van a volver en ningún evento que importe.
@@ -329,6 +342,10 @@ impl<B: Backend> Servicio<B> {
 
     /// Atiende una orden de la interfaz.
     pub fn atender(&mut self, orden: Orden) {
+        if self.interceptar_fragmento(&orden) {
+            self.publicar();
+            return;
+        }
         if self.interceptar_dj(&orden) {
             self.guardar();
             self.publicar();
@@ -337,6 +354,14 @@ impl<B: Backend> Servicio<B> {
         let accion = match orden {
             Orden::Dj(o) => {
                 self.atender_dj(o);
+                Accion::Nada
+            }
+            Orden::Fragmento {
+                pista_id,
+                desde_seg,
+                segundos,
+            } => {
+                self.tocar_fragmento(pista_id, desde_seg, segundos);
                 Accion::Nada
             }
             Orden::ReproducirPistas { ids, desde } => self.cola.reproducir_cola(
@@ -474,6 +499,19 @@ impl<B: Backend> Servicio<B> {
     /// Atiende lo que contó el motor. Se llama a menudo desde el hilo del servicio.
     pub fn atender_motor(&mut self) {
         let eventos: Vec<EventoMotor> = self.motor.eventos().collect();
+        if self.fragmento.is_some() {
+            let terminada = eventos.iter().any(|e| {
+                matches!(
+                    e,
+                    EventoMotor::ColaTerminada | EventoMotor::PistaIlegible { .. }
+                )
+            });
+            if self.tic_fragmento(terminada) {
+                self.guardar();
+            }
+            self.publicar();
+            return;
+        }
         if self.en_dj() {
             let hubo = !eventos.is_empty();
             self.eventos_dj(eventos);
@@ -544,7 +582,10 @@ impl<B: Backend> Servicio<B> {
         let pos = self.motor.posicion();
         // Con una sesión del DJ, lo que suena no es la cola: la cola guarda donde se
         // quedó, y la sesión, por dónde va.
-        let posicion_seg = self.guardar_dj().unwrap_or(pos.segundos);
+        let posicion_seg = self
+            .cola_seg_fragmento()
+            .or_else(|| self.guardar_dj())
+            .unwrap_or(pos.segundos);
         let sesion = persistencia::Sesion {
             cola: self.cola.filas().to_vec(),
             posicion_cola: self.cola.indice().unwrap_or(0),
@@ -588,8 +629,10 @@ impl<B: Backend> Servicio<B> {
             karaoke_disponible: actual.is_some_and(|s| s.karaoke),
             karaoke_activo: self.karaoke,
             dj: None,
+            ciego: false,
         };
         self.instantanea_dj(&mut i);
+        self.instantanea_fragmento(&mut i);
         i
     }
 

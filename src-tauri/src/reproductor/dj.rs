@@ -320,20 +320,7 @@ impl<B: kira::backend::Backend> Servicio<B> {
         };
         self.motor.detener();
         let _ = sesiones::guardar_en_curso(&self.db, None);
-        self.actual = None;
-        self.prevista = None;
-        if self.cola.estado() == Estado::Reproduciendo {
-            let _ = self.cola.pausar_reanudar();
-        }
-        // En pausa, "reanudar" sigue desde donde estaba: se deja cargada. Detenida,
-        // empezará de cero por su cuenta.
-        if self.cola.estado() == Estado::Pausado {
-            if let Some((pista, sonando)) = self.cola.activa().and_then(|f| self.resolver(f)) {
-                self.motor.reproducir(pista, d.cola_seg);
-                self.motor.pausar();
-                self.actual = Some(sonando);
-            }
-        }
+        self.devolver_cola(d.cola_seg);
     }
 
     /// Lo que la barra pide con una sesión sonando. Devuelve si lo atendió; lo

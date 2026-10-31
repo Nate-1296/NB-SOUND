@@ -44,6 +44,8 @@ export const es = {
   reproductor: {
     region: 'Reproductor',
     nadaSonando: 'Nada sonando',
+    aCiegas: 'A ciegas',
+    adivina: '¿Sabes cuál es?',
     eligeAlgo: 'Elige una canción para empezar',
     anterior: 'Anterior',
     siguiente: 'Siguiente',
@@ -487,9 +489,6 @@ export const es = {
     cancelar: 'Cancelar',
     papelera: 'Los archivos descartados van a la papelera del sistema.',
     error: 'No se pudo completar. Vuelve a intentarlo.'
-  },
-  vistas: {
-    proximamente: 'Esta sección llega en una fase próxima del plan.'
   }
 } as const;
 

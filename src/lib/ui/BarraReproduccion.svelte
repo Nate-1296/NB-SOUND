@@ -132,6 +132,9 @@
         <span class="titulo" title={pista.titulo}>{pista.titulo}</span>
         <span class="artista" title={pista.artista}>{pista.artista}</span>
         <span class="album" title={pista.album}>{pista.album}</span>
+      {:else if i.ciego}
+        <span class="titulo">{t.aCiegas}</span>
+        <span class="artista">{t.adivina}</span>
       {:else}
         <span class="titulo">{t.nadaSonando}</span>
         <span class="artista">{t.eligeAlgo}</span>

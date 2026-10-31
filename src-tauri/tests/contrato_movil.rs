@@ -239,6 +239,7 @@ fn instantanea(e: &Value) -> Instantanea {
         karaoke_disponible: s["karaoke_disponible"].as_bool().unwrap(),
         karaoke_activo: s["karaoke_activo"].as_bool().unwrap(),
         dj: None,
+        ciego: false,
     }
 }
 

@@ -591,6 +591,7 @@ mod tests {
             karaoke_disponible: true,
             karaoke_activo: false,
             dj: None,
+            ciego: false,
         }
     }
 

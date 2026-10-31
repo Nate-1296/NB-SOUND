@@ -147,3 +147,6 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
       pedido, la sesión crece mientras suena hasta la duración pedida, la barra la controla (pausa, saltar, anterior,
       buscar), "Otra parecida" y "Descartar" devuelven la cola tal como estaba, y al cerrar y abrir vuelve en pausa
       (F6.1.6).
+- [ ] En la instalación real, una ronda de cada modo de A ciegas: el fragmento suena desde el 30 % durante los
+      segundos elegidos, la barra y el móvil no dicen la canción, escribir el título con un error de una letra acierta
+      y al terminar la cola vuelve donde estaba (F6.2.2).

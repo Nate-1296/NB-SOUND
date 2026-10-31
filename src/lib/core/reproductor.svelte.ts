@@ -32,7 +32,8 @@ const VACIA: Instantanea = {
   normalizar: true,
   karaokeDisponible: false,
   karaokeActivo: false,
-  dj: null
+  dj: null,
+  ciego: false
 };
 
 class EstadoDelReproductor {

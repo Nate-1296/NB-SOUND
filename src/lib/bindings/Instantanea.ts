@@ -16,4 +16,9 @@ repeticion: string, volumen: number, normalizar: boolean, karaokeDisponible: boo
 /**
  * Con una sesión del DJ sonando: cuál, por dónde va y si está mezclando.
  */
-dj: EstadoDj | null, };
+dj: EstadoDj | null, 
+/**
+ * Suena un fragmento a ciegas: la pista no se dice, y la posición y la
+ * duración son las del fragmento.
+ */
+ciego: boolean, };

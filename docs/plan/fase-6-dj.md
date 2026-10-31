@@ -16,7 +16,7 @@
 | F6.1.5 Narrativa, persistencia, historial y preferencias | Hecha: la narrativa en F6.1.2; `dj/sesiones.rs` (sesiones, pistas, eventos, preferencias y sesión en curso) y `dj/servicio.rs` (empezar, continuar, regenerar, descartar, finalizar, guardar como playlist, retomar, historial y borrar), con las pruebas de integración de la V1 |
 | F6.1.6 Vistas: pedir sesión, sesión activa, historial | Hecha: la sesión suena en el reproductor único (`reproductor/dj.rs`) con la cola del usuario en pausa; `dj/director.rs` la sigue construyendo mientras suena; nueve comandos y la vista con pedir, sesión y historial, que avisa cuando no hay análisis. El uso real, a las pruebas finales |
 | F6.2.1 A ciegas: selectores, pistas y servicio | Hecha: `a_ciegas/selectores.rs` (los cuatro modos y sus cuentas), `a_ciegas/indicios.rs` (los indicios y la comprobación tolerante con `SequenceMatcher`) y `a_ciegas/mod.rs` (la ronda, que solo entrega lo revelado). Las pruebas de la V1, traducidas |
-| F6.2.2 A ciegas: vista del juego | Pendiente |
+| F6.2.2 A ciegas: vista del juego | Hecha: el fragmento suena a ciegas por el reproductor (`reproductor/fragmento.rs`), sin que la barra, los controles del sistema ni el móvil digan qué es, y la vista juega la ronda entera. La partida real, a las pruebas finales |
 
 ## Criterios
 
