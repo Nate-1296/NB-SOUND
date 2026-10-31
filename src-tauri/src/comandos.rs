@@ -373,6 +373,38 @@ pub async fn anclar_playlist(
     en_segundo_plano(&estado, move |db| playlists::anclar(db, id, anclada)).await
 }
 
+#[tauri::command]
+pub async fn crear_playlist_inteligente(
+    estado: tauri::State<'_, Estado>,
+    nombre: String,
+    descripcion: Option<String>,
+    regla: playlists::ReglaInteligente,
+) -> NsResult<i64> {
+    en_segundo_plano(&estado, move |db| {
+        playlists::crear_inteligente(db, &nombre, descripcion.as_deref(), &regla)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn editar_playlist_inteligente(
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    nombre: String,
+    descripcion: Option<String>,
+    regla: playlists::ReglaInteligente,
+) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| {
+        playlists::editar_inteligente(db, id, &nombre, descripcion.as_deref(), &regla)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn regenerar_playlists_automaticas(estado: tauri::State<'_, Estado>) -> NsResult<u32> {
+    en_segundo_plano(&estado, playlists::regenerar_automaticas).await
+}
+
 // --- Vista de reproducción ------------------------------------------------------
 
 #[tauri::command]

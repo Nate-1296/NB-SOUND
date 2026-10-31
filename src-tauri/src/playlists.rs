@@ -14,6 +14,13 @@ use crate::biblioteca::PaginaPistas;
 use crate::db::{self, BaseDeDatos};
 use crate::error::{NsError, NsResult};
 
+pub mod inteligentes;
+
+pub use inteligentes::{
+    crear_inteligente, editar_inteligente, regenerar_automaticas, OrdenInteligente,
+    ReglaInteligente,
+};
+
 /// La `clave_auto` de "Me gusta" en la V1 (`PLAYLIST_FAVORITOS_AUTO_KEY`).
 pub const CLAVE_ME_GUSTA: &str = "system:favoritos";
 /// Tope del nombre, el de la V1.
@@ -51,7 +58,7 @@ pub fn clasificar(tipo: &str, subtipo: Option<&str>, origen: &str) -> (Categoria
         "favoritos" => "Me gusta",
         "usuario" => "Manual",
         "this_is" => "This is...",
-        "mood" => "Inteligente",
+        "mood" | "inteligente" => "Inteligente",
         "top_canciones" => "Top",
         "top_artistas" | "top_albumes" | "album_mix" | "artist_mix" => "Mix",
         "recientes" | "descubrimiento_local" => "Para ti",
@@ -81,8 +88,12 @@ pub struct PlaylistResumen {
     pub categoria: Categoria,
     pub etiqueta: String,
     pub subtipo: Option<String>,
-    /// Solo las creadas por el usuario se editan; las demás se regeneran.
+    /// Solo las manuales creadas por el usuario se reordenan y editan pista a pista.
     pub editable: bool,
+    /// Las creadas por el usuario (manuales o inteligentes) se pueden borrar.
+    pub borrable: bool,
+    /// Si es una lista inteligente del usuario, su regla declarativa.
+    pub regla_inteligente: Option<ReglaInteligente>,
     pub anclada: bool,
     pub num_pistas: u32,
     pub duracion_seg: f64,
@@ -122,6 +133,7 @@ fn resumen(conn: &Connection, f: &rusqlite::Row<'_>) -> rusqlite::Result<Playlis
     let tipo: String = f.get(3)?;
     let subtipo: Option<String> = f.get(4)?;
     let origen: String = f.get(5)?;
+    let regla_raw: Option<String> = f.get(10)?;
     let (categoria, etiqueta) = clasificar(&tipo, subtipo.as_deref(), &origen);
     let mut s = conn.prepare_cached(
         "SELECT pp.pista_id FROM playlist_pistas pp JOIN pistas p ON p.id = pp.pista_id
@@ -133,6 +145,13 @@ fn resumen(conn: &Connection, f: &rusqlite::Row<'_>) -> rusqlite::Result<Playlis
     let mosaico = s
         .query_map(rusqlite::params![id, PORTADAS_DEL_MOSAICO], |f| f.get(0))?
         .collect::<rusqlite::Result<Vec<i64>>>()?;
+    let regla_inteligente = if subtipo.as_deref() == Some("inteligente") && origen == "usuario" {
+        regla_raw
+            .as_deref()
+            .and_then(|j| serde_json::from_str::<ReglaInteligente>(j).ok())
+    } else {
+        None
+    };
     Ok(PlaylistResumen {
         id,
         nombre: f.get(1)?,
@@ -141,6 +160,8 @@ fn resumen(conn: &Connection, f: &rusqlite::Row<'_>) -> rusqlite::Result<Playlis
         etiqueta: etiqueta.to_owned(),
         subtipo,
         editable: tipo == "manual" && origen == "usuario",
+        borrable: origen == "usuario",
+        regla_inteligente,
         anclada: f.get(6)?,
         num_pistas: f.get::<_, i64>(7)? as u32,
         duracion_seg: f.get(8)?,
@@ -155,7 +176,7 @@ const COLUMNAS: &str =
      WHERE pp.playlist_id = pl.id AND p.estado = 'biblioteca'),
     (SELECT total(p.duracion_seg) FROM playlist_pistas pp JOIN pistas p ON p.id = pp.pista_id
      WHERE pp.playlist_id = pl.id AND p.estado = 'biblioteca'),
-    pl.creada_en";
+    pl.creada_en, pl.regla";
 
 /// Las playlists visibles, con las ancladas delante como en la V1.
 ///
@@ -163,6 +184,7 @@ const COLUMNAS: &str =
 ///
 /// [`NsError::StorageFailure`] si la consulta falla.
 pub fn listar(db: &BaseDeDatos, c: &ConsultaPlaylists) -> NsResult<Vec<PlaylistResumen>> {
+    inteligentes::refrescar_inteligentes(db)?;
     let conn = db.conexion()?;
     let orden = match c.orden {
         OrdenPlaylists::Recientes => "pl.creada_en DESC, pl.id DESC",
@@ -220,6 +242,7 @@ fn normalizar(texto: &str) -> String {
 ///
 /// [`NsError::StorageFailure`] si la consulta falla.
 pub fn una(db: &BaseDeDatos, id: i64) -> NsResult<Option<PlaylistResumen>> {
+    inteligentes::refrescar_inteligente_si_aplica(db, id)?;
     let conn = db.conexion()?;
     bd(conn
         .query_row(
@@ -252,6 +275,7 @@ pub fn pistas(db: &BaseDeDatos, id: i64, desde: u32, limite: u32) -> NsResult<Pa
 ///
 /// [`NsError::StorageFailure`] si la consulta falla.
 pub fn ids(db: &BaseDeDatos, id: i64) -> NsResult<Vec<i64>> {
+    inteligentes::refrescar_inteligente_si_aplica(db, id)?;
     let conn = db.conexion()?;
     let mut s = bd(conn.prepare_cached(
         "SELECT pp.pista_id FROM playlist_pistas pp JOIN pistas p ON p.id = pp.pista_id
@@ -343,15 +367,27 @@ pub fn renombrar(
     bd(tx.commit())
 }
 
-/// Borra una playlist manual. El disparador de V5 deja la tumba para el móvil.
+/// Borra una playlist creada por el usuario (manual o inteligente). El disparador de
+/// V5 deja la tumba para el móvil.
 ///
 /// # Errors
 ///
-/// [`NsError::PathNotAllowed`] si no es una playlist manual.
+/// [`NsError::PathNotAllowed`] si no es una playlist del usuario.
 pub fn borrar(db: &BaseDeDatos, id: i64) -> NsResult<()> {
     let mut conn = db.conexion()?;
     let tx = db::transaccion_de_escritura(&mut conn)?;
-    exigir_editable(&tx, id)?;
+    let borrable: Option<bool> = bd(tx
+        .query_row(
+            "SELECT origen = 'usuario' FROM playlists WHERE id = ?1",
+            [id],
+            |f| f.get(0),
+        )
+        .optional())?;
+    match borrable {
+        Some(true) => {}
+        Some(false) => return Err(NsError::PathNotAllowed),
+        None => return Err(NsError::FileNotFound),
+    }
     bd(tx.execute("DELETE FROM playlists WHERE id = ?1", [id]))?;
     bd(tx.commit())
 }

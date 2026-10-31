@@ -19,7 +19,7 @@ Base: NB Sound v1.1.16. Unas 111.000 líneas: 60.000 de Python de aplicación (`
 | MPRIS | `infra/mpris_linux.py` | Se porta con `mpris-server`; se añaden SMTC y macOS | F2.1.5 | Hecha (`controles_sistema/`) |
 | Inicio | `VistaInicio.qml` | Se porta | F2.2.2 | Hecha |
 | Biblioteca y detalle de álbum | `VistaBiblioteca.qml`, `VistaDetalleAlbum.qml` | Se porta; artistas y álbumes como pestañas | F2.2.3 | Hecha |
-| Playlists manuales, de sistema y automáticas | `VistaPlaylists.qml`, `servicios/biblioteca.py` | Se porta; las automáticas convergen con las inteligentes | F2.2.4, F8.2 | Hecha para las manuales y "Me gusta"; las automáticas de la V1 se importan y suenan, y volver a generarlas es la convergencia con las inteligentes de F8.2 |
+| Playlists manuales, de sistema y automáticas | `VistaPlaylists.qml`, `servicios/biblioteca.py` | Se porta; las automáticas convergen con las inteligentes | F2.2.4, F8.2 | Hecha (`playlists.rs`, `playlists/inteligentes.rs`): manuales, "Me gusta", listas inteligentes vivas del usuario y regeneración de las automáticas ("Crear para mí") |
 | Búsqueda | `VistaBusqueda.qml` | Se rediseña: barra global y `Ctrl+K` | F2.2.5 | Rediseñada (FTS5, barra global y `Ctrl+K`) |
 | Letras sincronizadas | `VistaLyrics.qml`, `external/lyrics_client.py` | Se porta | F2.2.6, F4.1.11 | Hecha |
 | Reproducción expandida y minirreproductor | `VistaReproduccionExpandida.qml` | Se porta | F2.2.6 | Hecha |

@@ -19,7 +19,7 @@ Cada una exige su ficha completa (objetivo, criterio, dependencias) antes de emp
 | Iteración | Estado |
 |---|---|
 | F8.1 Forma de onda | Hecha: 1.000 picos por pista en `sonoridad.picos` (migración V10), calculados en la misma decodificación que los LUFS (`audio/sonoridad.rs`, `medicion.rs`), servidos por `forma_de_onda` y dibujados en `FormaDeOnda.svelte` sobre la barra y en la sesión activa del DJ con los puntos de entrada y salida de `EstadoDj` |
-| F8.2 Listas inteligentes vivas | En curso |
+| F8.2 Listas inteligentes vivas | Hecha: `ReglaInteligente` evaluada en SQLite (`playlists/inteligentes.rs`), sincronizada en `playlist_pistas` sin subir `sync_version` cuando no hay cambios, convergencia con `regenerar_automaticas` ("Crear para mí") y diálogo `DialogoInteligente.svelte` |
 | F8.3 Resumen local de escucha | Pendiente: sin ficha |
 | F8.4 Copia a dispositivos | Pendiente: sin ficha |
 | F8.5 Modo fiesta | Bloqueada: necesita un ADR del modelo de confianza aprobado por Nathan |
@@ -82,7 +82,7 @@ automáticas de la V1 ("Crear para mí").
   su `ReglaInteligente` en JSON dentro de `regla`. `clasificar` la agrupa en `Categoria::Inteligente` con etiqueta
   `"Inteligente"`, de modo que NB Sound Mobile la recibe como cualquier playlist sin tocar su contrato (ADR-005).
 * **Evaluación en SQLite y sincronización sin ruido:** la regla se traduce a una consulta parametrizada sobre
-  `pistas`, `rasgos`, `analisis_profundo`, `etiquetas_ambiente` (umbral ≥ 0,5) e `instrumentales` (`estado = 'listo'`).
+  `pistas`, `rasgos`, `analisis_profundo`, `etiquetas_ambiente` (umbral ≥ 0,5) y `stems` (`estado = 'lista'`).
   Al listar, abrir o reproducir una lista inteligente viva se evalúa su regla y solo se reescribe `playlist_pistas`
   cuando la lista de `id` resultante cambió: así la lista está siempre al día y `sync_version` solo sube cuando de
   verdad entraron, salieron o cambiaron de orden sus canciones.
@@ -99,7 +99,7 @@ automáticas de la V1 ("Crear para mí").
 
 1. `ReglaInteligente` permite filtrar combinando rango de BPM (`rasgos.bpm`), rango de energía
    (`coalesce(analisis_profundo.activacion, rasgos.energia)`), ánimo (`etiquetas_ambiente`), instrumental listo para
-   cantar (`instrumentales`), solo favoritas, mínimo y máximo de reproducciones, escuchadas en los últimos $N$ días
+   cantar (`stems`), solo favoritas, mínimo y máximo de reproducciones, escuchadas en los últimos $N$ días
    o sin escuchar desde hace al menos $N$ días (incluidas las nunca escuchadas), rango de año y género, con orden y
    límite (1 a 200).
 2. Una lista inteligente es **viva**: si una pista pasa a cumplir la regla (por ejemplo, se marca como favorita, se

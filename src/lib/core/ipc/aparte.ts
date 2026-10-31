@@ -16,12 +16,39 @@ import type {
   EstadoCopia,
   Gpu,
   IdAgregado,
+  OrdenInteligente,
   PoliticaDeRed,
   ProveedorIa,
+  ReglaInteligente,
   ResumenCopia
 } from '$lib/bindings';
 
 import { call, escuchar } from './index';
+
+export type { OrdenInteligente, ReglaInteligente };
+
+// --- Listas inteligentes y automáticas (F8.2) ------------------------------------
+
+export function crearPlaylistInteligente(
+  nombre: string,
+  descripcion: string | null,
+  regla: ReglaInteligente
+): Promise<number> {
+  return call<number>('crear_playlist_inteligente', { nombre, descripcion, regla });
+}
+
+export function editarPlaylistInteligente(
+  id: number,
+  nombre: string,
+  descripcion: string | null,
+  regla: ReglaInteligente
+): Promise<void> {
+  return call<void>('editar_playlist_inteligente', { id, nombre, descripcion, regla });
+}
+
+export function regenerarPlaylistsAutomaticas(): Promise<number> {
+  return call<number>('regenerar_playlists_automaticas');
+}
 
 // --- Descubrir --------------------------------------------------------------------
 

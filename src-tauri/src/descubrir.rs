@@ -464,6 +464,36 @@ fn filas(db: &BaseDeDatos) -> NsResult<Vec<(i64, Metricas)>> {
     Ok(filas)
 }
 
+/// Los `id` de las pistas que alcanzan `confianza_minima` para la frase, de mayor
+/// a menor puntuación y hasta `limite`. Alimenta las playlists automáticas por
+/// ánimo (`auto:mood:*`, con umbral 0,45 como en la V1).
+///
+/// # Errors
+///
+/// [`NsError::StorageFailure`] si la consulta falla.
+pub fn candidatos_con_confianza(
+    db: &BaseDeDatos,
+    consulta: &str,
+    confianza_minima: f64,
+    limite: usize,
+) -> NsResult<Vec<i64>> {
+    let pesos = interpretar(consulta);
+    if pesos.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut candidatas: Vec<(f64, i64)> = filas(db)?
+        .into_iter()
+        .map(|(id, m)| (m.puntuacion(&pesos), id))
+        .filter(|(p, _)| *p >= confianza_minima)
+        .collect();
+    candidatas.sort_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
+    Ok(candidatas
+        .into_iter()
+        .take(limite)
+        .map(|(_, id)| id)
+        .collect())
+}
+
 /// `discover`: las secciones para una frase, con `limite` pistas como mucho entre
 /// todas las candidatas.
 ///

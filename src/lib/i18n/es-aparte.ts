@@ -232,6 +232,65 @@ export const esAparte = {
     sinLlavero:
       'Este sistema no tiene llavero de contraseñas, así que no se puede guardar ninguna clave. NB Sound nunca la guarda en un archivo.',
     noGuardado: 'No se pudo guardar. Vuelve a intentarlo.'
+  },
+  inteligentes: {
+    nueva: 'Nueva inteligente',
+    editar: 'Editar regla',
+    crearParaMi: 'Crear para mí',
+    creandoParaMi: 'Preparando listas',
+    ayuda:
+      'Se actualiza sola cada vez que importas música, marcas favoritas o escuchas canciones que cumplen estas condiciones.',
+    animo: 'Ánimo',
+    cualquierAnimo: 'Cualquiera',
+    animos: {
+      energetica: 'Enérgica',
+      tranquila: 'Tranquila',
+      bailable: 'Bailable',
+      triste: 'Triste',
+      nocturna: 'Nocturna',
+      entrenamiento: 'Para entrenar',
+      concentracion: 'Para concentrarse',
+      fiesta: 'Para fiesta',
+      feliz: 'Alegre',
+      relajada: 'Relajada',
+      intensa: 'Intensa'
+    } as Record<string, string>,
+    bpmMin: 'BPM mínimo',
+    bpmMax: 'BPM máximo',
+    energiaMin: 'Energía mínima (0 a 100 %)',
+    energiaMax: 'Energía máxima (0 a 100 %)',
+    instrumental: 'Instrumental de karaoke',
+    instrumentalOpciones: {
+      cualquiera: 'Cualquiera',
+      con: 'Solo con instrumental listo',
+      sin: 'Solo sin instrumental'
+    },
+    soloFavoritas: 'Solo canciones favoritas',
+    reproduccionesMin: 'Mínimo de reproducciones',
+    reproduccionesMax: 'Máximo de reproducciones',
+    frecuencia: 'Última escucha',
+    frecuenciaOpciones: {
+      cualquiera: 'En cualquier momento',
+      reciente: 'Escuchadas en los últimos días',
+      olvidada: 'Sin escuchar desde hace días'
+    },
+    dias: 'Días',
+    anioMin: 'Año desde',
+    anioMax: 'Año hasta',
+    genero: 'Género contiene',
+    orden: 'Ordenar por',
+    ordenes: {
+      recientes: 'Añadidas más recientes',
+      masEscuchadas: 'Más escuchadas',
+      menosEscuchadas: 'Menos escuchadas',
+      ultimaEscuchaAsc: 'Más tiempo sin sonar',
+      bpmAsc: 'BPM de menor a mayor',
+      bpmDesc: 'BPM de mayor a menor',
+      energiaDesc: 'Mayor energía',
+      tituloAsc: 'Título (A a Z)'
+    },
+    limite: 'Máximo de canciones',
+    invalida: 'Revisa los rangos: el mínimo no puede superar al máximo.'
   }
 };
 

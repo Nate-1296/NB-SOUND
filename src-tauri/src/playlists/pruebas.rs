@@ -171,3 +171,179 @@ fn buscar_y_filtrar_por_categoria() {
     assert_eq!(c(Some("rapidas"), None), ["Rápidas"]);
     assert_eq!(c(None, Some(Categoria::Inteligente)), ["Rápidas"]);
 }
+
+fn regla_base() -> ReglaInteligente {
+    ReglaInteligente {
+        bpm_min: None,
+        bpm_max: None,
+        energia_min: None,
+        energia_max: None,
+        animo: None,
+        con_instrumental: None,
+        solo_favoritas: false,
+        reproducciones_min: None,
+        reproducciones_max: None,
+        escuchada_en_dias: None,
+        sin_escuchar_dias: None,
+        anio_min: None,
+        anio_max: None,
+        genero: None,
+        orden: OrdenInteligente::BpmDesc,
+        limite: 50,
+    }
+}
+
+#[test]
+fn una_lista_inteligente_evalua_rasgos_uso_e_instrumental_y_se_mantiene_viva() {
+    let db = base();
+    db.conexion()
+        .unwrap()
+        .execute_batch(
+            "UPDATE pistas SET anio = 2021, genero = 'Synth Pop', favorita = 1, reproducciones = 4,
+                 ultima_reproduccion = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 days') WHERE id = 1;
+             UPDATE pistas SET anio = 2023, genero = 'Synth Rock', favorita = 0, reproducciones = 12,
+                 ultima_reproduccion = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-90 days') WHERE id = 2;
+             UPDATE pistas SET anio = 2018, genero = 'Jazz', favorita = 1, reproducciones = 0,
+                 ultima_reproduccion = NULL WHERE id = 3;
+             INSERT INTO rasgos (pista_id, version, bpm, energia) VALUES
+                 (1, 'v2-basico-1', 124.0, 0.75),
+                 (2, 'v2-basico-1', 132.0, 0.85),
+                 (3, 'v2-basico-1', 92.0, 0.30);
+             INSERT INTO etiquetas_ambiente (pista_id, etiqueta, fuente, puntuacion, confianza, version) VALUES
+                 (1, 'bailable', 'basic_rules', 0.82, 0.82, 'v2-basico-1'),
+                 (2, 'bailable', 'basic_rules', 0.78, 0.78, 'v2-basico-1'),
+                 (3, 'tranquila', 'basic_rules', 0.90, 0.90, 'v2-basico-1');
+             INSERT INTO stems (pista_id, estado, instrumental) VALUES
+                 (1, 'lista', '1.flac'),
+                 (2, 'lista', '2.flac');",
+        )
+        .unwrap();
+
+    let mut r = regla_base();
+    r.bpm_min = Some(120.0);
+    r.bpm_max = Some(140.0);
+    r.energia_min = Some(0.6);
+    r.animo = Some("bailable".to_owned());
+    r.con_instrumental = Some(true);
+    r.solo_favoritas = true;
+    r.anio_min = Some(2020);
+    r.genero = Some("synth".to_owned());
+
+    let id = crear_inteligente(&db, "Noche synth", Some("Para cantar"), &r).unwrap();
+    let resumen = una(&db, id).unwrap().unwrap();
+    assert_eq!(resumen.categoria, Categoria::Inteligente);
+    assert_eq!(resumen.etiqueta, "Inteligente");
+    assert!(!resumen.editable);
+    assert!(resumen.borrable);
+    assert_eq!(resumen.regla_inteligente.as_ref(), Some(&r));
+    assert_eq!(ids(&db, id).unwrap(), [1]);
+
+    // Si nada cambia, volver a leerla no sube su sync_version.
+    let v_antes: i64 = db
+        .conexion()
+        .unwrap()
+        .query_row(
+            "SELECT sync_version FROM playlists WHERE id = ?1",
+            [id],
+            |f| f.get(0),
+        )
+        .unwrap();
+    assert_eq!(ids(&db, id).unwrap(), [1]);
+    let v_igual: i64 = db
+        .conexion()
+        .unwrap()
+        .query_row(
+            "SELECT sync_version FROM playlists WHERE id = ?1",
+            [id],
+            |f| f.get(0),
+        )
+        .unwrap();
+    assert_eq!(
+        v_antes, v_igual,
+        "sin cambios no se reescribe ni sube sync_version"
+    );
+
+    // Al marcar la pista 2 como favorita, entra sola y en orden de BPM descendente.
+    crate::biblioteca::fijar_favorita(&db, 2, true).unwrap();
+    assert_eq!(ids(&db, id).unwrap(), [2, 1]);
+    let v_despues: i64 = db
+        .conexion()
+        .unwrap()
+        .query_row(
+            "SELECT sync_version FROM playlists WHERE id = ?1",
+            [id],
+            |f| f.get(0),
+        )
+        .unwrap();
+    assert!(v_despues > v_antes, "al entrar una pista sube sync_version");
+
+    // Editar la regla para pedir pistas sin escuchar desde hace 30 días deja solo la 2 (o 3 si quitamos BPM).
+    let mut r2 = regla_base();
+    r2.solo_favoritas = true;
+    r2.sin_escuchar_dias = Some(30);
+    r2.orden = OrdenInteligente::TituloAsc;
+    editar_inteligente(&db, id, "Favoritas olvidadas mías", None, &r2).unwrap();
+    assert_eq!(ids(&db, id).unwrap(), [2, 3]);
+
+    // No admite edición manual de pistas, pero sí borrarse.
+    assert_eq!(agregar(&db, id, &[1]), Err(NsError::PathNotAllowed));
+    borrar(&db, id).unwrap();
+    assert_eq!(una(&db, id).unwrap(), None);
+}
+
+#[test]
+fn regenerar_automaticas_crea_las_que_alcanzan_el_minimo_y_respeta_las_editadas() {
+    let db = BaseDeDatos::en_memoria().unwrap();
+    {
+        let conn = db.conexion().unwrap();
+        conn.execute(
+            "INSERT INTO artistas (id, nombre, clave) VALUES (1, 'Soda Stereo', 'soda-stereo')",
+            [],
+        )
+        .unwrap();
+        for i in 1..=25 {
+            conn.execute(
+                "INSERT INTO pistas (id, artista_id, titulo, ruta, duracion_seg, favorita, reproducciones)
+                 VALUES (?1, 1, ?2, ?3, 180, ?4, ?5)",
+                rusqlite::params![
+                    i,
+                    format!("Tema {i:02}"),
+                    format!("p{i}.mp3"),
+                    i32::from(i <= 6),
+                    if i <= 6 { 3 } else { 0 }
+                ],
+            )
+            .unwrap();
+        }
+    }
+
+    let tocadas = regenerar_automaticas(&db).unwrap();
+    assert!(tocadas >= 4);
+    let nombres: Vec<String> = todas(&db).into_iter().map(|p| p.nombre).collect();
+    assert!(nombres.contains(&"Favoritas que siguen sonando".to_owned()));
+    assert!(nombres.contains(&"Recientes de tu biblioteca".to_owned()));
+    assert!(nombres.contains(&"Canciones por descubrir".to_owned()));
+    assert!(nombres.contains(&"Recientes sin escuchar".to_owned()));
+    assert!(nombres.contains(&"This is Soda Stereo".to_owned()));
+
+    // Segunda pasada sin cambios: 0 playlists reescritas.
+    assert_eq!(regenerar_automaticas(&db).unwrap(), 0);
+
+    // Si una automática fue editada por el usuario, no se toca aunque baje del mínimo.
+    db.conexion()
+        .unwrap()
+        .execute(
+            "UPDATE playlists SET editada = 1 WHERE clave_auto = 'auto:favoritas_sonando'",
+            [],
+        )
+        .unwrap();
+    db.conexion()
+        .unwrap()
+        .execute("UPDATE pistas SET favorita = 0", [])
+        .unwrap();
+    regenerar_automaticas(&db).unwrap();
+    let sigue = todas(&db)
+        .into_iter()
+        .any(|p| p.nombre == "Favoritas que siguen sonando");
+    assert!(sigue, "la editada por el usuario se conserva visible");
+}

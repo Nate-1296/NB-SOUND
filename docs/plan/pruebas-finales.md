@@ -156,3 +156,6 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] En la instalación real, diez pistas del corpus: la forma de onda en la barra se corresponde a la vista con lo que
       suena, en una sesión del DJ marca el punto de entrada y el de salida de la pista actual, y volver a medir la
       biblioteca entera en segundo plano para poblar los picos no se nota en el equipo (F8.1).
+- [ ] En la instalación real: crear una lista inteligente por BPM, ánimo y favoritas, comprobar que el teléfono la
+      recibe y que al marcar otra canción como favorita entra sola; pulsar "Crear para mí" sobre la biblioteca migrada
+      de la V1 y comprobar las listas automáticas generadas (F8.2).
