@@ -5,6 +5,7 @@
 //! comando sin `async` corre en el hilo de la ventana y la congela mientras dura
 //! (lo vigila `scripts/check-comandos.mjs`).
 
+pub mod a_ciegas;
 pub mod agregados;
 pub mod analisis;
 pub mod audio;
