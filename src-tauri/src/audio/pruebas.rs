@@ -60,12 +60,14 @@ pub(crate) fn renderizar(m: &mut Motor<Offline>, frames: usize) -> Vec<f32> {
     let mut salida = Vec::with_capacity(frames * 2 + 512);
     while salida.len() / 2 < frames {
         let limite = Instant::now() + Duration::from_secs(2);
-        let vigente = m.compartido().generacion.load(Ordering::Acquire);
-        while (m.compartido().en_cola.load(Ordering::Acquire) == 0
-            || m.compartido().entregada.load(Ordering::Acquire) != vigente)
-            && !m.compartido().terminado.load(Ordering::Acquire)
-            && Instant::now() < limite
-        {
+        // Los dos platos: en una mezcla suenan a la vez.
+        let pendiente = |c: &super::fuente::Compartido| {
+            let vigente = c.generacion.load(Ordering::Acquire);
+            (c.en_cola.load(Ordering::Acquire) == 0
+                || c.entregada.load(Ordering::Acquire) != vigente)
+                && !c.terminado.load(Ordering::Acquire)
+        };
+        while m.compartidos().into_iter().any(pendiente) && Instant::now() < limite {
             std::thread::sleep(Duration::from_millis(1));
         }
         let backend = m.backend();

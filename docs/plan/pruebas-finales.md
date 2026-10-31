@@ -137,3 +137,7 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Sobre la base migrada de la instalación real, diez pedidos con semilla construyen en la V2 la misma sesión que la
       V1 (mismas pistas en el mismo orden). Las pistas con etiquetas `genre_discogs400` en la V1 pueden diferir: la
       importación conserva solo las de MusiCNN (F6.1.2).
+- [ ] A oído, en la instalación real, una sesión de una hora con las cinco técnicas: ninguna transición hace clic,
+      se hunde ni sube de golpe, y en las capas la voz de la entrante vuelve al final del solapamiento (F6.1.3).
+- [ ] Con los dos platos, la reproducción normal sigue por debajo del 2 % de un núcleo (criterio de ADR-003), y una
+      mezcla en curso, por debajo del 4 % (F6.1.3).

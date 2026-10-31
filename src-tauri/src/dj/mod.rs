@@ -2,6 +2,7 @@
 
 pub mod azar;
 pub mod constructor;
+pub mod ejecutor;
 pub mod embeddings;
 pub mod intencion;
 pub mod mezcla;

@@ -224,20 +224,21 @@ pub fn bandas(tecnica: Tecnica, p: f64) -> ([f32; 10], [f32; 10]) {
             b[1] = 3.0 * p as f32;
         }
         Tecnica::Barrido => {
-            // `int(round(...))` de Python: a la mitad par.
-            let corte_a = (p * 5.0).round_ties_even() as i32;
+            // La V1 movía el corte de banda en banda (`int(round(p * 5))`), con
+            // saltos de 4 dB que se oyen; aquí el corte avanza de forma continua y
+            // coincide con la V1 cuando cae en una banda exacta.
+            let corte_a = p * 5.0;
             for (i, g) in a.iter_mut().enumerate() {
-                let i = i as i32;
-                if i < corte_a {
-                    *g = f32::max(QUITAR_DB, -4.0 * (corte_a - i) as f32);
+                let d = corte_a - i as f64;
+                if d > 0.0 {
+                    *g = f32::max(QUITAR_DB, (-4.0 * d) as f32);
                 }
             }
-            let corte_b = ((1.0 - p) * 5.0).round_ties_even() as i32;
-            let limite = 9 - corte_b;
+            let limite = 9.0 - (1.0 - p) * 5.0;
             for (i, g) in b.iter_mut().enumerate() {
-                let i = i as i32;
-                if i > limite {
-                    *g = f32::max(QUITAR_DB, -4.0 * (i - limite) as f32);
+                let d = i as f64 - limite;
+                if d > 0.0 {
+                    *g = f32::max(QUITAR_DB, (-4.0 * d) as f32);
                 }
             }
         }
@@ -485,6 +486,19 @@ mod pruebas {
     fn el_barrido_converge_y_las_demas_no_tocan_las_bandas() {
         let (a, b) = bandas(Tecnica::Barrido, 0.5);
         assert!(a[0] < 0.0 && b[9] < 0.0);
+        // En los extremos, lo mismo que la V1.
+        assert_eq!(bandas(Tecnica::Barrido, 0.0).0, [0.0; 10]);
+        let (a, b) = bandas(Tecnica::Barrido, 1.0);
+        assert_eq!(
+            a,
+            [-16.0, -16.0, -12.0, -8.0, -4.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        );
+        assert_eq!(b, [0.0; 10]);
+        let (_, b) = bandas(Tecnica::Barrido, 0.0);
+        assert_eq!(
+            b,
+            [0.0, 0.0, 0.0, 0.0, 0.0, -4.0, -8.0, -12.0, -16.0, -16.0]
+        );
         for t in [Tecnica::Corte, Tecnica::Fundido, Tecnica::Capas] {
             assert_eq!(bandas(t, 0.5), ([0.0; 10], [0.0; 10]));
         }
