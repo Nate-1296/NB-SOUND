@@ -159,3 +159,8 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] En la instalación real: crear una lista inteligente por BPM, ánimo y favoritas, comprobar que el teléfono la
       recibe y que al marcar otra canción como favorita entra sola; pulsar "Crear para mí" sobre la biblioteca migrada
       de la V1 y comprobar las listas automáticas generadas (F8.2).
+- [ ] En la instalación real, en Tu música: recorrer el resumen local de escucha por año y por mes sobre el historial
+      migrado de la V1, comprobar el radar de ánimos y el mapa de calor 7×24 y exportar una tarjeta SVG (F8.3).
+- [ ] En la instalación real, en Ajustes > Dispositivos: copiar una playlist y las favoritas a una memoria USB o
+      microSD con portada incrustada y comprobar la estructura de carpetas, la portada en los archivos, el archivo
+      `.m3u8` y la conversión opcional a WAV (F8.4).

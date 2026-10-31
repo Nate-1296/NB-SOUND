@@ -21,7 +21,7 @@ Cada una exige su ficha completa (objetivo, criterio, dependencias) antes de emp
 | F8.1 Forma de onda | Hecha: 1.000 picos por pista en `sonoridad.picos` (migración V10), calculados en la misma decodificación que los LUFS (`audio/sonoridad.rs`, `medicion.rs`), servidos por `forma_de_onda` y dibujados en `FormaDeOnda.svelte` sobre la barra y en la sesión activa del DJ con los puntos de entrada y salida de `EstadoDj` |
 | F8.2 Listas inteligentes vivas | Hecha: `ReglaInteligente` evaluada en SQLite (`playlists/inteligentes.rs`), sincronizada en `playlist_pistas` sin subir `sync_version` cuando no hay cambios, convergencia con `regenerar_automaticas` ("Crear para mí") y diálogo `DialogoInteligente.svelte` |
 | F8.3 Resumen local de escucha | Hecha: `resumen_escucha` por mes (`YYYY-MM`), año (`YYYY`) o `"todo"`, radar de seis ánimos (`RadarAnimos`), mapa de calor 7×24 en hora local y tarjeta SVG autónoma exportable (`tarjeta_svg`, `exportar_resumen_escucha`) en `VistaTuMusica.svelte` |
-| F8.4 Copia a dispositivos | Pendiente: sin ficha |
+| F8.4 Copia a dispositivos | En curso |
 | F8.5 Modo fiesta | Bloqueada: necesita un ADR del modelo de confianza aprobado por Nathan |
 
 ## F8.1 Forma de onda
@@ -149,3 +149,50 @@ una tarjeta exportable a archivo desde el propio equipo sin que ningún dato sal
 
 **A las pruebas finales.** En la instalación real, recorrer en Tu música los resúmenes mensuales y anuales del
 historial migrado de la V1, comprobar el radar y el mapa de calor y exportar la tarjeta de un mes y de un año.
+
+## F8.4 Copia a dispositivos
+
+**Objetivo.** El usuario puede copiar toda su biblioteca, sus canciones favoritas o una playlist a una tarjeta microSD,
+una memoria USB o un reproductor portátil desde **Ajustes → Dispositivos**, eligiendo la estructura de carpetas, la
+incrustación de portada y etiquetas en las copias y la conversión opcional a WAV PCM estándar (16 bits, 44,1 kHz) para
+reproductores que no leen formatos modernos, sin tocar jamás los archivos originales de su biblioteca.
+
+**Depende de.** F4.1.1 (`catalogo/etiquetas.rs` con `lofty`), F4.1.9 (`portadas.rs`) y F3.3.1
+(`SeccionDispositivos.svelte`).
+
+**Decisiones.**
+
+* **Ninguna ruta cruza el puente IPC:** la carpeta de destino se elige con el selector nativo de carpetas desde Rust
+  (`copia_dispositivo_ejecutar`), igual que en `copia_seguridad` y `anadir_musica`, cumpliendo `check-rutas` y ADR-003.
+* **Saneado estricto para FAT32 / exFAT:** las tarjetas microSD y memorias USB suelen estar formateadas en FAT32 o
+  exFAT, que rechazan `<>:"/\|?*`, caracteres de control y puntos o espacios finales en nombres de carpeta o archivo.
+  Cada segmento se sanea de forma determinista y se acota en longitud para que la copia funcione en cualquier sistema
+  de archivos portátil.
+* **Tres estructuras de carpetas:** `Artista / Álbum / NN - Título.ext` (`artistaAlbum`), `Artista / NN - Título.ext`
+  (`artista`) o todos los archivos en la raíz con `Artista - Título.ext` (`plana`), además de escribir un archivo de
+  lista `.m3u8` con rutas relativas cuando se exporta una playlist o las favoritas.
+* **Etiquetas y portada incrustada sobre la copia:** cuando `incrustar_portada` está activo, `lofty` escribe título,
+  artista, álbum, número, año y la imagen de portada (`PictureType::CoverFront`) en el archivo ya copiado en el
+  dispositivo, sin abrir en modo escritura el archivo original de la biblioteca.
+* **Conversión opcional sin dependencias externas (`convertir_a_wav`):** de acuerdo con la enmienda de ADR-006 (sin
+  `ffmpeg` empaquetado), la opción de transcodificación decodifica la pista con `symphonia` (`audio::Decodificador`) y
+  escribe WAV PCM de 16 bits a 44,1 kHz estéreo, legible por cualquier reproductor portátil o radio de coche.
+* **Copia incremental:** si el archivo de destino ya existe con tamaño positivo y no se pide recodificar ni reescribir
+  portada, se reutiliza y se contabiliza como omitido para que actualizar una tarjeta microSD sea rápido.
+
+**Criterio de aceptación.**
+
+1. `copia_dispositivo::copiar` exporta las pistas seleccionadas (toda la biblioteca, solo favoritas o una playlist) a
+   una carpeta de destino respetando la estructura elegida (`ArtistaAlbum`, `Artista`, `Plana`) y saneando nombres para
+   FAT32/exFAT.
+2. Con `incrustar_portada = true`, el archivo copiado en el destino lleva las etiquetas y la portada de la pista o del
+   álbum incrustadas con `lofty`, y el archivo original de la biblioteca permanece intacto byte a byte.
+3. Con `convertir_a_wav = true`, las pistas se convierten a `.wav` PCM de 16 bits y 44,1 kHz reproducible.
+4. Al exportar una playlist o las favoritas se genera además el archivo `.m3u8` con las rutas relativas de las pistas
+   copiadas.
+5. En **Ajustes → Dispositivos**, el bloque de copia a dispositivos externos permite elegir qué copiar, la estructura de
+   carpetas, las opciones de portada y conversión y lanzar la copia mostrando el resumen de pistas copiadas, omitidas y
+   bytes escritos.
+
+**A las pruebas finales.** En la instalación real, copiar una playlist y las favoritas a una memoria USB o carpeta de
+prueba con portada incrustada y comprobar las etiquetas, la portada, el `.m3u8` y la conversión opcional a WAV.
