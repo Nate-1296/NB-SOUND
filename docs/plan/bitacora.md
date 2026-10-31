@@ -67,4 +67,22 @@ rellenar URL, tamaño y SHA-256.
 | `306aee3` | F5.2.2, F5.1.4 | El micrófono prepara mientras suena y ofrece el agregado; el instrumental listo entra en la pista que suena sin desfase. Defecto evitado: pasar el frame por segundos perdía uno por redondeo, de ahí `buscar_frame`. La fila del contrato del reproductor que pedía desactivar el micrófono se rediseña según ADR-007 | El instrumental a mitad de pista en su frame exacto |
 | `4fb295f` | F5.2.3, F5.2.4 | Filtro "Listas para cantar" y "Preparar mis favoritas"; F5.2.4 ya lo cumplía el importador de la V1 | El filtro solo da las que tienen instrumental; favoritas en cola sin repetir |
 | `9a91d52` | F5.3.1, F5.3.2 | `analisis.rs`: MusiCNN y sus cabezas con la cadena de F0.4.3, en segundo plano y reanudable. Defecto de la V1 corregido: valencia y activación de DEAM se recortaban a 1. Atribución de los modelos en Acerca de y en los avisos de terceros | Clase positiva de cada cabeza y escala de DEAM, parches de Essentia, lotes de 8, remuestreo lineal, filas de la V1 que caducan |
-| (siguiente) | F5.3.3 | `descubrir.rs` y sus secciones en Buscar. Para dar margen al arranque (249,4 KB), Reproducción y Apariencia de Ajustes pasan a `SeccionesEscucha.svelte`, que se carga aparte: 244,3 KB | La frase como en la V1, orden y sin repetir, sin intención no hay nada, la activación de la V1 no cuenta |
+| `a1cb5cc` | F5.3.3 | `descubrir.rs` y sus secciones en Buscar. Para dar margen al arranque (249,4 KB), Reproducción y Apariencia de Ajustes pasan a `SeccionesEscucha.svelte`, que se carga aparte: 244,3 KB | La frase como en la V1, orden y sin repetir, sin intención no hay nada, la activación de la V1 no cuenta |
+
+**Estado al cerrar la sesión.** Todas las iteraciones de la Fase 5 tienen sus pruebas automáticas en verde salvo lo
+que depende de publicar los agregados: F5.1.1 (las URL, tamaños y SHA-256 del catálogo) y el agregado de
+aceleración de F5.1.5 esperan a P13, y su tamaño a P6. Lo que solo se comprueba con los modelos reales (separación,
+paridad del análisis, vacíos de buffer, memoria) está en [pruebas finales](./pruebas-finales.md).
+
+**Decisiones tomadas por el camino.**
+
+* El instrumental se guarda como WAV de 16 bits mientras no haya codificador aprobado (P14).
+* Pulsar Instalar en un agregado, con el tamaño y el origen a la vista, cuenta como consentimiento del servicio
+  de agregados; con la conexión general apagada no se descarga nada.
+* Valencia y activación del análisis van en `(v − 1) / 8` y las filas de la V1 se reanalizan, porque la V1 las
+  recortaba a 1.
+* Las secciones del descubrimiento se titulan desde el diccionario, no desde Rust.
+
+**Aviso.** El arranque se mantuvo dentro de los 250 KB llevando a carga diferida todo lo que solo usan pantallas
+secundarias (textos en `es-aparte.ts`, puente en `$core/ipc/aparte.ts`, Dispositivos, Reproducción y Apariencia de
+Ajustes); quedó en 244,3 KB.
