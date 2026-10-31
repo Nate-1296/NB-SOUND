@@ -416,6 +416,7 @@ export const es = {
     version: (v: string) => `NB Sound ${v}`,
     licencia: 'Software libre bajo la licencia GPL-3.0-or-later.',
     terceros: 'Incluye componentes de terceros con sus licencias (THIRD_PARTY_LICENSES.md).',
+    agregados: 'Agregados',
     privacidad: 'Privacidad y servicios en línea',
     ia: 'Inteligencia artificial'
   },

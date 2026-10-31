@@ -6,16 +6,15 @@
   puente. Se carga aparte del arranque.
 -->
 <script lang="ts">
+  import { type EstadoCopia, NsError } from '$core/ipc';
   import {
     copiaCrear,
     copiaElegirCarpeta,
     copiaEstado,
     copiaFrecuencia,
     copiaRestaurar,
-    type EstadoCopia,
-    NsError,
     reiniciar
-  } from '$core/ipc';
+  } from '$core/ipc/aparte';
   import { textosAparte } from '$lib/i18n/aparte';
 
   const t = textosAparte.copia;

@@ -347,6 +347,137 @@ pub fn quitar(rutas: &Rutas, id: IdAgregado) -> NsResult<()> {
     Ok(())
 }
 
+// --- El gestor: estado y progreso para Ajustes (F5.1.3) -----------------------------
+
+/// Lo que muestra la tarjeta de un agregado.
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub struct EstadoAgregado {
+    pub id: IdAgregado,
+    /// Lo que ocupa la descarga.
+    #[ts(type = "number")]
+    pub bytes: u64,
+    /// Si hay archivo publicado que instalar (P13).
+    pub publicado: bool,
+    pub instalado: bool,
+    /// Hay una versión más nueva en el catálogo que la instalada.
+    pub actualizable: bool,
+    /// De 0 a 1 mientras se descarga.
+    pub progreso: Option<f64>,
+    /// El código del último fallo (`NETWORK_FAILURE`, `INTEGRITY_MISMATCH`…).
+    pub error: Option<String>,
+}
+
+#[derive(Default)]
+struct EnCurso {
+    progreso: std::collections::HashMap<IdAgregado, f64>,
+    errores: std::collections::HashMap<IdAgregado, String>,
+}
+
+/// Lleva las instalaciones en curso. Clonable: el hilo de cada descarga y los
+/// comandos comparten el estado.
+#[derive(Clone, Default)]
+pub struct Gestor {
+    en_curso: std::sync::Arc<std::sync::Mutex<EnCurso>>,
+}
+
+impl Gestor {
+    fn con<T>(&self, f: impl FnOnce(&mut EnCurso) -> T) -> T {
+        let mut g = self
+            .en_curso
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        f(&mut g)
+    }
+
+    /// El estado de todos, en el orden del catálogo.
+    #[must_use]
+    pub fn estado(&self, rutas: &Rutas) -> Vec<EstadoAgregado> {
+        self.con(|c| {
+            CATALOGO
+                .iter()
+                .map(|e| {
+                    let version = instalado(rutas, e.id);
+                    EstadoAgregado {
+                        id: e.id,
+                        bytes: e.bytes,
+                        publicado: e.publicada(),
+                        instalado: version.is_some(),
+                        actualizable: e.publicada()
+                            && version.as_deref().is_some_and(|v| v != e.version),
+                        progreso: c.progreso.get(&e.id).copied(),
+                        error: c.errores.get(&e.id).cloned(),
+                    }
+                })
+                .collect()
+        })
+    }
+
+    /// Lanza la instalación en su hilo. `avisar` se llama con cada cambio que la
+    /// interfaz deba ver (progreso cada 1 %, fin o fallo). No hace nada si ya se
+    /// está instalando.
+    ///
+    /// # Errors
+    ///
+    /// [`NsError::InvalidInput`] si el id no está en el catálogo;
+    /// [`NsError::ComponentUnavailable`] si no está publicado.
+    pub fn instalar(
+        &self,
+        rutas: Rutas,
+        red: std::sync::Arc<Red>,
+        id: IdAgregado,
+        avisar: impl Fn() + Send + 'static,
+    ) -> NsResult<()> {
+        let e = entrada(id)?;
+        if !e.publicada() {
+            return Err(NsError::ComponentUnavailable);
+        }
+        let empezar = self.con(|c| {
+            if c.progreso.contains_key(&id) {
+                return false;
+            }
+            c.errores.remove(&id);
+            c.progreso.insert(id, 0.0);
+            true
+        });
+        if !empezar {
+            return Ok(());
+        }
+        avisar();
+        let gestor = self.clone();
+        let lanzado = std::thread::Builder::new()
+            .name(format!("agregado-{}", id.carpeta()))
+            .spawn(move || {
+                let mut ultimo = 0.0;
+                let r = instalar(&rutas, red.as_ref(), &e, &mut |n, total| {
+                    let p = (n as f64 / total.max(1) as f64).min(1.0);
+                    if p - ultimo >= 0.01 {
+                        ultimo = p;
+                        gestor.con(|c| {
+                            c.progreso.insert(id, p);
+                        });
+                        avisar();
+                    }
+                });
+                gestor.con(|c| {
+                    c.progreso.remove(&id);
+                    if let Err(error) = r {
+                        c.errores.insert(id, error.code().to_owned());
+                    }
+                });
+                avisar();
+            });
+        if lanzado.is_err() {
+            self.con(|c| {
+                c.progreso.remove(&id);
+            });
+            return Err(NsError::Internal);
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::cell::Cell;
@@ -579,5 +710,22 @@ mod tests {
                 assert_eq!(e.sha256.map(str::len), Some(64));
             }
         }
+    }
+
+    #[test]
+    fn el_gestor_lista_el_catalogo_y_no_lanza_lo_que_no_esta_publicado() {
+        let (d, r) = rutas("gestor");
+        let g = Gestor::default();
+        let estado = g.estado(&r);
+        assert_eq!(estado.len(), CATALOGO.len());
+        assert!(estado.iter().all(|e| !e.instalado && e.progreso.is_none()));
+        let red = std::sync::Arc::new(Red::new(crate::net::PoliticaDeRed::default()));
+        if let Some(e) = CATALOGO.iter().find(|e| !e.publicada()) {
+            assert_eq!(
+                g.instalar(r.clone(), red, e.id, || {}),
+                Err(NsError::ComponentUnavailable)
+            );
+        }
+        let _ = std::fs::remove_dir_all(&d);
     }
 }

@@ -15,7 +15,6 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 
 import type {
   AjustesEcualizador,
-  AjustesIa,
   AlbumResumen,
   Ambiente,
   Apariencia,
@@ -25,11 +24,8 @@ import type {
   ConsultaArtistas,
   ConsultaPistas,
   ConsultaPlaylists,
-  DatosAlbum,
   DatosCompletados,
-  DatosPista,
   Emparejar,
-  EstadoCopia,
   EstadoMovil,
   InformeDeSalud,
   Inicio,
@@ -43,11 +39,8 @@ import type {
   Perfil,
   PistaResumen,
   PlaylistResumen,
-  PoliticaDeRed,
   PreseleccionEcualizador,
   ProgresoImportacion,
-  ProveedorIa,
-  ResumenCopia,
   Telefono
 } from '$lib/bindings';
 
@@ -70,8 +63,10 @@ export type {
   DatosCompletados,
   DatosPista,
   Emparejar,
+  EstadoAgregado,
   EstadoCopia,
   EstadoMovil,
+  IdAgregado,
   InformeDeSalud,
   Inicio,
   Instantanea,
@@ -138,7 +133,7 @@ export function salud(): Promise<InformeDeSalud> {
  * Se suscribe a un evento del runtime. Devuelve la función que cancela la
  * suscripción, que el componente llama al desmontarse.
  */
-function escuchar<T>(evento: string, cada: (carga: T) => void): Promise<UnlistenFn> {
+export function escuchar<T>(evento: string, cada: (carga: T) => void): Promise<UnlistenFn> {
   return listen<T>(evento, (e) => cada(e.payload));
 }
 
@@ -331,85 +326,6 @@ export function carpetaMusica(): Promise<string | null> {
  */
 export function completarDatos(pista: number): Promise<DatosCompletados> {
   return call<DatosCompletados>('completar_datos', { pista });
-}
-
-// --- Copia de seguridad ----------------------------------------------------------
-
-export function copiaEstado(): Promise<EstadoCopia> {
-  return call<EstadoCopia>('copia_estado');
-}
-
-/** Abre el selector nativo para guardar; `null` si se canceló. */
-export function copiaCrear(): Promise<ResumenCopia | null> {
-  return call<ResumenCopia | null>('copia_crear');
-}
-
-/** Abre el selector nativo, valida la copia y la deja lista para el próximo arranque. */
-export function copiaRestaurar(): Promise<boolean> {
-  return call<boolean>('copia_restaurar');
-}
-
-/** 0, 1, 7 o 30 días. */
-export function copiaFrecuencia(dias: number): Promise<EstadoCopia> {
-  return call<EstadoCopia>('copia_frecuencia', { dias });
-}
-
-export function copiaElegirCarpeta(): Promise<EstadoCopia> {
-  return call<EstadoCopia>('copia_elegir_carpeta');
-}
-
-/** Reinicia la aplicación, con el mismo cierre ordenado que al salir. */
-export function reiniciar(): Promise<void> {
-  return call<void>('reiniciar');
-}
-
-// --- Editar metadatos --------------------------------------------------------------
-
-export function datosPista(pista: number): Promise<DatosPista> {
-  return call<DatosPista>('datos_pista', { pista });
-}
-
-/** Guarda en la base y, si se puede, en el archivo. La pista conserva su id. */
-export function editarPista(pista: number, datos: DatosPista): Promise<void> {
-  return call<void>('editar_pista', { pista, datos });
-}
-
-export function datosAlbum(album: number): Promise<DatosAlbum> {
-  return call<DatosAlbum>('datos_album', { album });
-}
-
-/** Devuelve el id del álbum resultante: otro solo si se juntó con uno que ya existía. */
-export function editarAlbum(album: number, datos: DatosAlbum): Promise<number> {
-  return call<number>('editar_album', { album, datos });
-}
-
-// --- Privacidad e inteligencia artificial ---------------------------------------
-
-/** Lo que la puerta de red deja salir ahora mismo. */
-export function politicaRed(): Promise<PoliticaDeRed> {
-  return call<PoliticaDeRed>('politica_red');
-}
-
-export function cambiarPoliticaRed(politica: PoliticaDeRed): Promise<void> {
-  return call<void>('cambiar_politica_red', { politica });
-}
-
-export function ajustesIa(): Promise<AjustesIa> {
-  return call<AjustesIa>('ajustes_ia');
-}
-
-/** Un modelo vacío vuelve al de fábrica del proveedor. */
-export function guardarAjustesIa(proveedor: ProveedorIa, modelo: string): Promise<AjustesIa> {
-  return call<AjustesIa>('guardar_ajustes_ia', { proveedor, modelo });
-}
-
-/** La clave va al llavero del sistema y no vuelve: la respuesta solo dice si hay una. */
-export function guardarClaveIa(clave: string): Promise<AjustesIa> {
-  return call<AjustesIa>('guardar_clave_ia', { clave });
-}
-
-export function borrarClaveIa(): Promise<AjustesIa> {
-  return call<AjustesIa>('borrar_clave_ia');
 }
 
 /** Todo lo que muestra Inicio, en una sola petición. */

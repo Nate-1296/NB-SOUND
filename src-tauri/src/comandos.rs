@@ -734,7 +734,64 @@ pub async fn por_revisar_descartar(
     .await
 }
 
-/// Vuelve a buscarlo: a la cola de importación.
+// --- Agregados (F5.1.3) ----------------------------------------------------------------
+
+/// Cota: los cuatro agregados del catálogo compilado (`agregados::CATALOGO`).
+#[tauri::command]
+pub async fn agregados_estado(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<Vec<crate::agregados::EstadoAgregado>> {
+    Ok(estado.agregados.estado(&estado.rutas))
+}
+
+/// Instala un agregado en segundo plano; el progreso llega con el evento
+/// `agregados:cambio`. Pulsar "Instalar", con el tamaño y el origen a la vista,
+/// es el consentimiento del servicio de agregados; con la conexión general
+/// apagada no sale nada.
+#[tauri::command]
+pub async fn agregado_instalar(app: AppHandle, id: crate::agregados::IdAgregado) -> NsResult<()> {
+    use tauri::Emitter;
+    let (db, rutas, red, gestor) = {
+        let e = app.state::<Estado>();
+        (
+            e.db.clone(),
+            e.rutas.clone(),
+            std::sync::Arc::clone(&e.red),
+            e.agregados.clone(),
+        )
+    };
+    let mut politica = red.politica();
+    if !politica.general {
+        return Err(NsError::NetworkDisabled);
+    }
+    if politica.servicios.insert(crate::net::Servicio::Agregados) {
+        let r = std::sync::Arc::clone(&red);
+        tauri::async_runtime::spawn_blocking(move || {
+            crate::privacidad::cambiar_politica(&db, &r, politica)
+        })
+        .await
+        .map_err(|_| NsError::Internal)??;
+    }
+    gestor.instalar(rutas, red, id, move || {
+        let _ = app.emit("agregados:cambio", ());
+    })
+}
+
+/// Cota: los cuatro agregados del catálogo compilado (`agregados::CATALOGO`).
+#[tauri::command]
+pub async fn agregado_quitar(
+    estado: tauri::State<'_, Estado>,
+    id: crate::agregados::IdAgregado,
+) -> NsResult<Vec<crate::agregados::EstadoAgregado>> {
+    let (rutas, gestor) = (estado.rutas.clone(), estado.agregados.clone());
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::agregados::quitar(&rutas, id)?;
+        Ok(gestor.estado(&rutas))
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
 // --- Copia de seguridad (F4.2.6) ------------------------------------------------------
 
 #[tauri::command]
@@ -921,6 +978,7 @@ pub async fn completar_datos(
     .map_err(|_| NsError::Internal)?
 }
 
+/// Vuelve a buscarlo: a la cola de importación.
 #[tauri::command]
 pub async fn por_revisar_reintentar(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<()> {
     let importador = estado.importador.clone();

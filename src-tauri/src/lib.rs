@@ -48,6 +48,7 @@ pub struct Estado {
     pub db: BaseDeDatos,
     pub movil: Arc<movil::ServidorMovil>,
     pub importador: catalogo::importacion::Importador,
+    pub agregados: agregados::Gestor,
 }
 
 /// La política de red que el usuario dejó guardada; la de fábrica, que no deja
@@ -206,6 +207,7 @@ pub fn run() {
         db: db.clone(),
         movil: Arc::clone(&servidor_movil),
         importador: importador.clone(),
+        agregados: agregados::Gestor::default(),
     };
     let importador_setup = importador.clone();
 
@@ -386,7 +388,10 @@ pub fn run() {
             comandos::copia_restaurar,
             comandos::copia_frecuencia,
             comandos::copia_elegir_carpeta,
-            comandos::reiniciar
+            comandos::reiniciar,
+            comandos::agregados_estado,
+            comandos::agregado_instalar,
+            comandos::agregado_quitar
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");

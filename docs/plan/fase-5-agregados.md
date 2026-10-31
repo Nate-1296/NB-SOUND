@@ -12,7 +12,7 @@
 |---|---|
 | F5.1.1 Catálogo de agregados compilado (URL, tamaño, SHA-256) | Parcial: `agregados.rs` con los cuatro agregados de ADR-006 y su versión; sin publicar (P13), cada entrada lleva `url: None` y no se puede instalar. Falta rellenar URL, tamaño y SHA-256 al publicar la Release |
 | F5.1.2 Descarga reanudable, verificación e instalación atómica | Hecha: `Red::descargar` escribe a disco con `Range` y sin el tope global de 30 s; el ZIP parcial sobrevive a un cierre, se verifica el SHA-256 antes de abrirlo y se extrae a una carpeta temporal que se cambia de nombre al final. Probado con un servidor de mentira: corte y reanudación, servidor que ignora el `Range`, hash alterado y ruta trampa. La prueba contra la Release real va a las pruebas finales |
-| F5.1.3 Ajustes > Agregados: tarjetas con Instalar y Quitar | Pendiente |
+| F5.1.3 Ajustes > Agregados: tarjetas con Instalar y Quitar | Hecha: una tarjeta por agregado con qué hace, cuánto ocupa y un botón; el progreso llega por `agregados:cambio` y se sigue usando la aplicación. Pulsar Instalar consiente el servicio de agregados; con la conexión general apagada no se descarga. Sin Release publicada (P13) se ven como "Todavía no disponible"; el clic hasta el micrófono funcionando va a las pruebas finales |
 | F5.1.4 Ofrecer el agregado donde hace falta | Pendiente |
 | F5.1.5 Detección de GPU y agregado de aceleración | Pendiente |
 | F5.2.1 Separación con `htdemucs` ONNX en segundo plano, con prioridad baja | Pendiente |

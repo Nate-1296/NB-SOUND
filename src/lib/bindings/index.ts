@@ -27,6 +27,7 @@ export type { DatosAlbum } from './DatosAlbum';
 export type { DatosCompletados } from './DatosCompletados';
 export type { DatosPista } from './DatosPista';
 export type { Emparejar } from './Emparejar';
+export type { EstadoAgregado } from './EstadoAgregado';
 export type { EstadoCopia } from './EstadoCopia';
 export type { EstadoMovil } from './EstadoMovil';
 export type { IdAgregado } from './IdAgregado';

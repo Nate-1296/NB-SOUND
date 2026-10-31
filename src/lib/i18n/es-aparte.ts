@@ -6,6 +6,40 @@
  * solo los importan módulos que ya se cargan a demanda, y con ellos se cargan.
  */
 export const esAparte = {
+  agregados: {
+    ayuda:
+      'Funciones grandes y opcionales. Se descargan de las publicaciones de NB Sound en GitHub con un clic, y quitarlas libera su espacio en el acto.',
+    nombres: {
+      karaoke: 'Karaoke',
+      analisis: 'Análisis musical',
+      textoDj: 'Pedidos al DJ en tus palabras',
+      aceleracion: 'Aceleración por GPU'
+    },
+    descripciones: {
+      karaoke:
+        'Separa la voz de cualquier canción para cantarla, y prepara los instrumentales para el teléfono y el DJ.',
+      analisis:
+        'Reconoce el ánimo, la bailabilidad y el estilo de cada canción para las listas inteligentes y el DJ.',
+      textoDj: 'Entiende lo que le pides al DJ con tus propias palabras.',
+      aceleracion: 'Hace el karaoke y el análisis varias veces más rápidos con la tarjeta gráfica.'
+    },
+    tamano: (megas: number) => `${megas} MB`,
+    instalar: (megas: number) => `Instalar (${megas} MB)`,
+    descargando: (porcentaje: number) => `Descargando ${porcentaje} %`,
+    instalado: 'Instalado',
+    actualizar: 'Actualizar',
+    quitar: 'Quitar',
+    noDisponible: 'Todavía no disponible',
+    sinConexion: 'Activa los servicios en línea en Privacidad para descargarlo.',
+    errores: {
+      NETWORK_FAILURE: 'La descarga se cortó. Al volver a pulsar Instalar sigue donde se quedó.',
+      INTEGRITY_MISMATCH:
+        'El archivo descargado no es el esperado y se ha descartado. Vuelve a intentarlo.',
+      STORAGE_FAILURE: 'No hay espacio o no se pudo escribir en el disco.',
+      NETWORK_DISABLED: 'Activa los servicios en línea en Privacidad para descargarlo.'
+    } as Record<string, string>,
+    error: 'No se pudo instalar. Vuelve a intentarlo.'
+  },
   copia: {
     titulo: 'Copia de seguridad',
     ayuda:

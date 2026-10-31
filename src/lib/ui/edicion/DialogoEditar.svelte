@@ -6,7 +6,8 @@
   solo si se juntó con otro que ya existía).
 -->
 <script lang="ts">
-  import { datosAlbum, datosPista, editarAlbum, editarPista, NsError } from '$core/ipc';
+  import { NsError } from '$core/ipc';
+  import { datosAlbum, datosPista, editarAlbum, editarPista } from '$core/ipc/aparte';
   import { textosAparte } from '$lib/i18n/aparte';
 
   interface Props {
