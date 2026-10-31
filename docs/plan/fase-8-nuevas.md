@@ -22,7 +22,7 @@ Cada una exige su ficha completa (objetivo, criterio, dependencias) antes de emp
 | F8.2 Listas inteligentes vivas | Hecha: `ReglaInteligente` evaluada en SQLite (`playlists/inteligentes.rs`), sincronizada en `playlist_pistas` sin subir `sync_version` cuando no hay cambios, convergencia con `regenerar_automaticas` ("Crear para mí") y diálogo `DialogoInteligente.svelte` |
 | F8.3 Resumen local de escucha | Hecha: `resumen_escucha` por mes (`YYYY-MM`), año (`YYYY`) o `"todo"`, radar de seis ánimos (`RadarAnimos`), mapa de calor 7×24 en hora local y tarjeta SVG autónoma exportable (`tarjeta_svg`, `exportar_resumen_escucha`) en `VistaTuMusica.svelte` |
 | F8.4 Copia a dispositivos | Hecha: `copia_dispositivo::copiar` con saneado FAT32/exFAT, tres estructuras de carpetas (`ArtistaAlbum`, `Artista`, `Plana`), portada y etiquetas incrustadas en la copia con `lofty` sin tocar los originales, conversión opcional a WAV PCM (16 bits, 44,1 kHz), lista `.m3u8` e interfaz en `SeccionDispositivos.svelte` |
-| F8.5 Modo fiesta | Bloqueada: necesita un ADR del modelo de confianza aprobado por Nathan |
+| F8.5 Modo fiesta | Bloqueada: ficha y [ADR-012](../adr/decisions/ADR-012-modo-fiesta.md) propuestos, pendientes de aprobación de Nathan antes de escribir código |
 
 ## F8.1 Forma de onda
 
@@ -196,3 +196,47 @@ reproductores que no leen formatos modernos, sin tocar jamás los archivos origi
 
 **A las pruebas finales.** En la instalación real, copiar una playlist y las favoritas a una memoria USB o carpeta de
 prueba con portada incrustada y comprobar las etiquetas, la portada, el `.m3u8` y la conversión opcional a WAV.
+
+## F8.5 Modo fiesta
+
+**Objetivo.** Permitir que los invitados presentes en la misma red local escaneen un código QR desde el navegador de su
+teléfono, busquen canciones en el catálogo del anfitrión y sugieran qué debería sonar a continuación, sin instalar
+ninguna aplicación y sin que ningún desconocido pueda descargar música, alterar el volumen ni controlar el reproductor.
+
+**Depende de.** Fase 3 (`movil/emparejamiento.rs` para generación de QR y detección de IP LAN), `db::busqueda` (FTS5) y
+la aprobación previa de **[ADR-012](../adr/decisions/ADR-012-modo-fiesta.md)** por parte de Nathan antes de escribir
+código.
+
+**Decisiones (propuestas en [ADR-012](../adr/decisions/ADR-012-modo-fiesta.md)).**
+
+* **Servidor HTTP efímero y físicamente separado de NB Sound Mobile:** corre en su propio listener `axum` en un puerto
+  efímero fuera del rango `8731..8799` únicamente mientras el Modo fiesta está activo. Se sirve por HTTP porque los
+  navegadores móviles (Safari en iOS, Chrome en Android) bloquean páginas interactivas con certificados TLS
+  autofirmados en IPs privadas.
+* **Token de sesión de 128 bits en el QR + cookie `HttpOnly` de invitado:** la URL del QR incluye
+  `/f/<token_sesion>` generado con `OsRng`; regenerar el QR o apagar la fiesta invalida en el acto todas las sesiones.
+* **Superficie de red reducida a 5 rutas sin audio ni mutaciones en SQLite:**
+  * `GET /f/{token}` (interfaz web estática embebida en el binario, sin recursos externos).
+  * `GET /api/estado` (pista que suena y lista de sugerencias).
+  * `GET /api/buscar?q=...` (hasta 25 pistas vía FTS5).
+  * `POST /api/sugerir` (`{ pistaId, aliasOpcional }`, en memoria).
+  * `GET /api/portada/{pista_id}` (solo miniatura de 64 px en caché; jamás archivos de audio ni portadas originales).
+* **Cuotas contra abuso:** máximo de 3 sugerencias pendientes por invitado/IP, enfriamiento de 10 segundos entre envíos,
+  tope global de 50 sugerencias en memoria y 30 peticiones por minuto por IP.
+* **Moderación del anfitrión por defecto:** las sugerencias entran en una bandeja que el anfitrión acepta o descarta
+  (con opción de activar "Aceptar sugerencias automáticamente" para añadirlas al final de la cola).
+
+**Criterio de aceptación (para cuando Nathan apruebe ADR-012).**
+
+1. Encender el Modo fiesta levanta el listener efímero y muestra el QR con `/f/<token>`; apagarlo o cerrar la
+   aplicación cierra el puerto y limpia todas las sugerencias en memoria.
+2. Un cliente sin el token válido recibe `401 Unauthorized` en todas las rutas; con el token válido puede buscar pistas
+   y enviar sugerencias, pero no existe ninguna ruta que sirva archivos de audio ni que ejecute órdenes de pausa, salto
+   o volumen.
+3. Un mismo invitado o IP no puede superar 3 sugerencias pendientes ni enviar dos en menos de 10 segundos (`429 Too Many
+   Requests`).
+4. Aceptar una sugerencia en la interfaz del anfitrión la añade al final de la cola (`Orden::Agregar { justo_despues:
+   false }`); con "Aceptar automáticamente" activo, entra sola al final de la cola.
+
+**A las pruebas finales.** En la instalación real, abrir una sesión de Modo fiesta, escanear el QR desde un teléfono
+en la misma red Wi-Fi, buscar y sugerir canciones, comprobar el límite de sugerencias y la aceptación desde el equipo.
