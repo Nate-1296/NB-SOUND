@@ -1087,3 +1087,262 @@ pub async fn por_revisar_reintentar(estado: tauri::State<'_, Estado>, id: i64) -
     importador.importar(vec![ruta]);
     Ok(())
 }
+
+// --- DJ Privado (F6.1.6) -----------------------------------------------------------------
+
+/// Lo que devuelve pedir una sesión: cuál, y si no hubo ninguna pista que encajara.
+#[derive(Debug, Clone, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub struct PedidoDj {
+    #[ts(type = "number")]
+    pub sesion_id: i64,
+    pub sin_candidatas: bool,
+}
+
+/// Una sesión como la ve su vista: cómo se entendió el pedido, sus números y sus
+/// pistas con la transición que trae cada una.
+#[derive(Debug, Clone, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub struct VistaSesionDj {
+    #[ts(type = "number")]
+    pub sesion_id: i64,
+    pub peticion: String,
+    pub estado: String,
+    pub minutos: u32,
+    /// El resumen de la intención, con las frases de la V1.
+    pub resumen: String,
+    pub notas: Vec<String>,
+    pub pistas: Vec<crate::dj::sesiones::PistaDeSesion>,
+    pub duracion_seg: f64,
+    #[ts(type = "number")]
+    pub artistas_distintos: u64,
+    #[ts(type = "number")]
+    pub transiciones_buenas: u64,
+    #[ts(type = "number")]
+    pub transiciones_total: u64,
+    /// Sin el agregado de análisis el DJ elige con los rasgos básicos, y la vista
+    /// lo dice (criterio de la Fase 6).
+    pub sin_analisis: bool,
+}
+
+/// En un hilo de trabajo, para no esperar al hilo del DJ en el de la ventana.
+async fn con_dj<T: Send + 'static>(
+    estado: &tauri::State<'_, Estado>,
+    f: impl FnOnce(&mut crate::dj::servicio::Dj) -> NsResult<T> + Send + 'static,
+) -> NsResult<T> {
+    let director = estado.dj.clone();
+    tauri::async_runtime::spawn_blocking(move || director.con(f))
+        .await
+        .map_err(|_| NsError::Internal)?
+}
+
+fn tocar_sesion(app: &AppHandle, sesion: i64, posicion: u32) {
+    if let Ok(r) = reproductor(app) {
+        r.enviar(Orden::Dj(crate::reproductor::OrdenDj::Reproducir {
+            sesion,
+            posicion,
+            desde_seg: 0.0,
+        }));
+    }
+}
+
+fn pedido(app: &AppHandle, inicio: crate::dj::servicio::Inicio) -> PedidoDj {
+    use crate::dj::servicio::Inicio;
+    match inicio {
+        Inicio::Lista { id } => {
+            tocar_sesion(app, id, 0);
+            PedidoDj {
+                sesion_id: id,
+                sin_candidatas: false,
+            }
+        }
+        Inicio::SinCandidatas { id } => PedidoDj {
+            sesion_id: id,
+            sin_candidatas: true,
+        },
+    }
+}
+
+/// Pide una sesión con palabras y la empieza a tocar en cuanto tiene su primer
+/// bloque; el resto se construye mientras suena.
+#[tauri::command]
+pub async fn dj_pedir(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    peticion: String,
+    minutos: u32,
+) -> NsResult<PedidoDj> {
+    if peticion.chars().count() > 500 {
+        return Err(NsError::InvalidInput);
+    }
+    // La medida del equipo, la primera vez que se usa el DJ (F6.1.4).
+    estado.equipo.medir_con_karaoke(&estado.rutas, false);
+    let inicio = con_dj(&estado, move |dj| {
+        dj.iniciar(&peticion, minutos, None, None)
+    })
+    .await?;
+    Ok(pedido(&app, inicio))
+}
+
+/// Una sesión para su vista. Cota: sus pistas, que el constructor limita a la
+/// duración pedida (ocho horas como mucho).
+#[tauri::command]
+pub async fn dj_sesion(
+    estado: tauri::State<'_, Estado>,
+    sesion_id: i64,
+) -> NsResult<VistaSesionDj> {
+    en_segundo_plano(&estado, move |db| {
+        let s = crate::dj::sesiones::una(db, sesion_id)?.ok_or(NsError::InvalidInput)?;
+        let intencion: crate::dj::intencion::Intencion =
+            serde_json::from_str(&s.intencion).unwrap_or_default();
+        let r: serde_json::Value = serde_json::from_str(&s.resumen).unwrap_or_default();
+        let n = |k: &str| r[k].as_u64().unwrap_or(0);
+        let sin_analisis = !db
+            .conexion()?
+            .query_row(
+                "SELECT EXISTS (SELECT 1 FROM analisis_profundo WHERE feliz IS NOT NULL)",
+                [],
+                |f| f.get::<_, bool>(0),
+            )
+            .map_err(|_| NsError::StorageFailure)?;
+        Ok(VistaSesionDj {
+            sesion_id,
+            peticion: s.peticion,
+            estado: s.estado,
+            minutos: s.objetivo_minutos,
+            resumen: intencion.resumen,
+            notas: intencion.notas,
+            pistas: crate::dj::sesiones::pistas(db, sesion_id)?,
+            duracion_seg: r["duracion_seg"].as_f64().unwrap_or(0.0),
+            artistas_distintos: n("artistas_distintos"),
+            transiciones_buenas: n("transiciones_buenas"),
+            transiciones_total: n("transiciones_total"),
+            sin_analisis,
+        })
+    })
+    .await
+}
+
+/// Toca una sesión (del historial, o la activa desde otra pista).
+#[tauri::command]
+pub async fn dj_reproducir(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    sesion_id: i64,
+    posicion: u32,
+) -> NsResult<()> {
+    estado.equipo.medir_con_karaoke(&estado.rutas, false);
+    con_dj(&estado, move |dj| dj.asegurar(sesion_id)).await?;
+    tocar_sesion(&app, sesion_id, posicion);
+    Ok(())
+}
+
+/// "Me gusta" o "No me gusta" para una pista de la sesión.
+#[tauri::command]
+pub async fn dj_valorar(
+    estado: tauri::State<'_, Estado>,
+    sesion_id: i64,
+    posicion: u32,
+    pista_id: i64,
+    gusta: bool,
+) -> NsResult<()> {
+    use crate::dj::sesiones::Evento;
+    con_dj(&estado, move |dj| {
+        dj.asegurar(sesion_id)?;
+        dj.registrar(
+            posicion,
+            pista_id,
+            if gusta {
+                Evento::MeGusta
+            } else {
+                Evento::NoMeGusta
+            },
+        )
+    })
+    .await
+}
+
+/// Otra sesión con el mismo pedido; la anterior queda descartada.
+#[tauri::command]
+pub async fn dj_regenerar(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    sesion_id: i64,
+) -> NsResult<PedidoDj> {
+    let inicio = con_dj(&estado, move |dj| {
+        dj.asegurar(sesion_id)?;
+        dj.regenerar()?.ok_or(NsError::InvalidInput)
+    })
+    .await?;
+    Ok(pedido(&app, inicio))
+}
+
+fn salir_si_suena(app: &AppHandle, sesion: i64) {
+    if let Ok(r) = reproductor(app) {
+        if r.instantanea()
+            .and_then(|i| i.dj)
+            .is_some_and(|d| d.sesion_id == sesion)
+        {
+            r.enviar(Orden::Dj(crate::reproductor::OrdenDj::Salir));
+        }
+    }
+}
+
+/// Descarta la sesión: deja de sonar y vuelve la cola.
+#[tauri::command]
+pub async fn dj_descartar(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    sesion_id: i64,
+) -> NsResult<()> {
+    salir_si_suena(&app, sesion_id);
+    con_dj(&estado, move |dj| {
+        dj.asegurar(sesion_id)?;
+        dj.descartar()
+    })
+    .await
+}
+
+/// Guarda la sesión como playlist; sin nombre, "DJ Privado: Music Session, Vol. N".
+#[tauri::command]
+pub async fn dj_guardar(
+    estado: tauri::State<'_, Estado>,
+    sesion_id: i64,
+    nombre: String,
+) -> NsResult<i64> {
+    if nombre.chars().count() > 200 {
+        return Err(NsError::InvalidInput);
+    }
+    con_dj(&estado, move |dj| {
+        dj.asegurar(sesion_id)?;
+        dj.guardar_como_playlist(&nombre)
+    })
+    .await
+}
+
+/// El historial, filtrado por texto (sin tildes) y estado. Cota: las 60 sesiones
+/// más recientes, como la V1.
+#[tauri::command]
+pub async fn dj_historial(
+    estado: tauri::State<'_, Estado>,
+    texto: String,
+    filtro: String,
+) -> NsResult<Vec<crate::dj::servicio::FilaHistorial>> {
+    if texto.chars().count() > 200 || filtro.len() > 32 {
+        return Err(NsError::InvalidInput);
+    }
+    con_dj(&estado, move |dj| dj.historial(&texto, &filtro)).await
+}
+
+/// Borra una sesión del historial; si sonaba, deja de sonar.
+#[tauri::command]
+pub async fn dj_eliminar(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    sesion_id: i64,
+) -> NsResult<()> {
+    salir_si_suena(&app, sesion_id);
+    con_dj(&estado, move |dj| dj.eliminar(sesion_id)).await
+}

@@ -5,6 +5,7 @@
 
 use rusqlite::{params, OptionalExtension};
 use serde::Serialize;
+use ts_rs::TS;
 
 use super::constructor::Bloque;
 use crate::db::{self, BaseDeDatos};
@@ -175,10 +176,12 @@ pub fn recientes(db: &BaseDeDatos, limite: u32) -> NsResult<Vec<Sesion>> {
 }
 
 /// Una pista planificada, con lo que la vista muestra de ella.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
 #[serde(rename_all = "camelCase")]
 pub struct PistaDeSesion {
     pub posicion: u32,
+    #[ts(type = "number")]
     pub pista_id: i64,
     pub titulo: String,
     pub artista: String,
@@ -187,6 +190,7 @@ pub struct PistaDeSesion {
     pub puntuacion_transicion: f64,
     pub razones: Vec<String>,
     /// La transición que la trae, con las claves de la V1; `{}` en la primera.
+    #[ts(type = "Record<string, unknown>")]
     pub transicion: serde_json::Value,
     pub estado: String,
     pub bloqueada: bool,

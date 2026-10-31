@@ -143,3 +143,7 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
       mezcla en curso, por debajo del 4 % (F6.1.3).
 - [ ] Con el agregado de karaoke instalado, la medida del equipo de desarrollo termina en menos de dos minutos y da
       un perfil coherente con lo que tarda en preparar una pista para cantar (F6.1.4).
+- [ ] En la instalación real: pedir una sesión empieza a sonar en menos de 3 s, la vista muestra cómo se entendió el
+      pedido, la sesión crece mientras suena hasta la duración pedida, la barra la controla (pausa, saltar, anterior,
+      buscar), "Otra parecida" y "Descartar" devuelven la cola tal como estaba, y al cerrar y abrir vuelve en pausa
+      (F6.1.6).

@@ -14,7 +14,7 @@
 | F6.1.3 Transiciones y motor de mezcla: `energy_blend`, `eq_kill_bass`, `filter_sweep`, `harmonic_mix` | Hecha: `dj/mezcla.rs` (técnica, puntos de entrada y salida, solapamiento y curvas), dos platos en el motor y `dj/ejecutor.rs` (la puerta de la V1 y las curvas con el reloj del audio). Las cinco técnicas, renderizadas fuera de línea, no hacen clic ni saltan de volumen. El perfil de equipo que decide si hay capas llega con F6.1.4; la escucha, a las pruebas finales |
 | F6.1.4 Perfil de hardware y degradación de técnicas | Hecha: `dj/equipo.rs` mide el equipo separando diez segundos con el agregado de karaoke y clasifica como la V1; sin medida o sin agregado, perfil bajo y cuatro técnicas. La medida no se guarda (la migración la descarta). La medición con el modelo real, a las pruebas finales |
 | F6.1.5 Narrativa, persistencia, historial y preferencias | Hecha: la narrativa en F6.1.2; `dj/sesiones.rs` (sesiones, pistas, eventos, preferencias y sesión en curso) y `dj/servicio.rs` (empezar, continuar, regenerar, descartar, finalizar, guardar como playlist, retomar, historial y borrar), con las pruebas de integración de la V1 |
-| F6.1.6 Vistas: pedir sesión, sesión activa, historial | Pendiente |
+| F6.1.6 Vistas: pedir sesión, sesión activa, historial | Hecha: la sesión suena en el reproductor único (`reproductor/dj.rs`) con la cola del usuario en pausa; `dj/director.rs` la sigue construyendo mientras suena; nueve comandos y la vista con pedir, sesión y historial, que avisa cuando no hay análisis. El uso real, a las pruebas finales |
 | F6.2.1 A ciegas: selectores, pistas y servicio | Pendiente |
 | F6.2.2 A ciegas: vista del juego | Pendiente |
 

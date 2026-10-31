@@ -1,6 +1,8 @@
-<script lang="ts">
-  import { textos } from '$lib/i18n';
-  import VistaPendiente from '$ui/VistaPendiente.svelte';
-</script>
+<!--
+  DJ Privado. Su contenido se carga a demanda: los nodos de ruta entran en el
+  arranque (`check-paquete`).
+-->
 
-<VistaPendiente titulo={textos.nav.dj} icono="dj" />
+{#await import('$ui/dj/VistaDj.svelte') then m}
+  <m.default />
+{/await}

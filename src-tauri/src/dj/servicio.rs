@@ -10,6 +10,7 @@
 //! retomar una sesión del historial sigue construyéndola igual que la primera vez.
 
 use serde::Serialize;
+use ts_rs::TS;
 
 use super::azar::Azar;
 use super::constructor::{self, Ajustes, Bloque, Constructor};
@@ -55,19 +56,26 @@ pub enum Inicio {
 }
 
 /// Una fila del historial, con lo que la V1 enseñaba de cada sesión.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
 #[serde(rename_all = "camelCase")]
 pub struct FilaHistorial {
+    #[ts(type = "number")]
     pub id: i64,
     pub peticion: String,
     pub estado: String,
     pub minutos: u32,
     pub creada_en: String,
+    #[ts(type = "number | null")]
     pub playlist_id: Option<i64>,
+    #[ts(type = "number")]
     pub total_pistas: u64,
+    #[ts(type = "number")]
     pub artistas_distintos: u64,
     pub duracion_seg: f64,
+    #[ts(type = "number")]
     pub transiciones_buenas: u64,
+    #[ts(type = "number")]
     pub transiciones_total: u64,
 }
 
@@ -94,6 +102,20 @@ impl Dj {
     #[must_use]
     pub const fn activa(&self) -> Option<&Activa> {
         self.activa.as_ref()
+    }
+
+    /// Hace activa la sesión `id` si no lo es: tras abrir la aplicación, la que
+    /// suena puede no estar en memoria.
+    ///
+    /// # Errors
+    ///
+    /// Los de [`Self::cargar`].
+    pub fn asegurar(&mut self, id: i64) -> NsResult<()> {
+        if self.activa.as_ref().is_some_and(|a| a.id == id) {
+            Ok(())
+        } else {
+            self.cargar(id)
+        }
     }
 
     /// `iniciar_sesion`. `pool` sustituye a la biblioteca (pruebas).

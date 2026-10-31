@@ -2,6 +2,7 @@
 
 pub mod azar;
 pub mod constructor;
+pub mod director;
 pub mod ejecutor;
 pub mod embeddings;
 pub mod equipo;

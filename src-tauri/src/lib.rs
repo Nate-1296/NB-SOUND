@@ -56,6 +56,8 @@ pub struct Estado {
     pub importador: catalogo::importacion::Importador,
     pub agregados: agregados::Gestor,
     pub karaoke: karaoke::Karaoke,
+    pub dj: dj::director::Director,
+    pub equipo: dj::equipo::Equipo,
 }
 
 /// La política de red que el usuario dejó guardada; la de fábrica, que no deja
@@ -221,6 +223,32 @@ pub fn run() {
             b.enviar(reproductor::Orden::InstrumentalListo(pista));
         }
     });
+    // El DJ, en su hilo (F6.1.6): sigue construyendo la sesión mientras suena, y
+    // cada bloque nuevo llega al reproductor y a la vista.
+    let aviso = Arc::clone(&ventana);
+    let al_reproductor = Arc::clone(&buzon_karaoke);
+    let rutas_dj = rutas.clone();
+    let director = dj::director::Director::arrancar(
+        dj::servicio::Dj::new(
+            db.clone(),
+            Box::new(move || dj::embeddings::proveedor(&rutas_dj)),
+        ),
+        Arc::new(move |sesion| {
+            use tauri::Emitter;
+            if let Some(b) = al_reproductor.get() {
+                b.enviar(reproductor::Orden::Dj(reproductor::OrdenDj::Recargar(
+                    sesion,
+                )));
+            }
+            if let Some(app) = aviso.get() {
+                let _ = app.emit("dj:cambio", sesion);
+            }
+        }),
+    )
+    .expect("no se pudo arrancar el hilo del DJ");
+    // La medida del equipo para mezclar (F6.1.4): la comparten el DJ, que la lanza
+    // al abrirse, y el reproductor, que la usa en cada mezcla.
+    let equipo = dj::equipo::Equipo::default();
     let estado = Estado {
         rutas: rutas.clone(),
         red: Arc::clone(&red),
@@ -229,11 +257,10 @@ pub fn run() {
         importador: importador.clone(),
         agregados: agregados::Gestor::default(),
         karaoke: servicio_karaoke,
+        dj: director,
+        equipo: equipo.clone(),
     };
     let importador_setup = importador.clone();
-    // La medida del equipo para mezclar (F6.1.4): la comparten el DJ, que la lanza
-    // al abrirse, y el reproductor, que la usa en cada mezcla.
-    let equipo = dj::equipo::Equipo::default();
 
     let aplicacion = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -444,7 +471,16 @@ pub fn run() {
             comandos::karaoke_estado,
             comandos::karaoke_preparar,
             comandos::karaoke_preparar_favoritas,
-            comandos::descubrir
+            comandos::descubrir,
+            comandos::dj_pedir,
+            comandos::dj_sesion,
+            comandos::dj_reproducir,
+            comandos::dj_valorar,
+            comandos::dj_regenerar,
+            comandos::dj_descartar,
+            comandos::dj_guardar,
+            comandos::dj_historial,
+            comandos::dj_eliminar
         ])
         .build(tauri::generate_context!())
         .expect("no se pudo arrancar la ventana de NB Sound");
