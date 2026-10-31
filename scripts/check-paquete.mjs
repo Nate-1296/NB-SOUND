@@ -63,7 +63,7 @@ const COMPILACION = join(RAIZ, 'build');
 const MANIFIESTO = join(RAIZ, '.svelte-kit', 'output', 'client', '.vite', 'manifest.json');
 
 /** Lo que, si cambia, cambia el paquete. */
-const FUENTES = ['src', 'svelte.config.js', 'vite.config.js', 'package.json', 'pnpm-lock.yaml'];
+const FUENTES = ['src', 'vite.config.js', 'package.json', 'pnpm-lock.yaml'];
 
 const ALIAS = { '$lib/': 'src/lib/', '$ui/': 'src/lib/ui/', '$core/': 'src/lib/core/' };
 

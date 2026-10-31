@@ -1,10 +1,34 @@
+import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vitest/config';
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig({
-  plugins: [sveltekit()],
+  plugins: [
+    // NB Sound es una aplicación de página única dentro del webview de Tauri: no
+    // hay servidor ni renderizado en servidor, así que el adaptador es el
+    // estático (ADR-001). SvelteKit 3 ya no lee `svelte.config.js`.
+    sveltekit({
+      preprocess: vitePreprocess(),
+      adapter: adapter({
+        pages: 'build',
+        assets: 'build',
+        fallback: 'index.html',
+        precompress: false,
+        strict: true
+      }),
+      alias: {
+        $lib: 'src/lib',
+        $core: 'src/lib/core',
+        $ui: 'src/lib/ui'
+      },
+      compilerOptions: {
+        runes: true
+      }
+    })
+  ],
   clearScreen: false,
   server: {
     // Los componentes se transforman al arrancar para que el CSS virtual de cada

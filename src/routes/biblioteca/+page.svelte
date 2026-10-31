@@ -227,7 +227,7 @@
           class="pestana"
           class:activa={vista === v}
           aria-selected={vista === v}
-          onclick={() => goto(`/biblioteca?vista=${v}`, { replaceState: true, keepFocus: true })}
+          onclick={() => goto(`/biblioteca?vista=${v}`, { replace: true, reset: false })}
         >
           {t.vistas[v]}
         </button>

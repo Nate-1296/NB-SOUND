@@ -26,9 +26,9 @@
       const q = consulta.trim();
       if (q === '' && page.url.pathname !== '/buscar') return;
       void goto(`/buscar?q=${encodeURIComponent(q)}`, {
-        replaceState: page.url.pathname === '/buscar',
-        keepFocus: true,
-        noScroll: true
+        replace: page.url.pathname === '/buscar',
+        // Sin devolver el foco ni el desplazamiento: se sigue escribiendo.
+        reset: false
       });
     }, 200);
   }
