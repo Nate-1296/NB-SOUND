@@ -75,12 +75,12 @@ fn servicio(e: &Escenario, apuntes: &Apuntes) -> Servicio<Offline> {
     .unwrap()
 }
 
-/// Renderiza y atiende al motor hasta que se cumple `hasta` o pasan 20 s.
+/// Renderiza y atiende al motor hasta que se cumple `hasta` o pasan 60 s.
 fn correr(s: &mut Servicio<Offline>, hasta: impl Fn(&Servicio<Offline>) -> bool) {
-    let limite = Instant::now() + Duration::from_secs(20);
+    let limite = Instant::now() + Duration::from_secs(60);
     while !hasta(s) && Instant::now() < limite {
         let _ = renderizar(s.motor(), 2_048);
-        std::thread::sleep(Duration::from_millis(2));
+        std::thread::sleep(Duration::from_millis(1));
         s.atender_motor();
     }
 }

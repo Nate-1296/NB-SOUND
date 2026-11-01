@@ -553,7 +553,27 @@ impl<B: kira::backend::Backend> Servicio<B> {
                 E::PistaEmpieza { .. } => {}
                 E::ColaTerminada => {
                     if self.dj.as_ref().is_some_and(|d| d.mezcla.is_none()) {
-                        self.terminar_dj();
+                        let pos = self.motor.posicion();
+                        let es_actual = self
+                            .dj
+                            .as_ref()
+                            .and_then(|d| d.sonando.as_ref())
+                            .is_some_and(|s| s.ficha == pos.ficha && pos.ficha != 0);
+                        let dur = self
+                            .dj
+                            .as_ref()
+                            .and_then(|d| d.pistas.get(d.indice))
+                            .map_or(0.0, |p| p.duracion_seg);
+                        // Si la pista actual todavía no ha terminado de sonar, este fin
+                        // de cola es un residuo del plato saliente de la mezcla anterior.
+                        if es_actual && pos.segundos < dur - 0.5 {
+                            continue;
+                        }
+                        if let Some(i) = self.dj.as_ref().and_then(|d| d.siguiente(d.indice)) {
+                            self.tocar_dj(i, 0.0);
+                        } else {
+                            self.terminar_dj();
+                        }
                     }
                 }
                 E::PistaIlegible { ficha, error } => {
