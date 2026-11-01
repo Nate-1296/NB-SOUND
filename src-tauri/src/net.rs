@@ -419,8 +419,10 @@ pub async fn buscar_actualizacion<R: tauri::Runtime>(
     }))
 }
 
+#[cfg(target_os = "linux")]
 struct ArchivoDestino(std::fs::File);
 
+#[cfg(target_os = "linux")]
 impl Destino for ArchivoDestino {
     fn empezar(&mut self, continuada: bool) -> std::io::Result<()> {
         use std::io::Seek;
