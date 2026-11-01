@@ -32,15 +32,33 @@
     const nombre = aparienciaActual.actual.nombreUsuario;
     if (!nombre) return al(t.saludosSinNombre);
     const hora = new Date().getHours();
-    const lista = hora < 12 ? t.saludosManana : hora < 19 ? t.saludosTarde : t.saludosNoche;
+    const lista =
+      hora < 6
+        ? t.saludosMadrugada
+        : hora < 12
+          ? t.saludosManana
+          : hora < 19
+            ? t.saludosTarde
+            : t.saludosNoche;
     return al(lista)(nombre);
   });
 
-  const retomar = $derived(datos?.paraVolver[0] ?? null);
+  const pistaRetomar = $derived.by(() => {
+    if (reproductor.pista) return reproductor.pista;
+    return datos?.paraVolver[0]?.pista ?? null;
+  });
   const hayBiblioteca = $derived((datos?.cifras.pistas ?? 0) > 0);
   const idsVolver = $derived(datos?.paraVolver.map((x) => x.pista.id) ?? []);
   const idsTop = $derived(datos?.top.map((x) => x.pista.id) ?? []);
   const idsUltimos = $derived(datos?.ultimosAnadidos.map((x) => x.id) ?? []);
+
+  function activarRetomar() {
+    if (pistaRetomar && reproductor.pista?.id === pistaRetomar.id) {
+      void reproductor.pausarReanudar();
+    } else if (pistaRetomar) {
+      reproducir([pistaRetomar.id]);
+    }
+  }
 
   function reproducir(ids: number[], desde = 0) {
     void reproductor.reproducirPistas(ids, desde);
@@ -72,9 +90,6 @@
       <h1>{saludo}</h1>
       <p>{t.subtitulo}</p>
     </div>
-    {#await import('$ui/EcualizadorBarras.svelte') then m}
-      <m.default />
-    {/await}
   </header>
 
   {#if datos && !hayBiblioteca}
@@ -106,20 +121,27 @@
           {/each}
         </ul>
 
-        {#if retomar}
-          <button type="button" class="retomar" onclick={() => reproducir([retomar.pista.id])}>
+        {#if pistaRetomar}
+          <button type="button" class="retomar" onclick={activarRetomar}>
             <span class="mini-portada">
-              {#if retomar.pista.tienePortada}<img
-                  src={urlPortada('pista', retomar.pista.id, 64)}
+              {#if pistaRetomar.tienePortada}<img
+                  src={urlPortada('pista', pistaRetomar.id, 64)}
                   alt=""
                 />{:else}<Icon nombre="cancion" tamano={18} />{/if}
             </span>
             <span class="texto">
               <span class="etiqueta">{t.retomar}</span>
-              <strong>{retomar.pista.titulo}</strong>
-              <span class="sub">{retomar.pista.artista} · {retomar.pista.album}</span>
+              <strong>{pistaRetomar.titulo}</strong>
+              <span class="sub">{pistaRetomar.artista} · {pistaRetomar.album}</span>
             </span>
-            <span class="play"><Icon nombre="reproducir" tamano={18} /></span>
+            <span class="play"
+              ><Icon
+                nombre={reproductor.pista?.id === pistaRetomar.id && reproductor.sonando
+                  ? 'pausa'
+                  : 'reproducir'}
+                tamano={18}
+              /></span
+            >
           </button>
         {/if}
       </div>

@@ -484,6 +484,7 @@ pub fn run() {
             comandos::borrar_clave_ia,
             comandos::inicio,
             comandos::perfil,
+            comandos::perfil_cambiar_foto,
             comandos::resumen_escucha,
             comandos::exportar_resumen_escucha,
             comandos::movil_estado,

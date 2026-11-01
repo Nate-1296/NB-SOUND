@@ -16,6 +16,7 @@
     reiniciar
   } from '$core/ipc/aparte';
   import { textosAparte } from '$lib/i18n/aparte';
+  import MenuSelector from '$ui/MenuSelector.svelte';
 
   const t = textosAparte.copia;
   const FRECUENCIAS = [0, 1, 7, 30];
@@ -122,21 +123,20 @@
 {#if mensaje}<p role="status">{mensaje}</p>{/if}
 
 {#if estado}
-  <label class="ajuste">
+  <div class="ajuste">
     <span class="rotulo">
       {t.automaticas}
       <small>{estado.ultima ? t.ultima(fecha(estado.ultima)) : t.ninguna}</small>
     </span>
-    <select
-      class="campo"
-      value={String(estado.cadaDias)}
-      onchange={(e) => cambiar(() => copiaFrecuencia(Number(e.currentTarget.value)))}
-    >
-      {#each FRECUENCIAS as dias (dias)}
-        <option value={String(dias)}>{t.frecuencias[dias]}</option>
-      {/each}
-    </select>
-  </label>
+    <MenuSelector
+      opciones={FRECUENCIAS.map((dias) => ({
+        valor: dias,
+        etiqueta: t.frecuencias[dias] ?? String(dias)
+      }))}
+      valor={estado.cadaDias}
+      onchange={(v) => cambiar(() => copiaFrecuencia(v))}
+    />
+  </div>
   {#if estado.cadaDias > 0}
     <div class="ajuste">
       <span class="rotulo">
@@ -189,17 +189,6 @@
   .rotulo small {
     color: var(--m3c-on-surface-variant);
     font-weight: 400;
-  }
-
-  .campo {
-    min-width: 14rem;
-    height: 2.5rem;
-    padding: 0 var(--ns-espacio-3);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-sm);
-    background: var(--m3c-surface-container);
-    color: var(--m3c-on-surface);
-    font: inherit;
   }
 
   .botones {

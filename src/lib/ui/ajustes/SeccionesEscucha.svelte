@@ -13,6 +13,7 @@
   } from '$core/ipc';
   import { reproductor } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
+  import MenuSelector from '$ui/MenuSelector.svelte';
   import type { TemaV1 } from '$ui/temas-v1';
 
   interface Props {
@@ -120,20 +121,18 @@
         onchange={(e) => enviarEq({ ...eq, activo: e.currentTarget.checked })}
       />
     </label>
-    <label class="ajuste">
+    <div class="ajuste">
       <span class="rotulo">{t.preseleccion}</span>
-      <select
-        class="campo"
-        disabled={!eq.activo}
-        value={eq.preseleccion === null ? '' : String(eq.preseleccion)}
-        onchange={(e) => elegirPreseleccion(e.currentTarget.value)}
-      >
-        {#if eq.preseleccion === null}<option value="">{t.personalizado}</option>{/if}
-        {#each preselecciones as p, i (p.nombre)}
-          <option value={String(i)}>{p.nombre}</option>
-        {/each}
-      </select>
-    </label>
+      <MenuSelector
+        deshabilitado={!eq.activo}
+        opciones={[
+          ...(eq.preseleccion === null ? [{ valor: '', etiqueta: t.personalizado }] : []),
+          ...preselecciones.map((p, i) => ({ valor: String(i), etiqueta: p.nombre }))
+        ]}
+        valor={eq.preseleccion === null ? '' : String(eq.preseleccion)}
+        onchange={elegirPreseleccion}
+      />
+    </div>
     <div class="bandas" class:apagado={!eq.activo}>
       {#each eq.bandas as valor, k (k)}
         <label class="banda">
@@ -345,21 +344,53 @@
     font-weight: 400;
   }
 
-  .campo {
-    min-width: 14rem;
-    height: 2.5rem;
-    padding: 0 var(--ns-espacio-3);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-sm);
-    background: var(--m3c-surface-container);
-    color: var(--m3c-on-surface);
-    font: inherit;
+  input[type='checkbox'] {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 3rem;
+    height: 1.75rem;
+    border: 2px solid var(--m3c-outline);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-highest);
+    cursor: pointer;
+    transition:
+      background var(--ns-duracion-corta) var(--ns-curva),
+      border-color var(--ns-duracion-corta) var(--ns-curva);
   }
 
-  input[type='checkbox'] {
-    width: 2.75rem;
-    height: 1.5rem;
-    accent-color: var(--m3c-primary);
+  input[type='checkbox']::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0.25rem;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-outline);
+    transition:
+      transform var(--ns-duracion-corta) var(--ns-curva),
+      background var(--ns-duracion-corta) var(--ns-curva),
+      width var(--ns-duracion-corta) var(--ns-curva),
+      height var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  input[type='checkbox']:checked {
+    background: var(--m3c-primary);
+    border-color: var(--m3c-primary);
+  }
+
+  input[type='checkbox']:checked::before {
+    transform: translate(1.25rem, -50%);
+    background: var(--m3c-on-primary);
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  input[type='checkbox']:focus-visible {
+    outline: 2px solid var(--m3c-primary);
+    outline-offset: 2px;
   }
 
   input[type='range'] {

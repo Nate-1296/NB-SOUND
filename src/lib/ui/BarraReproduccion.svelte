@@ -70,6 +70,29 @@
     capaPlaylist.showPopover();
   }
 
+  // Popover de volumen para pantallas compactas donde el deslizador inline se oculta.
+  let capaVolumen: HTMLDivElement | undefined = $state();
+  let botonVolumen: HTMLButtonElement | undefined = $state();
+  let volumenAbierto = $state(false);
+  let deslizadorBarra: HTMLInputElement | undefined = $state();
+
+  function alternarVolumen() {
+    if (!capaVolumen || !botonVolumen) return;
+    const sliderVisible = deslizadorBarra ? deslizadorBarra.offsetParent !== null : false;
+    if (sliderVisible) {
+      void reproductor.volumen(reproductor.instantanea.volumen > 0 ? 0 : 1);
+      return;
+    }
+    if (volumenAbierto) {
+      capaVolumen.hidePopover();
+      return;
+    }
+    const r = botonVolumen.getBoundingClientRect();
+    capaVolumen.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
+    capaVolumen.style.bottom = `${window.innerHeight - r.top + 8}px`;
+    capaVolumen.showPopover();
+  }
+
   // El micrófono (F5.2.2): con instrumental alterna; sin él, lo prepara mientras
   // suena el original; sin el agregado, lo ofrece ahí mismo (F5.1.4).
   let preparando = $state<number | null>(null);
@@ -414,15 +437,46 @@
       <button
         type="button"
         class="control"
+        bind:this={botonVolumen}
         aria-label={i.volumen > 0 ? t.silenciar : t.quitarSilencio}
         title={t.volumen}
-        onclick={() => reproductor.volumen(i.volumen > 0 ? 0 : 1)}
+        onclick={alternarVolumen}
       >
         <Icon nombre={i.volumen > 0 ? 'volumen' : 'silencio'} tamano={20} />
       </button>
+      <div
+        class="capa-volumen"
+        popover="auto"
+        bind:this={capaVolumen}
+        ontoggle={(e) => (volumenAbierto = e.newState === 'open')}
+      >
+        <div class="popup-volumen">
+          <button
+            type="button"
+            class="control"
+            aria-label={i.volumen > 0 ? t.silenciar : t.quitarSilencio}
+            onclick={() => reproductor.volumen(i.volumen > 0 ? 0 : 1)}
+          >
+            <Icon nombre={i.volumen > 0 ? 'volumen' : 'silencio'} tamano={18} />
+          </button>
+          <input
+            type="range"
+            class="deslizador deslizador-popup"
+            aria-label={t.volumen}
+            min="0"
+            max="1"
+            step="0.01"
+            value={i.volumen}
+            style:--relleno={`${i.volumen * 100}%`}
+            oninput={(e) => reproductor.volumen(Number(e.currentTarget.value))}
+          />
+          <span class="pct-volumen">{Math.round(i.volumen * 100)}%</span>
+        </div>
+      </div>
       <input
         type="range"
-        class="deslizador"
+        class="deslizador deslizador-barra"
+        bind:this={deslizadorBarra}
         aria-label={t.volumen}
         min="0"
         max="1"
@@ -461,7 +515,7 @@
       class="control"
       class:activo={page.url.pathname === '/reproduciendo' && !page.url.searchParams.has('letras')}
       aria-label={t.expandir}
-      title={t.expandir}
+      title={`${t.expandir} (F)`}
       disabled={!hayPista || i.ciego}
       onclick={() => abrirVista(false)}
     >
@@ -743,9 +797,47 @@
     width: 6.5rem;
   }
 
+  .capa-volumen {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    overflow: visible;
+  }
+
+  .capa-volumen:popover-open {
+    display: flex;
+  }
+
+  .popup-volumen {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    padding: var(--ns-espacio-2) var(--ns-espacio-3);
+    background: var(--m3c-surface-container-high);
+    color: var(--m3c-on-surface);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-lg);
+    box-shadow: var(--m3-elevation-2, none);
+  }
+
+  .deslizador-popup {
+    width: 6.5rem;
+  }
+
+  .pct-volumen {
+    font-size: var(--ns-texto-xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--m3c-on-surface-variant);
+    min-width: 2.25rem;
+    text-align: right;
+  }
+
   @container carcasa (max-width: 60rem) {
     .album,
-    .volumen .deslizador {
+    .volumen .deslizador-barra {
       display: none;
     }
   }

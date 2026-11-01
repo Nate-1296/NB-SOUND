@@ -419,7 +419,7 @@ fn restaurar_una_sesion_no_suena_hasta_reproducir_y_vuelve_a_su_segundo() {
     let mut c = cola();
     c.restaurar(vec![f(1), f(2), f(3)], 1, 42.5);
     assert_eq!(c.estado(), Estado::Detenido);
-    assert_eq!(activa(&c), None);
+    assert_eq!(activa(&c), Some(2));
     assert_eq!(
         c.pausar_reanudar(),
         Accion::Reproducir {

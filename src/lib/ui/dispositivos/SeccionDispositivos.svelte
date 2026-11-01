@@ -15,6 +15,7 @@
   import { textos } from '$lib/i18n';
   import { textosAparte } from '$lib/i18n/aparte';
   import Icon from '$ui/Icon.svelte';
+  import MenuSelector from '$ui/MenuSelector.svelte';
 
   import BloqueFiesta from './BloqueFiesta.svelte';
   import DialogoConectar from './DialogoConectar.svelte';
@@ -155,38 +156,44 @@
     <h3>{tc.titulo}</h3>
     <p>{tc.ayuda}</p>
 
-    <label class="ajuste">
+    <div class="ajuste">
       <span class="rotulo">{tc.origen}</span>
-      <select class="selector" bind:value={origen}>
-        <option value="favoritas">{tc.origenes.favoritas}</option>
-        <option value="playlist">{tc.origenes.playlist}</option>
-        <option value="biblioteca">{tc.origenes.biblioteca}</option>
-      </select>
-    </label>
+      <MenuSelector
+        opciones={[
+          { valor: 'favoritas', etiqueta: tc.origenes.favoritas },
+          { valor: 'playlist', etiqueta: tc.origenes.playlist },
+          { valor: 'biblioteca', etiqueta: tc.origenes.biblioteca }
+        ]}
+        bind:valor={origen}
+      />
+    </div>
 
     {#if origen === 'playlist'}
-      <label class="ajuste">
+      <div class="ajuste">
         <span class="rotulo">{tc.playlist}</span>
         {#if playlists.length === 0}
           <small>{tc.sinPlaylists}</small>
         {:else}
-          <select class="selector" bind:value={playlistId}>
-            {#each playlists as pl (pl.id)}
-              <option value={pl.id}>{pl.nombre}</option>
-            {/each}
-          </select>
+          <MenuSelector
+            opciones={playlists.map((pl) => ({ valor: pl.id, etiqueta: pl.nombre }))}
+            valor={playlistId ?? playlists[0]?.id ?? 0}
+            onchange={(v) => (playlistId = v)}
+          />
         {/if}
-      </label>
+      </div>
     {/if}
 
-    <label class="ajuste">
+    <div class="ajuste">
       <span class="rotulo">{tc.estructura}</span>
-      <select class="selector" bind:value={estructura}>
-        <option value="artistaAlbum">{tc.estructuras.artistaAlbum}</option>
-        <option value="artista">{tc.estructuras.artista}</option>
-        <option value="plana">{tc.estructuras.plana}</option>
-      </select>
-    </label>
+      <MenuSelector
+        opciones={[
+          { valor: 'artistaAlbum', etiqueta: tc.estructuras.artistaAlbum },
+          { valor: 'artista', etiqueta: tc.estructuras.artista },
+          { valor: 'plana', etiqueta: tc.estructuras.plana }
+        ]}
+        bind:valor={estructura}
+      />
+    </div>
 
     <label class="ajuste interruptor">
       <span class="rotulo">{tc.incrustarPortada}</span>
@@ -276,9 +283,52 @@
   }
 
   input[type='checkbox'] {
-    width: 2.75rem;
-    height: 1.5rem;
-    accent-color: var(--m3c-primary);
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 3rem;
+    height: 1.75rem;
+    border: 2px solid var(--m3c-outline);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-highest);
+    cursor: pointer;
+    transition:
+      background var(--ns-duracion-corta) var(--ns-curva),
+      border-color var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  input[type='checkbox']::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0.25rem;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-outline);
+    transition:
+      transform var(--ns-duracion-corta) var(--ns-curva),
+      background var(--ns-duracion-corta) var(--ns-curva),
+      width var(--ns-duracion-corta) var(--ns-curva),
+      height var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  input[type='checkbox']:checked {
+    background: var(--m3c-primary);
+    border-color: var(--m3c-primary);
+  }
+
+  input[type='checkbox']:checked::before {
+    transform: translate(1.25rem, -50%);
+    background: var(--m3c-on-primary);
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  input[type='checkbox']:focus-visible {
+    outline: 2px solid var(--m3c-primary);
+    outline-offset: 2px;
   }
 
   .telefonos {
@@ -385,17 +435,6 @@
   .bloque-externo h3 {
     margin: 0;
     font-size: var(--ns-texto-md);
-  }
-
-  .selector {
-    min-width: 15rem;
-    padding: var(--ns-espacio-2) var(--ns-espacio-3);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-md);
-    background: var(--m3c-surface-container);
-    color: var(--m3c-on-surface);
-    font: inherit;
-    font-size: var(--ns-texto-sm);
   }
 
   .fila-accion {

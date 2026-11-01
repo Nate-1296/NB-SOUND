@@ -30,6 +30,7 @@
   import FilaPista from '$ui/biblioteca/FilaPista.svelte';
   import Icon from '$ui/Icon.svelte';
   import ListaVirtual from '$ui/lista/ListaVirtual.svelte';
+  import MenuSelector from '$ui/MenuSelector.svelte';
   import { TAM_BLOQUE } from '$ui/lista/ventana';
 
   type Vista = 'albumes' | 'artistas' | 'pistas';
@@ -300,26 +301,20 @@
     {/if}
 
     <div class="control-orden">
-      <span class="rotulo-orden">{t.orden}:</span>
-      <select
-        class="selector-orden"
-        aria-label={t.orden}
-        value={vista === 'pistas'
+      <MenuSelector
+        rotulo={t.orden}
+        opciones={ordenesActuales.map((o) => ({ valor: o, etiqueta: t.ordenes[o] }))}
+        valor={vista === 'pistas'
           ? ordenPistas
           : vista === 'albumes'
             ? ordenAlbumes
             : ordenArtistas}
-        onchange={(e) => {
-          const v = e.currentTarget.value;
+        onchange={(v) => {
           if (vista === 'pistas') ordenPistas = v as OrdenPistas;
           else if (vista === 'albumes') ordenAlbumes = v as OrdenAlbumes;
           else ordenArtistas = v as OrdenArtistas;
         }}
-      >
-        {#each ordenesActuales as o (o)}
-          <option value={o}>{t.ordenes[o]}</option>
-        {/each}
-      </select>
+      />
     </div>
 
     {#if vista === 'albumes' || vista === 'artistas'}
@@ -581,28 +576,6 @@
     display: flex;
     align-items: center;
     gap: var(--ns-espacio-2);
-  }
-
-  .rotulo-orden {
-    color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-sm);
-    font-weight: 500;
-  }
-
-  .selector-orden {
-    height: 2.25rem;
-    padding: 0 var(--ns-espacio-3);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-pleno);
-    background: var(--m3c-surface-container);
-    color: var(--m3c-on-surface);
-    font: inherit;
-    font-size: var(--ns-texto-sm);
-    cursor: pointer;
-  }
-
-  .selector-orden:hover {
-    background: var(--m3c-surface-container-high);
   }
 
   .ficha {

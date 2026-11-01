@@ -8,7 +8,7 @@
 <script lang="ts">
   import { aparienciaActual } from '$core/apariencia.svelte';
   import { duracionDetallada } from '$core/formato';
-  import { type Perfil, perfil, urlFotoPerfil, urlPortada } from '$core/ipc';
+  import { type Perfil, perfil, perfilCambiarFoto, urlFotoPerfil, urlPortada } from '$core/ipc';
   import {
     exportarResumenEscucha,
     type RadarAnimos,
@@ -28,6 +28,15 @@
   let exportando = $state(false);
   let exportada = $state(false);
   let sinFoto = $state(false);
+  let versionFoto = $state(Date.now());
+
+  async function cambiarFoto() {
+    const cambio = await perfilCambiarFoto();
+    if (cambio) {
+      sinFoto = false;
+      versionFoto = Date.now();
+    }
+  }
 
   function cargarResumen(periodo: string) {
     periodoActivo = periodo;
@@ -117,13 +126,22 @@
 
 <section class="perfil">
   <header class="identidad">
-    <span class="foto">
+    <button
+      type="button"
+      class="foto boton-foto"
+      title={textos.ajustes.cambiarFoto}
+      aria-label={textos.ajustes.cambiarFoto}
+      onclick={cambiarFoto}
+    >
       {#if !sinFoto}
-        <img src={urlFotoPerfil()} alt="" onerror={() => (sinFoto = true)} />
+        <img src={urlFotoPerfil(versionFoto)} alt="" onerror={() => (sinFoto = true)} />
       {:else}
         <Icon nombre="artista" tamano={48} />
       {/if}
-    </span>
+      <span class="velo-foto" aria-hidden="true">
+        <Icon nombre="editar" tamano={22} />
+      </span>
+    </button>
     <div class="datos">
       <span class="etiqueta">{t.identidad}</span>
       <h1>{nombre}</h1>
@@ -235,12 +253,13 @@
                   reproductor.reproducirPistas(datos?.topCanciones.map((x) => x.pista.id) ?? [], k)}
               >
                 <span class="n">{String(k + 1).padStart(2, '0')}</span>
-                <span class="img"
-                  >{#if e.pista.tienePortada}<img
-                      src={urlPortada('pista', e.pista.id, 64)}
-                      alt=""
-                    />{/if}</span
-                >
+                <span class="img">
+                  {#if e.pista.tienePortada}
+                    <img src={urlPortada('pista', e.pista.id, 64)} alt="" />
+                  {:else}
+                    <Icon nombre="cancion" tamano={18} />
+                  {/if}
+                </span>
                 <span class="texto"
                   ><strong>{e.pista.titulo}</strong><span class="sub"
                     >{e.pista.artista} · {e.pista.album}</span
@@ -258,9 +277,13 @@
             <li>
               <a class="fila" href={`/biblioteca/album?id=${a.id}`}>
                 <span class="n">{String(k + 1).padStart(2, '0')}</span>
-                <span class="img"
-                  >{#if a.tienePortada}<img src={urlPortada('album', a.id, 64)} alt="" />{/if}</span
-                >
+                <span class="img">
+                  {#if a.tienePortada}
+                    <img src={urlPortada('album', a.id, 64)} alt="" />
+                  {:else}
+                    <Icon nombre="album" tamano={18} />
+                  {/if}
+                </span>
                 <span class="texto"
                   ><strong>{a.titulo}</strong><span class="sub">{a.artista}</span></span
                 >
@@ -277,12 +300,13 @@
             <li>
               <a class="fila" href={`/biblioteca/artista?id=${a.id}`}>
                 <span class="n">{String(k + 1).padStart(2, '0')}</span>
-                <span class="img redonda"
-                  >{#if a.tieneImagen}<img
-                      src={urlPortada('artista', a.id, 64)}
-                      alt=""
-                    />{/if}</span
-                >
+                <span class="img redonda">
+                  {#if a.tieneImagen}
+                    <img src={urlPortada('artista', a.id, 64)} alt="" />
+                  {:else}
+                    <Icon nombre="artista" tamano={18} />
+                  {/if}
+                </span>
                 <span class="texto"><strong>{a.nombre}</strong></span>
                 <Icon nombre="derecha" tamano={16} />
               </a>
@@ -409,6 +433,29 @@
     border-radius: var(--ns-radio-pleno);
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-on-surface-variant);
+  }
+
+  .boton-foto {
+    position: relative;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .velo-foto {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-inverse-surface);
+    color: var(--m3c-inverse-on-surface);
+    opacity: 0;
+    transition: opacity var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .boton-foto:hover .velo-foto,
+  .boton-foto:focus-visible .velo-foto {
+    opacity: 0.7;
   }
 
   .foto img,
@@ -656,11 +703,14 @@
   }
 
   .img {
+    display: grid;
+    place-items: center;
     flex: 0 0 2.5rem;
     height: 2.5rem;
     overflow: hidden;
     border-radius: var(--ns-radio-sm);
     background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface-variant);
   }
 
   .img.redonda {

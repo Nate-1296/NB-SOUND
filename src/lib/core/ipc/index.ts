@@ -174,9 +174,10 @@ export type ClaseDePortada = 'pista' | 'album' | 'artista';
  * WebView2 lo expone como `http://portada.localhost`.
  */
 /** La foto de perfil que trajo la V1, si hay. */
-export function urlFotoPerfil(): string {
+export function urlFotoPerfil(version?: number): string {
   const windows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');
-  return windows ? 'http://portada.localhost/perfil' : 'portada://localhost/perfil';
+  const base = windows ? 'http://portada.localhost/perfil' : 'portada://localhost/perfil';
+  return version ? `${base}?v=${version}` : base;
 }
 
 export function urlPortada(clase: ClaseDePortada, id: number, tamano: number): string {
@@ -385,6 +386,11 @@ export function inicio(): Promise<Inicio> {
 /** Lo que el historial dice del usuario (Tu música). */
 export function perfil(): Promise<Perfil> {
   return call<Perfil>('perfil');
+}
+
+/** Abre el selector nativo para cambiar la foto de perfil. Devuelve true si se cambió. */
+export function perfilCambiarFoto(): Promise<boolean> {
+  return call<boolean>('perfil_cambiar_foto');
 }
 
 // --- Karaoke ---------------------------------------------------------------------

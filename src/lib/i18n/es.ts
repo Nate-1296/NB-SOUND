@@ -166,7 +166,8 @@ export const es = {
       pistas: (n: number, duracion: string) =>
         `${n === 1 ? '1 pista' : `${n} pistas`} · ${duracion}`,
       aleatorio: 'Aleatorio',
-      noEncontrado: 'Este álbum ya no está en la biblioteca.'
+      noEncontrado: 'Este álbum ya no está en la biblioteca.',
+      masDe: (artista: string) => `Más de ${artista}`
     },
     artista: {
       albumes: 'Álbumes',
@@ -179,6 +180,14 @@ export const es = {
   },
   inicio: {
     // Los saludos de la V1 (`legado/utils/diccionarios.py`), uno al azar por visita.
+    saludosMadrugada: [
+      (nombre: string) => `Buenas noches, ${nombre}. La música acompaña la calma de estas horas.`,
+      (nombre: string) =>
+        `Madrugada tranquila, ${nombre}. Una buena selección para escuchar sin prisa.`,
+      (nombre: string) => `Buenas noches, ${nombre}. Tu biblioteca sigue despierta contigo.`,
+      (nombre: string) => `${nombre}, escucha con calma en este tramo de la noche.`,
+      (nombre: string) => `Buenas noches, ${nombre}. El mejor momento para una escucha atenta.`
+    ],
     saludosManana: [
       (nombre: string) => `Buenos días, ${nombre}. Tu música ya está lista.`,
       (nombre: string) => `Arranca el día con una buena selección, ${nombre}.`,
@@ -443,6 +452,9 @@ export const es = {
     sinCarpeta: 'Todavía no hay carpeta. La eliges al importar música.',
     nombre: 'Tu nombre',
     nombreAyuda: 'Lo usa Inicio para saludarte.',
+    fotoPerfil: 'Foto de perfil',
+    fotoPerfilAyuda: 'Imagen visible en tu perfil y estadísticas personales.',
+    cambiarFoto: 'Cambiar imagen',
     normalizar: 'Igualar el volumen entre canciones',
     normalizarAyuda:
       'Lleva todas las canciones al mismo nivel (EBU R128). Se aplica desde la siguiente.',

@@ -76,6 +76,13 @@ export const esACiegas = {
   escucharEntera: 'Escuchar entera',
   aLaCola: 'Añadir a la cola',
   enCola: 'En la cola.',
+  estadisticas: {
+    titulo: 'Tus registros en A ciegas',
+    mejorRacha: 'Mejor racha',
+    acertadasSemana: 'Aciertos recientes',
+    modoFavorito: 'Modo preferido',
+    aciertosRecientes: 'Rendimiento en los últimos días'
+  },
   resumen: {
     titulo: 'Fin de la ronda',
     cifras: (acertados: number, revelados: number, pasados: number) =>

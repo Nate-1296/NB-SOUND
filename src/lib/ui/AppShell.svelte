@@ -9,6 +9,7 @@
 -->
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
+  import { page } from '$app/state';
 
   import { accionDeTecla, esCampoDeTexto } from '$core/atajos';
   import { aparienciaActual } from '$core/apariencia.svelte';
@@ -31,6 +32,7 @@
 
   let ancho = $state(0);
   const clase = $derived(clasificarAncho(ancho));
+  const enReproduciendo = $derived(page.url.pathname === '/reproduciendo');
 
   onMount(() => {
     void reproductor.arrancar();
@@ -125,10 +127,18 @@
 <div
   class="carcasa"
   class:compacta={aparienciaActual.barraLateralCompacta}
+  class:sin-lateral={enReproduciendo}
   data-ancho={clase}
   bind:clientWidth={ancho}
 >
-  <div class="lateral"><NavLateral pendientes={importacion.pendientes} /></div>
+  {#if !enReproduciendo}
+    <div class="lateral">
+      <NavLateral
+        pendientes={importacion.pendientes}
+        compacta={clase !== 'amplio' || aparienciaActual.barraLateralCompacta}
+      />
+    </div>
+  {/if}
   <div class="superior"><BarraSuperior /></div>
   <main class="contenido">{@render children()}</main>
   <div class="reproductor"><BarraReproduccion /></div>
@@ -180,6 +190,14 @@
   .reproductor {
     grid-area: reproductor;
     min-width: 0;
+  }
+
+  .carcasa.sin-lateral {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'superior'
+      'contenido'
+      'reproductor';
   }
 
   .carcasa:not([data-ancho='amplio']),

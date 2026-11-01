@@ -85,6 +85,11 @@
         bind:this={campo}
         bind:value={consulta}
         oninput={alEscribir}
+        onkeydown={(e) => {
+          if (e.key === 'Escape') {
+            campo?.blur();
+          }
+        }}
         type="search"
         placeholder={t.marcador}
         autocomplete="off"

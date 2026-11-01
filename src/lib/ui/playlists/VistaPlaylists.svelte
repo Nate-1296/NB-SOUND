@@ -84,14 +84,14 @@
         <p class="sub">{t.subtitulo}</p>
       </div>
       <div class="acciones">
-        <button type="button" class="boton" disabled={regenerando} onclick={crearParaMi}>
-          <Icon nombre="reintentar" tamano={16} />{regenerando ? ti.creandoParaMi : ti.crearParaMi}
+        <button type="button" class="boton relleno" onclick={() => (creando = true)}>
+          <Icon nombre="mas" tamano={16} />{t.nueva}
         </button>
         <button type="button" class="boton" onclick={() => (creandoInteligente = true)}>
           <Icon nombre="mas" tamano={16} />{ti.nueva}
         </button>
-        <button type="button" class="boton relleno" onclick={() => (creando = true)}>
-          <Icon nombre="mas" tamano={16} />{t.nueva}
+        <button type="button" class="boton" disabled={regenerando} onclick={crearParaMi}>
+          <Icon nombre="reintentar" tamano={16} />{regenerando ? ti.creandoParaMi : ti.crearParaMi}
         </button>
       </div>
     </header>
@@ -265,12 +265,14 @@
   .cabecera {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--ns-espacio-4);
+    flex-wrap: wrap;
   }
 
   .acciones {
     display: flex;
+    align-items: center;
     flex-wrap: wrap;
     gap: var(--ns-espacio-2);
   }

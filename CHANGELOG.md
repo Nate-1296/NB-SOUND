@@ -3,6 +3,35 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.3] — 2026-11-01
+
+Auditoría visual y funcional exhaustiva: resolución de los 18 hallazgos QA-01 a QA-18 de la suite final.
+
+### Mejoras y correcciones
+
+- **Reproducción y cola (QA-01, QA-03, QA-05, QA-08, QA-13, QA-18)**:
+  - Restauración inmediata del estado de la cola en el arranque con pista activa, metadatos y tiempo precargado sin requerir presionar Play (QA-01).
+  - El botón "Continuar escuchando" en Inicio reanuda reactivamente la pista restaurada o en pausa y sincroniza su icono de reproducción (QA-03).
+  - Popover de volumen accesible e interactivo con control deslizante y porcentaje para pantallas estrechas y vista compacta (QA-05).
+  - Eliminación de barras decorativas estáticas en Inicio y componente `EcualizadorBarras.svelte` huérfano (QA-08).
+  - Elevación visual y tokens semánticos M3 (`surface-container-high`, `elevation-3`) en el panel flotante de cola (QA-13).
+  - Atajos visibles y accesibles para modo pantalla completa (F11) y vista inmersiva (F) en la barra de reproducción (QA-18).
+- **Diseño del sistema y selectores (QA-09, QA-10, QA-11)**:
+  - Componente accesible `MenuSelector.svelte` con popover y foco por teclado, sustituyendo elementos `<select>` nativos en toda la aplicación (QA-09).
+  - Alineación ergonómica y barra de herramientas unificada en la vista de playlists, destacando "+ Nueva playlist" como botón primario (QA-10).
+  - Conmutadores estilo Material 3 Switch con animación deslizante y estados interactivos en los ajustes (QA-11).
+- **Navegación e inmersión (QA-02, QA-04, QA-06, QA-07, QA-17)**:
+  - Saludos circadianos de cuatro tramos según la hora local: madrugada, mañana, tarde y noche (QA-02).
+  - Navegación lateral en Ajustes adaptativa y desplazable sin desbordamientos en resoluciones reducidas (QA-04).
+  - Icono y etiqueta dinámicos en el botón de colapso de la barra lateral para indicar claramente la dirección de expansión (QA-06).
+  - Escape en el campo de búsqueda rápida desenfoca el foco y restaura inmediatamente los atajos globales (QA-07).
+  - Barra lateral colapsada automáticamente en la vista de reproducción inmersiva `/reproduciendo` para dar protagonismo total a las letras (QA-17).
+- **Biblioteca, perfil y juego a ciegas (QA-12, QA-14, QA-15, QA-16)**:
+  - Historial de récords y gráfica de actividad de los últimos 7 días en la vista "A ciegas", junto a ambientación de portadas y sección "Más del artista" en el detalle de álbum (QA-12).
+  - Fallbacks visuales limpios con iconos vectoriales en tarjetas y elementos sin imagen en Tu Música (QA-14).
+  - Selección y guardado de foto de perfil personalizada con diálogo de archivos nativo y persistencia local (QA-15).
+  - Discografía de álbumes reorganizada en la cabecera del perfil de artista antes de la lista plana de pistas (QA-16).
+
 ## [2.0.2] — 2026-10-31
 
 Resolución completa de hallazgos de paridad y componentes (COMP-01 a COMP-19) y corrección del actualizador del sistema en Linux (BUG-08).

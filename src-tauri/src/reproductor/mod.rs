@@ -245,6 +245,11 @@ impl<B: Backend> Servicio<B> {
             // El orden guardado ya es el barajado: se marca sin volver a barajar.
             self.cola.marcar_aleatorio();
         }
+        if let Some(activa) = self.cola.activa() {
+            if let Some((_, sonando)) = self.resolver(activa) {
+                self.actual = Some(sonando);
+            }
+        }
         Ok(())
     }
 
@@ -292,6 +297,7 @@ impl<B: Backend> Servicio<B> {
             Accion::Nada => {}
             Accion::Reproducir { fila, desde_seg } => match self.resolver(fila) {
                 Some((pista, sonando)) => {
+                    self.cola_seg_restaurada = 0.0;
                     self.motor.reproducir(pista, desde_seg);
                     self.actual = Some(sonando);
                 }
@@ -616,6 +622,8 @@ impl<B: Backend> Servicio<B> {
             pista_id: self.cola.activa().map(|f| f.pista_id),
             posicion_seg: if actual.is_some_and(|s| s.ficha == pos.ficha) {
                 pos.segundos
+            } else if actual.is_some() && self.cola.estado() == Estado::Detenido {
+                self.cola_seg_restaurada
             } else {
                 0.0
             },

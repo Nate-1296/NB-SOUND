@@ -807,6 +807,53 @@ pub async fn perfil(estado: tauri::State<'_, Estado>) -> NsResult<crate::perfil:
     en_segundo_plano(&estado, crate::perfil::perfil).await
 }
 
+/// Cambia la foto de perfil del usuario mediante el selector nativo de archivos.
+#[tauri::command]
+pub async fn perfil_cambiar_foto(app: AppHandle) -> NsResult<bool> {
+    use tauri_plugin_dialog::DialogExt;
+    let (db, rutas) = {
+        let e = app.state::<Estado>();
+        (e.db.clone(), e.rutas.clone())
+    };
+    tauri::async_runtime::spawn_blocking(move || {
+        let Some(archivo) = app
+            .dialog()
+            .file()
+            .set_title("Elegir foto de perfil")
+            .add_filter("Imágenes", &["png", "jpg", "jpeg", "webp"])
+            .blocking_pick_file()
+            .and_then(|f| f.into_path().ok())
+        else {
+            return Ok(false);
+        };
+        let bytes = std::fs::read(&archivo).map_err(|_| NsError::FileNotFound)?;
+        let ext = archivo
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("jpg")
+            .to_lowercase();
+        let ext = if ext == "png" { "png" } else { "jpg" };
+        let nombre_archivo = format!("foto.{ext}");
+        let carpeta = rutas.datos.join("perfil");
+        std::fs::create_dir_all(&carpeta).map_err(|_| NsError::StorageFailure)?;
+        let destino = carpeta.join(&nombre_archivo);
+        std::fs::write(&destino, bytes).map_err(|_| NsError::StorageFailure)?;
+
+        let conn = db.conexion()?;
+        let valor_json =
+            serde_json::to_string(&nombre_archivo).map_err(|_| NsError::StorageFailure)?;
+        conn.execute(
+            "INSERT INTO preferencias (clave, valor) VALUES ('foto_perfil', ?1)
+             ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor",
+            [&valor_json],
+        )
+        .map_err(|_| NsError::StorageFailure)?;
+        Ok(true)
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
 /// Resumen local de escucha (F8.3) por mes (`YYYY-MM`), año (`YYYY`) o `"todo"`.
 #[tauri::command]
 pub async fn resumen_escucha(

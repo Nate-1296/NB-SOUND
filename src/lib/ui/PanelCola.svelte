@@ -143,8 +143,9 @@
     padding: var(--ns-espacio-3);
     border: 1px solid var(--m3c-outline-variant);
     border-radius: var(--ns-radio-lg);
-    background: var(--m3c-surface-container);
+    background: var(--m3c-surface-container-high);
     color: var(--m3c-on-surface);
+    box-shadow: var(--m3-elevation-3, none);
   }
 
   header {
@@ -211,12 +212,13 @@
     padding: var(--ns-espacio-2);
     border: 1px solid transparent;
     border-radius: var(--ns-radio-md);
-    background: var(--m3c-surface-container-low);
+    background: var(--m3c-surface-container);
   }
 
   .fila.actual {
     border-color: var(--m3c-primary);
-    background: var(--m3c-surface-container-high);
+    background: var(--m3c-secondary-container);
+    color: var(--m3c-on-secondary-container);
   }
 
   .fila.destino {

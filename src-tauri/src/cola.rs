@@ -585,7 +585,8 @@ impl Cola {
         self.filas = filas;
         self.posicion = posicion;
         self.normalizar_indice();
-        self.activa_desde_cola = false;
+        self.activa_desde_cola = !self.filas.is_empty();
+        self.activa = self.filas.get(self.posicion).copied();
         self.reanudar_en_seg = segundos.max(0.0);
         self.estado = Estado::Detenido;
     }

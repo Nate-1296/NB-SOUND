@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
   import { aparienciaActual } from '$core/apariencia.svelte';
-  import { carpetaMusica, salud } from '$core/ipc';
+  import { carpetaMusica, perfilCambiarFoto, salud } from '$core/ipc';
   import { textos } from '$lib/i18n';
   import Icon from '$ui/Icon.svelte';
   import type { NombreDeIcono } from '$ui/iconos';
@@ -79,6 +79,13 @@
             onchange={() => aparienciaActual.cambiar('nombreUsuario', nombre.trim() || null)}
           />
         </label>
+        <div class="ajuste">
+          <span class="rotulo">{t.fotoPerfil}<small>{t.fotoPerfilAyuda}</small></span>
+          <button type="button" class="boton-cambiar-foto" onclick={() => void perfilCambiarFoto()}>
+            <Icon nombre="editar" tamano={16} />
+            <span>{t.cambiarFoto}</span>
+          </button>
+        </div>
         {#await import('$ui/copia/BloqueCopia.svelte') then m}
           <m.default />
         {/await}
@@ -239,6 +246,30 @@
     font: inherit;
   }
 
+  .boton-cambiar-foto {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    min-height: 2.5rem;
+    padding: 0 var(--ns-espacio-4);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-sm);
+    background: var(--m3c-surface-container);
+    color: var(--m3c-on-surface);
+    font: inherit;
+    font-size: var(--ns-texto-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background var(--ns-duracion-corta) var(--ns-curva),
+      border-color var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .boton-cambiar-foto:hover {
+    background: var(--m3c-surface-container-high);
+    border-color: var(--m3c-outline);
+  }
+
   p {
     margin: 0;
     color: var(--m3c-on-surface-variant);
@@ -255,7 +286,16 @@
       flex-direction: row;
       overflow-x: auto;
       padding-top: 0;
+      padding-bottom: var(--ns-espacio-2);
       white-space: nowrap;
+      gap: var(--ns-espacio-2);
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+    }
+
+    .pestana-seccion {
+      flex-shrink: 0;
     }
   }
 </style>

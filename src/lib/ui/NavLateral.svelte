@@ -20,10 +20,13 @@
   interface Props {
     /** Archivos que esperan en Por revisar. */
     pendientes?: number;
+    /** Si la barra lateral está forzada a modo riel por el contenedor. */
+    compacta?: boolean;
   }
 
-  let { pendientes = 0 }: Props = $props();
+  let { pendientes = 0, compacta = false }: Props = $props();
 
+  const esCompacta = $derived(compacta || aparienciaActual.barraLateralCompacta);
   const pie = $derived<Destino[]>(pendientes > 0 ? [POR_REVISAR, AJUSTES] : [AJUSTES]);
   const rutaLogo = $derived(`/logos/logo_${aparienciaActual.actual.tema}.png`);
 </script>
@@ -82,21 +85,14 @@
       type="button"
       class="boton-colapso"
       onclick={() => aparienciaActual.alternarBarraLateral()}
-      title={aparienciaActual.barraLateralCompacta ? textos.nav.expandirLateral : undefined}
-      aria-label={aparienciaActual.barraLateralCompacta
-        ? textos.nav.expandirLateral
-        : textos.nav.colapsarLateral}
+      title={esCompacta ? textos.nav.expandirLateral : undefined}
+      aria-label={esCompacta ? textos.nav.expandirLateral : textos.nav.colapsarLateral}
     >
       <span class="icono">
-        <Icon
-          nombre={aparienciaActual.barraLateralCompacta ? 'derecha' : 'izquierda'}
-          tamano={20}
-        />
+        <Icon nombre={esCompacta ? 'derecha' : 'izquierda'} tamano={20} />
       </span>
       <span class="etiqueta">
-        {aparienciaActual.barraLateralCompacta
-          ? textos.nav.expandirLateral
-          : textos.nav.colapsarLateral}
+        {esCompacta ? textos.nav.expandirLateral : textos.nav.colapsarLateral}
       </span>
     </button>
   </div>

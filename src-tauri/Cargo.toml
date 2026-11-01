@@ -1,6 +1,6 @@
 [package]
 name = "nb-sound"
-version = "2.0.2"
+version = "2.0.3"
 description = "Aplicación de escritorio para la música local"
 authors = ["The NB Sound Authors"]
 license = "GPL-3.0-or-later"

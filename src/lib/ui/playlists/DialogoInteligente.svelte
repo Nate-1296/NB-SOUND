@@ -12,6 +12,7 @@
   } from '$core/ipc/aparte';
   import { textos } from '$lib/i18n';
   import { esAparte } from '$lib/i18n/es-aparte';
+  import MenuSelector from '$ui/MenuSelector.svelte';
 
   interface Props {
     abierto: boolean;
@@ -224,20 +225,24 @@
       <div class="fila">
         <label>
           <span>{ti.animo}</span>
-          <select bind:value={animo}>
-            <option value="">{ti.cualquierAnimo}</option>
-            {#each ANIMOS as a (a)}
-              <option value={a}>{ti.animos[a] ?? a}</option>
-            {/each}
-          </select>
+          <MenuSelector
+            opciones={[
+              { valor: '', etiqueta: ti.cualquierAnimo },
+              ...ANIMOS.map((a) => ({ valor: a, etiqueta: ti.animos[a] ?? a }))
+            ]}
+            bind:valor={animo}
+          />
         </label>
         <label>
           <span>{ti.instrumental}</span>
-          <select bind:value={instrumental}>
-            <option value="cualquiera">{ti.instrumentalOpciones.cualquiera}</option>
-            <option value="con">{ti.instrumentalOpciones.con}</option>
-            <option value="sin">{ti.instrumentalOpciones.sin}</option>
-          </select>
+          <MenuSelector
+            opciones={[
+              { valor: 'cualquiera', etiqueta: ti.instrumentalOpciones.cualquiera },
+              { valor: 'con', etiqueta: ti.instrumentalOpciones.con },
+              { valor: 'sin', etiqueta: ti.instrumentalOpciones.sin }
+            ]}
+            bind:valor={instrumental}
+          />
         </label>
       </div>
 
@@ -282,11 +287,14 @@
       <div class="fila">
         <label>
           <span>{ti.frecuencia}</span>
-          <select bind:value={modoEscucha}>
-            <option value="cualquiera">{ti.frecuenciaOpciones.cualquiera}</option>
-            <option value="reciente">{ti.frecuenciaOpciones.reciente}</option>
-            <option value="olvidada">{ti.frecuenciaOpciones.olvidada}</option>
-          </select>
+          <MenuSelector
+            opciones={[
+              { valor: 'cualquiera', etiqueta: ti.frecuenciaOpciones.cualquiera },
+              { valor: 'reciente', etiqueta: ti.frecuenciaOpciones.reciente },
+              { valor: 'olvidada', etiqueta: ti.frecuenciaOpciones.olvidada }
+            ]}
+            bind:valor={modoEscucha}
+          />
         </label>
         {#if modoEscucha !== 'cualquiera'}
           <label>
@@ -303,11 +311,10 @@
       <div class="fila">
         <label>
           <span>{ti.orden}</span>
-          <select bind:value={orden}>
-            {#each ORDENES as o (o)}
-              <option value={o}>{ti.ordenes[o]}</option>
-            {/each}
-          </select>
+          <MenuSelector
+            opciones={ORDENES.map((o) => ({ valor: o, etiqueta: ti.ordenes[o] }))}
+            bind:valor={orden}
+          />
         </label>
         <label>
           <span>{ti.limite}</span>
@@ -415,8 +422,7 @@
     cursor: pointer;
   }
 
-  input:not([type='checkbox']),
-  select {
+  input:not([type='checkbox']) {
     height: 2.25rem;
     padding: 0 var(--ns-espacio-3);
     border: 1px solid var(--m3c-outline);
