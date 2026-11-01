@@ -40,7 +40,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | MusiCNN y sus cabezas (MTG, Universitat Pompeu Fabra) | CC BY-NC 4.0, uso no comercial | https://essentia.upf.edu/models.html | Análisis musical |
 | `all-MiniLM-L6-v2` | Apache-2.0 | https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2 | Pedidos al DJ |
 
-## Componentes de Rust (678)
+## Componentes de Rust (679)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -316,6 +316,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `memoffset` | 0.9.1 | MIT | https://github.com/Gilnaa/memoffset |
 | `mime` | 0.3.17 | MIT OR Apache-2.0 | https://github.com/hyperium/mime |
 | `minimal-lexical` | 0.2.1 | MIT/Apache-2.0 | https://github.com/Alexhuszagh/minimal-lexical |
+| `minisign-verify` | 0.2.5 | MIT | https://github.com/jedisct1/rust-minisign-verify |
 | `minisign-verify` | 0.3.0 | MIT | https://github.com/jedisct1/rust-minisign-verify |
 | `miniz_oxide` | 0.8.9 | MIT OR Zlib OR Apache-2.0 | https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide |
 | `miniz_oxide` | 0.9.1 | MIT OR Zlib OR Apache-2.0 | https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide |

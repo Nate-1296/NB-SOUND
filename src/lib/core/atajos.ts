@@ -20,7 +20,8 @@ export type AccionDeAtajo =
   | 'karaoke'
   | 'subirVolumen'
   | 'bajarVolumen'
-  | 'pantallaCompleta';
+  | 'pantallaCompleta'
+  | 'sorprendeme';
 
 export interface Tecla {
   key: string;
@@ -42,6 +43,7 @@ const SIMPLES: Readonly<Record<string, AccionDeAtajo>> = {
   l: 'letras',
   f: 'ampliada',
   k: 'karaoke',
+  d: 'sorprendeme',
   '+': 'subirVolumen',
   '=': 'subirVolumen',
   '-': 'bajarVolumen',

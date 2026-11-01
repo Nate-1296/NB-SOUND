@@ -448,6 +448,7 @@ pub fn run() {
             comandos::reproducir_lista,
             comandos::fijar_favorita,
             comandos::borrar_pista,
+            comandos::mostrar_en_explorador,
             comandos::duplicados_resumen,
             comandos::purgar_duplicados,
             comandos::biblioteca_album,

@@ -12,16 +12,15 @@
 
   import { accionDeTecla, esCampoDeTexto } from '$core/atajos';
   import { aparienciaActual } from '$core/apariencia.svelte';
-  import { abrirMinirreproductor, alternarPantallaCompleta } from '$core/ipc';
+  import { abrirMinirreproductor, alternarPantallaCompleta, bibliotecaPistas } from '$core/ipc';
   import { importacion } from '$core/importacion.svelte';
   import { telefonos } from '$core/movil.svelte';
   import { reproductor } from '$core/reproductor.svelte';
+  import { textos } from '$lib/i18n';
 
   import { clasificarAncho } from './anchos';
   import BarraReproduccion from './BarraReproduccion.svelte';
   import BarraSuperior from './BarraSuperior.svelte';
-  import CapaArrastre from './importacion/CapaArrastre.svelte';
-  import TarjetaImportacion from './importacion/TarjetaImportacion.svelte';
   import NavLateral from './NavLateral.svelte';
 
   interface Props {
@@ -72,6 +71,49 @@
       pantallaCompleta: async () => {
         await alternarPantallaCompleta();
         window.dispatchEvent(new CustomEvent('ns:pantalla-completa'));
+      },
+      sorprendeme: async () => {
+        try {
+          const res = await bibliotecaPistas(
+            {
+              texto: null,
+              favoritas: false,
+              sinVerificar: false,
+              albumId: null,
+              artistaId: null,
+              orden: 'menosReproducidas'
+            },
+            0,
+            50
+          );
+          if (res.pistas.length > 0) {
+            const indice = Math.floor(Math.random() * res.pistas.length);
+            const pistaElegida = res.pistas[indice];
+            const ids = res.pistas.map((p) => p.id);
+            for (let j = ids.length - 1; j > 0; j--) {
+              const k = Math.floor(Math.random() * (j + 1));
+              const ej = ids[j];
+              const ek = ids[k];
+              if (ej !== undefined && ek !== undefined) {
+                ids[j] = ek;
+                ids[k] = ej;
+              }
+            }
+            await r.reproducirPistas(ids, 0);
+            if (pistaElegida) {
+              window.dispatchEvent(
+                new CustomEvent('ns:notificacion', {
+                  detail: {
+                    tipo: 'info',
+                    mensaje: textos.inicio.sorprendeme(pistaElegida.titulo, pistaElegida.artista)
+                  }
+                })
+              );
+            }
+          }
+        } catch {
+          // Si no hay pistas o falla la consulta no se interrumpe
+        }
       }
     };
     void acciones[accion]();
@@ -91,8 +133,16 @@
   <main class="contenido">{@render children()}</main>
   <div class="reproductor"><BarraReproduccion /></div>
 </div>
-<CapaArrastre />
-<TarjetaImportacion />
+{#if importacion.arrastrando}
+  {#await import('./importacion/CapaArrastre.svelte') then m}
+    <m.default />
+  {/await}
+{/if}
+{#if importacion.progreso.activa || importacion.resumen}
+  {#await import('./importacion/TarjetaImportacion.svelte') then m}
+    <m.default />
+  {/await}
+{/if}
 {#await import('$ui/ToastContenedor.svelte') then m}
   <m.default />
 {/await}

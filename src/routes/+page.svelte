@@ -68,8 +68,13 @@
 
 <section class="inicio">
   <header class="saludo">
-    <h1>{saludo}</h1>
-    <p>{t.subtitulo}</p>
+    <div class="saludo-texto">
+      <h1>{saludo}</h1>
+      <p>{t.subtitulo}</p>
+    </div>
+    {#await import('$ui/EcualizadorBarras.svelte') then m}
+      <m.default />
+    {/await}
   </header>
 
   {#if datos && !hayBiblioteca}
@@ -329,6 +334,20 @@
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-3);
+  }
+
+  .saludo {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--ns-espacio-4);
+    flex-wrap: wrap;
+  }
+
+  .saludo-texto {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-1);
   }
 
   .saludo h1 {

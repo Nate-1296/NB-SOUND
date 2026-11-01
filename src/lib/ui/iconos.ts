@@ -51,6 +51,10 @@ export const ICONOS = {
   correcto: '<circle cx="12" cy="12" r="8.5"/><path d="m8 12.25 2.75 2.75L16 9.5"/>',
   cuadricula:
     '<rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.5"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.5"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.5"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.5"/>',
+  cuadriculaGrande:
+    '<rect x="3.5" y="3.5" width="17" height="7.5" rx="1.5"/><rect x="3.5" y="13" width="17" height="7.5" rx="1.5"/>',
+  cuadriculaPequena:
+    '<rect x="3.5" y="3.5" width="4" height="4" rx="1"/><rect x="10" y="3.5" width="4" height="4" rx="1"/><rect x="16.5" y="3.5" width="4" height="4" rx="1"/><rect x="3.5" y="10" width="4" height="4" rx="1"/><rect x="10" y="10" width="4" height="4" rx="1"/><rect x="16.5" y="10" width="4" height="4" rx="1"/><rect x="3.5" y="16.5" width="4" height="4" rx="1"/><rect x="10" y="16.5" width="4" height="4" rx="1"/><rect x="16.5" y="16.5" width="4" height="4" rx="1"/>',
   derecha: '<path d="m8.75 5.5 6.5 6.5-6.5 6.5"/>',
   descargar:
     '<path d="M12 3.5v12"/><path d="m6.75 10.25 5.25 5.25 5.25-5.25"/><path d="M4.5 20.5h15"/>',

@@ -10,6 +10,7 @@
   import { actualizacionBuscar, actualizacionInstalar } from '$core/ipc/aparte';
   import type { Actualizacion } from '$lib/bindings';
   import { textosAparte } from '$lib/i18n/aparte';
+  import Spinner from '$ui/Spinner.svelte';
 
   const t = textosAparte.actualizacion;
 
@@ -68,10 +69,18 @@
 <div class="botones">
   {#if nueva}
     <button type="button" class="boton principal" disabled={ocupado} onclick={instalar}>
+      {#if ocupado}
+        <Spinner tamano={16} />
+      {/if}
       {t.instalar}
     </button>
   {:else}
-    <button type="button" class="boton" disabled={ocupado} onclick={buscar}>{t.buscar}</button>
+    <button type="button" class="boton" disabled={ocupado} onclick={buscar}>
+      {#if ocupado}
+        <Spinner tamano={16} />
+      {/if}
+      {t.buscar}
+    </button>
   {/if}
 </div>
 {#if mensaje}<p role="status">{mensaje}</p>{/if}

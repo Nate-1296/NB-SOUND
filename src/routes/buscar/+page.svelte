@@ -7,6 +7,7 @@
   primero (F5.3.3).
 -->
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import {
     type AlbumResumen,
@@ -98,7 +99,9 @@
   {/if}
 
   {#if !q}
-    <p class="vacio">{t.escribe}</p>
+    {#await import('$ui/buscar/BienvenidaBuscar.svelte') then m}
+      <m.default onseleccionar={(idea) => goto(`/buscar?q=${encodeURIComponent(idea)}`)} />
+    {/await}
   {:else if nada}
     <p class="vacio">{t.sinResultados(q)}</p>
   {:else}

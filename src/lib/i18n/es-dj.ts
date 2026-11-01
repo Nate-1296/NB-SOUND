@@ -19,6 +19,28 @@ export const esDj = {
     sinCandidatas:
       'Ninguna canción de tu biblioteca encaja con eso. Prueba con otras palabras o con menos exclusiones.',
     ideas: 'Ideas',
+    categoriasSugeridas: [
+      {
+        nombre: 'Voces',
+        chips: ['Voces femeninas', 'Voces masculinas', 'Instrumental sin voz', 'Acústico']
+      },
+      {
+        nombre: 'Géneros',
+        chips: ['Rock', 'Electrónica', 'Jazz', 'Pop', 'Clásica', 'Hip hop', 'Indie']
+      },
+      {
+        nombre: 'Ánimos',
+        chips: ['Tranquilo', 'Melancólico', 'Alegre', 'Nocturno', 'Cinematográfico', 'Relajante']
+      },
+      {
+        nombre: 'Energía',
+        chips: ['Mucha energía', 'Baja energía', 'Subida progresiva', 'Ritmo bailable']
+      },
+      {
+        nombre: 'Contextos',
+        chips: ['Para entrenar', 'Para concentrarme', 'Para viajar', 'Noche de lluvia', 'Fiesta']
+      }
+    ],
     sugerencias: [
       'Subida progresiva para entrenar',
       'Algo cinematográfico con voces femeninas',

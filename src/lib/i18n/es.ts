@@ -91,6 +91,12 @@ export const es = {
     cuentaPistas: (n: number) => (n === 1 ? '1 pista' : `${n.toLocaleString('es')} pistas`),
     cuentaAlbumes: (n: number) => (n === 1 ? '1 álbum' : `${n.toLocaleString('es')} álbumes`),
     cuentaArtistas: (n: number) => (n === 1 ? '1 artista' : `${n.toLocaleString('es')} artistas`),
+    densidad: {
+      gridSm: 'Cuadrícula pequeña',
+      gridMd: 'Cuadrícula mediana',
+      gridLg: 'Cuadrícula grande',
+      lista: 'Lista'
+    },
     buscar: 'Buscar por pista, artista, álbum o letra',
     favoritas: 'Favoritas',
     sinVerificar: 'Sin verificar',
@@ -131,6 +137,7 @@ export const es = {
     sinVerificarInsignia: 'Sin verificar',
     completarDatos: 'Completar datos',
     editarDatos: 'Editar datos',
+    mostrarEnExplorador: 'Mostrar en el explorador',
     borrarCancion: 'Eliminar canción',
     confirmarBorrarTitulo: '¿Eliminar canción?',
     confirmarBorrarDetalle: (titulo: string) => `Elige cómo deseas eliminar «${titulo}»:`,
@@ -280,6 +287,7 @@ export const es = {
     siguiente: 'Siguiente',
     masEscuchados: 'Tus 10 álbumes más escuchados',
     masEscuchadosSub: 'Los discos que más han pasado por reproducción.',
+    sorprendeme: (titulo: string, artista: string) => `Sorpréndeme: «${titulo}» de ${artista}`,
     vacia: 'Tu biblioteca empieza al importar música',
     vaciaSub:
       'NB Sound usará tus archivos locales para mostrar recientes, favoritos y música para retomar sin depender de servicios externos.'
@@ -341,6 +349,12 @@ export const es = {
     titulo: 'Playlists',
     subtitulo: 'Listas manuales, favoritas y mezclas locales preparadas con tu biblioteca.',
     nueva: 'Nueva playlist',
+    densidad: {
+      gridSm: 'Cuadrícula pequeña',
+      gridMd: 'Cuadrícula mediana',
+      gridLg: 'Cuadrícula grande',
+      lista: 'Lista'
+    },
     buscar: 'Buscar por nombre o tipo',
     cuenta: (n: number) => (n === 1 ? '1 playlist' : `${n} playlists`),
     categorias: {
@@ -383,6 +397,7 @@ export const es = {
     cancelar: 'Cancelar',
     anadirA: 'Añadir a playlist',
     anadida: (nombre: string) => `Añadida a «${nombre}»`,
+    quitada: (nombre: string) => `Eliminada de «${nombre}»`,
     yaEstaba: (nombre: string) => `Ya estaba en «${nombre}»`,
     errores: {
       INVALID_INPUT: 'El nombre no puede estar vacío ni pasar de 120 caracteres.',

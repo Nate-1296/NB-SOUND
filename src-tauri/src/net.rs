@@ -419,6 +419,81 @@ pub async fn buscar_actualizacion<R: tauri::Runtime>(
     }))
 }
 
+struct ArchivoDestino(std::fs::File);
+
+impl Destino for ArchivoDestino {
+    fn empezar(&mut self, continuada: bool) -> std::io::Result<()> {
+        use std::io::Seek;
+        if continuada {
+            self.0.seek(std::io::SeekFrom::End(0)).map(|_| ())
+        } else {
+            self.0.set_len(0)?;
+            self.0.seek(std::io::SeekFrom::Start(0)).map(|_| ())
+        }
+    }
+
+    fn escribir(&mut self, bloque: &[u8]) -> std::io::Result<()> {
+        use std::io::Write;
+        self.0.write_all(bloque)
+    }
+}
+
+#[cfg(target_os = "linux")]
+async fn actualizar_linux_sistema(red: &Red, version: &str) -> NsResult<bool> {
+    const CLAVE_PUBLICA: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU1RDkwQTgyMzREQjM4QTcKUldTbk9OczBnZ3JaVmRhV1VqM1VjQXVmOGZxOFBMZk5zemV0Ums4WXBYMWlyM2x6TUt0Qk5ocy8K";
+    let url_tar = format!("https://github.com/Nate-1296/NB-SOUND/releases/download/v{version}/NB.Sound_{version}_amd64.tar.gz");
+    let url_sig = format!("{url_tar}.sig");
+
+    // 1. Descargar la firma de la publicación
+    let sig_bytes = red.obtener(Servicio::Actualizaciones, &url_sig, &[])?;
+    let sig_str = std::str::from_utf8(&sig_bytes).map_err(|_| NsError::IntegrityMismatch)?;
+    let sig =
+        minisign_verify::Signature::decode(sig_str).map_err(|_| NsError::IntegrityMismatch)?;
+    let pk = minisign_verify::PublicKey::from_base64(CLAVE_PUBLICA)
+        .map_err(|_| NsError::IntegrityMismatch)?;
+
+    // 2. Descargar el archivo tarball a un archivo temporal
+    let ruta_tar = std::env::temp_dir().join(format!("nb-sound-update-{version}.tar.gz"));
+    {
+        let archivo = std::fs::File::create(&ruta_tar).map_err(|_| NsError::StorageFailure)?;
+        let mut destino = ArchivoDestino(archivo);
+        red.descargar(
+            Servicio::Actualizaciones,
+            &url_tar,
+            0,
+            &mut destino,
+            &mut |_| {},
+        )?;
+    }
+
+    // 3. Comprobar la firma criptográfica del tarball
+    let bytes_tar = std::fs::read(&ruta_tar).map_err(|_| NsError::StorageFailure)?;
+    if pk.verify(&bytes_tar, &sig, false).is_err() {
+        let _ = std::fs::remove_file(&ruta_tar);
+        return Err(NsError::IntegrityMismatch);
+    }
+    drop(bytes_tar);
+
+    // 4. Extraer en la raíz del sistema mediante sudo -n o pkexec
+    let ruta_str = ruta_tar.to_string_lossy().to_string();
+    let res_sudo = std::process::Command::new("sudo")
+        .args(["-n", "tar", "-xzf", &ruta_str, "-C", "/"])
+        .status();
+
+    let exito = match res_sudo {
+        Ok(s) if s.success() => true,
+        _ => {
+            let res_pkexec = std::process::Command::new("pkexec")
+                .args(["tar", "-xzf", &ruta_str, "-C", "/"])
+                .status();
+            matches!(res_pkexec, Ok(s) if s.success())
+        }
+    };
+
+    let _ = std::fs::remove_file(&ruta_tar);
+    Ok(exito)
+}
+
 /// Descarga la versión más nueva, comprueba su firma y la instala. Quien llama
 /// reinicia la aplicación. Devuelve `false` si ya no había nada que instalar.
 ///
@@ -433,20 +508,30 @@ pub async fn instalar_actualizacion<R: tauri::Runtime>(
     let Some(nueva) = consultar(app, red).await? else {
         return Ok(false);
     };
-    nueva
-        .download_and_install(|_, _| {}, || {})
-        .await
-        .map_err(|e| {
-            tracing::warn!("no se pudo instalar la actualización");
-            match e {
-                tauri_plugin_updater::Error::Minisign(_)
-                | tauri_plugin_updater::Error::SignatureUtf8(_)
-                | tauri_plugin_updater::Error::SignedVersionMismatch { .. }
-                | tauri_plugin_updater::Error::MissingSignedVersion => NsError::IntegrityMismatch,
-                _ => NsError::NetworkFailure,
-            }
-        })?;
-    Ok(true)
+
+    let resultado = nueva.download_and_install(|_, _| {}, || {}).await;
+    if resultado.is_ok() {
+        return Ok(true);
+    }
+
+    let e = resultado.unwrap_err();
+    tracing::warn!("no se pudo instalar la actualización con el actualizador estándar");
+
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(true) = actualizar_linux_sistema(red, &nueva.version).await {
+            return Ok(true);
+        }
+    }
+
+    Err(match e {
+        tauri_plugin_updater::Error::Minisign(_)
+        | tauri_plugin_updater::Error::SignatureUtf8(_)
+        | tauri_plugin_updater::Error::SignedVersionMismatch { .. }
+        | tauri_plugin_updater::Error::MissingSignedVersion => NsError::IntegrityMismatch,
+        tauri_plugin_updater::Error::Io(_) => NsError::ComponentUnavailable,
+        _ => NsError::NetworkFailure,
+    })
 }
 
 /// El anfitrión de una URL `https://`. Las demás no se admiten: nada sale en

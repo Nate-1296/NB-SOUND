@@ -281,6 +281,80 @@ pub async fn borrar_pista(
     .map_err(|_| NsError::Internal)?
 }
 
+fn abrir_en_explorador(archivo: &std::path::Path) {
+    #[cfg(target_os = "windows")]
+    {
+        let _ = std::process::Command::new("explorer")
+            .arg("/select,")
+            .arg(archivo)
+            .spawn();
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open")
+            .arg("-R")
+            .arg(archivo)
+            .spawn();
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let ruta_uri = format!("file://{}", archivo.to_string_lossy());
+        let status = std::process::Command::new("dbus-send")
+            .args([
+                "--session",
+                "--dest=org.freedesktop.FileManager1",
+                "--type=method_call",
+                "/org/freedesktop/FileManager1",
+                "org.freedesktop.FileManager1.ShowItems",
+                &format!("array:string:{ruta_uri}"),
+                "string:",
+            ])
+            .status();
+
+        if !matches!(status, Ok(s) if s.success()) {
+            if let Some(padre) = archivo.parent() {
+                let _ = std::process::Command::new("xdg-open").arg(padre).spawn();
+            }
+        }
+    }
+}
+
+/// Muestra el archivo de una pista en el gestor de archivos nativo del sistema.
+#[tauri::command]
+pub async fn mostrar_en_explorador(
+    estado: tauri::State<'_, Estado>,
+    pista_id: i64,
+) -> NsResult<()> {
+    let db = estado.db.clone();
+    let importador = estado.importador.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let conn = db.conexion()?;
+        let ruta: String = conn
+            .query_row("SELECT ruta FROM pistas WHERE id = ?1", [pista_id], |f| {
+                f.get(0)
+            })
+            .map_err(|_| NsError::FileNotFound)?;
+
+        importador.con_entorno(|entorno| {
+            let archivo =
+                crate::security::resolve_within(&entorno.musica, std::path::Path::new(&ruta))
+                    .or_else(|_| {
+                        std::path::PathBuf::from(&ruta)
+                            .canonicalize()
+                            .map_err(|_| NsError::FileNotFound)
+                    })?;
+            if !archivo.exists() {
+                return Err(NsError::FileNotFound);
+            }
+            abrir_en_explorador(&archivo);
+            tracing::info!(id = pista_id, "archivo mostrado en el explorador");
+            Ok(())
+        })
+    })
+    .await
+    .map_err(|_| NsError::StorageFailure)?
+}
+
 /// Información de duplicados detectados en la biblioteca (FDB-02, COMP-07).
 #[derive(Debug, Clone, Serialize, TS)]
 #[ts(export, export_to = "../../src/lib/bindings/")]

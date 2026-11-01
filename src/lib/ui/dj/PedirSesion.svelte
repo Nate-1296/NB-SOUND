@@ -23,6 +23,25 @@
   let ocupado = $state(false);
   let aviso = $state<string | null>(null);
 
+  function alternarChip(chip: string) {
+    const actual = texto.trim();
+    if (!actual) {
+      texto = chip;
+      return;
+    }
+    const partes = actual
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
+    const indice = partes.findIndex((p) => p.toLowerCase() === chip.toLowerCase());
+    if (indice >= 0) {
+      partes.splice(indice, 1);
+      texto = partes.join(', ');
+    } else {
+      texto = `${actual}, ${chip}`;
+    }
+  }
+
   async function pedir() {
     const peticion = texto.trim();
     if (!peticion) {
@@ -81,6 +100,29 @@
       {/if}
       {ocupado ? t.creando : t.crear}
     </button>
+  </div>
+
+  <div class="bloque-categorias">
+    {#each t.categoriasSugeridas as cat (cat.nombre)}
+      <div class="grupo-chips">
+        <span class="rotulo-categoria">{cat.nombre}:</span>
+        <div class="chips">
+          {#each cat.chips as chip (chip)}
+            {@const activa = texto.toLowerCase().includes(chip.toLowerCase())}
+            <button
+              type="button"
+              class="ficha chip"
+              class:activa
+              aria-pressed={activa}
+              disabled={ocupado}
+              onclick={() => alternarChip(chip)}
+            >
+              {chip}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/each}
   </div>
 
   <div class="fila">
@@ -176,6 +218,42 @@
     background: var(--m3c-secondary-container);
     color: var(--m3c-on-secondary-container);
     font-weight: 700;
+  }
+
+  .bloque-categorias {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-2);
+    margin-top: var(--ns-espacio-1);
+    padding: var(--ns-espacio-3);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-md);
+    background: var(--m3c-surface-container);
+  }
+
+  .grupo-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+  }
+
+  .rotulo-categoria {
+    min-width: 5.5rem;
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    font-weight: 700;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ns-espacio-1);
+  }
+
+  .ficha.chip {
+    height: 1.75rem;
+    padding: 0 var(--ns-espacio-2);
   }
 
   .boton {

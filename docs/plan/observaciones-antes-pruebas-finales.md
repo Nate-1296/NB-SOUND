@@ -164,6 +164,21 @@ Confundió la premisa de *"simplificar la arquitectura"* con *"eliminar interact
 
 ---
 
+### [ALERTA] BUG-08: El botón "Instalar y reiniciar" del actualizador falla en Linux cuando la app está en una ruta del sistema
+- **Ubicación:** `Ajustes` -> `Acerca de` -> `Buscar actualizaciones` (`BloqueActualizacion.svelte` y `src-tauri/src/net.rs`)
+- **Qué se ve / qué pasa:**  
+  Al pulsar `Buscar actualizaciones`, el sistema consulta con éxito el repositorio de GitHub y detecta una nueva versión disponible (por ejemplo `v2.0.1`). Sin embargo, al pulsar el botón `Instalar y reiniciar`, la operación fallaba arrojando un error de red genérico o sin respuesta visual, debido a que el actualizador estándar intentaba renombrar el binario instalado en `/usr/bin/nb-sound` sin privilegios de escritura (`PermissionDenied`), mapeándose erróneamente a fallo de red.
+- **Qué piensa / siente el usuario:**  
+  *"La aplicación me dice que encontró una versión nueva, pero cuando le doy a Instalar y reiniciar me dice que no se pudo conectar o falla sin hacer nada."*
+- **El porqué:**  
+  En distribuciones Linux donde la aplicación está instalada a nivel de sistema (`/usr/bin/nb-sound`), el proceso no tiene permisos para sobreescribir binarios de root. Además, el mapeo de errores convertía fallos de I/O en `NsError::NetworkFailure`.
+- **Solución implementada:**  
+  1. En `src-tauri/src/net.rs`, se implementó una rutina de actualización específica para Linux (`actualizar_linux_sistema`) que descarga el paquete `tar.gz` oficial firmado y su archivo `.sig`, valida la firma criptográfica con `minisign-verify` y la clave pública de NB Sound, y extrae el paquete en `/` mediante elevación estándar (`sudo -n` o polkit `pkexec`).
+  2. Se corrigió el mapeo de errores para no enmascarar fallos de I/O/permisos como fallos de red.
+  3. En `BloqueActualizacion.svelte`, se añadió estado de carga visual (`<Spinner tamano={16} />`) y bloqueo reactivo durante la descarga e instalación.
+
+---
+
 ## 3. "Te lo esperas y no pasa" (Convenciones y Modelos Mentales Faltantes)
 
 ---
@@ -917,6 +932,7 @@ Las siguientes dos características existían en la versión legacy de Python/QM
 | **BUG-05** | Sec. 2: Bugs Críticos | Fallo silencioso sin respuesta visual en "A ciegas" | **Hecho** |
 | **BUG-06** | Sec. 2: Bugs Críticos | Inexistencia del modo pantalla completa (F11 / Party Mode) | **Hecho** |
 | **BUG-07** | Sec. 2: Bugs Críticos | Spoiler visual en modo "A ciegas" en la barra de reproducción | **Hecho** |
+| **BUG-08** | Sec. 2: Bugs Críticos | Botón "Instalar y reiniciar" falla al actualizar en Linux | **Hecho** |
 | **EXP-01** | Sec. 3: Modelos Mentales | Artista y álbum no clickeables en la barra de reproducción | **Hecho** |
 | **EXP-02** | Sec. 3: Modelos Mentales | Portada y título en barra inferior no abren reproducción | **Hecho** |
 | **EXP-03** | Sec. 3: Modelos Mentales | Botón de importar música/carpetas ausente en barra superior | **Hecho** |
@@ -942,22 +958,22 @@ Las siguientes dos características existían en la versión legacy de Python/QM
 | **FDB-03** | Sec. 5: Feedback / Carga | Acciones de mantenimiento en Ajustes sin confirmación Toast | **Hecho** |
 | **FDB-04** | Sec. 5: Feedback / Carga | Reordenamiento en playlist sin estado deshabilitado | **Hecho** |
 | **FDB-05** | Sec. 5: Feedback / Carga | Botón "Generar sesión" en DJ tarda sin progreso visual | **Hecho** |
-| **COMP-01** | Sec. 8: Port Forense | Pérdida de modos de visualización (Sm/Md/Lg y Lista) | Pendiente |
+| **COMP-01** | Sec. 8: Port Forense | Pérdida de modos de visualización (Sm/Md/Lg y Lista) | **Hecho** |
 | **COMP-02** | Sec. 8: Port Forense | Degradación de Ajustes frente al estándar Master-Detail | **Hecho** |
 | **COMP-03** | Sec. 8: Port Forense | Desaparición del sistema de notificaciones Toast | **Hecho** |
-| **COMP-04** | Sec. 8: Port Forense | Pérdida de fondo ambiental dinámico y letras inmersivas | Pendiente |
+| **COMP-04** | Sec. 8: Port Forense | Pérdida de fondo ambiental dinámico y letras inmersivas | **Hecho** |
 | **COMP-05** | Sec. 8: Port Forense | Supresión de los 64 logotipos dinámicos por tema | **Hecho** |
-| **COMP-06** | Sec. 8: Port Forense | Pérdida del botón de ingesta global en barra superior | Pendiente |
+| **COMP-06** | Sec. 8: Port Forense | Pérdida del botón de ingesta global en barra superior | **Hecho** |
 | **COMP-07** | Sec. 8: Port Forense | Omisión de gestión de duplicados y borrado seguro | **Hecho** |
-| **COMP-08** | Sec. 8: Port Forense | Rígido anclaje de barra lateral y falta de pantalla completa | Pendiente |
-| **COMP-09** | Sec. 8: Port Forense | Mutilación del selector multi-selección de playlists | Pendiente |
+| **COMP-08** | Sec. 8: Port Forense | Rígido anclaje de barra lateral y falta de pantalla completa | **Hecho** |
+| **COMP-09** | Sec. 8: Port Forense | Mutilación del selector multi-selección de playlists | **Hecho** |
 | **COMP-11** | Sec. 8: Port Forense | Desplazamiento deficiente en carruseles de Inicio | **Hecho** |
-| **COMP-13** | Sec. 8: Port Forense | Falta opción "Mostrar en explorador de archivos" (Dolphin) | Pendiente |
-| **COMP-14** | Sec. 8: Port Forense | DJ Privado carece de chips interactivos por categorías | Pendiente |
-| **COMP-15** | Sec. 8: Port Forense | Pérdida del ecualizador visual dinámico en Inicio | Pendiente |
-| **COMP-16** | Sec. 8: Port Forense | Falta bienvenida y chips "Háblale a tu biblioteca" en búsqueda | Pendiente |
-| **COMP-17** | Sec. 8: Port Forense | Falta atajo D ("Sorpréndeme") y pantalla completa real | Pendiente |
-| **COMP-18** | Sec. 8: Port Forense | Uso de window.confirm frente a diálogo modal estilizado | Pendiente |
-| **COMP-19** | Sec. 8: Port Forense | Sobrecarga contextual de FilaPista en Álbumes y Playlists | Pendiente |
+| **COMP-13** | Sec. 8: Port Forense | Falta opción "Mostrar en explorador de archivos" (Dolphin) | **Hecho** |
+| **COMP-14** | Sec. 8: Port Forense | DJ Privado carece de chips interactivos por categorías | **Hecho** |
+| **COMP-15** | Sec. 8: Port Forense | Pérdida del ecualizador visual dinámico en Inicio | **Hecho** |
+| **COMP-16** | Sec. 8: Port Forense | Falta bienvenida y chips "Háblale a tu biblioteca" en búsqueda | **Hecho** |
+| **COMP-17** | Sec. 8: Port Forense | Falta atajo D ("Sorpréndeme") y pantalla completa real | **Hecho** |
+| **COMP-18** | Sec. 8: Port Forense | Uso de window.confirm frente a diálogo modal estilizado | **Hecho** |
+| **COMP-19** | Sec. 8: Port Forense | Sobrecarga contextual de FilaPista en Álbumes y Playlists | **Hecho** |
 | **DISC-01** | Sec. 10: Discusión | Consola de karaoke completa (resuelto con feedback en FDB-01) | **Hecho (Cerrado)** |
 | **DISC-02** | Sec. 10: Discusión | Foto de perfil y redescubrimiento (delegado a Tu Música/DJ) | **Hecho (Cerrado)** |

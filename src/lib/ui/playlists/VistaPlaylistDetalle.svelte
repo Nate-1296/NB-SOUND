@@ -23,6 +23,7 @@
   import { textos } from '$lib/i18n';
   import { esAparte } from '$lib/i18n/es-aparte';
   import FilaPista from '$ui/biblioteca/FilaPista.svelte';
+  import DialogoConfirmar from '$ui/DialogoConfirmar.svelte';
   import Icon from '$ui/Icon.svelte';
   import DialogoInteligente from '$ui/playlists/DialogoInteligente.svelte';
   import DialogoPlaylist from '$ui/playlists/DialogoPlaylist.svelte';
@@ -36,6 +37,7 @@
   let pistas = $state<PistaResumen[]>([]);
   let renombrando = $state(false);
   let editandoRegla = $state(false);
+  let confirmandoBorrado = $state(false);
   let version = $state(0);
 
   $effect(() => {
@@ -84,8 +86,12 @@
     }
   }
 
-  async function borrar() {
-    if (!datos || !confirm(t.confirmarBorrar(datos.nombre))) return;
+  function borrar() {
+    confirmandoBorrado = true;
+  }
+
+  async function ejecutarBorrado() {
+    if (!datos) return;
     await borrarPlaylist(id);
     await goto('/playlists');
   }
@@ -240,6 +246,18 @@
           version += 1;
         }}
         oncerrar={() => (editandoRegla = false)}
+      />
+    {/if}
+
+    {#if confirmandoBorrado && datos}
+      <DialogoConfirmar
+        abierto={confirmandoBorrado}
+        titulo={t.borrar}
+        mensaje={t.confirmarBorrar(datos.nombre)}
+        destructivo={true}
+        textoConfirmar={t.borrar}
+        onconfirmar={ejecutarBorrado}
+        oncerrar={() => (confirmandoBorrado = false)}
       />
     {/if}
   {/if}

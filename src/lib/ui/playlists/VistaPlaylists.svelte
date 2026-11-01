@@ -45,6 +45,7 @@
   let creandoInteligente = $state(false);
   let regenerando = $state(false);
   let version = $state(0);
+  let modoRejilla = $state<'sm' | 'md' | 'lg' | 'lista'>('md');
 
   $effect(() => {
     const consulta = { texto: texto.trim() || null, categoria, orden };
@@ -128,9 +129,59 @@
       {/each}
     </div>
 
-    <span class="cuenta">{t.cuenta(lista.length)}</span>
+    <div class="fila-control">
+      <span class="cuenta">{t.cuenta(lista.length)}</span>
+      <div class="densidades" role="group" aria-label={t.densidad.gridMd}>
+        <button
+          type="button"
+          class="boton-densidad"
+          class:activa={modoRejilla === 'sm'}
+          aria-pressed={modoRejilla === 'sm'}
+          aria-label={t.densidad.gridSm}
+          onclick={() => (modoRejilla = 'sm')}
+        >
+          <Icon nombre="cuadriculaPequena" tamano={16} />
+        </button>
+        <button
+          type="button"
+          class="boton-densidad"
+          class:activa={modoRejilla === 'md'}
+          aria-pressed={modoRejilla === 'md'}
+          aria-label={t.densidad.gridMd}
+          onclick={() => (modoRejilla = 'md')}
+        >
+          <Icon nombre="cuadricula" tamano={16} />
+        </button>
+        <button
+          type="button"
+          class="boton-densidad"
+          class:activa={modoRejilla === 'lg'}
+          aria-pressed={modoRejilla === 'lg'}
+          aria-label={t.densidad.gridLg}
+          onclick={() => (modoRejilla = 'lg')}
+        >
+          <Icon nombre="cuadriculaGrande" tamano={16} />
+        </button>
+        <button
+          type="button"
+          class="boton-densidad"
+          class:activa={modoRejilla === 'lista'}
+          aria-pressed={modoRejilla === 'lista'}
+          aria-label={t.densidad.lista}
+          onclick={() => (modoRejilla = 'lista')}
+        >
+          <Icon nombre="lista" tamano={16} />
+        </button>
+      </div>
+    </div>
 
-    <ul class="rejilla">
+    <ul
+      class="rejilla"
+      class:sm={modoRejilla === 'sm'}
+      class:md={modoRejilla === 'md'}
+      class:lg={modoRejilla === 'lg'}
+      class:lista={modoRejilla === 'lista'}
+    >
       {#each lista as p (p.id)}
         <li>
           <button
@@ -297,6 +348,44 @@
     font-weight: 700;
   }
 
+  .fila-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ns-espacio-2);
+  }
+
+  .densidades {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+    overflow: hidden;
+    background: var(--m3c-surface-container);
+  }
+
+  .boton-densidad {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    background: none;
+    color: var(--m3c-on-surface-variant);
+    cursor: pointer;
+  }
+
+  .boton-densidad:hover {
+    background: var(--m3c-surface-container-high);
+    color: var(--m3c-on-surface);
+  }
+
+  .boton-densidad.activa {
+    background: var(--m3c-secondary-container);
+    color: var(--m3c-on-secondary-container);
+  }
+
   .rejilla {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
@@ -304,6 +393,39 @@
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  .rejilla.sm {
+    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    gap: var(--ns-espacio-2);
+  }
+
+  .rejilla.md {
+    grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+    gap: var(--ns-espacio-4);
+  }
+
+  .rejilla.lg {
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: var(--ns-espacio-5);
+  }
+
+  .rejilla.lista {
+    grid-template-columns: 1fr;
+    gap: var(--ns-espacio-1);
+  }
+
+  .rejilla.lista .tarjeta {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--ns-espacio-3);
+    padding: var(--ns-espacio-2);
+  }
+
+  .rejilla.lista .tarjeta :global(.mosaico) {
+    width: 3.5rem;
+    height: 3.5rem;
+    flex: 0 0 3.5rem;
   }
 
   .tarjeta {

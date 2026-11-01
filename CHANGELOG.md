@@ -3,6 +3,28 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.2] — 2026-10-31
+
+Resolución completa de hallazgos de paridad y componentes (COMP-01 a COMP-19) y corrección del actualizador del sistema en Linux (BUG-08).
+
+### Mejoras y correcciones
+
+- **Actualizador de sistema en Linux (BUG-08)**:
+  - Implementación nativa de instalación y reinicio de actualizaciones en Linux vía descarga del tarball oficial, verificación de firma criptográfica con minisign, extracción atómica en sistema con permisos elevados y reinicio seguro del proceso.
+- **Componentes y paridad visual (COMP)**:
+  - Selector de modo de vista (cuadrícula pequeña, mediana, grande y lista) en Biblioteca y Playlists (COMP-01).
+  - Vista inmersiva centrada de letras sincronizadas con fondo ambiental dinámico (COMP-04).
+  - Botón global de importación con menú desplegable para añadir música o carpetas desde la barra superior (COMP-06).
+  - Botón de colapso de barra lateral en modo riel y atajo/botón de pantalla completa del sistema F11 (COMP-08).
+  - Modal multi-selección de playlists con estado interactivo y botón directo en barra de reproducción (COMP-09).
+  - Opción de menú contextual "Mostrar en el explorador de archivos" conectada a Rust (COMP-13).
+  - Chips interactivos categorizados (Voces, Géneros, Ánimos, Energía, Contextos) en el asistente DJ (COMP-14).
+  - Indicador visual reactivo de barras en Inicio que responde dinámicamente a la reproducción sin loops infinitos en reposo (COMP-15).
+  - Pantalla de bienvenida en búsqueda con 24 ideas musicales y carga diferida para cumplir presupuesto (COMP-16).
+  - Atajo global 'D' ("Sorpréndeme") con selección y reproducción aleatoria de biblioteca (COMP-17).
+  - Diálogo modal accesible `DialogoConfirmar` con backdrop scrim nativo reemplazando confirmaciones de navegador (COMP-18).
+  - Optimización contextual de columnas y visualización en filas de pistas para álbumes, artistas y playlists (COMP-19).
+
 ## [2.0.1] — 2026-10-31
 
 Resolución de hallazgos de auditoría de interfaz: pulido estético (DIS-01 a DIS-07), feedback y estados de carga (FDB-01 a FDB-05), sistema de notificaciones Toast y restauración de componentes.

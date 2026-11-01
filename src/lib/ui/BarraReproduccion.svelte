@@ -23,7 +23,6 @@
   import SelectorDestino from './dispositivos/SelectorDestino.svelte';
   import FormaDeOnda from './FormaDeOnda.svelte';
   import Icon from './Icon.svelte';
-  import PanelCola from './PanelCola.svelte';
 
   const t = textos.reproductor;
   const i = $derived(reproductor.instantanea);
@@ -54,6 +53,21 @@
     capaCola.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
     capaCola.style.bottom = `${window.innerHeight - r.top + 8}px`;
     capaCola.showPopover();
+  }
+
+  let capaPlaylist: HTMLDivElement | undefined = $state();
+  let menuPlaylistAbierto = $state(false);
+  let botonAnadirPlaylist: HTMLButtonElement | undefined = $state();
+  function alternarMenuPlaylist() {
+    if (!capaPlaylist || !botonAnadirPlaylist) return;
+    if (menuPlaylistAbierto) {
+      capaPlaylist.hidePopover();
+      return;
+    }
+    const r = botonAnadirPlaylist.getBoundingClientRect();
+    capaPlaylist.style.left = `${Math.max(8, r.left - 60)}px`;
+    capaPlaylist.style.bottom = `${window.innerHeight - r.top + 8}px`;
+    capaPlaylist.showPopover();
   }
 
   // El micrófono (F5.2.2): con instrumental alterna; sin él, lo prepara mientras
@@ -223,6 +237,31 @@
         <span class="artista">{t.eligeAlgo}</span>
       {/if}
     </div>
+
+    {#if pista && !i.ciego}
+      <button
+        type="button"
+        bind:this={botonAnadirPlaylist}
+        class="control-anadir-playlist"
+        aria-label={textos.playlists.anadirA}
+        title={textos.playlists.anadirA}
+        onclick={alternarMenuPlaylist}
+      >
+        <Icon nombre="mas" tamano={18} />
+      </button>
+      <div
+        class="capa-playlist"
+        popover="auto"
+        bind:this={capaPlaylist}
+        ontoggle={(e) => (menuPlaylistAbierto = e.newState === 'open')}
+      >
+        {#if menuPlaylistAbierto}
+          {#await import('./playlists/MenuAnadir.svelte') then m}
+            <m.default pistas={[pista.id]} oncerrar={() => capaPlaylist?.hidePopover()} />
+          {/await}
+        {/if}
+      </div>
+    {/if}
   </div>
 
   <div class="centro">
@@ -365,7 +404,11 @@
       bind:this={capaCola}
       ontoggle={(e) => (colaAbierta = e.newState === 'open')}
     >
-      {#if colaAbierta}<PanelCola />{/if}
+      {#if colaAbierta}
+        {#await import('./PanelCola.svelte') then m}
+          <m.default />
+        {/await}
+      {/if}
     </div>
     <div class="volumen">
       <button
@@ -476,6 +519,36 @@
     flex-direction: column;
     min-width: 0;
     line-height: 1.3;
+  }
+
+  .control-anadir-playlist {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--ns-radio-pleno);
+    background: none;
+    color: var(--m3c-on-surface-variant);
+    cursor: pointer;
+    flex: 0 0 auto;
+    margin-left: var(--ns-espacio-1);
+  }
+
+  .control-anadir-playlist:hover {
+    background: var(--m3c-surface-container-high);
+    color: var(--m3c-primary);
+  }
+
+  .capa-playlist {
+    position: fixed;
+    inset: auto;
+    border: none;
+    background: none;
+    padding: 0;
+    overflow: visible;
   }
 
   .titulo,

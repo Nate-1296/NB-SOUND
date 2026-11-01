@@ -226,6 +226,11 @@ export function borrarPista(id: number, borrarArchivo: boolean): Promise<void> {
   return call<void>('borrar_pista', { id, borrarArchivo });
 }
 
+/** Muestra el archivo de una pista en el gestor de archivos nativo del sistema. */
+export function mostrarEnExplorador(pistaId: number): Promise<void> {
+  return call<void>('mostrar_en_explorador', { pistaId });
+}
+
 export function bibliotecaAlbum(id: number): Promise<AlbumResumen | null> {
   return call<AlbumResumen | null>('biblioteca_album', { id });
 }

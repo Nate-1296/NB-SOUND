@@ -7,12 +7,17 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { completarDatos, NsError, type PistaResumen, urlPortada } from '$core/ipc';
+  import {
+    completarDatos,
+    mostrarEnExplorador,
+    NsError,
+    type PistaResumen,
+    urlPortada
+  } from '$core/ipc';
   import { formatoTiempo } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
 
   import Icon from '../Icon.svelte';
-  import MenuAnadir from '../playlists/MenuAnadir.svelte';
 
   interface Props {
     pista: PistaResumen;
@@ -199,7 +204,10 @@
       ontoggle={(e) => (menuPlaylistsAbierto = e.newState === 'open')}
     >
       {#if menuPlaylistsAbierto}
-        <MenuAnadir pistas={[pista.id]} oncerrar={cerrarMenuPlaylists} />
+        {#await import('../playlists/MenuAnadir.svelte') then m}
+          {@const Comp = m.default}
+          <Comp pistas={[pista.id]} oncerrar={cerrarMenuPlaylists} />
+        {/await}
       {/if}
     </div>
 
@@ -278,6 +286,18 @@
               <span>{t.abrirArtista}</span>
             </button>
           {/if}
+          <button
+            type="button"
+            role="menuitem"
+            class="opcion-menu"
+            onclick={() => {
+              cerrarMenuAcciones();
+              void mostrarEnExplorador(pista.id);
+            }}
+          >
+            <Icon nombre="carpeta" tamano={18} />
+            <span>{t.mostrarEnExplorador}</span>
+          </button>
           <hr class="separador-menu" />
           <button
             type="button"

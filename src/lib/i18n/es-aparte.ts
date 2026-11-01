@@ -408,6 +408,44 @@ export const esAparte = {
         ? '1 canción duplicada eliminada con éxito'
         : `${n} canciones duplicadas eliminadas con éxito`,
     error: 'Error al purgar duplicados'
+  },
+
+  buscar: {
+    bienvenida: {
+      titulo: 'Explora tu música',
+      descripcion: 'Busca por palabras exactas o háblale a tu biblioteca con lenguaje natural.',
+      modoDirecto: 'Búsqueda directa',
+      modoDirectoDesc: 'Títulos, artistas, álbumes y letras exactas',
+      modoSemantico: 'Háblale a tu biblioteca',
+      modoSemanticoDesc: 'Ideas, estados de ánimo, ritmos y géneros',
+      ideasTitulo: 'Ideas para probar'
+    },
+    ideas: [
+      'Canciones alegres para empezar el día',
+      'Rock clásico de los 70 y 80',
+      'Música instrumental para concentrarme',
+      'Baladas acústicas con voz femenina',
+      'Jazz suave para una tarde tranquila',
+      'Temas enérgicos para hacer ejercicio',
+      'Canciones melancólicas para una noche de lluvia',
+      'Pop bailable con mucho ritmo',
+      'Música relajante para leer sin prisa',
+      'Bandas sonoras cinematográficas e intensas',
+      'Canciones con solos de guitarra memorables',
+      'Ritmos latinos para animar la casa',
+      'Sonido lo-fi y beats tranquilos',
+      'Álbumes conceptuales para escuchar de corrido',
+      'Temas nocturnos con atmósfera espacial',
+      'Voces masculinas profundas y cálidas',
+      'Fusión flamenca o raíces acústicas',
+      'Electrónica melódica y progresiva',
+      'Canciones de más de 6 minutos de duración',
+      'Música para un viaje en carretera',
+      'Baladas de piano íntimas y desnudas',
+      'Temas con batería potente y bajo marcado',
+      'Joyas escondidas poco escuchadas',
+      'Grandes éxitos de mi colección'
+    ]
   }
 };
 

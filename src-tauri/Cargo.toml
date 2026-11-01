@@ -1,6 +1,6 @@
 [package]
 name = "nb-sound"
-version = "2.0.1"
+version = "2.0.2"
 description = "Aplicación de escritorio para la música local"
 authors = ["The NB Sound Authors"]
 license = "GPL-3.0-or-later"
@@ -32,6 +32,7 @@ tauri-plugin-dialog = "2.7.2"
 # ADR-009). Su cliente HTTP es propio, así que solo se usa desde `net.rs`, detrás
 # de la misma comprobación de consentimiento y anfitriones que el resto.
 tauri-plugin-updater = "2.14.1"
+minisign-verify = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
