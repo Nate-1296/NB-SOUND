@@ -172,7 +172,9 @@
       history.back();
       return;
     }
-    void goto(letras ? '/reproduciendo?letras' : '/reproduciendo', { replace: ruta });
+    void goto(letras ? '/reproduciendo?letras' : '/reproduciendo', {
+      replace: Boolean(ruta)
+    });
   }
 
   // Los atajos de la carcasa (`atajos.ts`) piden la cola y la vista ampliada con

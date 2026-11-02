@@ -155,29 +155,31 @@
     display: flex;
     align-items: center;
     gap: var(--ns-espacio-3);
-    padding: var(--ns-espacio-2) var(--ns-espacio-3);
-    border: 1px solid transparent;
-    border-radius: var(--ns-radio-md);
-    background: none;
+    min-height: 2.75rem;
+    padding: 0 var(--ns-espacio-4);
+    border: none;
+    border-radius: var(--ns-radio-pleno);
+    background: transparent;
     color: var(--m3c-on-surface-variant);
     font: inherit;
     font-size: var(--ns-texto-sm);
+    font-weight: 500;
     text-align: left;
     cursor: pointer;
     transition:
-      background 150ms ease,
-      color 150ms ease;
+      background-color var(--ns-duracion-corta) var(--ns-curva),
+      color var(--ns-duracion-corta) var(--ns-curva);
   }
 
   .pestana-seccion:hover {
-    background: var(--m3c-surface-container);
+    background: var(--m3c-surface-container-high);
     color: var(--m3c-on-surface);
   }
 
   .pestana-seccion.activa {
-    background: var(--m3c-secondary-container);
-    color: var(--m3c-on-secondary-container);
-    font-weight: 600;
+    background: var(--m3c-primary-container);
+    color: var(--m3c-on-primary-container);
+    font-weight: 700;
   }
 
   .contenido {

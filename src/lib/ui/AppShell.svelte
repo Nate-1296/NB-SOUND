@@ -1,8 +1,8 @@
 <!--
   @component
-  La carcasa, con la disposición de la V1 (`legado/ui/qml/Principal.qml`): la barra
-  lateral ocupa toda la altura y, a su derecha, la barra superior, el contenido y la
-  barra de reproducción.
+  La carcasa, con la disposición de capas inspirada en Material 3 y NB Books:
+  la barra lateral y la barra superior sobre la superficie de la ventana, el contenido
+  en un lienzo redondeado de contenedor suave, y la barra de reproducción permanente.
 
   El reproductor es permanente y el contenido es lo único que se desplaza; el
   cromo que queda encima del contenido es opaco, sin desenfoques (ADR-008).
@@ -140,7 +140,9 @@
     </div>
   {/if}
   <div class="superior"><BarraSuperior /></div>
-  <main class="contenido">{@render children()}</main>
+  <div class="lienzo" class:en-reproduciendo={enReproduciendo}>
+    <main class="contenido">{@render children()}</main>
+  </div>
   <div class="reproductor"><BarraReproduccion /></div>
 </div>
 {#if importacion.arrastrando}
@@ -180,9 +182,35 @@
     grid-area: superior;
   }
 
-  .contenido {
+  /*
+   * El lienzo del contenido: como en NB Books (ADR-012 / ADR-008), la jerarquía
+   * visual la dan las capas y no los bordes toscos. El contenido flota en una
+   * tarjeta redondeada de contenedor suave (surface-container-low) sobre la superficie
+   * de la ventana.
+   */
+  .lienzo {
     grid-area: contenido;
     min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--m3c-surface-container-low);
+    border-radius: var(--ns-radio-xl);
+    margin: 0 var(--ns-espacio-4) var(--ns-espacio-2) 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .lienzo.en-reproduciendo {
+    margin: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .contenido {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
     overflow-y: auto;
     padding: var(--ns-espacio-2) var(--ns-espacio-5) var(--ns-espacio-6);
   }

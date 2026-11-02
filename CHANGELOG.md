@@ -3,6 +3,26 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.4] — 2026-11-02
+
+Rediseño integral de la interfaz alineada con NB Books y corrección del buscador general.
+
+### Mejoras y correcciones
+
+- **Buscador general**:
+  - Corrección de la reactividad del campo de búsqueda en `BarraSuperior.svelte`: aislamiento de dependencias con `untrack` para evitar el reinicio accidental de la consulta al teclear fuera de `/buscar`.
+  - Soporte de pulsación de tecla Enter para ejecutar la búsqueda inmediata.
+  - Botón accesible para borrar búsqueda (X) con texto localizado en diccionario i18n (`t.borrar`).
+  - Ocultación del botón de borrado nativo de WebKit (`::-webkit-search-cancel-button`) para evitar controles duplicados.
+  - Foco y contorno accesible M3 (`outline: 2px solid var(--m3c-primary)`) unificado en todo el contenedor de búsqueda.
+- **Rediseño visual y arquitectura de capas (paridad con NB Books)**:
+  - Estructura de capas sobre superficie de ventana (`var(--m3c-surface)`): eliminación de bordes toscos de separación en la barra lateral (`border-right: 3px solid var(--m3c-primary)` eliminado).
+  - Contenedor flotante redondeado `.lienzo` (`var(--m3c-surface-container-low)`, `border-radius: var(--ns-radio-xl)`) para alojar las vistas de la aplicación.
+  - Navegación lateral con destinos en forma de píldora Material 3 (`border-radius: var(--ns-radio-pleno)`), contenedor activo en `var(--m3c-primary-container)` y texto/icono en `var(--m3c-on-primary-container)`.
+  - Botón de acción principal "+ Añadir música" con diseño de píldora destacada, icono y chevron de apertura de menú desplegable.
+  - Pestañas de navegación de Ajustes actualizadas a píldoras Material 3 con estados activos de alto contraste.
+  - Reducción del tamaño del logo en la barra lateral para una proporción visual armónica (6.5rem / 104px).
+
 ## [2.0.3] — 2026-11-01
 
 Auditoría visual y funcional exhaustiva: resolución de los 18 hallazgos QA-01 a QA-18 de la suite final.

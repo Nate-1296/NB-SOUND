@@ -33,6 +33,7 @@ export const es = {
     etiqueta: 'Buscar en tu música',
     marcador: 'Canciones, álbumes, artistas o letras',
     atajo: 'Ctrl+K',
+    borrar: 'Borrar búsqueda',
     titulo: 'Buscar',
     subtitulo: 'Encuentra artistas, álbumes, pistas y letras en toda tu biblioteca.',
     artistas: 'Artistas',

@@ -1,10 +1,9 @@
 <!--
   @component
-  La barra lateral, con la disposición de la V1 (`legado/ui/qml/componentes/NavLateral.qml`):
-  el logo grande arriba, los destinos agrupados bajo sus rótulos y, al pie, Por
-  revisar (solo si hay algo pendiente) y Ajustes. Los destinos son los de ADR-007:
-  Importar, Preparar Karaoke, Estado del Sistema y Sincronización ya no tienen
-  vista propia, y el botón de Modo Pro desaparece.
+  La barra lateral, con la disposición inspirada en Material 3 y NB Books:
+  el logo arriba, los destinos agrupados bajo sus rótulos como contenedores en
+  forma de píldora (ADR-008), y al pie, Por revisar (si hay pendientes) y Ajustes.
+  La jerarquía visual se apoya en capas y superficies, sin bordes toscos.
 
   En ventanas estrechas se queda en riel: solo iconos, con la etiqueta como nombre
   accesible y en el `title`.
@@ -55,8 +54,8 @@
     <img
       src={rutaLogo}
       alt=""
-      width="136"
-      height="136"
+      width="104"
+      height="104"
       onerror={(e) => {
         (e.currentTarget as HTMLImageElement).src = '/logo.png';
       }}
@@ -104,27 +103,29 @@
     flex-direction: column;
     gap: var(--ns-espacio-4);
     height: 100%;
-    padding: var(--ns-espacio-5) var(--ns-espacio-2) var(--ns-espacio-4);
-    background: var(--m3c-surface-container-lowest);
-    border-right: 3px solid var(--m3c-primary);
+    padding: var(--ns-espacio-4) var(--ns-espacio-3);
+    background: var(--m3c-surface);
     overflow-y: auto;
   }
 
   .marca {
     display: grid;
     place-items: center;
-    padding-bottom: var(--ns-espacio-3);
+    padding-bottom: var(--ns-espacio-2);
   }
 
   .marca img {
-    width: 8.5rem;
-    height: 8.5rem;
+    width: 6.5rem;
+    height: 6.5rem;
     border-radius: var(--ns-radio-pleno);
+    transition:
+      width var(--ns-duracion-corta) var(--ns-curva),
+      height var(--ns-duracion-corta) var(--ns-curva);
   }
 
   .rotulo {
     margin: 0 0 var(--ns-espacio-2);
-    padding: 0 var(--ns-espacio-3);
+    padding: 0 var(--ns-espacio-4);
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
     font-weight: 700;
@@ -149,27 +150,29 @@
     display: flex;
     align-items: center;
     gap: var(--ns-espacio-3);
+    width: 100%;
     min-height: 2.75rem;
-    padding: 0 var(--ns-espacio-3);
-    border: 1px solid transparent;
-    border-radius: var(--ns-radio-sm);
-    color: var(--m3c-on-surface);
+    padding: 0 var(--ns-espacio-4);
+    border: none;
+    border-radius: var(--ns-radio-pleno);
+    color: var(--m3c-on-surface-variant);
     text-decoration: none;
     font-size: var(--ns-texto-sm);
     font-weight: 500;
-    transition: background-color var(--ns-duracion-corta) var(--ns-curva);
+    transition:
+      background-color var(--ns-duracion-corta) var(--ns-curva),
+      color var(--ns-duracion-corta) var(--ns-curva);
   }
 
   .destino:hover {
     background: var(--m3c-surface-container-high);
+    color: var(--m3c-on-surface);
   }
 
-  /* El destino activo, como en la V1: recuadro de acento con la barra a la
-     izquierda. */
+  /* El destino activo en píldora con acento suave Material 3 */
   .destino.activo {
-    border-color: var(--m3c-primary);
-    border-left-width: 3px;
-    background: var(--m3c-surface-container);
+    background: var(--m3c-primary-container);
+    color: var(--m3c-on-primary-container);
     font-weight: 700;
   }
 
@@ -177,10 +180,11 @@
     display: grid;
     place-items: center;
     color: var(--m3c-on-surface-variant);
+    flex-shrink: 0;
   }
 
   .activo .icono {
-    color: var(--m3c-on-surface);
+    color: var(--m3c-on-primary-container);
   }
 
   .etiqueta {
@@ -214,10 +218,10 @@
     gap: var(--ns-espacio-3);
     width: 100%;
     min-height: 2.75rem;
-    padding: 0 var(--ns-espacio-3);
+    padding: 0 var(--ns-espacio-4);
     background: transparent;
-    border: 1px solid transparent;
-    border-radius: var(--ns-radio-sm);
+    border: none;
+    border-radius: var(--ns-radio-pleno);
     color: var(--m3c-on-surface-variant);
     cursor: pointer;
     font-size: var(--ns-texto-sm);
@@ -241,8 +245,8 @@
     }
 
     .marca img {
-      width: 3rem;
-      height: 3rem;
+      width: 2.75rem;
+      height: 2.75rem;
     }
 
     .rotulo,
@@ -258,8 +262,11 @@
     .boton-colapso {
       position: relative;
       justify-content: center;
-      width: 3.25rem;
+      width: 2.75rem;
+      min-height: 2.75rem;
       padding: 0;
+      border-radius: var(--ns-radio-pleno);
+      margin: 0 auto;
     }
 
     .pie-colapso {
