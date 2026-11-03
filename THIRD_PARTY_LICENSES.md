@@ -59,7 +59,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `asn1-rs-impl` | 0.2.0 | MIT/Apache-2.0 | https://github.com/rusticata/asn1-rs.git |
 | `async-broadcast` | 0.7.2 | MIT OR Apache-2.0 | https://github.com/smol-rs/async-broadcast |
 | `async-channel` | 2.5.0 | Apache-2.0 OR MIT | https://github.com/smol-rs/async-channel |
-| `async-executor` | 1.14.0 | Apache-2.0 OR MIT | https://github.com/smol-rs/async-executor |
+| `async-executor` | 1.14.1 | Apache-2.0 OR MIT | https://github.com/smol-rs/async-executor |
 | `async-io` | 2.6.0 | Apache-2.0 OR MIT | https://github.com/smol-rs/async-io |
 | `async-lock` | 3.4.2 | Apache-2.0 OR MIT | https://github.com/smol-rs/async-lock |
 | `async-process` | 2.5.0 | Apache-2.0 OR MIT | https://github.com/smol-rs/async-process |
