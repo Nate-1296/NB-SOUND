@@ -129,8 +129,12 @@
       <span class="icono-sonando" title={t.sonando} aria-label={t.sonando}>
         <Icon nombre="ecualizador" tamano={16} />
       </span>
-    {:else}
+    {:else if contexto === 'album'}
       {numero}
+    {:else}
+      <span class="icono-cancion">
+        <Icon nombre="cancion" tamano={14} />
+      </span>
     {/if}
   </span>
   {#if contexto !== 'album'}
@@ -189,7 +193,7 @@
     </button>
     <button
       type="button"
-      class="icono"
+      class="icono secundario"
       aria-label={t.masAcciones}
       aria-haspopup="menu"
       onclick={abrirMenuAcciones}
@@ -353,6 +357,7 @@
     height: 100%;
     padding: 0 var(--ns-espacio-3);
     border-radius: var(--ns-radio-sm);
+    transition: background 120ms ease;
   }
 
   .fila.contexto-album {
@@ -366,8 +371,20 @@
     color: var(--m3c-primary);
   }
 
+  .icono-cancion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--m3c-outline);
+    opacity: 0.5;
+  }
+
   .fila:hover {
     background: var(--m3c-surface-container);
+  }
+
+  .fila.sonando {
+    background: var(--m3c-surface-container-high);
   }
 
   .fila.sonando .titulo {
@@ -500,28 +517,48 @@
   .acciones {
     display: flex;
     align-items: center;
-    gap: var(--ns-espacio-2);
+    gap: var(--ns-espacio-1);
   }
 
   .icono {
     display: grid;
     place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border: 1px solid var(--m3c-outline-variant);
+    width: 2.125rem;
+    height: 2.125rem;
+    border: none;
     border-radius: var(--ns-radio-pleno);
-    background: none;
+    background: transparent;
     color: var(--m3c-on-surface-variant);
     cursor: pointer;
+    opacity: 0;
+    transition:
+      opacity 120ms ease,
+      background 120ms ease,
+      color 120ms ease;
+  }
+
+  .fila:hover .icono,
+  .fila:focus-within .icono {
+    opacity: 1;
   }
 
   .icono.activo {
-    border-color: var(--m3c-primary);
+    opacity: 1;
     color: var(--m3c-primary);
   }
 
+  .icono.secundario {
+    opacity: 0.4;
+  }
+
+  .fila:hover .icono.secundario,
+  .fila:focus-within .icono.secundario {
+    opacity: 1;
+  }
+
   .icono:hover {
-    background: var(--m3c-surface-container-high);
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface);
   }
 
   .icono.reproducir {

@@ -57,6 +57,7 @@ export type {
   AvisoReproductor,
   CandidatoRevisar,
   Categoria,
+  Cifras,
   ConsultaAlbumes,
   ConsultaArtistas,
   ConsultaPistas,
@@ -313,9 +314,14 @@ export function abrirMinirreproductor(): Promise<void> {
   return call<void>('abrir_minirreproductor');
 }
 
-/** Cierra la ventana desde la que se llama (el minirreproductor). */
-export function cerrarEstaVentana(): Promise<void> {
-  return getCurrentWindow().close();
+/** Cierra o esconde la ventana desde la que se llama (el minirreproductor). */
+export async function cerrarEstaVentana(): Promise<void> {
+  try {
+    const win = getCurrentWindow();
+    await win.hide();
+  } catch {
+    await getCurrentWindow().close();
+  }
 }
 
 /** Alterna el modo de pantalla completa de la ventana actual. Devuelve si quedó en pantalla completa. */

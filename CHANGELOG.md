@@ -3,6 +3,33 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.5] — 2026-11-03
+
+Auditoría visual y funcional completa: paneles laterales dedicados, persistencia de vistas en biblioteca, rediseño del minirreproductor y optimización global de la experiencia de usuario.
+
+### Mejoras y correcciones
+
+- **Inicio**:
+  - Hero estilizado con degradados suaves y diseño uniforme en tarjetas de contenido.
+  - Podio decorativo para el Top 1-3 con cuarta pista a ancho completo.
+  - Carruseles continuos sin barra horizontal nativa y mensajes de bienvenida concisos.
+- **Biblioteca y navegación**:
+  - Pestaña inicial predeterminada en Álbumes.
+  - Persistencia de estado independiente para Álbumes, Artistas y Pistas (modo cuadrícula/lista, orden y búsqueda).
+  - Búsqueda cruzada inteligente entre títulos de canciones, álbumes y artistas.
+  - Botón de retroceso consistente que conserva el contexto de procedencia.
+- **Playlists**:
+  - Panel inspector lateral fijado en vertical (sticky) que aprovecha la altura completa de la ventana con previsualización interactiva de pistas.
+  - Lista de favoritos "Me gusta" anclada fija en primer lugar sin botón redundante de anclaje.
+  - Barra de herramientas alineada con filtros Material 3 y selector de visualización en el extremo derecho.
+- **Paneles laterales (Drawers) y barra superior**:
+  - Panel lateral dedicado para la Consola de Karaoke.
+  - Panel lateral de Dispositivos y destinos de reproducción, con ocultación dinámica del botón de cast en la barra inferior si no hay dispositivos conectados.
+  - Panel lateral de Añadir Música / Importación con gestor de pistas duplicadas y purga inteligente en biblioteca activa.
+- **Minirreproductor y modo inmersivo**:
+  - Rediseño completo del minirreproductor (470x168 px) con apertura y cierre instantáneo mediante retención en memoria y control de favoritos directo.
+  - Modo inmersivo/letras con desvanecimiento automático de controles en pantalla completa tras inactividad.
+
 ## [2.0.4] — 2026-11-02
 
 Rediseño integral de la interfaz alineada con NB Books y corrección del buscador general.

@@ -138,6 +138,8 @@
     border-radius: var(--ns-radio-lg);
     background: var(--m3c-surface-container-low);
     margin-top: var(--ns-espacio-3);
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .cabecera {

@@ -9,10 +9,12 @@
 -->
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
 
   import { accionDeTecla, esCampoDeTexto } from '$core/atajos';
   import { aparienciaActual } from '$core/apariencia.svelte';
+  import { estadoPantalla } from '$core/estadoVistas.svelte';
   import { abrirMinirreproductor, alternarPantallaCompleta, bibliotecaPistas } from '$core/ipc';
   import { importacion } from '$core/importacion.svelte';
   import { telefonos } from '$core/movil.svelte';
@@ -120,28 +122,50 @@
     };
     void acciones[accion]();
   }
+
+  let temporizadorOcultar: ReturnType<typeof setTimeout> | undefined;
+
+  function alMoverRaton() {
+    if (!enReproduciendo || !estadoPantalla.enPantallaCompleta) {
+      estadoPantalla.controlesVisibles = true;
+      return;
+    }
+    estadoPantalla.controlesVisibles = true;
+    clearTimeout(temporizadorOcultar);
+    temporizadorOcultar = setTimeout(() => {
+      estadoPantalla.controlesVisibles = false;
+    }, 3500);
+  }
+
+  $effect(() => {
+    if (!enReproduciendo || !estadoPantalla.enPantallaCompleta) {
+      clearTimeout(temporizadorOcultar);
+      estadoPantalla.controlesVisibles = true;
+    }
+  });
 </script>
 
-<svelte:window onkeydown={alPulsar} />
+<svelte:window onkeydown={alPulsar} onmousemove={alMoverRaton} />
 
 <div
   class="carcasa"
   class:compacta={aparienciaActual.barraLateralCompacta}
   class:sin-lateral={enReproduciendo}
+  class:ocultar-controles={enReproduciendo &&
+    estadoPantalla.enPantallaCompleta &&
+    !estadoPantalla.controlesVisibles}
   data-ancho={clase}
   bind:clientWidth={ancho}
 >
-  {#if !enReproduciendo}
-    <div class="lateral">
-      <NavLateral
-        pendientes={importacion.pendientes}
-        compacta={clase !== 'amplio' || aparienciaActual.barraLateralCompacta}
-      />
-    </div>
-  {/if}
-  <div class="superior"><BarraSuperior /></div>
+  <div class="lateral" class:oculta={enReproduciendo}>
+    <NavLateral
+      pendientes={importacion.pendientes}
+      compacta={clase !== 'amplio' || aparienciaActual.barraLateralCompacta}
+    />
+  </div>
+  <div class="superior" class:oculta={enReproduciendo}><BarraSuperior /></div>
   <div class="lienzo" class:en-reproduciendo={enReproduciendo}>
-    <main class="contenido">{@render children()}</main>
+    <main class="contenido" class:en-reproduciendo={enReproduciendo}>{@render children()}</main>
   </div>
   <div class="reproductor"><BarraReproduccion /></div>
 </div>
@@ -215,21 +239,40 @@
     padding: var(--ns-espacio-2) var(--ns-espacio-5) var(--ns-espacio-6);
   }
 
+  .contenido.en-reproduciendo {
+    padding: 0;
+    overflow: hidden;
+  }
+
   .reproductor {
     grid-area: reproductor;
     min-width: 0;
+    transition:
+      transform 300ms var(--ns-curva),
+      opacity 300ms var(--ns-curva);
+  }
+
+  .carcasa.ocultar-controles .reproductor {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .lateral.oculta,
+  .superior.oculta {
+    display: none;
   }
 
   .carcasa.sin-lateral {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) var(--ns-alto-reproductor);
     grid-template-areas:
-      'superior'
       'contenido'
       'reproductor';
   }
 
-  .carcasa:not([data-ancho='amplio']),
-  .carcasa.compacta {
+  .carcasa:not(.sin-lateral):not([data-ancho='amplio']),
+  .carcasa:not(.sin-lateral).compacta {
     grid-template-columns: var(--ns-ancho-riel) minmax(0, 1fr);
   }
 </style>

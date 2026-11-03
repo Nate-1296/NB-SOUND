@@ -4,6 +4,7 @@
   canciones van en la ventana virtual, porque un artista puede tener cientos.
 -->
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import {
     type AlbumResumen,
@@ -66,9 +67,21 @@
 </script>
 
 <section class="detalle">
-  <a class="volver" href="/biblioteca?vista=artistas">
-    <Icon nombre="atras" tamano={18} />{t.album.volver}
-  </a>
+  <button
+    type="button"
+    class="volver"
+    onclick={() => {
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        window.history.back();
+      } else {
+        void goto('/biblioteca?vista=artistas');
+      }
+    }}
+    title={t.album.volver}
+  >
+    <Icon nombre="atras" tamano={18} />
+    <span>{t.album.volver}</span>
+  </button>
 
   {#if artista === null}
     <p class="vacio">{t.artista.noEncontrado}</p>
@@ -162,8 +175,18 @@
     align-items: center;
     gap: var(--ns-espacio-2);
     color: var(--m3c-on-surface-variant);
+    font: inherit;
     font-size: var(--ns-texto-sm);
     text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: color 120ms ease;
+  }
+
+  .volver:hover {
+    color: var(--m3c-primary);
   }
 
   .cabecera {

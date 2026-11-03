@@ -42,7 +42,8 @@ export const es = {
     playlists: 'Playlists',
     sinResultados: (q: string) => `Nada en tu biblioteca coincide con «${q}».`,
     escribe: 'Escribe arriba para buscar.',
-    verTodas: (n: number) => `Ver las ${n.toLocaleString('es')} pistas`
+    verTodas: (n: number) => `Ver las ${n.toLocaleString('es')} pistas`,
+    cerrarBusqueda: 'Cerrar búsqueda'
   },
   reproductor: {
     region: 'Reproductor',
@@ -56,6 +57,8 @@ export const es = {
     pausar: 'Pausar',
     aleatorio: 'Aleatorio',
     repetir: 'Repetir',
+    marcarFavorita: 'Añadir a favoritas',
+    quitarFavorita: 'Quitar de favoritas',
     karaoke: 'Modo karaoke',
     karaokeNoListo: 'Esta canción aún no está lista para cantar',
     karaokeListo: 'Karaoke listo para cantar',
@@ -275,6 +278,9 @@ export const es = {
     albumes: 'Álbumes',
     duracion: 'Duración',
     retomar: 'Retomar reproducción',
+    continuar: 'Continuar',
+    detalles: 'Detalles',
+    coleccionResumen: 'Colección local',
     destacado: 'Álbum destacado del día',
     verAlbum: 'Ver álbum',
     reproducir: 'Reproducir',
@@ -285,6 +291,11 @@ export const es = {
     top: 'Tu top 10 canciones',
     topSub: 'Las que más has repetido en tu biblioteca.',
     masReproducida: '#1 más reproducida',
+    podio: {
+      lugar1: '1.º lugar',
+      lugar2: '2.º lugar',
+      lugar3: '3.º lugar'
+    },
     playlists: 'Tus playlists destacadas',
     playlistsSub: 'Listas que has creado o escuchado más.',
     queGustan: 'Álbumes que vuelven a aparecer',
@@ -353,7 +364,9 @@ export const es = {
     nadaSonando: 'No suena nada. Elige una canción en tu biblioteca.',
     irA: (t: string) => `Ir a ${t}`,
     modoDividido: 'Vista dividida',
-    modoCentrado: 'Letras centradas'
+    modoCentrado: 'Letras centradas',
+    verLetras: 'Ver letras',
+    verPortada: 'Ver portada'
   },
   playlists: {
     titulo: 'Playlists',
@@ -367,6 +380,7 @@ export const es = {
     },
     buscar: 'Buscar por nombre o tipo',
     cuenta: (n: number) => (n === 1 ? '1 playlist' : `${n} playlists`),
+    categoria: 'Categoría',
     categorias: {
       todo: 'Todo',
       meGusta: 'Me gusta',
@@ -398,6 +412,7 @@ export const es = {
     subir: 'Subir',
     bajar: 'Bajar',
     vacia: 'Esta playlist todavía no tiene canciones.',
+    verMasCanciones: (n: number) => `Ver ${n.toLocaleString('es')} canciones más...`,
     noEncontrada: 'Esta playlist ya no existe.',
     volver: 'Volver a Playlists',
     nombre: 'Nombre',
@@ -499,7 +514,20 @@ export const es = {
           : `${anadidas} añadidas`,
     sinVerificar: (n: number) => (n === 1 ? '1 sin verificar' : `${n} sin verificar`),
     verPorRevisar: 'Ver Por revisar',
-    cerrar: 'Cerrar'
+    cerrar: 'Cerrar',
+    subtitulo: 'Importa pistas individuales o carpetas a tu biblioteca local',
+    archivosDesc: 'Selecciona pistas de audio (.mp3, .flac, .m4a, .wav)',
+    carpetaDesc: 'Escanea un directorio entero con sus subcarpetas y carátulas',
+    arrastrarTitulo: 'Arrastrar y soltar',
+    arrastrarDesc: 'Puedes arrastrar archivos o carpetas a la ventana en cualquier momento',
+    arrastrarActivo: 'Suelta los archivos aquí para comenzar a importar',
+    estadoBiblioteca: 'Estado de la biblioteca',
+    totalPistas: (n: number) => (n === 1 ? '1 pista' : `${n} pistas`),
+    totalAlbumes: (n: number) => (n === 1 ? '1 álbum' : `${n} álbumes`),
+    totalArtistas: (n: number) => (n === 1 ? '1 artista' : `${n} artistas`),
+    archivosPorRevisar: (n: number) =>
+      n === 1 ? '1 archivo pendiente por revisar' : `${n} archivos pendientes por revisar`,
+    sinPendientes: 'Todo el contenido catalogado sin incidencias'
   },
   porRevisar: {
     titulo: 'Por revisar',
@@ -540,6 +568,26 @@ export const es = {
     cancelar: 'Cancelar',
     papelera: 'Los archivos descartados van a la papelera del sistema.',
     error: 'No se pudo completar. Vuelve a intentarlo.'
+  },
+  karaokeConsola: {
+    titulo: 'Consola Karaoke',
+    subtitulo: 'Separación instrumental local con IA.',
+    abrir: 'Consola de karaoke',
+    cerrar: 'Cerrar consola',
+    motorActivo: 'Motor de separación activo',
+    motorDescargando: 'Descargando modelo de separación',
+    motorNoInstalado: 'Agregado de karaoke no instalado',
+    motorExplicacion:
+      'Separa la pista vocal de cualquier canción localmente usando htdemucs de Meta.',
+    instalar: 'Instalar agregado',
+    prepararFavoritas: 'Preparar mis favoritas',
+    prepararPistaActual: 'Preparar canción actual',
+    pistaActualLista: 'Canción actual lista para cantar',
+    cancionesEnCola: (n: number) =>
+      `${n === 1 ? '1 canción' : `${n} canciones`} en cola de preparación`,
+    sinPendientes: 'No hay canciones pendientes de preparación.',
+    motorModelo: 'htdemucs (Meta)',
+    progresoActual: (titulo: string, pct: number) => `Preparando «${titulo}» (${pct} %)`
   }
 } as const;
 

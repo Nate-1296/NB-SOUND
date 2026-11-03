@@ -21,6 +21,7 @@
   let conectando = $state(false);
 
   const controlando = $derived(telefonos.controlando[0]?.nombre ?? null);
+  const visible = $derived(telefonos.estado.activo && telefonos.lista.some((t) => t.conectado));
 
   function alternar() {
     if (!capa || !boton) return;
@@ -40,46 +41,48 @@
   }
 </script>
 
-<button
-  type="button"
-  bind:this={boton}
-  class="control conmutador"
-  class:activo={controlando !== null}
-  aria-label={controlando ? t.controlandoDesde(controlando) : t.destino}
-  aria-expanded={abierta}
-  title={controlando ? t.controlandoDesde(controlando) : t.destino}
-  onclick={alternar}
->
-  <Icon nombre="telefono" tamano={20} />
-</button>
-<div
-  class="capa"
-  popover="auto"
-  bind:this={capa}
-  ontoggle={(e) => (abierta = e.newState === 'open')}
->
-  <h2>{t.destino}</h2>
-  <div class="fila actual">
-    <Icon nombre="volumen" tamano={22} />
-    <span>
-      <strong>{t.esteEquipo}</strong>
-      <small>{t.sonandoAqui}</small>
-    </span>
-  </div>
-  {#each telefonos.controlando as tel (tel.id)}
-    <div class="fila">
-      <Icon nombre="telefono" tamano={22} />
+{#if visible}
+  <button
+    type="button"
+    bind:this={boton}
+    class="control conmutador"
+    class:activo={controlando !== null}
+    aria-label={controlando ? t.controlandoDesde(controlando) : t.destino}
+    aria-expanded={abierta}
+    title={controlando ? t.controlandoDesde(controlando) : t.destino}
+    onclick={alternar}
+  >
+    <Icon nombre="telefono" tamano={20} />
+  </button>
+  <div
+    class="capa"
+    popover="auto"
+    bind:this={capa}
+    ontoggle={(e) => (abierta = e.newState === 'open')}
+  >
+    <h2>{t.destino}</h2>
+    <div class="fila actual">
+      <Icon nombre="volumen" tamano={22} />
       <span>
-        <strong>{tel.nombre}</strong>
-        <small>{t.controlandoDesde(tel.nombre)}</small>
+        <strong>{t.esteEquipo}</strong>
+        <small>{t.sonandoAqui}</small>
       </span>
     </div>
-  {/each}
-  <p>{t.escucharEnElTelefono}</p>
-  <button type="button" class="boton" onclick={conectar}>{t.conectarTelefono}</button>
-</div>
+    {#each telefonos.controlando as tel (tel.id)}
+      <div class="fila">
+        <Icon nombre="telefono" tamano={22} />
+        <span>
+          <strong>{tel.nombre}</strong>
+          <small>{t.controlandoDesde(tel.nombre)}</small>
+        </span>
+      </div>
+    {/each}
+    <p>{t.escucharEnElTelefono}</p>
+    <button type="button" class="boton" onclick={conectar}>{t.conectarTelefono}</button>
+  </div>
 
-<DialogoConectar abierto={conectando} oncerrar={() => (conectando = false)} />
+  <DialogoConectar abierto={conectando} oncerrar={() => (conectando = false)} />
+{/if}
 
 <style>
   /* Las medidas de los demás controles de la barra. */

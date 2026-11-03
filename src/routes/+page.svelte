@@ -8,8 +8,8 @@
   animación en reposo (ADR-008).
 -->
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { aparienciaActual } from '$core/apariencia.svelte';
-  import { duracionDetallada } from '$core/formato';
   import { type Inicio, inicio, reproducirLista, reproducirPlaylist, urlPortada } from '$core/ipc';
   import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
   import { textos } from '$lib/i18n';
@@ -80,7 +80,10 @@
 
   function desplazar(btn: HTMLButtonElement, direccion: -1 | 1) {
     const fila = btn.closest('.cabecera-carrusel')?.nextElementSibling as HTMLElement;
-    fila?.scrollBy({ left: direccion * fila.clientWidth * 0.8, behavior: 'smooth' });
+    fila?.scrollBy({
+      left: direccion * Math.min(fila.clientWidth * 0.75, 480),
+      behavior: 'smooth'
+    });
   }
 </script>
 
@@ -88,7 +91,6 @@
   <header class="saludo">
     <div class="saludo-texto">
       <h1>{saludo}</h1>
-      <p>{t.subtitulo}</p>
     </div>
   </header>
 
@@ -100,125 +102,243 @@
     </div>
   {:else if datos}
     <div class="heroe">
-      <div class="izquierda">
-        <ul class="cifras">
-          {#each [{ href: '/biblioteca?vista=pistas', icono: 'cancion', valor: datos.cifras.pistas.toLocaleString('es'), rotulo: t.pistas }, { href: '/biblioteca?vista=artistas', icono: 'artista', valor: datos.cifras.artistas.toLocaleString('es'), rotulo: t.artistas }, { href: '/biblioteca?vista=albumes', icono: 'album', valor: datos.cifras.albumes.toLocaleString('es'), rotulo: t.albumes }, { href: null, icono: 'reloj', valor: duracionDetallada(datos.cifras.duracionSeg), rotulo: t.duracion }] as c (c.rotulo)}
-            <li>
-              {#if c.href}
-                <a class="cifra-enlace" href={c.href}>
-                  <Icon nombre={c.icono as any} tamano={18} /><strong>{c.valor}</strong><span
-                    >{c.rotulo}</span
-                  >
-                </a>
-              {:else}
-                <div class="cifra-estatica">
-                  <Icon nombre={c.icono as any} tamano={18} /><strong>{c.valor}</strong><span
-                    >{c.rotulo}</span
-                  >
-                </div>
+      {#if pistaRetomar}
+        <section class="marquesina" aria-labelledby="inicio-retomar">
+          <div class="marquesina-info">
+            <span class="marquesina-etiqueta">
+              <Icon nombre="cancion" tamano={16} />
+              {t.retomar}
+            </span>
+            <h2 id="inicio-retomar" class="marquesina-titulo">{pistaRetomar.titulo}</h2>
+            <p class="marquesina-sub">
+              <span>{pistaRetomar.artista}</span>
+              {#if pistaRetomar.album}
+                <span class="punto" aria-hidden="true">·</span>
+                <span>{pistaRetomar.album}</span>
               {/if}
-            </li>
-          {/each}
-        </ul>
-
-        {#if pistaRetomar}
-          <button type="button" class="retomar" onclick={activarRetomar}>
-            <span class="mini-portada">
-              {#if pistaRetomar.tienePortada}<img
-                  src={urlPortada('pista', pistaRetomar.id, 64)}
-                  alt=""
-                />{:else}<Icon nombre="cancion" tamano={18} />{/if}
-            </span>
-            <span class="texto">
-              <span class="etiqueta">{t.retomar}</span>
-              <strong>{pistaRetomar.titulo}</strong>
-              <span class="sub">{pistaRetomar.artista} · {pistaRetomar.album}</span>
-            </span>
-            <span class="play"
-              ><Icon
-                nombre={reproductor.pista?.id === pistaRetomar.id && reproductor.sonando
-                  ? 'pausa'
-                  : 'reproducir'}
-                tamano={18}
-              /></span
-            >
-          </button>
-        {/if}
-      </div>
+            </p>
+            <div class="marquesina-acciones">
+              <button type="button" class="boton relleno" onclick={activarRetomar}>
+                <Icon
+                  nombre={reproductor.pista?.id === pistaRetomar.id && reproductor.sonando
+                    ? 'pausa'
+                    : 'reproducir'}
+                  tamano={18}
+                />
+                <span
+                  >{reproductor.pista?.id === pistaRetomar.id && reproductor.sonando
+                    ? textos.reproductor.pausar
+                    : t.continuar}</span
+                >
+              </button>
+              {#if pistaRetomar.albumId}
+                <a class="boton contorno" href={`/biblioteca/album?id=${pistaRetomar.albumId}`}>
+                  <Icon nombre="album" tamano={16} />
+                  <span>{t.verAlbum}</span>
+                </a>
+              {/if}
+            </div>
+          </div>
+          <div class="marquesina-portada-box" aria-hidden="true">
+            <div class="marquesina-portada">
+              {#if pistaRetomar.tienePortada}
+                <img src={urlPortada('pista', pistaRetomar.id, 320)} alt="" />
+              {:else}
+                <Icon nombre="cancion" tamano={64} />
+              {/if}
+            </div>
+          </div>
+        </section>
+      {/if}
 
       {#if datos.albumDestacado}
         {@const a = datos.albumDestacado}
-        <div class="destacado">
-          {#if a.tienePortada}<img src={urlPortada('album', a.id, 640)} alt="" />{/if}
-          <div class="velo">
-            <span class="etiqueta">{t.destacado}</span>
-            <h2>{a.titulo}</h2>
-            <span class="sub">
-              {[a.artista, textos.biblioteca.cuentaPistas(a.numPistas), a.anio ?? '']
-                .filter((x) => x !== '')
-                .join(' · ')}
+        <section class="destacado" aria-labelledby="inicio-destacado">
+          <div class="destacado-info">
+            <span class="destacado-etiqueta">
+              <Icon nombre="album" tamano={16} />
+              {t.destacado}
             </span>
-            <div class="botones">
+            <h2 id="inicio-destacado" class="destacado-titulo">{a.titulo}</h2>
+            <p class="destacado-sub">
+              <span>{a.artista}</span>
+              <span class="punto" aria-hidden="true">·</span>
+              <span>{textos.biblioteca.cuentaPistas(a.numPistas)}</span>
+              {#if a.anio}
+                <span class="punto" aria-hidden="true">·</span>
+                <span>{a.anio}</span>
+              {/if}
+            </p>
+            <div class="destacado-acciones">
               <button type="button" class="boton relleno" onclick={() => reproducirAlbum(a.id)}>
-                <Icon nombre="reproducir" tamano={16} />{t.reproducir}
+                <Icon nombre="reproducir" tamano={18} />
+                <span>{t.reproducir}</span>
               </button>
-              <a class="boton" href={`/biblioteca/album?id=${a.id}`}>{t.verAlbum}</a>
+              <a class="boton contorno" href={`/biblioteca/album?id=${a.id}`}>
+                <Icon nombre="album" tamano={16} />
+                <span>{t.verAlbum}</span>
+              </a>
             </div>
           </div>
-        </div>
+          <div class="destacado-portada-box" aria-hidden="true">
+            <div class="destacado-portada">
+              {#if a.tienePortada}
+                <img src={urlPortada('album', a.id, 320)} alt="" />
+              {:else}
+                <Icon nombre="album" tamano={64} />
+              {/if}
+            </div>
+          </div>
+        </section>
       {/if}
     </div>
 
     {#if datos.paraVolver.length > 0}
       <h2 class="seccion">{t.vuelve}</h2>
       <p class="seccion-sub">{t.vuelveSub}</p>
-      <ul class="vuelve">
-        {#each datos.paraVolver.slice(0, 7) as e, k (e.pista.id)}
-          <li class:grande={k === 0}>
-            <button type="button" class="tarjeta-pista" onclick={() => reproducir(idsVolver, k)}>
-              <span class="mini-portada">
-                {#if e.pista.tienePortada}<img
-                    src={urlPortada('pista', e.pista.id, k === 0 ? 320 : 64)}
-                    alt=""
-                  />{:else}<Icon nombre="cancion" tamano={18} />{/if}
-              </span>
-              <span class="texto">
-                {#if k === 0}<span class="etiqueta">{t.ultima}</span>{/if}
-                <strong>{e.pista.titulo}</strong>
-                <span class="sub">{e.pista.artista} · {e.pista.album}</span>
-                <span class="sub">{t.reproducciones(e.reproducciones)}</span>
-              </span>
-              <span class="play"><Icon nombre="reproducir" tamano={16} /></span>
+      <div class="vuelve-contenedor">
+        {#if datos.paraVolver[0]}
+          {@const primera = datos.paraVolver[0]}
+          <div class="vuelve-destacado">
+            <button
+              type="button"
+              class="tarjeta-vuelve-destacada"
+              onclick={() => reproducir(idsVolver, 0)}
+            >
+              <div class="destacada-portada-box">
+                <span class="destacada-portada">
+                  {#if primera.pista.tienePortada}
+                    <img src={urlPortada('pista', primera.pista.id, 320)} alt="" />
+                  {:else}
+                    <Icon nombre="cancion" tamano={56} />
+                  {/if}
+                </span>
+                <span class="destacada-play" aria-hidden="true">
+                  <Icon nombre="reproducir" tamano={22} />
+                </span>
+              </div>
+              <div class="destacada-info">
+                <span class="etiqueta">{t.ultima}</span>
+                <strong class="destacada-titulo">{primera.pista.titulo}</strong>
+                <span class="sub">{primera.pista.artista} · {primera.pista.album}</span>
+                <span class="sub">{t.reproducciones(primera.reproducciones)}</span>
+              </div>
             </button>
-          </li>
-        {/each}
-      </ul>
+          </div>
+        {/if}
+
+        <ul class="vuelve-rejilla">
+          {#each datos.paraVolver.slice(1, 9) as e, k (e.pista.id)}
+            <li>
+              <button
+                type="button"
+                class="tarjeta-pista"
+                onclick={() => reproducir(idsVolver, k + 1)}
+              >
+                <span class="mini-portada">
+                  {#if e.pista.tienePortada}
+                    <img src={urlPortada('pista', e.pista.id, 64)} alt="" />
+                  {:else}
+                    <Icon nombre="cancion" tamano={18} />
+                  {/if}
+                </span>
+                <span class="texto">
+                  <strong>{e.pista.titulo}</strong>
+                  <span class="sub">{e.pista.artista} · {e.pista.album}</span>
+                  <span class="sub">{t.reproducciones(e.reproducciones)}</span>
+                </span>
+                <span class="play"><Icon nombre="reproducir" tamano={16} /></span>
+              </button>
+            </li>
+          {/each}
+        </ul>
+      </div>
     {/if}
+
+    {#snippet tarjetaPodio(
+      p: NonNullable<typeof datos>['top'][number],
+      lugar: number,
+      insignia: string,
+      clase: 'oro' | 'plata' | 'bronce',
+      ordenIdx: number
+    )}
+      <button
+        type="button"
+        class="podio-tarjeta podio-{lugar}"
+        onclick={() => reproducir(idsTop, ordenIdx)}
+      >
+        <div class="podio-insignia {clase}">{insignia}</div>
+        <div class="podio-portada-box">
+          <span class="podio-portada">
+            {#if p.pista.tienePortada}
+              <img src={urlPortada('pista', p.pista.id, lugar === 1 ? 320 : 240)} alt="" />
+            {:else}
+              <Icon nombre="cancion" tamano={lugar === 1 ? 40 : 32} />
+            {/if}
+          </span>
+          <span class="podio-play"><Icon nombre="reproducir" tamano={lugar === 1 ? 22 : 18} /></span
+          >
+        </div>
+        <div class="podio-texto">
+          <strong title={p.pista.titulo}>{p.pista.titulo}</strong>
+          <span class="sub">{p.pista.artista}</span>
+          <span class="podio-escuchas">{t.reproducciones(p.reproducciones)}</span>
+        </div>
+        <div class="podio-pedestal pedestal-{lugar}">
+          <span class="pedestal-num">{lugar}</span>
+        </div>
+      </button>
+    {/snippet}
+
+    {#snippet itemTop(e: NonNullable<typeof datos>['top'][number], num: number, ordenIdx: number)}
+      <li>
+        <button type="button" class="fila-top" onclick={() => reproducir(idsTop, ordenIdx)}>
+          <span class="numero">{String(num).padStart(2, '0')}</span>
+          <span class="mini-portada">
+            {#if e.pista.tienePortada}
+              <img src={urlPortada('pista', e.pista.id, 64)} alt="" />
+            {:else}
+              <Icon nombre="cancion" tamano={16} />
+            {/if}
+          </span>
+          <span class="texto">
+            <strong>{e.pista.titulo}</strong>
+            <span class="sub">{e.pista.artista}</span>
+          </span>
+          <span class="sub">{t.reproducciones(e.reproducciones)}</span>
+          <span class="sub">{formatoTiempo(e.pista.duracionSeg)}</span>
+        </button>
+      </li>
+    {/snippet}
 
     {#if datos.top.length > 0}
       <h2 class="seccion">{t.top}</h2>
       <p class="seccion-sub">{t.topSub}</p>
-      <ol class="top">
-        {#each datos.top as e, k (e.pista.id)}
-          <li>
-            <button type="button" class="fila-top" onclick={() => reproducir(idsTop, k)}>
-              <span class="numero">{String(k + 1).padStart(2, '0')}</span>
-              <span class="mini-portada">
-                {#if e.pista.tienePortada}<img
-                    src={urlPortada('pista', e.pista.id, 64)}
-                    alt=""
-                  />{:else}<Icon nombre="cancion" tamano={16} />{/if}
-              </span>
-              <span class="texto">
-                <strong>{e.pista.titulo}</strong>
-                <span class="sub">{e.pista.artista}</span>
-              </span>
-              <span class="sub">{t.reproducciones(e.reproducciones)}</span>
-              <span class="sub">{formatoTiempo(e.pista.duracionSeg)}</span>
-            </button>
-          </li>
-        {/each}
-      </ol>
+
+      {#if datos.top[0] && datos.top[1] && datos.top[2]}
+        {@const p0 = datos.top[0]}
+        {@const p1 = datos.top[1]}
+        {@const p2 = datos.top[2]}
+        <div class="podio">
+          {@render tarjetaPodio(p1, 2, t.podio.lugar2, 'plata', 1)}
+          {@render tarjetaPodio(p0, 1, t.podio.lugar1, 'oro', 0)}
+          {@render tarjetaPodio(p2, 3, t.podio.lugar3, 'bronce', 2)}
+        </div>
+
+        {#if datos.top.length > 3}
+          <ol class="top-resto" start="4">
+            {#each datos.top.slice(3) as e, k (e.pista.id)}
+              {@render itemTop(e, k + 4, k + 3)}
+            {/each}
+          </ol>
+        {/if}
+      {:else}
+        <ol class="top">
+          {#each datos.top as e, k (e.pista.id)}
+            {@render itemTop(e, k + 1, k)}
+          {/each}
+        </ol>
+      {/if}
     {/if}
 
     {#snippet carruselCabecera(titulo: string, sub: string)}
@@ -360,22 +480,26 @@
 
   .saludo {
     display: flex;
-    align-items: flex-end;
+    align-items: baseline;
     justify-content: space-between;
     gap: var(--ns-espacio-4);
+    margin: var(--ns-espacio-1) 0;
     flex-wrap: wrap;
   }
 
   .saludo-texto {
     display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-1);
+    align-items: baseline;
+    gap: var(--ns-espacio-3);
+    flex-wrap: wrap;
   }
 
   .saludo h1 {
-    margin: var(--ns-espacio-3) 0 0;
-    font-size: clamp(var(--ns-texto-2xl), 4vw, 3.25rem);
-    line-height: 1.1;
+    margin: 0;
+    font-size: var(--ns-texto-lg);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--m3c-on-surface);
   }
 
   .saludo p,
@@ -409,63 +533,130 @@
 
   .heroe {
     display: grid;
-    grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr);
-    gap: var(--ns-espacio-5);
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr);
+    gap: var(--ns-espacio-4);
   }
 
-  .izquierda {
+  .marquesina,
+  .destacado {
     display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-3);
-  }
-
-  .cifras {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--ns-espacio-3);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .cifras li {
-    display: flex;
-    padding: 0;
-    border-radius: var(--ns-radio-md);
-    background: var(--m3c-surface-container);
-    color: var(--m3c-primary);
-    overflow: hidden;
-  }
-
-  .cifra-enlace,
-  .cifra-estatica {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: var(--ns-espacio-1);
+    justify-content: space-between;
+    gap: var(--ns-espacio-5);
+    padding: var(--ns-espacio-5);
+    border-radius: var(--ns-radio-xl);
+    background: linear-gradient(
+      135deg,
+      var(--m3c-surface-container) 0%,
+      color-mix(in srgb, var(--m3c-surface-container-high) 65%, var(--m3c-primary-container) 35%)
+        100%
+    );
+    border: 1px solid var(--m3c-outline-variant);
+    min-height: 14rem;
+    overflow: hidden;
+    box-shadow: 0 var(--ns-espacio-2) var(--ns-espacio-4) var(--m3c-shadow);
+  }
+
+  .destacado {
+    background: linear-gradient(
+      135deg,
+      var(--m3c-surface-container) 0%,
+      color-mix(in srgb, var(--m3c-surface-container-high) 65%, var(--m3c-secondary-container) 35%)
+        100%
+    );
+  }
+
+  .marquesina-info,
+  .destacado-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--ns-espacio-2);
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .marquesina-etiqueta,
+  .destacado-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    font-size: var(--ns-texto-xs);
+    font-weight: 700;
+    color: var(--m3c-primary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .marquesina-titulo,
+  .destacado-titulo {
+    margin: 0;
+    font-size: clamp(var(--ns-texto-lg), 2.5vw, var(--ns-texto-xl));
+    line-height: 1.15;
+    font-weight: 700;
+    color: var(--m3c-on-surface);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .marquesina-sub,
+  .destacado-sub {
+    margin: 0;
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    flex-wrap: wrap;
+  }
+
+  .marquesina-sub .punto,
+  .destacado-sub .punto {
+    color: var(--m3c-outline);
+  }
+
+  .marquesina-acciones,
+  .destacado-acciones {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    margin-top: var(--ns-espacio-2);
+    flex-wrap: wrap;
+  }
+
+  .marquesina-portada-box,
+  .destacado-portada-box {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .marquesina-portada,
+  .destacado-portada {
+    width: 8.5rem;
+    height: 8.5rem;
+    border-radius: var(--ns-radio-lg);
+    overflow: hidden;
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-primary);
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--m3c-outline-variant);
+    box-shadow: 0 var(--ns-espacio-3) var(--ns-espacio-5) var(--m3c-shadow);
+  }
+
+  .marquesina-portada img,
+  .destacado-portada img {
     width: 100%;
     height: 100%;
-    padding: var(--ns-espacio-4);
-    color: inherit;
-    text-decoration: none;
-    transition: background-color var(--ns-duracion-corta) var(--ns-curva);
+    object-fit: cover;
   }
 
-  .cifra-enlace:hover {
-    background: var(--m3c-surface-container-high);
-  }
-
-  .cifras strong {
-    color: var(--m3c-on-surface);
-    font-size: var(--ns-texto-lg);
-  }
-
-  .cifras span {
-    color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-xs);
-  }
-
-  .retomar,
   .tarjeta-pista,
   .fila-top {
     display: flex;
@@ -473,24 +664,43 @@
     gap: var(--ns-espacio-3);
     width: 100%;
     padding: var(--ns-espacio-3);
-    border: none;
-    border-radius: var(--ns-radio-md);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-lg);
     background: var(--m3c-surface-container);
     color: var(--m3c-on-surface);
     font: inherit;
     text-align: left;
     cursor: pointer;
+    transition:
+      background-color var(--ns-duracion-corta) var(--ns-curva),
+      border-color var(--ns-duracion-corta) var(--ns-curva),
+      box-shadow var(--ns-duracion-corta) var(--ns-curva);
   }
 
-  .retomar {
-    flex: 1;
-    padding: var(--ns-espacio-4);
-  }
-
-  .retomar:hover,
-  .tarjeta-pista:hover,
-  .fila-top:hover {
+  .tarjeta-pista:hover {
     background: var(--m3c-surface-container-high);
+    border-color: var(--m3c-outline);
+    box-shadow: 0 4px 12px var(--m3c-shadow);
+  }
+
+  .fila-top {
+    padding: var(--ns-espacio-2) var(--ns-espacio-3);
+    border: none;
+    border-radius: var(--ns-radio-md);
+    background: transparent;
+  }
+
+  .fila-top:hover {
+    background: var(--m3c-surface-container);
+  }
+
+  .boton.contorno {
+    border: 1px solid var(--m3c-outline-variant);
+    background: var(--m3c-surface-container-high);
+  }
+
+  .boton.contorno:hover {
+    background: var(--m3c-surface-container-highest);
   }
 
   .mini-portada {
@@ -550,34 +760,6 @@
     cursor: pointer;
   }
 
-  .destacado {
-    position: relative;
-    min-height: 18rem;
-    overflow: hidden;
-    border-radius: var(--ns-radio-md);
-    background: var(--m3c-surface-container-high);
-  }
-
-  .destacado img {
-    position: absolute;
-    inset: 0;
-  }
-
-  .velo {
-    position: absolute;
-    inset: auto 0 0 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-1);
-    padding: var(--ns-espacio-4);
-    background: linear-gradient(to top, var(--m3c-surface-container-lowest), transparent);
-  }
-
-  .velo h2 {
-    margin: 0;
-    font-size: var(--ns-texto-lg);
-  }
-
   .botones {
     display: flex;
     gap: var(--ns-espacio-2);
@@ -610,27 +792,356 @@
     font-size: var(--ns-texto-lg);
   }
 
-  .vuelve {
+  .vuelve-contenedor {
+    display: flex;
+    gap: var(--ns-espacio-3);
+    align-items: stretch;
+  }
+
+  .vuelve-destacado {
+    flex: 0 0 clamp(14rem, 20vw, 17.5rem);
+    display: flex;
+  }
+
+  .tarjeta-vuelve-destacada {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-3);
+    width: 100%;
+    padding: var(--ns-espacio-3);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-lg);
+    background: linear-gradient(
+      180deg,
+      var(--m3c-surface-container) 0%,
+      var(--m3c-surface-container-low) 100%
+    );
+    color: var(--m3c-on-surface);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background-color var(--ns-duracion-corta) var(--ns-curva),
+      border-color var(--ns-duracion-corta) var(--ns-curva),
+      box-shadow var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .tarjeta-vuelve-destacada:hover {
+    background: var(--m3c-surface-container-high);
+    border-color: var(--m3c-outline);
+    box-shadow: 0 var(--ns-espacio-2) var(--ns-espacio-4) var(--m3c-shadow);
+  }
+
+  .destacada-portada-box {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: var(--ns-radio-md);
+    overflow: hidden;
+    background: var(--m3c-surface-container-highest);
+    border: 1px solid var(--m3c-outline-variant);
+  }
+
+  .destacada-portada {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: var(--m3c-primary);
+  }
+
+  .destacada-portada img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .destacada-play {
+    position: absolute;
+    right: var(--ns-espacio-2);
+    bottom: var(--ns-espacio-2);
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-primary);
+    color: var(--m3c-on-primary);
+    box-shadow: 0 var(--ns-espacio-1) var(--ns-espacio-3) var(--m3c-shadow);
+    opacity: 0.92;
+    transition:
+      transform var(--ns-duracion-corta) var(--ns-curva),
+      opacity var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .tarjeta-vuelve-destacada:hover .destacada-play {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+
+  .destacada-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .destacada-titulo {
+    font-size: var(--ns-texto-base);
+    font-weight: 700;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .vuelve-rejilla {
+    flex: 1 1 0;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: var(--ns-espacio-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    align-content: start;
+  }
+
+  .vuelve-rejilla li {
+    display: flex;
+  }
+
+  .podio {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--ns-espacio-3);
+    align-items: end;
+    margin-top: var(--ns-espacio-2);
+    margin-bottom: var(--ns-espacio-4);
+  }
+
+  .podio-tarjeta {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: var(--ns-espacio-3) var(--ns-espacio-3) 0;
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-xl) var(--ns-radio-xl) 0 0;
+    background: var(--m3c-surface-container);
+    color: var(--m3c-on-surface);
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background-color var(--ns-duracion-corta) var(--ns-curva),
+      border-color var(--ns-duracion-corta) var(--ns-curva),
+      box-shadow var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .podio-tarjeta:hover {
+    border-color: var(--m3c-outline);
+    box-shadow: 0 var(--ns-espacio-3) var(--ns-espacio-5) var(--m3c-shadow);
+  }
+
+  .podio-1 {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--m3c-primary-container) 40%, var(--m3c-surface-container-high)) 0%,
+      var(--m3c-surface-container) 100%
+    );
+    border-color: color-mix(in srgb, var(--m3c-primary) 50%, var(--m3c-outline-variant));
+  }
+
+  .podio-2 {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--m3c-secondary-container) 35%, var(--m3c-surface-container)) 0%,
+      var(--m3c-surface-container-low) 100%
+    );
+  }
+
+  .podio-3 {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--m3c-tertiary-container) 35%, var(--m3c-surface-container)) 0%,
+      var(--m3c-surface-container-low) 100%
+    );
+  }
+
+  .podio-insignia {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.125rem var(--ns-espacio-3);
+    border-radius: var(--ns-radio-pleno);
+    font-size: var(--ns-texto-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: var(--ns-espacio-2);
+  }
+
+  .podio-insignia.oro {
+    background: var(--m3c-primary);
+    color: var(--m3c-on-primary);
+  }
+
+  .podio-insignia.plata {
+    background: var(--m3c-secondary);
+    color: var(--m3c-on-secondary);
+  }
+
+  .podio-insignia.bronce {
+    background: var(--m3c-tertiary);
+    color: var(--m3c-on-tertiary);
+  }
+
+  .podio-portada-box {
+    position: relative;
+    width: 6.5rem;
+    height: 6.5rem;
+    margin-bottom: var(--ns-espacio-2);
+  }
+
+  .podio-1 .podio-portada-box {
+    width: 8rem;
+    height: 8rem;
+  }
+
+  .podio-portada {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--ns-radio-lg);
+    overflow: hidden;
+    background: var(--m3c-surface-container-highest);
+    border: 1px solid var(--m3c-outline-variant);
+    box-shadow: 0 var(--ns-espacio-1) var(--ns-espacio-3) var(--m3c-shadow);
+  }
+
+  .podio-portada img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .podio-play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--m3c-scrim) 40%, transparent);
+    color: var(--m3c-on-primary);
+    border-radius: var(--ns-radio-lg);
+    opacity: 0;
+    transition: opacity var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .podio-tarjeta:hover .podio-play {
+    opacity: 1;
+  }
+
+  .podio-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    width: 100%;
+    padding: 0 var(--ns-espacio-1);
+    margin-bottom: var(--ns-espacio-3);
+  }
+
+  .podio-texto strong {
+    font-size: var(--ns-texto-sm);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .podio-1 .podio-texto strong {
+    font-size: var(--ns-texto-base);
+  }
+
+  .podio-escuchas {
+    font-size: var(--ns-texto-xs);
+    color: var(--m3c-primary);
+    font-weight: 600;
+  }
+
+  .podio-pedestal {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ns-radio-sm) var(--ns-radio-sm) 0 0;
+  }
+
+  .pedestal-1 {
+    height: 4.5rem;
+    background: color-mix(
+      in srgb,
+      var(--m3c-primary-container) 80%,
+      var(--m3c-surface-container-highest)
+    );
+    color: var(--m3c-on-primary-container);
+  }
+
+  .pedestal-2 {
+    height: 3.25rem;
+    background: color-mix(
+      in srgb,
+      var(--m3c-secondary-container) 80%,
+      var(--m3c-surface-container-highest)
+    );
+    color: var(--m3c-on-secondary-container);
+  }
+
+  .pedestal-3 {
+    height: 2.25rem;
+    background: color-mix(
+      in srgb,
+      var(--m3c-tertiary-container) 80%,
+      var(--m3c-surface-container-highest)
+    );
+    color: var(--m3c-on-tertiary-container);
+  }
+
+  .pedestal-num {
+    font-size: var(--ns-texto-xl);
+    font-weight: 900;
+    line-height: 1;
+    opacity: 0.85;
+  }
+
+  .top-resto {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ns-espacio-2);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  .vuelve li.grande {
-    grid-column: span 2;
-    grid-row: span 2;
+  .top-resto li:first-child {
+    grid-column: 1 / -1;
   }
 
-  .vuelve li.grande .tarjeta-pista {
-    height: 100%;
+  .top-resto li:first-child .fila-top {
+    padding: var(--ns-espacio-3) var(--ns-espacio-4);
+    background: color-mix(
+      in srgb,
+      var(--m3c-surface-container) 85%,
+      var(--m3c-primary-container) 15%
+    );
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-lg);
   }
 
-  .vuelve li.grande .mini-portada {
-    width: 11rem;
-    height: 11rem;
+  .top-resto li:first-child .fila-top:hover {
+    background: var(--m3c-surface-container-high);
+    border-color: var(--m3c-primary);
+    box-shadow: 0 4px 12px var(--m3c-shadow);
   }
 
   .top {
@@ -640,11 +1151,6 @@
     margin: 0;
     padding: 0;
     list-style: none;
-  }
-
-  .fila-top {
-    background: none;
-    padding: var(--ns-espacio-2) var(--ns-espacio-3);
   }
 
   .numero {
@@ -661,7 +1167,7 @@
 
   .fila {
     display: grid;
-    grid-auto-columns: 10rem;
+    grid-auto-columns: 10.5rem;
     grid-auto-flow: column;
     gap: var(--ns-espacio-3);
     margin: 0;
@@ -670,6 +1176,12 @@
     list-style: none;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .fila::-webkit-scrollbar {
+    display: none;
   }
 
   .fila li {
@@ -718,18 +1230,24 @@
     gap: var(--ns-espacio-1);
     width: 100%;
     padding: var(--ns-espacio-2);
-    border: none;
-    border-radius: var(--ns-radio-md);
-    background: none;
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-lg);
+    background: var(--m3c-surface-container-low);
     color: var(--m3c-on-surface);
     font: inherit;
     text-align: left;
     text-decoration: none;
     cursor: pointer;
+    transition:
+      background-color var(--ns-duracion-corta) var(--ns-curva),
+      border-color var(--ns-duracion-corta) var(--ns-curva),
+      box-shadow var(--ns-duracion-corta) var(--ns-curva);
   }
 
   .tarjeta:hover {
     background: var(--m3c-surface-container);
+    border-color: var(--m3c-outline);
+    box-shadow: 0 var(--ns-espacio-1) var(--ns-espacio-3) var(--m3c-shadow);
   }
 
   .centrada {
@@ -743,9 +1261,10 @@
     width: 100%;
     aspect-ratio: 1;
     overflow: hidden;
-    border-radius: var(--ns-radio-sm);
+    border-radius: var(--ns-radio-md);
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-on-surface-variant);
+    border: 1px solid var(--m3c-outline-variant);
   }
 
   .caratula.redonda {
@@ -773,9 +1292,32 @@
     .destacado {
       display: none;
     }
+  }
 
-    .cifras {
-      grid-template-columns: repeat(2, 1fr);
+  @container carcasa (max-width: 52rem) {
+    .vuelve-contenedor {
+      flex-direction: column;
+    }
+
+    .vuelve-destacado {
+      flex: none;
+      width: 100%;
+    }
+
+    .top-resto {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pedestal-1 {
+      height: 3.25rem;
+    }
+
+    .pedestal-2 {
+      height: 2.5rem;
+    }
+
+    .pedestal-3 {
+      height: 1.75rem;
     }
   }
 </style>

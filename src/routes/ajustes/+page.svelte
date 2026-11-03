@@ -12,20 +12,12 @@
   const t = textos.ajustes;
 
   type SeccionAjustes =
-    | 'biblioteca'
-    | 'reproduccion'
-    | 'apariencia'
-    | 'dispositivos'
-    | 'agregados'
-    | 'privacidad'
-    | 'ia'
-    | 'acerca';
+    'biblioteca' | 'reproduccion' | 'apariencia' | 'agregados' | 'privacidad' | 'ia' | 'acerca';
 
   const SECCIONES: { id: SeccionAjustes; etiqueta: string; icono: NombreDeIcono }[] = [
     { id: 'biblioteca', etiqueta: t.biblioteca, icono: 'biblioteca' },
     { id: 'reproduccion', etiqueta: t.reproduccion, icono: 'ecualizador' },
     { id: 'apariencia', etiqueta: t.apariencia, icono: 'apariencia' },
-    { id: 'dispositivos', etiqueta: t.dispositivos, icono: 'telefono' },
     { id: 'agregados', etiqueta: t.agregados, icono: 'descargar' },
     { id: 'privacidad', etiqueta: t.privacidad, icono: 'privacidad' },
     { id: 'ia', etiqueta: t.ia, icono: 'dj' },
@@ -89,9 +81,6 @@
         {#await import('$ui/copia/BloqueCopia.svelte') then m}
           <m.default />
         {/await}
-        {#await import('$ui/biblioteca/TarjetaDuplicados.svelte') then m}
-          <m.default />
-        {/await}
       </section>
     {:else if seccionActiva === 'reproduccion'}
       {#await import('$ui/ajustes/SeccionesEscucha.svelte') then m}
@@ -100,10 +89,6 @@
     {:else if seccionActiva === 'apariencia'}
       {#await import('$ui/ajustes/SeccionesEscucha.svelte') then m}
         <m.default seccion="apariencia" />
-      {/await}
-    {:else if seccionActiva === 'dispositivos'}
-      {#await import('$ui/dispositivos/SeccionDispositivos.svelte') then m}
-        <m.default />
       {/await}
     {:else if seccionActiva === 'agregados'}
       {#await import('$ui/agregados/SeccionAgregados.svelte') then m}

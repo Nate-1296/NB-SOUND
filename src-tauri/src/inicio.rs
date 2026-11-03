@@ -146,14 +146,14 @@ pub fn resumen(db: &BaseDeDatos) -> NsResult<Inicio> {
          WHERE estado = 'biblioteca' AND album_id IS NOT NULL
          GROUP BY album_id HAVING sum(favorita) > 0 OR sum(reproducciones) > 0
          ORDER BY peso DESC, album_id LIMIT ?1",
-        10,
+        25,
     )?;
     let mas_escuchados = ids(
         db,
         "SELECT album_id, sum(reproducciones) AS n FROM pistas
          WHERE estado = 'biblioteca' AND album_id IS NOT NULL
          GROUP BY album_id HAVING n > 0 ORDER BY n DESC, album_id LIMIT ?1",
-        10,
+        25,
     )?;
     let albumes_que_gustan = albumes(db, &que_gustan)?;
     let albumes_mas_escuchados = albumes(db, &mas_escuchados)?;
@@ -167,7 +167,7 @@ pub fn resumen(db: &BaseDeDatos) -> NsResult<Inicio> {
         "SELECT artista_id, sum(reproducciones) AS n FROM pistas
          WHERE estado = 'biblioteca' AND artista_id IS NOT NULL
          GROUP BY artista_id HAVING n > 0 ORDER BY n DESC, artista_id LIMIT ?1",
-        10,
+        25,
     )?
     .iter()
     .filter_map(|(id, _)| biblioteca::artista(db, *id).transpose())
@@ -177,7 +177,7 @@ pub fn resumen(db: &BaseDeDatos) -> NsResult<Inicio> {
         db,
         "SELECT id, 0 FROM pistas WHERE estado = 'biblioteca'
          ORDER BY creada_en DESC, id DESC LIMIT ?1",
-        12,
+        30,
     )?
     .into_iter()
     .map(|f| f.0)
@@ -196,7 +196,7 @@ pub fn resumen(db: &BaseDeDatos) -> NsResult<Inicio> {
     )?;
     playlists_destacadas.retain(|p| p.num_pistas > 0);
     playlists_destacadas.sort_by_key(|p| (!p.anclada, p.categoria != playlists::Categoria::Creada));
-    playlists_destacadas.truncate(8);
+    playlists_destacadas.truncate(20);
 
     Ok(Inicio {
         cifras,

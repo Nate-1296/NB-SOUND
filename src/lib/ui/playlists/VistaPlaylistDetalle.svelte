@@ -105,7 +105,21 @@
 </script>
 
 <section class="detalle">
-  <a class="volver" href="/playlists"><Icon nombre="atras" tamano={18} />{t.volver}</a>
+  <button
+    type="button"
+    class="volver"
+    onclick={() => {
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        window.history.back();
+      } else {
+        void goto('/playlists');
+      }
+    }}
+    title={t.volver}
+  >
+    <Icon nombre="atras" tamano={18} />
+    <span>{t.volver}</span>
+  </button>
 
   {#if datos === null}
     <p class="vacio">{t.noEncontrada}</p>
@@ -138,17 +152,19 @@
           >
             <Icon nombre="aleatorio" tamano={16} />{t.aleatorio}
           </button>
-          <button
-            type="button"
-            class="boton"
-            onclick={async () => {
-              if (!datos) return;
-              await anclarPlaylist(id, !datos.anclada);
-              version += 1;
-            }}
-          >
-            {datos.anclada ? t.desanclar : t.anclar}
-          </button>
+          {#if datos.categoria !== 'meGusta'}
+            <button
+              type="button"
+              class="boton"
+              onclick={async () => {
+                if (!datos) return;
+                await anclarPlaylist(id, !datos.anclada);
+                version += 1;
+              }}
+            >
+              {datos.anclada ? t.desanclar : t.anclar}
+            </button>
+          {/if}
           {#if datos.editable}
             <button type="button" class="boton" onclick={() => (renombrando = true)}>
               <Icon nombre="editar" tamano={16} />{t.renombrar}
@@ -275,8 +291,18 @@
     align-items: center;
     gap: var(--ns-espacio-2);
     color: var(--m3c-on-surface-variant);
+    font: inherit;
     font-size: var(--ns-texto-sm);
     text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: color 120ms ease;
+  }
+
+  .volver:hover {
+    color: var(--m3c-primary);
   }
 
   .cabecera {

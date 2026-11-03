@@ -545,12 +545,12 @@ pub fn albumes(
         params.push(Value::Integer(a));
     }
     if let Some(q) = c.texto.as_deref().and_then(crate::db::busqueda::consulta) {
-        // Por las canciones: el índice ya sabe de tildes y prefijos.
+        // Por las canciones: el índice ya sabe de tildes y prefijos. Búsqueda cruzada por título, álbum y artista.
         donde.push_str(
             " AND a.id IN (SELECT p2.album_id FROM busqueda b JOIN pistas p2 ON p2.id = b.rowid
-                           WHERE busqueda MATCH ? LIMIT ?)",
+                           WHERE busqueda MATCH ? AND p2.album_id IS NOT NULL LIMIT ?)",
         );
-        params.push(Value::Text(format!("{{album artista}} : ({q})")));
+        params.push(Value::Text(format!("{{titulo album artista}} : ({q})")));
         params.push(Value::Integer(i64::from(MAX_COINCIDENCIAS)));
     }
     let base = format!(
@@ -654,11 +654,12 @@ pub fn artistas(
     let mut donde = String::from("1 = 1");
     let mut params: Vec<Value> = Vec::new();
     if let Some(q) = c.texto.as_deref().and_then(crate::db::busqueda::consulta) {
+        // Búsqueda cruzada: si se busca una pista o un álbum, devuelve el artista correspondiente.
         donde.push_str(
             " AND ar.id IN (SELECT p2.artista_id FROM busqueda b JOIN pistas p2 ON p2.id = b.rowid
-                            WHERE busqueda MATCH ? LIMIT ?)",
+                            WHERE busqueda MATCH ? AND p2.artista_id IS NOT NULL LIMIT ?)",
         );
-        params.push(Value::Text(format!("{{artista}} : ({q})")));
+        params.push(Value::Text(format!("{{titulo album artista}} : ({q})")));
         params.push(Value::Integer(i64::from(MAX_COINCIDENCIAS)));
     }
     let base = format!(
@@ -797,6 +798,49 @@ mod pruebas_albumes {
         .unwrap();
         assert_eq!(r.artistas.iter().map(|a| a.id).collect::<Vec<_>>(), [1]);
         assert_eq!(r.artistas[0].num_pistas, 2);
+    }
+
+    #[test]
+    fn busqueda_cruzada_en_albumes_y_artistas() {
+        let db = base();
+        // Buscar por nombre de canción encuentra el álbum
+        let a = albumes(
+            &db,
+            &ConsultaAlbumes {
+                texto: Some("clavado".into()),
+                artista_id: None,
+                orden: OrdenAlbumes::TituloAsc,
+            },
+            0,
+            50,
+        )
+        .unwrap();
+        assert_eq!(a.albumes.iter().map(|a| a.id).collect::<Vec<_>>(), [10]);
+
+        // Buscar por nombre de canción o álbum encuentra el artista
+        let r1 = artistas(
+            &db,
+            &ConsultaArtistas {
+                texto: Some("hechicera".into()),
+                orden: OrdenArtistas::NombreAsc,
+            },
+            0,
+            50,
+        )
+        .unwrap();
+        assert_eq!(r1.artistas.iter().map(|a| a.id).collect::<Vec<_>>(), [1]);
+
+        let r2 = artistas(
+            &db,
+            &ConsultaArtistas {
+                texto: Some("verano".into()),
+                orden: OrdenArtistas::NombreAsc,
+            },
+            0,
+            50,
+        )
+        .unwrap();
+        assert_eq!(r2.artistas.iter().map(|a| a.id).collect::<Vec<_>>(), [2]);
     }
 
     #[test]

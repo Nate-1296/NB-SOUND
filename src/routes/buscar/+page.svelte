@@ -84,12 +84,34 @@
   const nada = $derived(
     listo && totalArtistas + totalAlbumes + totalPistas + playlists.length === 0
   );
+
+  function alPulsar(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      history.back();
+    }
+  }
 </script>
+
+<svelte:window onkeydown={alPulsar} />
 
 <section class="vista">
   <header class="tarjeta-titulo">
-    <h1>{t.titulo}</h1>
-    <p>{t.subtitulo}</p>
+    <div class="cabecera-buscar">
+      <button
+        type="button"
+        class="boton-cerrar-buscar"
+        onclick={() => history.back()}
+        aria-label={t.cerrarBusqueda}
+        title={t.cerrarBusqueda}
+      >
+        <Icon nombre="anterior" tamano={18} />
+        <span>{textos.reproduciendo.volver}</span>
+      </button>
+      <div class="buscar-titulos">
+        <h1>{t.titulo}</h1>
+        <p>{t.subtitulo}</p>
+      </div>
+    </div>
   </header>
 
   {#if q}
@@ -208,6 +230,38 @@
     border: 1px solid var(--m3c-outline-variant);
     border-radius: var(--ns-radio-lg);
     background: var(--m3c-surface-container);
+  }
+
+  .cabecera-buscar {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-4);
+  }
+
+  .boton-cerrar-buscar {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    height: 2.25rem;
+    padding: 0 var(--ns-espacio-3);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-high);
+    color: var(--m3c-on-surface);
+    font: inherit;
+    font-size: var(--ns-texto-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .boton-cerrar-buscar:hover {
+    background: var(--m3c-surface-container-highest);
+  }
+
+  .buscar-titulos {
+    display: flex;
+    flex-direction: column;
   }
 
   h1 {

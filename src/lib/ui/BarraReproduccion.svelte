@@ -8,16 +8,16 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
+  import { estadoPantalla } from '$core/estadoVistas.svelte';
   import {
     abrirMinirreproductor,
-    alCambiarElKaraoke,
     alternarPantallaCompleta,
     estaEnPantallaCompleta,
-    karaokeEstado,
-    karaokePreparar,
+    fijarFavorita,
     urlPortada
   } from '$core/ipc';
   import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
+  import { telefonos } from '$core/movil.svelte';
   import { textos } from '$lib/i18n';
 
   import SelectorDestino from './dispositivos/SelectorDestino.svelte';
@@ -28,6 +28,9 @@
   const i = $derived(reproductor.instantanea);
   const pista = $derived(reproductor.pista);
   const hayPista = $derived(i.pistaId !== null);
+  const hayDispositivoActivo = $derived(
+    telefonos.estado.activo && telefonos.lista.some((t) => t.conectado)
+  );
 
   /** Mientras se arrastra, la barra sigue al dedo y no a la reproducción. */
   let arrastrando = $state<number | null>(null);
@@ -93,74 +96,11 @@
     capaVolumen.showPopover();
   }
 
-  // El micrófono (F5.2.2): con instrumental alterna; sin él, lo prepara mientras
-  // suena el original; sin el agregado, lo ofrece ahí mismo (F5.1.4).
-  let preparando = $state<number | null>(null);
-  let ofertaKaraoke = $state(false);
-  $effect(() => {
-    void i.pistaId;
-    preparando = null;
-  });
-  $effect(() => {
-    const quitar = alCambiarElKaraoke(async () => {
-      const e = await karaokeEstado();
-      if (e.preparando && e.preparando.pista === i.pistaId) {
-        preparando = e.preparando.fraccion;
-        const pct = Math.round((preparando ?? 0) * 100);
-        window.dispatchEvent(
-          new CustomEvent('ns:notificacion', {
-            detail: {
-              tipo: 'progreso',
-              id: 'karaoke-progreso',
-              mensaje: t.karaokePreparando(pct),
-              progreso: pct
-            }
-          })
-        );
-      } else if (preparando !== null && !e.pendientes) {
-        preparando = null;
-        window.dispatchEvent(
-          new CustomEvent('ns:notificacion', {
-            detail: { tipo: 'quitar', id: 'karaoke-progreso' }
-          })
-        );
-        window.dispatchEvent(
-          new CustomEvent('ns:notificacion', {
-            detail: { tipo: 'exito', mensaje: t.karaokeListo }
-          })
-        );
-      }
-    });
-    return () => void quitar.then((f) => f());
-  });
-  async function microfono() {
-    if (i.karaokeDisponible) return reproductor.alternarKaraoke();
-    if (i.pistaId === null) return;
-    try {
-      const e = await karaokeEstado();
-      if (!e.instalado) {
-        ofertaKaraoke = true;
-        return;
-      }
-      await karaokePreparar([i.pistaId]);
-      preparando ??= 0;
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', {
-          detail: {
-            tipo: 'progreso',
-            id: 'karaoke-progreso',
-            mensaje: t.karaokePreparando(0),
-            progreso: 0
-          }
-        })
-      );
-    } catch {
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', {
-          detail: { tipo: 'error', mensaje: t.karaokeError }
-        })
-      );
-    }
+  async function alternarFavoritaPista() {
+    if (!pista) return;
+    const nuevo = !pista.favorita;
+    pista.favorita = nuevo;
+    await fijarFavorita(pista.id, nuevo);
   }
 
   /** Letras y pantalla completa abren la vista de reproducción; otra vez, vuelven. */
@@ -182,13 +122,17 @@
   let enPantallaCompleta = $state(false);
   async function conmutarPantallaCompleta() {
     enPantallaCompleta = await alternarPantallaCompleta();
+    estadoPantalla.enPantallaCompleta = enPantallaCompleta;
   }
 
   $effect(() => {
     const cola = () => alternarCola();
     const vista = (e: Event) => abrirVista((e as CustomEvent<{ letras: boolean }>).detail.letras);
     const actualizarPantalla = () => {
-      void estaEnPantallaCompleta().then((v) => (enPantallaCompleta = v));
+      void estaEnPantallaCompleta().then((v) => {
+        enPantallaCompleta = v;
+        estadoPantalla.enPantallaCompleta = v;
+      });
     };
     actualizarPantalla();
     window.addEventListener('ns:cola', cola);
@@ -264,6 +208,18 @@
     </div>
 
     {#if pista && !i.ciego}
+      <button
+        type="button"
+        class="control-favorita"
+        class:activo={pista.favorita}
+        aria-label={pista.favorita ? t.quitarFavorita : t.marcarFavorita}
+        title={pista.favorita ? t.quitarFavorita : t.marcarFavorita}
+        aria-pressed={pista.favorita}
+        onclick={alternarFavoritaPista}
+      >
+        <Icon nombre="favorito" tamano={18} />
+      </button>
+
       <button
         type="button"
         bind:this={botonAnadirPlaylist}
@@ -377,39 +333,32 @@
   <div class="extra">
     <button
       type="button"
-      class="control"
+      class="control conmutador"
       class:activo={page.url.pathname === '/reproduciendo' && page.url.searchParams.has('letras')}
       aria-label={t.letras}
       title={t.letras}
+      aria-pressed={page.url.pathname === '/reproduciendo' && page.url.searchParams.has('letras')}
       disabled={!hayPista || i.ciego}
       onclick={() => abrirVista(true)}
     >
       <Icon nombre="letras" tamano={20} />
     </button>
-    <button
-      type="button"
-      class="control conmutador"
-      class:activo={i.karaokeActivo}
-      class:preparando={preparando !== null}
-      style:--progreso={`${Math.round((preparando ?? 0) * 100)}%`}
-      aria-label={preparando !== null
-        ? t.karaokePreparando(Math.round(preparando * 100))
-        : t.karaoke}
-      aria-pressed={i.karaokeActivo}
-      disabled={!hayPista}
-      onclick={microfono}
-    >
-      <Icon nombre="microfono" tamano={20} />
-      {#if preparando !== null}
-        <span class="pct-karaoke">{Math.round(preparando * 100)}%</span>
-      {/if}
-    </button>
-    {#if ofertaKaraoke}
-      {#await import('./agregados/OfertaAgregado.svelte') then m}
-        <m.default id="karaoke" oncerrar={() => (ofertaKaraoke = false)} />
-      {/await}
+    {#if hayPista && i.karaokeDisponible}
+      <button
+        type="button"
+        class="control conmutador"
+        class:activo={i.karaokeActivo}
+        aria-label={t.karaoke}
+        aria-pressed={i.karaokeActivo}
+        title={t.karaoke}
+        onclick={reproductor.alternarKaraoke}
+      >
+        <Icon nombre="microfono" tamano={20} />
+      </button>
     {/if}
-    <SelectorDestino />
+    {#if hayDispositivoActivo}
+      <SelectorDestino />
+    {/if}
     <button
       type="button"
       bind:this={botonCola}
@@ -512,17 +461,6 @@
         tamano={20}
       />
     </button>
-    <button
-      type="button"
-      class="control"
-      class:activo={page.url.pathname === '/reproduciendo' && !page.url.searchParams.has('letras')}
-      aria-label={t.expandir}
-      title={`${t.expandir} (F)`}
-      disabled={!hayPista || i.ciego}
-      onclick={() => abrirVista(false)}
-    >
-      <Icon nombre="expandir" tamano={20} />
-    </button>
   </div>
 </section>
 
@@ -557,11 +495,18 @@
     border-radius: var(--ns-radio-sm);
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-primary);
+    box-shadow: 0 2px 8px var(--m3c-shadow);
     cursor: pointer;
+    transition: transform 120ms ease;
+  }
+
+  .portada:hover:not(:disabled) {
+    transform: scale(1.04);
   }
 
   .portada:disabled {
     cursor: default;
+    box-shadow: none;
   }
 
   .portada img {
@@ -577,6 +522,7 @@
     line-height: 1.3;
   }
 
+  .control-favorita,
   .control-anadir-playlist {
     display: inline-flex;
     align-items: center;
@@ -591,10 +537,18 @@
     cursor: pointer;
     flex: 0 0 auto;
     margin-left: var(--ns-espacio-1);
+    transition:
+      background-color var(--ns-duracion-corta) var(--ns-curva),
+      color var(--ns-duracion-corta) var(--ns-curva);
   }
 
+  .control-favorita:hover,
   .control-anadir-playlist:hover {
     background: var(--m3c-surface-container-high);
+    color: var(--m3c-primary);
+  }
+
+  .control-favorita.activo {
     color: var(--m3c-primary);
   }
 
@@ -680,7 +634,7 @@
     width: 2.25rem;
     height: 2.25rem;
     border: 1px solid transparent;
-    border-radius: var(--ns-radio-sm);
+    border-radius: var(--ns-radio-pleno);
     background: none;
     color: var(--m3c-on-surface-variant);
     cursor: pointer;
@@ -700,15 +654,18 @@
   /* Aleatorio, repetición y karaoke: recuadro de acento cuando están activos, como
      en la V1. */
   .conmutador.activo {
+    background: var(--m3c-primary-container);
     border-color: var(--m3c-primary);
-    color: var(--m3c-primary);
+    color: var(--m3c-on-primary-container);
   }
 
   .principal {
     width: 2.75rem;
     height: 2.75rem;
+    border-radius: var(--ns-radio-pleno);
     background: var(--m3c-primary);
     color: var(--m3c-on-primary);
+    box-shadow: 0 2px 8px var(--m3c-shadow);
   }
 
   .principal:hover:not(:disabled) {
@@ -837,27 +794,16 @@
     text-align: right;
   }
 
-  @container carcasa (max-width: 60rem) {
+  @container carcasa (max-width: 65rem) {
     .album,
     .volumen .deslizador-barra {
       display: none;
     }
   }
 
-  /* Lo preparado del karaoke, como un anillo alrededor del micrófono. */
-  .control.preparando {
-    background: conic-gradient(
-      var(--m3c-primary) var(--progreso),
-      var(--m3c-surface-container-highest) 0
-    );
-  }
-
-  .pct-karaoke {
-    position: absolute;
-    bottom: -1rem;
-    font-size: var(--ns-texto-xs);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--m3c-primary);
+  @container carcasa (max-width: 50rem) {
+    .extra {
+      gap: 0.25rem;
+    }
   }
 </style>

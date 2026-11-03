@@ -372,7 +372,26 @@ pub async fn duplicados_resumen(estado: tauri::State<'_, Estado>) -> NsResult<Re
         let conn = db.conexion()?;
         let (total, bytes): (u32, Option<i64>) = conn
             .query_row(
-                "SELECT COUNT(*), SUM(tamano) FROM pistas WHERE estado = 'duplicado'",
+                "WITH dup_sha AS (
+                    SELECT id, tamano,
+                           ROW_NUMBER() OVER (PARTITION BY sha256 ORDER BY id ASC) as rn
+                    FROM pistas
+                    WHERE sha256 IS NOT NULL AND sha256 != ''
+                ),
+                dup_meta AS (
+                    SELECT id, tamano,
+                           ROW_NUMBER() OVER (PARTITION BY lower(trim(titulo)), lower(trim(artista_nombre)), round(duracion_seg) ORDER BY id ASC) as rn
+                    FROM pistas
+                    WHERE (sha256 IS NULL OR sha256 = '') AND titulo IS NOT NULL AND artista_nombre IS NOT NULL
+                ),
+                todos_dup AS (
+                    SELECT id, tamano FROM pistas WHERE estado = 'duplicado'
+                    UNION
+                    SELECT id, tamano FROM dup_sha WHERE rn > 1
+                    UNION
+                    SELECT id, tamano FROM dup_meta WHERE rn > 1
+                )
+                SELECT COUNT(*), COALESCE(SUM(tamano), 0) FROM todos_dup",
                 [],
                 |f| Ok((f.get(0)?, f.get(1)?)),
             )
@@ -396,7 +415,28 @@ pub async fn purgar_duplicados(
     tauri::async_runtime::spawn_blocking(move || {
         let mut conn = db.conexion()?;
         let mut s = conn
-            .prepare("SELECT id, ruta FROM pistas WHERE estado = 'duplicado'")
+            .prepare(
+                "WITH dup_sha AS (
+                    SELECT id, ruta,
+                           ROW_NUMBER() OVER (PARTITION BY sha256 ORDER BY id ASC) as rn
+                    FROM pistas
+                    WHERE sha256 IS NOT NULL AND sha256 != ''
+                ),
+                dup_meta AS (
+                    SELECT id, ruta,
+                           ROW_NUMBER() OVER (PARTITION BY lower(trim(titulo)), lower(trim(artista_nombre)), round(duracion_seg) ORDER BY id ASC) as rn
+                    FROM pistas
+                    WHERE (sha256 IS NULL OR sha256 = '') AND titulo IS NOT NULL AND artista_nombre IS NOT NULL
+                ),
+                todos_dup AS (
+                    SELECT id, ruta FROM pistas WHERE estado = 'duplicado'
+                    UNION
+                    SELECT id, ruta FROM dup_sha WHERE rn > 1
+                    UNION
+                    SELECT id, ruta FROM dup_meta WHERE rn > 1
+                )
+                SELECT id, ruta FROM todos_dup",
+            )
             .map_err(|_| NsError::StorageFailure)?;
         let filas = s
             .query_map([], |f| Ok((f.get::<_, i64>(0)?, f.get::<_, String>(1)?)))
@@ -427,8 +467,10 @@ pub async fn purgar_duplicados(
         }
 
         let tx = crate::db::transaccion_de_escritura(&mut conn)?;
-        tx.execute("DELETE FROM pistas WHERE estado = 'duplicado'", [])
-            .map_err(|_| NsError::StorageFailure)?;
+        for (id, _) in &filas {
+            let _ = tx.execute("DELETE FROM pistas WHERE id = ?1", [*id]);
+        }
+        let _ = tx.execute("DELETE FROM pistas WHERE estado = 'duplicado'", []);
         tx.commit().map_err(|_| NsError::StorageFailure)?;
 
         tracing::info!(total = total, "duplicados purgados de la biblioteca");
@@ -646,12 +688,13 @@ pub async fn forma_de_onda(estado: tauri::State<'_, Estado>, pista_id: i64) -> N
 #[tauri::command]
 pub async fn abrir_minirreproductor(app: AppHandle) -> NsResult<()> {
     if let Some(v) = app.get_webview_window("mini") {
+        let _ = v.show();
         let _ = v.set_focus();
         return Ok(());
     }
     tauri::WebviewWindowBuilder::new(&app, "mini", tauri::WebviewUrl::App("mini".into()))
         .title("NB Sound")
-        .inner_size(400.0, 112.0)
+        .inner_size(470.0, 168.0)
         .resizable(false)
         .always_on_top(true)
         .decorations(false)

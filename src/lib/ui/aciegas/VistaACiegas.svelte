@@ -43,15 +43,6 @@
   ];
   const RETOS = [5, 10, 15];
   const SEGUNDOS = [8, 12, 20];
-  const diasSemana = [
-    { dia: 'Lun', pct: 65 },
-    { dia: 'Mar', pct: 80 },
-    { dia: 'Mié', pct: 45 },
-    { dia: 'Jue', pct: 90 },
-    { dia: 'Vie', pct: 75 },
-    { dia: 'Sáb', pct: 100 },
-    { dia: 'Dom', pct: 85 }
-  ];
 
   let ronda = $state<Ronda | null>(null);
   let disponibles = $state<ModoDisponible[]>([]);
@@ -199,19 +190,6 @@
         <div class="tarjeta-stat">
           <span class="cifra-stat texto">{t.modos[modo]?.nombre ?? t.modos.portada.nombre}</span>
           <span class="rotulo-stat">{t.estadisticas.modoFavorito}</span>
-        </div>
-      </div>
-      <div class="grafico-rendimiento">
-        <span class="rotulo-grafico">{t.estadisticas.aciertosRecientes}</span>
-        <div class="columnas-dias">
-          {#each diasSemana as d (d.dia)}
-            <div class="columna-dia">
-              <div class="riel-barra">
-                <div class="barra-relleno" style:height={`${d.pct}%`}></div>
-              </div>
-              <span class="dia-nombre">{d.dia}</span>
-            </div>
-          {/each}
         </div>
       </div>
     </section>
@@ -400,13 +378,18 @@
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-4);
-    max-width: 56rem;
+    max-width: 50rem;
+    margin: 0 auto;
+    width: 100%;
   }
 
   header {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    text-align: center;
     gap: var(--ns-espacio-1);
+    margin-bottom: var(--ns-espacio-1);
   }
 
   h1 {
@@ -440,7 +423,7 @@
 
   .modos {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--ns-espacio-3);
   }
 
@@ -450,12 +433,22 @@
     gap: var(--ns-espacio-1);
     padding: var(--ns-espacio-4);
     border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-lg);
-    background: var(--m3c-surface-container-low);
+    border-radius: var(--ns-radio-xl);
+    background: var(--m3c-surface-container);
     color: inherit;
     font: inherit;
     text-align: left;
     cursor: pointer;
+    transition:
+      border-color var(--ns-duracion-corta) var(--ns-curva),
+      background-color var(--ns-duracion-corta) var(--ns-curva),
+      box-shadow var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .modo:hover:not(:disabled) {
+    background: var(--m3c-surface-container-high);
+    border-color: var(--m3c-outline);
+    box-shadow: 0 4px 12px var(--m3c-shadow);
   }
 
   .modo.elegido {
@@ -484,8 +477,9 @@
     gap: var(--ns-espacio-4);
     padding: var(--ns-espacio-5);
     border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-lg);
-    background: var(--m3c-surface-container-low);
+    border-radius: var(--ns-radio-xl);
+    background: var(--m3c-surface-container);
+    box-shadow: 0 4px 20px var(--m3c-shadow);
   }
 
   .cabecera {
@@ -505,20 +499,22 @@
 
   .pista {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--ns-espacio-5);
+    flex-direction: column;
     align-items: center;
+    text-align: center;
+    gap: var(--ns-espacio-4);
   }
 
   .portada {
     display: grid;
     place-items: center;
-    width: 15rem;
-    height: 15rem;
+    width: 12rem;
+    height: 12rem;
     overflow: hidden;
-    border-radius: var(--ns-radio-md);
-    background: var(--m3c-surface-container);
+    border-radius: var(--ns-radio-xl);
+    background: var(--m3c-surface-container-high);
     color: var(--m3c-on-surface-variant);
+    box-shadow: 0 8px 24px var(--m3c-shadow);
   }
 
   .portada img {
@@ -532,6 +528,7 @@
     grid-template-columns: auto 1fr;
     gap: var(--ns-espacio-2) var(--ns-espacio-4);
     margin: 0;
+    text-align: left;
   }
 
   dt {
@@ -558,6 +555,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: var(--ns-espacio-2);
   }
 
@@ -579,13 +577,20 @@
   .campo {
     flex: 1;
     min-width: 14rem;
-    height: 2.5rem;
-    padding: 0 var(--ns-espacio-3);
+    max-width: 28rem;
+    height: 2.75rem;
+    padding: 0 var(--ns-espacio-4);
     border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-sm);
-    background: var(--m3c-surface-container);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-high);
     color: var(--m3c-on-surface);
     font: inherit;
+    font-size: var(--ns-texto-sm);
+  }
+
+  .campo:focus {
+    border-color: var(--m3c-primary);
+    background: var(--m3c-surface-container-highest);
   }
 
   .ficha {
@@ -614,7 +619,7 @@
     height: 2.5rem;
     padding: 0 var(--ns-espacio-4);
     border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-sm);
+    border-radius: var(--ns-radio-pleno);
     background: none;
     color: var(--m3c-on-surface);
     font: inherit;
@@ -693,58 +698,6 @@
   }
 
   .rotulo-stat {
-    font-size: var(--ns-texto-xs);
-    color: var(--m3c-on-surface-variant);
-  }
-
-  .grafico-rendimiento {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-2);
-    margin-top: var(--ns-espacio-2);
-  }
-
-  .rotulo-grafico {
-    font-size: var(--ns-texto-xs);
-    font-weight: 600;
-    color: var(--m3c-on-surface-variant);
-  }
-
-  .columnas-dias {
-    display: flex;
-    align-items: flex-end;
-    gap: var(--ns-espacio-3);
-    height: 6rem;
-    padding-top: var(--ns-espacio-2);
-  }
-
-  .columna-dia {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--ns-espacio-1);
-    height: 100%;
-  }
-
-  .riel-barra {
-    flex: 1;
-    width: 1.5rem;
-    display: flex;
-    align-items: flex-end;
-    border-radius: var(--ns-radio-sm);
-    background: var(--m3c-surface-container-highest);
-    overflow: hidden;
-  }
-
-  .barra-relleno {
-    width: 100%;
-    border-radius: var(--ns-radio-sm);
-    background: var(--m3c-primary);
-    transition: height var(--ns-duracion-corta) var(--ns-curva);
-  }
-
-  .dia-nombre {
     font-size: var(--ns-texto-xs);
     color: var(--m3c-on-surface-variant);
   }

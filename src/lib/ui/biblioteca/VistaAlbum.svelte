@@ -79,9 +79,21 @@
 </script>
 
 <section class="detalle">
-  <a class="volver" href="/biblioteca?vista=albumes">
-    <Icon nombre="atras" tamano={18} />{t.album.volver}
-  </a>
+  <button
+    type="button"
+    class="volver"
+    onclick={() => {
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        window.history.back();
+      } else {
+        void goto('/biblioteca?vista=albumes');
+      }
+    }}
+    title={t.album.volver}
+  >
+    <Icon nombre="atras" tamano={18} />
+    <span>{t.album.volver}</span>
+  </button>
 
   {#if album === null}
     <p class="vacio">{t.album.noEncontrado}</p>
@@ -193,8 +205,18 @@
     align-items: center;
     gap: var(--ns-espacio-2);
     color: var(--m3c-on-surface-variant);
+    font: inherit;
     font-size: var(--ns-texto-sm);
     text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: color 120ms ease;
+  }
+
+  .volver:hover {
+    color: var(--m3c-primary);
   }
 
   .cabecera {

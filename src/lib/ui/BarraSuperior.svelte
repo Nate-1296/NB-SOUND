@@ -9,7 +9,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { anadirMusica } from '$core/ipc';
   import { textos } from '$lib/i18n';
   import { untrack } from 'svelte';
 
@@ -24,20 +23,18 @@
   );
   let rutaPrevia = $state(page.url.pathname);
 
-  let menuAbierto = $state(false);
-  let botonAnadir: HTMLButtonElement | undefined = $state();
-  let capaMenu: HTMLDivElement | undefined = $state();
+  let drawerAbierto = $state<'karaoke' | 'dispositivos' | 'anadir' | null>(null);
 
-  function alternarMenu() {
-    if (!capaMenu || !botonAnadir) return;
-    if (menuAbierto) {
-      capaMenu.hidePopover();
-      return;
-    }
-    const r = botonAnadir.getBoundingClientRect();
-    capaMenu.style.left = `${r.left}px`;
-    capaMenu.style.top = `${r.bottom + 8}px`;
-    capaMenu.showPopover();
+  function alternarKaraoke() {
+    drawerAbierto = drawerAbierto === 'karaoke' ? null : 'karaoke';
+  }
+
+  function alternarDispositivos() {
+    drawerAbierto = drawerAbierto === 'dispositivos' ? null : 'dispositivos';
+  }
+
+  function alternarAnadir() {
+    drawerAbierto = drawerAbierto === 'anadir' ? null : 'anadir';
   }
 
   // Cada tecla no es una navegación: se espera a la pausa.
@@ -100,9 +97,21 @@
         bind:this={campo}
         bind:value={consulta}
         oninput={alEscribir}
+        onfocus={() => {
+          if (page.url.pathname !== '/buscar') {
+            void goto(`/buscar${consulta ? `?q=${encodeURIComponent(consulta)}` : ''}`, {
+              replace: false,
+              reset: false
+            });
+          }
+        }}
         onkeydown={(e) => {
           if (e.key === 'Escape') {
-            campo?.blur();
+            if (page.url.pathname === '/buscar') {
+              history.back();
+            } else {
+              campo?.blur();
+            }
           } else if (e.key === 'Enter') {
             e.preventDefault();
             ejecutarBusqueda(true);
@@ -113,16 +122,20 @@
         autocomplete="off"
         spellcheck="false"
       />
-      {#if consulta}
+      {#if consulta || page.url.pathname === '/buscar'}
         <button
           type="button"
           class="boton-borrar"
-          aria-label={t.borrar}
-          title={t.borrar}
+          aria-label={page.url.pathname === '/buscar' ? t.cerrarBusqueda : t.borrar}
+          title={page.url.pathname === '/buscar' ? t.cerrarBusqueda : t.borrar}
           onclick={() => {
             consulta = '';
-            ejecutarBusqueda(true);
-            campo?.focus();
+            if (page.url.pathname === '/buscar') {
+              history.back();
+            } else {
+              ejecutarBusqueda(true);
+              campo?.focus();
+            }
           }}
         >
           <Icon nombre="cerrar" tamano={16} />
@@ -135,48 +148,58 @@
   <div class="acciones">
     <button
       type="button"
-      bind:this={botonAnadir}
+      class="boton-karaoke"
+      class:activo={drawerAbierto === 'karaoke'}
+      aria-label={textos.karaokeConsola.abrir}
+      title={textos.karaokeConsola.abrir}
+      aria-expanded={drawerAbierto === 'karaoke'}
+      onclick={alternarKaraoke}
+    >
+      <Icon nombre="microfono" tamano={18} />
+      <span class="texto-karaoke">{textos.karaokeConsola.titulo}</span>
+    </button>
+
+    <button
+      type="button"
+      class="boton-dispositivos"
+      class:activo={drawerAbierto === 'dispositivos'}
+      aria-label={textos.ajustes.dispositivos}
+      title={textos.ajustes.dispositivos}
+      aria-expanded={drawerAbierto === 'dispositivos'}
+      onclick={alternarDispositivos}
+    >
+      <Icon nombre="telefono" tamano={18} />
+      <span class="texto-dispositivos">{textos.ajustes.dispositivos}</span>
+    </button>
+
+    <button
+      type="button"
       class="boton-anadir"
+      class:activo={drawerAbierto === 'anadir'}
       aria-label={tImportacion.anadir}
       title={tImportacion.anadir}
-      aria-expanded={menuAbierto}
-      onclick={alternarMenu}
+      aria-expanded={drawerAbierto === 'anadir'}
+      onclick={alternarAnadir}
     >
       <Icon nombre="mas" tamano={20} />
       <span class="texto-anadir">{tImportacion.anadir}</span>
-      <span class="flecha"><Icon nombre={menuAbierto ? 'arriba' : 'abajo'} tamano={16} /></span>
     </button>
-    <div
-      class="menu-anadir"
-      popover="auto"
-      bind:this={capaMenu}
-      ontoggle={(e) => (menuAbierto = e.newState === 'open')}
-    >
-      <button
-        type="button"
-        class="opcion"
-        onclick={() => {
-          capaMenu?.hidePopover();
-          void anadirMusica(false);
-        }}
-      >
-        <Icon nombre="cancion" tamano={18} />
-        <span>{tImportacion.anadirArchivos}</span>
-      </button>
-      <button
-        type="button"
-        class="opcion"
-        onclick={() => {
-          capaMenu?.hidePopover();
-          void anadirMusica(true);
-        }}
-      >
-        <Icon nombre="carpeta" tamano={18} />
-        <span>{tImportacion.anadirCarpeta}</span>
-      </button>
-    </div>
   </div>
 </header>
+
+{#if drawerAbierto === 'karaoke'}
+  {#await import('$ui/karaoke/ConsolaKaraokeDrawer.svelte') then m}
+    <m.default oncerrar={() => (drawerAbierto = null)} />
+  {/await}
+{:else if drawerAbierto === 'dispositivos'}
+  {#await import('$ui/dispositivos/ConsolaDispositivosDrawer.svelte') then m}
+    <m.default oncerrar={() => (drawerAbierto = null)} />
+  {/await}
+{:else if drawerAbierto === 'anadir'}
+  {#await import('$ui/importacion/ConsolaImportacionDrawer.svelte') then m}
+    <m.default oncerrar={() => (drawerAbierto = null)} />
+  {/await}
+{/if}
 
 <style>
   /*
@@ -275,7 +298,62 @@
   }
 
   .acciones {
-    margin-left: var(--ns-espacio-4);
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+  }
+
+  .boton-karaoke,
+  .boton-dispositivos {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    height: 2.75rem;
+    padding: 0 var(--ns-espacio-4);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container);
+    color: var(--m3c-on-surface);
+    font: inherit;
+    font-size: var(--ns-texto-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--ns-duracion-corta) var(--ns-curva),
+      border-color var(--ns-duracion-corta) var(--ns-curva),
+      color var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .boton-karaoke:hover,
+  .boton-dispositivos:hover {
+    background: var(--m3c-surface-container-high);
+  }
+
+  .boton-karaoke.activo,
+  .boton-karaoke[aria-expanded='true'],
+  .boton-dispositivos.activo,
+  .boton-dispositivos[aria-expanded='true'] {
+    background: var(--m3c-secondary-container);
+    color: var(--m3c-on-secondary-container);
+    border-color: var(--m3c-primary);
+  }
+
+  :global(.carcasa:not([data-ancho='amplio'])) .texto-karaoke,
+  :global(.carcasa:not([data-ancho='amplio'])) .texto-dispositivos,
+  :global(.carcasa.compacta) .texto-karaoke,
+  :global(.carcasa.compacta) .texto-dispositivos {
+    display: none;
+  }
+
+  :global(.carcasa:not([data-ancho='amplio'])) .boton-karaoke,
+  :global(.carcasa:not([data-ancho='amplio'])) .boton-dispositivos,
+  :global(.carcasa.compacta) .boton-karaoke,
+  :global(.carcasa.compacta) .boton-dispositivos {
+    width: 2.75rem;
+    padding: 0;
+    justify-content: center;
   }
 
   .boton-anadir {
@@ -302,21 +380,14 @@
     background: var(--m3c-primary-dim, var(--m3c-primary));
   }
 
+  .boton-anadir.activo,
   .boton-anadir[aria-expanded='true'] {
     background: var(--m3c-primary-container);
     color: var(--m3c-on-primary-container);
   }
 
-  .flecha {
-    display: grid;
-    place-items: center;
-    opacity: 0.85;
-  }
-
   :global(.carcasa:not([data-ancho='amplio'])) .texto-anadir,
-  :global(.carcasa:not([data-ancho='amplio'])) .flecha,
-  :global(.carcasa.compacta) .texto-anadir,
-  :global(.carcasa.compacta) .flecha {
+  :global(.carcasa.compacta) .texto-anadir {
     display: none;
   }
 
@@ -325,45 +396,5 @@
     width: 2.75rem;
     padding: 0;
     justify-content: center;
-  }
-
-  .menu-anadir {
-    position: fixed;
-    inset: auto;
-    margin: 0;
-    padding: var(--ns-espacio-2);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-md);
-    background: var(--m3c-surface-container);
-    color: var(--m3c-on-surface);
-    display: none;
-    flex-direction: column;
-    gap: var(--ns-espacio-1);
-    box-shadow: var(--m3-elevation-2, none);
-  }
-
-  .menu-anadir:popover-open {
-    display: flex;
-  }
-
-  .opcion {
-    display: flex;
-    align-items: center;
-    gap: var(--ns-espacio-3);
-    padding: var(--ns-espacio-2) var(--ns-espacio-3);
-    border: none;
-    border-radius: var(--ns-radio-sm);
-    background: none;
-    color: inherit;
-    font: inherit;
-    font-size: var(--ns-texto-sm);
-    text-align: left;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .opcion:hover {
-    background: var(--m3c-secondary-container);
-    color: var(--m3c-on-secondary-container);
   }
 </style>
