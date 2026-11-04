@@ -3,6 +3,19 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.6] — 2026-11-04
+
+Perfeccionamiento ergonómico de la vista de Playlists y optimización del lienzo vertical.
+
+### Mejoras y correcciones
+
+- **Playlists**:
+  - Panel inspector lateral optimizado al 100% del alto vertical (`height: 100%`) con diseño de contenedor fijado continuo, eliminando cualquier espacio residual inferior.
+  - El panel inspector permanece completamente estable e inmóvil durante el desplazamiento vertical de la lista de playlists.
+  - Barra de búsqueda y filtros con anclaje adhesivo (`position: sticky`) dentro de la columna de playlists.
+  - Distribución refinada de botones secundarios en dos columnas (`Abrir` y `Anclar/Desanclar`) bajo el botón de reproducción principal.
+  - Lista de pistas interna en el panel con desplazamiento propio y ajuste dinámico según el alto de la ventana.
+
 ## [2.0.5] — 2026-11-03
 
 Auditoría visual y funcional completa: paneles laterales dedicados, persistencia de vistas en biblioteca, rediseño del minirreproductor y optimización global de la experiencia de usuario.

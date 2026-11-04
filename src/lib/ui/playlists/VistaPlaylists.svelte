@@ -136,7 +136,7 @@
   }
 </script>
 
-<section class="vista">
+<section class="vista" class:con-panel={Boolean(elegida)}>
   <div class="principal">
     <header class="cabecera">
       <div>
@@ -271,14 +271,16 @@
           >
             <Icon nombre="reproducir" tamano={16} />{t.reproducir}
           </button>
-          <a class="boton" href={`/playlists/ver?id=${elegida.id}`}>
-            <Icon nombre="derecha" tamano={16} />{t.abrir}
-          </a>
-          {#if elegida.categoria !== 'meGusta'}
-            <button type="button" class="boton" onclick={() => elegida && alternarAncla(elegida)}>
-              {elegida.anclada ? t.desanclar : t.anclar}
-            </button>
-          {/if}
+          <div class="botones-secundarios">
+            <a class="boton" href={`/playlists/ver?id=${elegida.id}`}>
+              <Icon nombre="derecha" tamano={16} />{t.abrir}
+            </a>
+            {#if elegida.categoria !== 'meGusta'}
+              <button type="button" class="boton" onclick={() => elegida && alternarAncla(elegida)}>
+                {elegida.anclada ? t.desanclar : t.anclar}
+              </button>
+            {/if}
+          </div>
         </div>
       </div>
 
@@ -346,9 +348,15 @@
 <style>
   .vista {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 22rem;
-    gap: var(--ns-espacio-5);
+    grid-template-columns: 1fr;
+    gap: var(--ns-espacio-4);
+    height: 100%;
+    min-height: 0;
     align-items: stretch;
+  }
+
+  .vista.con-panel {
+    grid-template-columns: minmax(0, 1fr) 23rem;
   }
 
   .principal {
@@ -356,6 +364,11 @@
     flex-direction: column;
     gap: var(--ns-espacio-3);
     min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: var(--ns-espacio-2);
+    padding-bottom: var(--ns-espacio-5);
   }
 
   .cabecera {
@@ -389,6 +402,11 @@
   }
 
   .barra-filtros {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--m3c-surface-container-low);
+    padding: var(--ns-espacio-1) 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -562,9 +580,9 @@
   }
 
   .panel {
-    position: sticky;
-    top: 0;
-    height: calc(100vh - var(--ns-alto-superior) - var(--ns-alto-reproductor) - 2.5rem);
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-3);
@@ -590,7 +608,7 @@
 
   .panel :global(.mosaico) {
     width: 100%;
-    max-width: 9rem;
+    max-width: 8rem;
     margin: 0 auto;
     aspect-ratio: 1;
     border-radius: var(--ns-radio-lg);
@@ -611,6 +629,9 @@
   h2 {
     margin: 0;
     font-size: var(--ns-texto-lg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .descripcion {
@@ -623,8 +644,19 @@
   .botones {
     display: flex;
     flex-direction: column;
-    gap: var(--ns-espacio-1);
+    gap: var(--ns-espacio-2);
     margin-top: var(--ns-espacio-1);
+  }
+
+  .botones-secundarios {
+    display: flex;
+    gap: var(--ns-espacio-2);
+  }
+
+  .botones-secundarios > :global(*) {
+    flex: 1 1 0;
+    text-align: center;
+    justify-content: center;
   }
 
   .panel-pistas {

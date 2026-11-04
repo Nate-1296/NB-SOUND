@@ -37,6 +37,14 @@
     drawerAbierto = drawerAbierto === 'anadir' ? null : 'anadir';
   }
 
+  $effect(() => {
+    function alDrawer(e: CustomEvent<'karaoke' | 'dispositivos' | 'anadir' | null>) {
+      drawerAbierto = e.detail;
+    }
+    window.addEventListener('ns:drawer', alDrawer as EventListener);
+    return () => window.removeEventListener('ns:drawer', alDrawer as EventListener);
+  });
+
   // Cada tecla no es una navegación: se espera a la pausa.
   let espera: ReturnType<typeof setTimeout> | undefined;
 

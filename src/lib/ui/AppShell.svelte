@@ -35,6 +35,7 @@
   let ancho = $state(0);
   const clase = $derived(clasificarAncho(ancho));
   const enReproduciendo = $derived(page.url.pathname === '/reproduciendo');
+  const vistaFijada = $derived(page.url.pathname === '/playlists');
 
   onMount(() => {
     void reproductor.arrancar();
@@ -165,7 +166,13 @@
   </div>
   <div class="superior" class:oculta={enReproduciendo}><BarraSuperior /></div>
   <div class="lienzo" class:en-reproduciendo={enReproduciendo}>
-    <main class="contenido" class:en-reproduciendo={enReproduciendo}>{@render children()}</main>
+    <main
+      class="contenido"
+      class:en-reproduciendo={enReproduciendo}
+      class:vista-fijada={vistaFijada}
+    >
+      {@render children()}
+    </main>
   </div>
   <div class="reproductor"><BarraReproduccion /></div>
 </div>
@@ -242,6 +249,11 @@
   .contenido.en-reproduciendo {
     padding: 0;
     overflow: hidden;
+  }
+
+  .contenido.vista-fijada {
+    overflow: hidden;
+    padding: var(--ns-espacio-3) var(--ns-espacio-4) var(--ns-espacio-3) var(--ns-espacio-5);
   }
 
   .reproductor {
