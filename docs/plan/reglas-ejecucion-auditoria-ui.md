@@ -1,5 +1,9 @@
 # Reglas de Ejecución y Salvaguardas Técnicas para la Auditoría de Interfaz
 
+> **Estado (2026-11-04, QA-R1):** histórico. Las reglas que cita las hacen cumplir los guardianes (`scripts/`) y [CLAUDE.md](../../CLAUDE.md); si discrepan, mandan ellos. Lo que se corrigió o rehízo al revisarlo está en la
+> [bitácora](./bitacora.md#2026-11-04-revisión-de-la-ronda-de-observaciones-qa-r1); lo que queda de interfaz, en
+> [pruebas finales](./pruebas-finales.md).
+
 **Documento:** `docs/plan/reglas-ejecucion-auditoria-ui.md`  
 **Referencia base:** [observaciones-antes-pruebas-finales.md](./observaciones-antes-pruebas-finales.md)  
 **Propósito:** Definir exactamente cómo debe implementarse cada corrección, mejora ergonómica y restauración visual del informe de QA sin romper ninguno de los 17 guardianes arquitectónicos (`pnpm verify`), ni degradar el rendimiento en WebKitGTK sobre Linux, ni violar los contratos de accesibilidad, internacionalización, seguridad y empaquetado de NB Sound.

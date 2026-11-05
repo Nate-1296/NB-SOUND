@@ -1,4 +1,8 @@
 # Informe de Auditoría y Control de Calidad (QA Senior)
+
+> **Estado (2026-11-04, QA-R1):** histórico. La matriz de abajo marca todo como hecho, y no todo lo estaba: los duplicados (COMP-07) adivinaban copias y borraban archivos, los avisos (COMP-03) casi no se usaban y el borrado de canciones (EXP-05) no usaba la papelera. Lo que se corrigió o rehízo al revisarlo está en la
+> [bitácora](./bitacora.md#2026-11-04-revisión-de-la-ronda-de-observaciones-qa-r1); lo que queda de interfaz, en
+> [pruebas finales](./pruebas-finales.md).
 **Producto:** NB Sound (Desktop App - WebKitGTK / Tauri 2 / Svelte 5)  
 **Versión evaluada:** 0.1.0 (Entorno real de ejecución en Linux Wayland / KDE Plasma 6)  
 **Documento:** `observaciones-antes-pruebas-finales.md`  

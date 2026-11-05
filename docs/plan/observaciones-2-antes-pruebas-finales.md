@@ -1,4 +1,8 @@
 # Informe de Auditoría y Control de Calidad (QA Senior) - Segunda Ronda
+
+> **Estado (2026-11-04, QA-R1):** histórico. Las dieciocho observaciones se atendieron en la 2.0.3. Lo que se corrigió o rehízo al revisarlo está en la
+> [bitácora](./bitacora.md#2026-11-04-revisión-de-la-ronda-de-observaciones-qa-r1); lo que queda de interfaz, en
+> [pruebas finales](./pruebas-finales.md).
 <!-- check-docs: allow-absolute-path -->
 
 **Producto:** NB Sound (Desktop App - WebKitGTK / Tauri 2 / Svelte 5)  

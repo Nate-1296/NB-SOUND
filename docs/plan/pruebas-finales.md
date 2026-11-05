@@ -167,3 +167,15 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] En la instalación real, en Ajustes > Dispositivos: encender el Modo fiesta, escanear el código QR desde un
       teléfono en la misma red Wi-Fi, buscar canciones desde el navegador del teléfono, enviar sugerencias, aprobarlas,
       descartarlas, probar el modo automático y rotar el QR comprobando que el enlace anterior deja de funcionar (F8.5).
+
+## Revisión QA-R1
+
+- [ ] En la instalación de Arch con el `.tar.gz`: con una publicación nueva hecha por la CI (que ya firma el `.tar.gz`),
+      "Instalar y reiniciar" pide la contraseña con `pkexec`, instala sobre `/usr` y arranca la versión nueva. La
+      publicación 2.0.6 y anteriores no tienen `.tar.gz.sig`: desde ellas el aviso será que no se pudo instalar.
+- [ ] Quitar una canción "y mover el archivo a la papelera": el archivo aparece en la papelera de KDE y se puede
+      restaurar; la canción sale de sus playlists, de la cola y del teléfono en la siguiente sincronización.
+- [ ] "Mostrar en su carpeta" abre Dolphin con el archivo seleccionado, también con comas y tildes en la ruta.
+- [ ] Cancelar una importación grande a la mitad: lo importado se queda, el resto no vuelve al reabrir.
+- [ ] "Buscar duplicados" sobre la biblioteca migrada no aparta nada que no sea una copia real.
+- [ ] Cambiar la foto de perfil por un PNG y por un JPG grandes: se ve al momento en Tu música.
