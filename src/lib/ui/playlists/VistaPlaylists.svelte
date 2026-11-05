@@ -6,6 +6,7 @@
   seleccionada con Abrir, Anclar y Reproducir.
 -->
 <script lang="ts">
+  import { tick } from 'svelte';
   import { goto } from '$app/navigation';
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import {
@@ -89,6 +90,21 @@
   });
 
   const elegida = $derived(listaOrdenada.find((p) => p.id === seleccionada) ?? null);
+  let panel = $state<HTMLElement>();
+
+  /**
+   * Como la V1: un clic la elige y la enseña en el panel; otro clic la abre. En
+   * ventanas estrechas el panel no se ve, y el primer clic no hacía nada visible:
+   * entonces la abre ya.
+   */
+  async function pulsar(id: number) {
+    if (seleccionada === id) return goto(`/playlists/ver?id=${id}`);
+    seleccionada = id;
+    await tick();
+    if (!panel || getComputedStyle(panel).display === 'none') {
+      await goto(`/playlists/ver?id=${id}`);
+    }
+  }
   let pistasAdelanto = $state<PistaResumen[]>([]);
   let cargandoPistas = $state(false);
 
@@ -242,7 +258,7 @@
             class="tarjeta"
             class:elegida={p.id === seleccionada}
             aria-pressed={p.id === seleccionada}
-            onclick={() => (seleccionada = p.id)}
+            onclick={() => pulsar(p.id)}
           >
             <Mosaico pistas={p.mosaico} />
             <span class="nombre" title={p.nombre}>{p.nombre}</span>
@@ -256,7 +272,7 @@
   </div>
 
   {#if elegida}
-    <aside class="panel" aria-label={elegida.nombre}>
+    <aside class="panel" aria-label={elegida.nombre} bind:this={panel}>
       <div class="panel-cabecera">
         <Mosaico pistas={elegida.mosaico} tamano={320} />
         <span class="etiqueta">{elegida.etiqueta}</span>
@@ -809,8 +825,11 @@
     cursor: default;
   }
 
+  /* Con `.con-panel` también: si no, ganaba la regla de dos columnas y, sin panel,
+     la rejilla ocupaba media vista. */
   @container carcasa (max-width: 70rem) {
-    .vista {
+    .vista,
+    .vista.con-panel {
       grid-template-columns: minmax(0, 1fr);
     }
 
