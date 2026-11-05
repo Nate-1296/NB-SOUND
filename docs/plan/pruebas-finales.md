@@ -199,4 +199,9 @@ estados de pasar por encima solo se vieron en el código.
       suena desde la nueva y la vieja queda sin las canciones (y sin carpetas vacías). Lo nuevo que se copie en la
       carpeta nueva se importa solo.
 - [ ] En Tu música, tocar el nombre lo deja editar; Enter guarda, Escape cancela, y Ajustes e Inicio lo ven.
+- [ ] Las playlists ancladas en la barra lateral: al pasar se resaltan, la abierta queda marcada, y con muchas se
+      desplazan sin tapar Por revisar ni Ajustes.
+- [ ] Al pasar por encima: las tarjetas de Inicio, los carruseles con sus flechas, el botón grande de reproducir (crece
+      un poco) y las filas de la sesión del DJ.
+- [ ] Una instalación nueva abre en la bienvenida; "Elegir la carpeta" importa lo que hay en ella y lo sigue vigilando.
 
