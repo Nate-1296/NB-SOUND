@@ -4,6 +4,7 @@
 
 | Documento | Qué es |
 |---|---|
+| [NB Sound, de punta a punta](./contextual/la-aplicacion.md) | Qué es la aplicación, pantalla por pantalla y botón por botón |
 | [Constitución](./contextual/constitution/README.md) | Las reglas que no se negocian |
 | [Plan de ejecución](./plan/README.md) | Fases, iteraciones, criterios y estado |
 | [ADR](./adr/README.md) | Por qué las cosas son como son |
