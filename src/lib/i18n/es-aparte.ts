@@ -458,7 +458,9 @@ export const esAparte = {
           : `${n.toLocaleString('es')} copias apartadas: ya no se ven en tu biblioteca.`,
     confirmarTitulo: '¿Limpiar canciones duplicadas?',
     confirmarPregunta: (n: number) =>
-      `Se quitarán ${n.toLocaleString('es')} copias de la biblioteca. La canción original no se toca.`,
+      n === 1
+        ? 'Se quitará 1 copia de la biblioteca. La canción original no se toca.'
+        : `Se quitarán ${n.toLocaleString('es')} copias de la biblioteca. La canción original no se toca.`,
     borrarArchivos: 'Mover también sus archivos a la papelera',
     purgarBtn: 'Limpiar',
     cancelar: 'Cancelar',

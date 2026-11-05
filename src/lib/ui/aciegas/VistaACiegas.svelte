@@ -26,6 +26,7 @@
     type Modo,
     type ModoDisponible,
     type ResultadoIntento,
+    type RetoVisible,
     type Ronda
   } from '#lib/core/ipc/aciegas.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
@@ -73,9 +74,18 @@
     });
   });
 
+  // Lo que se va revelando en la ronda, para el resumen: antes solo decía
+  // "0 acertadas · 5 reveladas" sin las canciones, que es lo que uno quiere volver
+  // a escuchar.
+  let deLaRonda = $state<RetoVisible[]>([]);
+
   function recordar(r: Ronda) {
     const id = r.reto?.pistaId;
     if (id != null && r.reto?.titulo != null && !jugadas.includes(id)) jugadas.push(id);
+    if (r.reto && r.reto.titulo != null) {
+      const visto = r.reto;
+      deLaRonda = [...deLaRonda.filter((x) => x.pistaId !== visto.pistaId), visto];
+    }
   }
 
   function nueva(r: Ronda) {
@@ -102,6 +112,7 @@
       }
       texto = '';
       intento = null;
+      deLaRonda = [];
       ronda = r;
     } catch {
       aviso = t.errorAlIniciar;
@@ -182,6 +193,29 @@
     <div class="tarjeta resumen">
       <h2>{t.resumen.titulo}</h2>
       <p>{t.resumen.cifras(ronda.acertados, ronda.revelados, ronda.pasados)}</p>
+      {#if deLaRonda.length > 0}
+        <ol class="de-la-ronda">
+          {#each deLaRonda as r (r.pistaId)}
+            <li>
+              <img src={urlPortada('pista', r.pistaId, 64)} alt="" />
+              <span class="datos-ronda">
+                <strong>{r.titulo}</strong>
+                <small>{r.artista}</small>
+              </span>
+              <span class="resultado {r.estado}">{t.resumen.estados[r.estado]}</span>
+              <button
+                type="button"
+                class="escuchar"
+                aria-label={t.resumen.escuchar(r.titulo ?? '')}
+                title={t.resumen.escuchar(r.titulo ?? '')}
+                onclick={() => reproductor.reproducirPistas([r.pistaId])}
+              >
+                <Icon nombre="reproducir" tamano={16} />
+              </button>
+            </li>
+          {/each}
+        </ol>
+      {/if}
       <div class="fila">
         <button
           type="button"
@@ -214,7 +248,7 @@
         <dl class="campos">
           <dt>{t.campos.titulo}</dt>
           <dd class:oculto={reto.titulo == null}>
-            {reto.titulo ?? t.oculto}{#if reto.anio}<small> · {reto.anio}</small>{/if}
+            {reto.titulo ?? t.oculto}{#if reto.anio}<small class="anio">{reto.anio}</small>{/if}
           </dd>
           <dt>{t.campos.artista}</dt>
           <dd class:oculto={reto.artista == null}>{reto.artista ?? t.oculto}</dd>
@@ -359,6 +393,86 @@
 </section>
 
 <style>
+  .anio {
+    margin-left: var(--ns-espacio-2);
+    color: var(--m3c-on-surface-variant);
+    font-weight: 400;
+  }
+
+  .de-la-ronda {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-align: left;
+  }
+
+  .de-la-ronda li {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--ns-espacio-3);
+    padding: var(--ns-espacio-2);
+    border-radius: var(--ns-radio-sm);
+  }
+
+  .de-la-ronda li:hover {
+    background: var(--m3c-surface-container-high);
+  }
+
+  .de-la-ronda img {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--ns-radio-sm);
+    object-fit: cover;
+  }
+
+  .datos-ronda {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .datos-ronda strong,
+  .datos-ronda small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .datos-ronda small {
+    color: var(--m3c-on-surface-variant);
+  }
+
+  .resultado {
+    padding: 0 var(--ns-espacio-2);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    font-weight: 700;
+  }
+
+  .resultado.acertado {
+    background: color-mix(in srgb, var(--m3c-primary) 18%, transparent);
+    color: var(--m3c-primary);
+  }
+
+  .escuchar {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface);
+    cursor: pointer;
+  }
+
   .vista {
     display: flex;
     flex-direction: column;

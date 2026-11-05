@@ -171,7 +171,7 @@ export const esDj = {
     enPausa: 'En pausa',
     construyendo: 'Preparando más canciones mientras suena…',
     resumen: (pistas: number, duracion: string, artistas: number) =>
-      `${pistas} canciones · ${duracion} · ${artistas} artistas`,
+      `${pistas === 1 ? '1 canción' : `${pistas} canciones`} · ${duracion} · ${artistas === 1 ? '1 artista' : `${artistas} artistas`}`,
     transiciones: (buenas: number, total: number) =>
       `${buenas} de ${total} transiciones muy limpias`,
     sinAnalisis:

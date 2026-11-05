@@ -115,6 +115,9 @@
         <span class="titulo-compacto">{pista.titulo}</span>
         <span>·</span>
         <span>{pista.artista}</span>
+        {#if reproductor.instantanea.karaokeActivo}
+          <span class="karaoke"><Icon nombre="microfono" tamano={14} />{t.karaoke}</span>
+        {/if}
       </div>
     {/if}
 
@@ -224,6 +227,20 @@
       var(--m3c-surface) 80%
     );
     color: var(--m3c-on-surface);
+  }
+
+  /* En karaoke la voz no suena: la cabecera lo dice, que la letra es para cantarla. */
+  .karaoke {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-1);
+    margin-left: var(--ns-espacio-2);
+    padding: 0 var(--ns-espacio-2);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-primary);
+    color: var(--m3c-on-primary);
+    font-size: var(--ns-texto-xs);
+    font-weight: 700;
   }
 
   .cabecera-vista {

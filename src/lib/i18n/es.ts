@@ -391,6 +391,7 @@ export const es = {
   reproduciendo: {
     titulo: 'Reproduciendo',
     volver: 'Volver',
+    karaoke: 'Karaoke: canta tú',
     album: (a: string) => `Álbum · ${a}`,
     anio: (a: number) => `Año · ${a}`,
     duracion: (d: string) => `Duración · ${d}`,

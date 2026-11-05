@@ -34,7 +34,7 @@ export const esACiegas = {
   sinCanciones: 'Aún no hay canciones para este modo.',
   errorAlIniciar: 'No se pudo iniciar la partida. Inténtalo de nuevo.',
   reto: (n: number, total: number) => `Reto ${n} de ${total}`,
-  marcador: (acertados: number) => `${acertados} acertadas`,
+  marcador: (acertados: number) => (acertados === 1 ? '1 acertada' : `${acertados} acertadas`),
   oculto: '???',
   campos: { titulo: 'Título', artista: 'Artista', album: 'Álbum' },
   escuchar: 'Escuchar el fragmento',
@@ -80,9 +80,20 @@ export const esACiegas = {
   resumen: {
     titulo: 'Fin de la ronda',
     cifras: (acertados: number, revelados: number, pasados: number) =>
-      `${acertados} acertadas · ${revelados} reveladas · ${pasados} pasadas`,
+      [
+        `${acertados} ${acertados === 1 ? 'acertada' : 'acertadas'}`,
+        `${revelados} ${revelados === 1 ? 'revelada' : 'reveladas'}`,
+        `${pasados} ${pasados === 1 ? 'pasada' : 'pasadas'}`
+      ].join(' · '),
     otra: 'Otra ronda',
-    cambiar: 'Cambiar de modo'
+    cambiar: 'Cambiar de modo',
+    estados: {
+      acertado: 'Acertada',
+      revelado: 'Revelada',
+      pasado: 'Pasada',
+      en_curso: ''
+    } as Record<string, string>,
+    escuchar: (titulo: string) => `Escuchar ${titulo}`
   }
 } as const;
 
