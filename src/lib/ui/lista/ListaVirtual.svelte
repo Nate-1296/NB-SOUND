@@ -24,9 +24,15 @@
     /** La fila; el tercer argumento dice si la lista va tan rápido que no conviene pedir imágenes. */
     fila: Snippet<[T, number, boolean]>;
     etiqueta: string;
+    /**
+     * Sube cuando los datos cambiaron (una canción borrada o editada): se vuelven a
+     * pedir los bloques sin perder dónde estaba el desplazamiento. Antes la lista
+     * se volvía a montar y saltaba al principio.
+     */
+    recarga?: number;
   }
 
-  let { total, altoFila, cargarBloque, fila, etiqueta }: Props = $props();
+  let { total, altoFila, cargarBloque, fila, etiqueta, recarga = 0 }: Props = $props();
 
   let scrollTop = $state(0);
   /*
@@ -52,7 +58,15 @@
 
   const ventana = $derived(calcularVentana(total, altoFila, scrollTop, altoVista));
 
+  let recargaAplicada = 0;
   $effect(() => {
+    if (recarga !== recargaAplicada) {
+      recargaAplicada = recarga;
+      pedidos.clear();
+      // Lo que no está a la vista se tira; lo visible se queda hasta que llegue lo nuevo.
+      const visibles = new Set(bloquesNecesarios(ventana.desde, ventana.hasta));
+      for (const b of [...bloques.keys()]) if (!visibles.has(b)) bloques.delete(b);
+    }
     for (const b of bloquesNecesarios(ventana.desde, ventana.hasta)) {
       if (pedidos.has(b)) continue;
       pedidos.add(b);

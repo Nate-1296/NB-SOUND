@@ -6,6 +6,8 @@
   de canciones, álbumes y artistas.
 -->
 <script lang="ts">
+  import { untrack } from 'svelte';
+  import { cambios } from '#lib/core/cambios.svelte.ts';
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
   import { duracionDetallada } from '#lib/core/formato.ts';
@@ -59,8 +61,10 @@
     cargarResumen(periodoActivo);
   }
   $effect(() => {
+    void cambios.version;
     void perfil().then((p) => (datos = p));
-    void resumenEscucha('todo').then((r) => (resumen = r));
+    const periodo = untrack(() => periodoActivo);
+    void resumenEscucha(periodo).then((r) => (resumen = r));
   });
 
   async function exportarTarjeta() {

@@ -79,12 +79,6 @@
     </section>
   {/each}
 
-  {#if !esCompacta}
-    {#await import('./playlists/PlaylistsAncladas.svelte') then m}
-      <m.default />
-    {/await}
-  {/if}
-
   <ul class="pie">
     {#each pie as destino (destino.id)}
       {@render enlace(destino)}
@@ -118,7 +112,7 @@
     flex-direction: column;
     gap: var(--ns-espacio-4);
     height: 100%;
-    padding: var(--ns-espacio-4) var(--ns-espacio-3);
+    padding: var(--ns-espacio-4) var(--ns-espacio-3) 0;
     background: var(--m3c-surface);
     overflow-y: auto;
   }
@@ -129,10 +123,9 @@
     padding-bottom: var(--ns-espacio-2);
   }
 
-  /* Más pequeño que en la V1: deja sitio a las playlists ancladas. */
   .marca img {
-    width: 5rem;
-    height: 5rem;
+    width: 5.5rem;
+    height: 5.5rem;
     border-radius: var(--ns-radio-pleno);
     transition:
       width var(--ns-duracion-corta) var(--ns-curva),
@@ -229,9 +222,16 @@
     text-align: center;
   }
 
+  /*
+   * El pie mide lo mismo que la barra de reproducción y su raya está a la misma
+   * altura que el borde de ella: la ventana se lee como un solo marco.
+   */
   .pie-colapso {
-    margin-top: var(--ns-espacio-2);
-    padding-top: var(--ns-espacio-2);
+    display: flex;
+    align-items: center;
+    height: var(--ns-alto-reproductor);
+    margin: 0 calc(-1 * var(--ns-espacio-3));
+    padding: 0 var(--ns-espacio-3);
     border-top: 1px solid var(--m3c-outline-variant);
   }
 

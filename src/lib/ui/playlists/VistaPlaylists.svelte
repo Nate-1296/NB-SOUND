@@ -6,6 +6,7 @@
   seleccionada con Abrir, Anclar y Reproducir.
 -->
 <script lang="ts">
+  import { cambios } from '#lib/core/cambios.svelte.ts';
   import { tick } from 'svelte';
   import { goto } from '$app/navigation';
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
@@ -66,6 +67,7 @@
   $effect(() => {
     const consulta = { texto: texto.trim() || null, categoria, orden };
     void version;
+    void cambios.version;
     void playlistsListar(consulta).then((p) => {
       lista = p;
       listaLista = true;

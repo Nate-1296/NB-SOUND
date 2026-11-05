@@ -5,6 +5,7 @@
   virtual, porque un artista puede tener cientos.
 -->
 <script lang="ts">
+  import { cambios } from '#lib/core/cambios.svelte.ts';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import {
@@ -52,6 +53,7 @@
 
   $effect(() => {
     const c = consulta;
+    void cambios.version;
     if (!Number.isFinite(id) || id <= 0) {
       artista = null;
       return;

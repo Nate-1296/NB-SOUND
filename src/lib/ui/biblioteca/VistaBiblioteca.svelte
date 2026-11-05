@@ -5,6 +5,7 @@
   virtual medida en F0.4.7; Sin verificar es nuevo (enmienda de ADR-007).
 -->
 <script lang="ts">
+  import { cambios } from '#lib/core/cambios.svelte.ts';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { untrack } from 'svelte';
@@ -173,19 +174,30 @@
   let total = $state<number | null>(null);
   let primerBloque: PistaResumen[] = [];
   let pedido = 0;
+  // `version` vuelve a montar la lista (otra consulta, desde arriba); `recarga`
+  // la refresca donde está (la biblioteca cambió).
   let version = $state(0);
+  let recarga = $state(0);
+  let claveMontada = '';
   // Editar o completar una pista la cambia en la base: se vuelve a pedir la lista.
   let recargas = $state(0);
   $effect(() => {
     const c = consulta;
     void recargas;
+    void cambios.version;
     if (vista !== 'pistas') return;
+    const clave = JSON.stringify(c);
     const v = ++pedido;
     void bibliotecaPistas(c, 0, TAM_BLOQUE).then((p) => {
       if (v !== pedido) return;
       primerBloque = p.pistas;
       total = p.total;
-      version = v;
+      if (clave !== claveMontada) {
+        claveMontada = clave;
+        version = v;
+      } else {
+        recarga = v;
+      }
     });
   });
 
@@ -212,6 +224,7 @@
   const PAGINA = 120;
 
   $effect(() => {
+    void cambios.version;
     const busqueda = textoAplicado || null;
     if (vista === 'pistas') {
       if (modoRejilla !== 'lista') {
@@ -491,7 +504,7 @@
         {:else if total !== null}
           <CabeceraPistas />
           {#key version}
-            <ListaVirtual {total} altoFila={56} {cargarBloque} etiqueta={t.lista}>
+            <ListaVirtual {total} altoFila={56} {cargarBloque} {recarga} etiqueta={t.lista}>
               {#snippet fila(p: PistaResumen, i: number, rapido: boolean)}
                 <FilaPista
                   pista={p}

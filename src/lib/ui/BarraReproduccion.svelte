@@ -8,14 +8,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { favoritas } from '#lib/core/acciones.svelte.ts';
-  import { abrirMinirreproductor, urlPortada } from '#lib/core/ipc/index.ts';
-  import { telefonos } from '#lib/core/movil.svelte.ts';
+  import { urlPortada } from '#lib/core/ipc/index.ts';
   import { pantalla } from '#lib/core/pantalla.svelte.ts';
   import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
 
-  import SelectorDestino from './dispositivos/SelectorDestino.svelte';
   import FormaDeOnda from './FormaDeOnda.svelte';
   import Icon from './Icon.svelte';
 
@@ -23,9 +20,6 @@
   const i = $derived(reproductor.instantanea);
   const pista = $derived(reproductor.pista);
   const hayPista = $derived(i.pistaId !== null);
-  const hayDispositivoActivo = $derived(
-    telefonos.estado.activo && telefonos.lista.some((t) => t.conectado)
-  );
 
   /** Mientras se arrastra, la barra sigue al dedo y no a la reproducción. */
   let arrastrando = $state<number | null>(null);
@@ -53,19 +47,20 @@
     capaCola.showPopover();
   }
 
-  let capaPlaylist: HTMLDivElement | undefined = $state();
-  let menuPlaylistAbierto = $state(false);
-  let botonAnadirPlaylist: HTMLButtonElement | undefined = $state();
-  function alternarMenuPlaylist() {
-    if (!capaPlaylist || !botonAnadirPlaylist) return;
-    if (menuPlaylistAbierto) {
-      capaPlaylist.hidePopover();
+  // El menú ···, en la misma capa superior que la cola.
+  let capaMenu: HTMLDivElement | undefined = $state();
+  let botonMenu: HTMLButtonElement | undefined = $state();
+  let menuAbierto = $state(false);
+  function alternarMenu() {
+    if (!capaMenu || !botonMenu) return;
+    if (menuAbierto) {
+      capaMenu.hidePopover();
       return;
     }
-    const r = botonAnadirPlaylist.getBoundingClientRect();
-    capaPlaylist.style.left = `${Math.max(8, r.left - 60)}px`;
-    capaPlaylist.style.bottom = `${window.innerHeight - r.top + 8}px`;
-    capaPlaylist.showPopover();
+    const r = botonMenu.getBoundingClientRect();
+    capaMenu.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
+    capaMenu.style.bottom = `${window.innerHeight - r.top + 8}px`;
+    capaMenu.showPopover();
   }
 
   // En ventanas estrechas el deslizador no cabe en la barra: el altavoz abre una
@@ -175,43 +170,6 @@
         <span class="artista">{t.eligeAlgo}</span>
       {/if}
     </div>
-
-    {#if pista && !i.ciego}
-      <button
-        type="button"
-        class="control-favorita"
-        class:activo={favoritas.es(pista)}
-        aria-label={favoritas.es(pista) ? t.quitarFavorita : t.marcarFavorita}
-        title={favoritas.es(pista) ? t.quitarFavorita : t.marcarFavorita}
-        aria-pressed={favoritas.es(pista)}
-        onclick={() => pista && favoritas.alternar(pista)}
-      >
-        <Icon nombre="favorito" tamano={18} />
-      </button>
-
-      <button
-        type="button"
-        bind:this={botonAnadirPlaylist}
-        class="control-anadir-playlist"
-        aria-label={textos.playlists.anadirA}
-        title={textos.playlists.anadirA}
-        onclick={alternarMenuPlaylist}
-      >
-        <Icon nombre="mas" tamano={18} />
-      </button>
-      <div
-        class="capa-playlist"
-        popover="auto"
-        bind:this={capaPlaylist}
-        ontoggle={(e) => (menuPlaylistAbierto = e.newState === 'open')}
-      >
-        {#if menuPlaylistAbierto}
-          {#await import('./playlists/MenuAnadir.svelte') then m}
-            <m.default pistas={[pista.id]} oncerrar={() => capaPlaylist?.hidePopover()} />
-          {/await}
-        {/if}
-      </div>
-    {/if}
   </div>
 
   <div class="centro">
@@ -325,9 +283,6 @@
         <Icon nombre="microfono" tamano={20} />
       </button>
     {/if}
-    {#if hayDispositivoActivo}
-      <SelectorDestino />
-    {/if}
     <button
       type="button"
       bind:this={botonCola}
@@ -408,16 +363,6 @@
     </div>
     <button
       type="button"
-      class="control"
-      aria-label={t.mini}
-      title={t.mini}
-      disabled={!hayPista || i.ciego}
-      onclick={abrirMinirreproductor}
-    >
-      <Icon nombre="minirreproductor" tamano={20} />
-    </button>
-    <button
-      type="button"
       class="control conmutador"
       class:activo={pantalla.completa}
       aria-label={pantalla.completa ? t.salirPantallaCompleta : t.pantallaCompleta}
@@ -427,6 +372,32 @@
     >
       <Icon nombre={pantalla.completa ? 'salirPantallaCompleta' : 'pantallaCompleta'} tamano={20} />
     </button>
+    <button
+      type="button"
+      bind:this={botonMenu}
+      class="control conmutador"
+      class:activo={menuAbierto}
+      aria-label={t.masOpciones}
+      title={t.masOpciones}
+      aria-haspopup="menu"
+      aria-expanded={menuAbierto}
+      disabled={i.ciego}
+      onclick={alternarMenu}
+    >
+      <Icon nombre="masHorizontal" tamano={20} />
+    </button>
+    <div
+      class="capa-cola"
+      popover="auto"
+      bind:this={capaMenu}
+      ontoggle={(e) => (menuAbierto = e.newState === 'open')}
+    >
+      {#if menuAbierto}
+        {#await import('./MenuBarra.svelte') then m}
+          <m.default oncerrar={() => capaMenu?.hidePopover()} />
+        {/await}
+      {/if}
+    </div>
   </div>
 </section>
 
@@ -490,45 +461,6 @@
     flex-direction: column;
     min-width: 0;
     line-height: 1.3;
-  }
-
-  .control-favorita,
-  .control-anadir-playlist {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    border: none;
-    border-radius: var(--ns-radio-pleno);
-    background: none;
-    color: var(--m3c-on-surface-variant);
-    cursor: pointer;
-    flex: 0 0 auto;
-    margin-left: var(--ns-espacio-1);
-    transition:
-      background-color var(--ns-duracion-corta) var(--ns-curva),
-      color var(--ns-duracion-corta) var(--ns-curva);
-  }
-
-  .control-favorita:hover,
-  .control-anadir-playlist:hover {
-    background: var(--m3c-surface-container-high);
-    color: var(--m3c-primary);
-  }
-
-  .control-favorita.activo {
-    color: var(--m3c-primary);
-  }
-
-  .capa-playlist {
-    position: fixed;
-    inset: auto;
-    border: none;
-    background: none;
-    padding: 0;
-    overflow: visible;
   }
 
   .titulo,
@@ -785,8 +717,6 @@
   }
 
   @container carcasa (max-width: 75rem) {
-    .album,
-    .control-anadir-playlist,
     .volumen .deslizador-barra {
       display: none;
     }

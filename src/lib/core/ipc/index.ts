@@ -12,7 +12,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-
 import type {
   AjustesEcualizador,
   AlbumResumen,
@@ -44,6 +43,7 @@ import type {
   ProgresoImportacion,
   Telefono
 } from '#lib/bindings/index.ts';
+import { COMANDOS_QUE_CAMBIAN, cambios } from '../cambios.svelte.ts';
 
 export type {
   Acelerador,
@@ -123,11 +123,15 @@ function aNsError(causa: unknown): NsError {
 }
 
 export async function call<T>(comando: string, args?: Record<string, unknown>): Promise<T> {
+  let r: T;
   try {
-    return await invoke<T>(comando, args);
+    r = await invoke<T>(comando, args);
   } catch (causa) {
     throw aNsError(causa);
   }
+  // Las vistas abiertas se refrescan solas (`cambios.svelte.ts`).
+  if (COMANDOS_QUE_CAMBIAN.has(comando)) cambios.avisar();
+  return r;
 }
 
 /** Comprueba que el runtime responde y devuelve su versión. */

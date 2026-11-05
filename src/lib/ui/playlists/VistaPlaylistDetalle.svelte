@@ -5,6 +5,7 @@
   creadas por el usuario.
 -->
 <script lang="ts">
+  import { cambios } from '#lib/core/cambios.svelte.ts';
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
@@ -56,6 +57,7 @@
 
   $effect(() => {
     void version;
+    void cambios.version;
     if (!Number.isFinite(id) || id <= 0) {
       datos = null;
       return;

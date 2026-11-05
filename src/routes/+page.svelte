@@ -8,6 +8,7 @@
   animación en reposo (ADR-008).
 -->
 <script lang="ts">
+  import { cambios } from '#lib/core/cambios.svelte.ts';
   import { goto } from '$app/navigation';
   import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
   import {
@@ -28,6 +29,7 @@
 
   $effect(() => {
     void inicio().then((d) => (datos = d));
+    void cambios.version;
   });
 
   function al<T>(lista: readonly T[]): T {

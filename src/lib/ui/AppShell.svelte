@@ -9,6 +9,7 @@
 -->
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
 
   import { accionDeTecla, esCampoDeTexto } from '#lib/core/atajos.ts';
@@ -37,7 +38,30 @@
   const enReproduciendo = $derived(page.url.pathname === '/reproduciendo');
   const vistaFijada = $derived(page.url.pathname === '/playlists');
 
+  // Se abre donde se dejó: la ruta va al almacenamiento del webview al navegar.
+  const ULTIMA_RUTA = 'ns:ultima-ruta';
+  // Se lee al crear la carcasa, antes de que el efecto de abajo guarde la de ahora.
+  const rutaGuardada = (() => {
+    try {
+      return localStorage.getItem(ULTIMA_RUTA);
+    } catch {
+      return null;
+    }
+  })();
+
+  $effect(() => {
+    const ruta = page.url.pathname + page.url.search;
+    try {
+      localStorage.setItem(ULTIMA_RUTA, ruta);
+    } catch {
+      // Sin almacenamiento se abre en Inicio, como siempre.
+    }
+  });
+
   onMount(() => {
+    if (rutaGuardada && rutaGuardada !== '/' && page.url.pathname === '/') {
+      void goto(rutaGuardada, { replaceState: true });
+    }
     void reproductor.arrancar();
     void pantalla.sincronizar();
     void telefonos.arrancar();

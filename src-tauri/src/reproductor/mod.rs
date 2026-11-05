@@ -611,10 +611,18 @@ impl<B: Backend> Servicio<B> {
         let pos = self.motor.posicion();
         // Con una sesión del DJ, lo que suena no es la cola: la cola guarda donde se
         // quedó, y la sesión, por dónde va.
+        // Recién abierta, la canción restaurada aún no está en el motor (su posición es
+        // la de nada, 0): se guarda la restaurada. Si no, cerrar sin haber pulsado
+        // reproducir perdía el minuto.
+        let de_la_cola = match self.actual.as_ref() {
+            Some(s) if s.ficha == pos.ficha => pos.segundos,
+            Some(_) if self.cola.estado() == Estado::Detenido => self.cola_seg_restaurada,
+            _ => pos.segundos,
+        };
         let posicion_seg = self
             .cola_seg_fragmento()
             .or_else(|| self.guardar_dj())
-            .unwrap_or(pos.segundos);
+            .unwrap_or(de_la_cola);
         let sesion = persistencia::Sesion {
             cola: self.cola.filas().to_vec(),
             posicion_cola: self.cola.indice().unwrap_or(0),

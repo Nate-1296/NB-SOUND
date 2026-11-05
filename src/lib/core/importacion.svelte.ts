@@ -12,6 +12,8 @@ import {
   porRevisarContar
 } from '#lib/core/ipc/index.ts';
 
+import { cambios } from './cambios.svelte.ts';
+
 const QUIETO: ProgresoImportacion = {
   activa: false,
   total: 0,
@@ -47,6 +49,7 @@ class Importacion {
       if (terminaba) {
         this.resumen = p;
         void this.contar();
+        cambios.avisar();
       }
     });
     this.progreso = await importacionProgreso();

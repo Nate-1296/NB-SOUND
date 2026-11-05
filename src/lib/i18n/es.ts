@@ -29,7 +29,6 @@ export const es = {
     tuMusica: 'Tu música',
     ajustes: 'Ajustes',
     porRevisar: 'Por revisar',
-    ancladas: 'Ancladas',
     pendientes: (n: number) => (n === 1 ? '1 pendiente' : `${n} pendientes`),
     colapsarLateral: 'Contraer barra lateral',
     expandirLateral: 'Expandir barra lateral',
@@ -100,7 +99,11 @@ export const es = {
     sonandoAqui: 'Sonando aquí',
     controlandoDesde: (nombre: string) => `${nombre} lo está controlando`,
     escucharEnElTelefono: 'Para escuchar en el teléfono, elígelo desde NB Sound Mobile.',
-    conectarTelefono: 'Conectar un teléfono'
+    conectarTelefono: 'Conectar un teléfono',
+    masOpciones: 'Más opciones',
+    anadirAPlaylist: 'Añadir a una playlist',
+    abrirDispositivos: 'Dispositivos',
+    sorprendeme: 'Sorpréndeme'
   },
   biblioteca: {
     titulo: 'Biblioteca',

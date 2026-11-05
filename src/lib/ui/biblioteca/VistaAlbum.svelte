@@ -4,6 +4,7 @@
   y sus canciones en orden.
 -->
 <script lang="ts">
+  import { cambios } from '#lib/core/cambios.svelte.ts';
   import { encolar } from '#lib/core/acciones.svelte.ts';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
@@ -48,6 +49,7 @@
   $effect(() => {
     const c = consulta;
     void recargas;
+    void cambios.version;
     if (!Number.isFinite(id) || id <= 0) {
       album = null;
       return;

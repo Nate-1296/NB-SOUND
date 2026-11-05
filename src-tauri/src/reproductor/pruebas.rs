@@ -140,8 +140,17 @@ fn la_sesion_se_restaura_al_volver_a_abrir() {
         correr(&mut s, |s| s.instantanea().posicion_seg > 0.5);
         s.guardar_al_cerrar();
     }
+    let mut s = servicio(&e, &apuntes);
+    // Abrir y volver a cerrar sin tocar nada no pierde el segundo.
+    s.guardar_al_cerrar();
+    drop(s);
     let s = servicio(&e, &apuntes);
     let i = s.instantanea();
+    assert!(
+        i.posicion_seg > 0.4,
+        "la barra enseña el segundo: {}",
+        i.posicion_seg
+    );
     assert_eq!(i.cola, [1, 2, 3]);
     assert_eq!(i.estado, "detenido", "restaurar no empieza a sonar");
     assert_eq!(i.volumen, 0.4);

@@ -3,7 +3,7 @@
  *
  * Se conserva entre navegaciones internas para que el usuario no pierda su pestaña
  * activa, filtros, búsqueda o modo de cuadrícula al explorar artistas, álbumes o playlists,
- * y se reinicia naturalmente al cerrar y volver a abrir la aplicación.
+ * y, salvo las búsquedas, también entre sesiones (ver al final).
  */
 
 import type {
@@ -59,3 +59,75 @@ class EstadoPlaylists {
 }
 
 export const estadoPlaylists = new EstadoPlaylists();
+
+/*
+ * Lo de arriba se guarda entre sesiones: al volver a abrir, cada vista está como
+ * se dejó (pestaña, orden, filtros, cuadrícula o lista, la playlist elegida). Las
+ * búsquedas escritas no: se abren limpias. En el almacenamiento del webview, que
+ * es de este equipo; si no está, se sigue con lo de fábrica.
+ */
+const CLAVE = 'ns:estado-vistas';
+
+interface Guardado {
+  vista?: VistaBiblioteca;
+  albumes?: Partial<Pick<EstadoTabAlbumes, 'orden' | 'grupo' | 'modoRejilla'>>;
+  artistas?: Partial<Pick<EstadoTabArtistas, 'orden' | 'modoRejilla'>>;
+  pistas?: Partial<
+    Pick<EstadoTabPistas, 'favoritas' | 'sinVerificar' | 'paraCantar' | 'orden' | 'modoRejilla'>
+  >;
+  playlists?: Partial<
+    Pick<EstadoPlaylists, 'categoria' | 'orden' | 'seleccionadaId' | 'modoRejilla'>
+  >;
+}
+
+function restaurar() {
+  let g: Guardado | null = null;
+  try {
+    g = JSON.parse(localStorage.getItem(CLAVE) ?? 'null') as Guardado | null;
+  } catch {
+    return;
+  }
+  if (!g) return;
+  if (g.vista) estadoBiblioteca.vista = g.vista;
+  Object.assign(estadoBiblioteca.albumes, g.albumes ?? {});
+  Object.assign(estadoBiblioteca.artistas, g.artistas ?? {});
+  Object.assign(estadoBiblioteca.pistas, g.pistas ?? {});
+  Object.assign(estadoPlaylists, g.playlists ?? {});
+}
+
+if (typeof window !== 'undefined') {
+  restaurar();
+  $effect.root(() => {
+    $effect(() => {
+      const b = estadoBiblioteca;
+      const p = estadoPlaylists;
+      const g: Guardado = {
+        vista: b.vista,
+        albumes: {
+          orden: b.albumes.orden,
+          grupo: b.albumes.grupo,
+          modoRejilla: b.albumes.modoRejilla
+        },
+        artistas: { orden: b.artistas.orden, modoRejilla: b.artistas.modoRejilla },
+        pistas: {
+          favoritas: b.pistas.favoritas,
+          sinVerificar: b.pistas.sinVerificar,
+          paraCantar: b.pistas.paraCantar,
+          orden: b.pistas.orden,
+          modoRejilla: b.pistas.modoRejilla
+        },
+        playlists: {
+          categoria: p.categoria,
+          orden: p.orden,
+          seleccionadaId: p.seleccionadaId,
+          modoRejilla: p.modoRejilla
+        }
+      };
+      try {
+        localStorage.setItem(CLAVE, JSON.stringify(g));
+      } catch {
+        // Sin almacenamiento, vale para esta sesión.
+      }
+    });
+  });
+}

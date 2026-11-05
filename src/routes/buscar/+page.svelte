@@ -10,6 +10,7 @@
   página escuchaba Escape también y volvía atrás dos veces.
 -->
 <script lang="ts">
+  import { cambios } from '#lib/core/cambios.svelte.ts';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import {
@@ -56,6 +57,7 @@
 
   let version = 0;
   $effect(() => {
+    void cambios.version;
     const texto = q;
     const c = consulta;
     const v = ++version;
