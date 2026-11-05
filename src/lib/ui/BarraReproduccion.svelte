@@ -431,9 +431,13 @@
 </section>
 
 <style>
+  /*
+   * Los extras van a su ancho: en tercios iguales, a 1100 px desbordaban sobre
+   * los controles del centro y el micrófono quedaba encima de "repetir".
+   */
   .reproductor {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr) auto;
     align-items: center;
     gap: var(--ns-espacio-4);
     height: var(--ns-alto-reproductor);
@@ -780,8 +784,9 @@
     text-align: right;
   }
 
-  @container carcasa (max-width: 65rem) {
+  @container carcasa (max-width: 75rem) {
     .album,
+    .control-anadir-playlist,
     .volumen .deslizador-barra {
       display: none;
     }

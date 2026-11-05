@@ -239,15 +239,15 @@
     background: var(--m3c-surface-container);
   }
 
+  /* El rótulo en su columna: con muchas fichas, las de debajo se iban bajo él. */
   .grupo-chips {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    align-items: baseline;
     gap: var(--ns-espacio-2);
   }
 
   .rotulo-categoria {
-    min-width: 5.5rem;
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
     font-weight: 700;

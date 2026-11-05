@@ -94,10 +94,12 @@
   const mejor = $derived.by<Mejor | null>(() => {
     const artista = artistas.find((a) => igual(a.nombre));
     if (artista) return { tipo: 'artista', a: artista };
-    const album = albumes.find((a) => igual(a.titulo));
-    if (album) return { tipo: 'album', a: album };
+    // La canción antes que el álbum: un sencillo se llama como su canción, y las
+    // pistas ya vienen por relevancia (la más escuchada de las que se llaman así).
     const i = pistas.findIndex((p) => igual(p.titulo));
     if (i >= 0 && pistas[i]) return { tipo: 'pista', p: pistas[i], i };
+    const album = albumes.find((a) => igual(a.titulo));
+    if (album) return { tipo: 'album', a: album };
     if (artistas[0]) return { tipo: 'artista', a: artistas[0] };
     if (albumes[0]) return { tipo: 'album', a: albumes[0] };
     if (pistas[0]) return { tipo: 'pista', p: pistas[0], i: 0 };

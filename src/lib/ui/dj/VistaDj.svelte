@@ -30,10 +30,12 @@
       <h1>{t.titulo}</h1>
       <p class="sub">{t.subtitulo}</p>
     </header>
-    <PedirSesion onpedida={ver} />
+    <!-- La sesión que se ve va arriba: debajo del formulario, al pedirla había que
+         bajar para saber que ya sonaba. -->
     {#if vista !== null}
       <SesionActiva sesionId={vista} oncambio={ver} />
     {/if}
+    <PedirSesion onpedida={ver} />
   </div>
   <aside class="lateral" aria-labelledby="t-historial">
     <HistorialDj seleccionada={vista} onver={(id) => (vista = id)} {version} />
