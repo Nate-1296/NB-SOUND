@@ -78,3 +78,16 @@ Trae su propio cliente HTTP, y eso choca con la puerta única de red de [ADR-009
 La excepción y sus límites están en la enmienda de ese ADR. La clave privada de firma no está en el repositorio:
 vive en la máquina de Nathan y en los secretos de GitHub (`TAURI_SIGNING_PRIVATE_KEY` y su contraseña), y solo la
 usa el workflow de publicación.
+
+## Enmienda del 2026-11-04: el `.tar.gz` de sistema y su actualización
+
+**Aprobado por Nathan** (QA-R1). Linux tiene, además de AppImage, `.deb` y `.rpm`, un `.tar.gz` con el árbol `usr/`
+para las distribuciones sin `dpkg` ni `rpm` (Arch y derivadas). `tauri-plugin-updater` no sabe instalarlo: con un
+paquete de sistema y sin su gestor, la aplicación descarga el `.tar.gz` y su `.sig` **en memoria**, verifica la firma
+contra la misma clave pública de `tauri.conf.json` y entrega los bytes a `tar` por la entrada estándar, elevado con
+`sudo -n` o `pkexec`. Nada pasa por un archivo temporal: un archivo en `/tmp` que luego extrae root es una carrera
+para escalar privilegios.
+
+Para verificar se añade `minisign-verify` 0.3, la misma versión que el plugin ya trae, así que no entra código nuevo
+en el árbol. Se descartó llamar al ejecutable `minisign` (sería algo que instalar fuera de la aplicación) y escribir
+la verificación Ed25519 a mano. La CI firma el `.tar.gz` con la misma clave que el resto de artefactos.

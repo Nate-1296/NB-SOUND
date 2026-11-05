@@ -104,3 +104,11 @@ en una carpeta que el usuario tenga que gestionar. Al importarlo se organiza en 
 etiquetas (si está activado "organizar archivos"; si no, se queda donde estaba). Descartar lo manda a la papelera
 del sistema; nunca se borra definitivamente.
 
+
+## Enmienda del 2026-11-04: la consola de karaoke
+
+**Aprobado por Nathan** (QA-R1, DISC-01). Preparar Karaoke sigue sin ser una vista, pero tiene una **consola**: un
+cajón lateral que se abre desde el micrófono de la barra superior, como "Añadir música" y Dispositivos. Reúne lo que
+antes había que adivinar: si la canción que suena está lista para cantar, el progreso real de la que se prepara, la
+cola de preparación y "Preparar mis favoritas". El micrófono del reproductor sigue alternando el karaoke de la
+canción que suena; la consola es donde se ve y se gobierna la preparación.

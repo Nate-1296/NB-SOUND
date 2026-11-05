@@ -39,7 +39,7 @@ Base: NB Sound v1.1.16. Unas 111.000 líneas: 60.000 de Python de aplicación (`
 | Análisis profundo (Essentia) | `core/audio_intelligence_*.py` | Se porta a ONNX como agregado: MusiCNN y sus siete cabezas. **Se eliminan** VGGish y EffNet/Discogs400: la V1 los calculaba o los tenía preparados y nada los usaba | F0.4.3, F5.3 | Hecha como agregado; VGGish y EffNet eliminados |
 | Descubrimiento musical por lenguaje natural | `core/music_discovery_service.py` | Se porta | F5.3.3 | Hecha |
 | Karaoke (Demucs) | `servicios/karaoke/` | Se porta a ONNX como agregado | F0.4.2, F5.2 | Hecha como agregado |
-| Preparar Karaoke (vista) | `VistaKaraoke.qml` | **Se elimina**: el micrófono del reproductor y "Listas para cantar" | F5.2 | Eliminada |
+| Preparar Karaoke (vista) | `VistaKaraoke.qml` | **Se elimina como vista**: el micrófono del reproductor, "Listas para cantar" y la consola de karaoke, un cajón lateral ([enmienda de ADR-007](../adr/decisions/ADR-007-arquitectura-de-informacion.md#enmienda-del-2026-11-04-la-consola-de-karaoke)) | F5.2, QA-R1 | Hecha |
 | DJ Privado | `servicios/dj_privado/`, vistas `Dj*` | Se porta | F6.1 | Hecha |
 | A ciegas | `servicios/explorador_ciego/`, `VistaExploradorCiego.qml` | Se porta | F6.2 | Hecha |
 | Servidor de sincronización y control remoto | `servicios/servidor_sync.py`, `sync_repositorio.py`, `infra/tls_local.py` | Se porta, compatible byte a byte | F3 | Hecha, con las respuestas doradas de la V1 en verde |

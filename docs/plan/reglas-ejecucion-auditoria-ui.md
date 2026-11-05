@@ -330,7 +330,7 @@ A continuación se detalla cómo implementar cada ítem del documento de QA cump
 
 ### 2.6. Directriz sobre los Puntos a Discusión (`DISC-01` y `DISC-02`)
 
-1. **DISC-01 (Consola de Karaoke):** **No recrear `VistaKaraoke.qml` como ruta independiente.** Mantener el diseño integrado actual (ADR-007) y resolver toda la fricción de usuario mediante el feedback explícito de progreso y notificaciones definido en `FDB-01`.
+1. **DISC-01 (Consola de Karaoke):** No se recrea `VistaKaraoke.qml` como ruta. Nathan aprobó la consola como cajón lateral ([enmienda de ADR-007](../adr/decisions/ADR-007-arquitectura-de-informacion.md#enmienda-del-2026-11-04-la-consola-de-karaoke)).
 2. **DISC-02 (Avatar y bloques de redescubrimiento en Perfil):** **No añadir subida de foto de perfil ni duplicar listas de redescubrimiento en `/tu-musica`.** Mantener `/tu-musica` enfocada en analítica visual impecable (corrigiendo `BUG-04`, `DIS-06` y `EXP-13`) y potenciar el redescubrimiento a través del atajo `D` (`COMP-17`), *A ciegas* (`/a-ciegas`) y *DJ Privado* (`/dj`).
 
 ---
