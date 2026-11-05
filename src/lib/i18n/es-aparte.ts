@@ -240,6 +240,10 @@ export const esAparte = {
     nueva: 'Nueva inteligente',
     editar: 'Editar regla',
     crearParaMi: 'Crear para mí',
+    creadasParaTi: (n: number) =>
+      n === 1
+        ? '1 lista hecha con tu música'
+        : `${n.toLocaleString('es')} listas hechas con tu música`,
     creandoParaMi: 'Preparando listas',
     ayuda:
       'Se actualiza sola cada vez que importas música, marcas favoritas o escuchas canciones que cumplen estas condiciones.',

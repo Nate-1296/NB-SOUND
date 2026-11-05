@@ -467,6 +467,7 @@ pub fn run() {
             comandos::crear_playlist,
             comandos::renombrar_playlist,
             comandos::borrar_playlist,
+            comandos::playlists_de_pista,
             comandos::duplicar_playlist,
             comandos::vaciar_playlist,
             comandos::encolar_playlist,

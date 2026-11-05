@@ -280,6 +280,11 @@ export function borrarPlaylist(id: number): Promise<void> {
   return call<void>('borrar_playlist', { id });
 }
 
+/** Las playlists manuales que ya tienen la canción. */
+export function playlistsDePista(pistaId: number): Promise<number[]> {
+  return call<number[]>('playlists_de_pista', { pistaId });
+}
+
 /** Una copia manual con las mismas canciones; devuelve su id. */
 export function duplicarPlaylist(id: number): Promise<number> {
   return call<number>('duplicar_playlist', { id });

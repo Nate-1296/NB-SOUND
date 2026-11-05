@@ -8,10 +8,11 @@
   import {
     agregarAPlaylist,
     type PlaylistResumen,
-    playlistPistas,
+    playlistsDePista,
     playlistsListar,
     quitarDePlaylist
   } from '#lib/core/ipc/index.ts';
+  import { esAparte } from '#lib/i18n/es-aparte.ts';
   import { textos } from '#lib/i18n/index.ts';
 
   import Icon from '../Icon.svelte';
@@ -30,43 +31,31 @@
   let creando = $state(false);
 
   $effect(() => {
-    void playlistsListar({ texto: null, categoria: 'creada', orden: 'nombreAsc' }).then(
-      async (p) => {
-        lista = p;
-        if (pistas.length === 1) {
-          const pistaId = pistas[0];
-          const miembros = new Set<number>();
-          await Promise.all(
-            p.map(async (pl) => {
-              try {
-                const pag = await playlistPistas(pl.id, 0, 500);
-                if (pag.pistas.some((item) => item.id === pistaId)) {
-                  miembros.add(pl.id);
-                }
-              } catch {
-                // Si falla una consulta, se continúa
-              }
-            })
-          );
-          contenidas = miembros;
-        }
-      }
-    );
+    void playlistsListar({ texto: null, categoria: 'creada', orden: 'nombreAsc' }).then((p) => {
+      // Las inteligentes también son «creadas», pero se llenan solas.
+      lista = p.filter((x) => x.editable);
+    });
+    const [una] = pistas;
+    if (pistas.length === 1 && una !== undefined) {
+      void playlistsDePista(una).then((ids) => (contenidas = new Set(ids)));
+    }
   });
 
   async function alternar(p: PlaylistResumen) {
-    const yaEsta = contenidas.has(p.id);
-    if (yaEsta && pistas.length === 1 && pistas[0] !== undefined) {
-      await quitarDePlaylist(p.id, pistas[0]);
-      contenidas.delete(p.id);
+    const [una] = pistas;
+    try {
+      if (contenidas.has(p.id) && pistas.length === 1 && una !== undefined) {
+        await quitarDePlaylist(p.id, una);
+        contenidas.delete(p.id);
+        notificar.informacion(t.quitada(p.nombre));
+      } else {
+        const entraron = await agregarAPlaylist(p.id, pistas);
+        contenidas.add(p.id);
+        notificar.exito(entraron > 0 ? t.anadida(p.nombre) : t.yaEstaba(p.nombre));
+      }
       contenidas = new Set(contenidas);
-      notificar.informacion(t.quitada(p.nombre));
-    } else {
-      const entraron = await agregarAPlaylist(p.id, pistas);
-      contenidas.add(p.id);
-      contenidas = new Set(contenidas);
-      const msg = entraron > 0 ? t.anadida(p.nombre) : t.yaEstaba(p.nombre);
-      notificar.exito(msg);
+    } catch {
+      notificar.error(esAparte.comun.error);
     }
   }
 </script>

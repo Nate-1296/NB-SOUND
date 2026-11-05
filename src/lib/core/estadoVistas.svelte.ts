@@ -6,7 +6,13 @@
  * y se reinicia naturalmente al cerrar y volver a abrir la aplicación.
  */
 
-import type { OrdenAlbumes, OrdenArtistas, OrdenPistas } from '#lib/core/ipc/index.ts';
+import type {
+  Categoria,
+  OrdenAlbumes,
+  OrdenArtistas,
+  OrdenPistas,
+  OrdenPlaylists
+} from '#lib/core/ipc/index.ts';
 
 export type ModoRejilla = 'sm' | 'md' | 'lg' | 'lista';
 export type VistaBiblioteca = 'albumes' | 'artistas' | 'pistas';
@@ -43,8 +49,9 @@ export const estadoBiblioteca = new EstadoBiblioteca();
 
 class EstadoPlaylists {
   busqueda = $state('');
-  categoria = $state('todas');
-  orden = $state('recientes');
+  /** `null` es «Todas». */
+  categoria = $state<Categoria | null>(null);
+  orden = $state<OrdenPlaylists>('recientes');
   seleccionadaId = $state<number | null>(null);
   modoRejilla = $state<ModoRejilla>('md');
 }

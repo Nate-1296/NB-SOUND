@@ -7,6 +7,7 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import {
     anclarPlaylist,
     type Categoria,
@@ -41,10 +42,8 @@
   ];
 
   let texto = $state(estadoPlaylists.busqueda);
-  let categoria = $state<Categoria | null>(
-    estadoPlaylists.categoria === 'todas' ? null : (estadoPlaylists.categoria as Categoria)
-  );
-  let orden = $state<OrdenPlaylists>(estadoPlaylists.orden as OrdenPlaylists);
+  let categoria = $state<Categoria | null>(estadoPlaylists.categoria);
+  let orden = $state<OrdenPlaylists>(estadoPlaylists.orden);
   let lista = $state<PlaylistResumen[]>([]);
   let seleccionada = $state<number | null>(estadoPlaylists.seleccionadaId);
   let creando = $state(false);
@@ -55,7 +54,7 @@
 
   $effect(() => {
     estadoPlaylists.busqueda = texto;
-    estadoPlaylists.categoria = categoria ?? 'todas';
+    estadoPlaylists.categoria = categoria;
     estadoPlaylists.orden = orden;
     estadoPlaylists.seleccionadaId = seleccionada;
     estadoPlaylists.modoRejilla = modoRejilla;
@@ -128,8 +127,10 @@
   async function crearParaMi() {
     regenerando = true;
     try {
-      await regenerarPlaylistsAutomaticas();
+      notificar.exito(ti.creadasParaTi(await regenerarPlaylistsAutomaticas()));
       version += 1;
+    } catch {
+      notificar.error(esAparte.comun.error);
     } finally {
       regenerando = false;
     }

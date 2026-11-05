@@ -6,6 +6,7 @@
   de canciones, álbumes y artistas.
 -->
 <script lang="ts">
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
   import { duracionDetallada } from '#lib/core/formato.ts';
   import {
@@ -37,10 +38,13 @@
   let versionFoto = $state(Date.now());
 
   async function cambiarFoto() {
-    const cambio = await perfilCambiarFoto();
-    if (cambio) {
-      sinFoto = false;
-      versionFoto = Date.now();
+    try {
+      if (await perfilCambiarFoto()) {
+        sinFoto = false;
+        versionFoto = Date.now();
+      }
+    } catch {
+      notificar.error(t.fotoInvalida);
     }
   }
 

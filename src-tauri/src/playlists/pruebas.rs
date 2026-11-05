@@ -362,6 +362,15 @@ fn duplicar_copia_el_orden_y_no_repite_nombre_y_vaciar_solo_en_manuales() {
     let auto = duplicar(&db, 50).unwrap();
     assert!(una(&db, auto).unwrap().unwrap().editable);
 
+    assert_eq!(
+        con_pista(&db, 3).unwrap().len(),
+        3,
+        "la original y sus dos copias"
+    );
+    assert!(
+        !con_pista(&db, 3).unwrap().contains(&50),
+        "las automáticas no cuentan"
+    );
     vaciar(&db, copia).unwrap();
     assert!(ids(&db, copia).unwrap().is_empty());
     assert_eq!(ids(&db, id).unwrap(), [3, 1], "la original no se toca");

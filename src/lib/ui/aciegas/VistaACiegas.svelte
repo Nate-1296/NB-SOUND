@@ -175,24 +175,6 @@
       </button>
     </div>
     {#if aviso}<p class="aviso" class:error={avisoEsError} role="status">{aviso}</p>{/if}
-
-    <section class="panel-records" aria-labelledby="t-records">
-      <h2 id="t-records">{t.estadisticas.titulo}</h2>
-      <div class="rejilla-stats">
-        <div class="tarjeta-stat">
-          <span class="cifra-stat">{jugadas.length > 0 ? jugadas.length : 8}</span>
-          <span class="rotulo-stat">{t.estadisticas.acertadasSemana}</span>
-        </div>
-        <div class="tarjeta-stat">
-          <span class="cifra-stat">5</span>
-          <span class="rotulo-stat">{t.estadisticas.mejorRacha}</span>
-        </div>
-        <div class="tarjeta-stat">
-          <span class="cifra-stat texto">{t.modos[modo]?.nombre ?? t.modos.portada.nombre}</span>
-          <span class="rotulo-stat">{t.estadisticas.modoFavorito}</span>
-        </div>
-      </div>
-    </section>
   {:else if ronda.terminada}
     <div class="tarjeta resumen">
       <h2>{t.resumen.titulo}</h2>
@@ -652,53 +634,5 @@
     display: block;
     height: 100%;
     background: var(--m3c-primary);
-  }
-
-  .panel-records {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-4);
-    margin-top: var(--ns-espacio-6);
-    padding: var(--ns-espacio-5);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-lg);
-    background: var(--m3c-surface-container-low);
-  }
-
-  .panel-records h2 {
-    margin: 0;
-    font-size: var(--ns-texto-lg);
-  }
-
-  .rejilla-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-    gap: var(--ns-espacio-3);
-  }
-
-  .tarjeta-stat {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-1);
-    padding: var(--ns-espacio-3);
-    border-radius: var(--ns-radio-md);
-    background: var(--m3c-surface-container);
-  }
-
-  .cifra-stat {
-    font-size: var(--ns-texto-xl);
-    font-weight: 700;
-    color: var(--m3c-primary);
-  }
-
-  .cifra-stat.texto {
-    font-size: var(--ns-texto-sm);
-    font-weight: 600;
-    color: var(--m3c-on-surface);
-  }
-
-  .rotulo-stat {
-    font-size: var(--ns-texto-xs);
-    color: var(--m3c-on-surface-variant);
   }
 </style>

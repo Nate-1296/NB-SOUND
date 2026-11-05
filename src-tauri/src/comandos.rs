@@ -441,6 +441,15 @@ pub async fn borrar_playlist(estado: tauri::State<'_, Estado>, id: i64) -> NsRes
     en_segundo_plano(&estado, move |db| playlists::borrar(db, id)).await
 }
 
+/// Cota: las playlists manuales del usuario, que son decenas.
+#[tauri::command]
+pub async fn playlists_de_pista(
+    estado: tauri::State<'_, Estado>,
+    pista_id: i64,
+) -> NsResult<Vec<i64>> {
+    en_segundo_plano(&estado, move |db| playlists::con_pista(db, pista_id)).await
+}
+
 /// Una copia manual de la playlist, con sus canciones; devuelve su `id`.
 #[tauri::command]
 pub async fn duplicar_playlist(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<i64> {

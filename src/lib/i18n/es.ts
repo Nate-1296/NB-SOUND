@@ -328,6 +328,7 @@ export const es = {
       'NB Sound usará tus archivos locales para mostrar recientes, favoritos y música para retomar sin depender de servicios externos.'
   },
   tuMusica: {
+    fotoInvalida: 'Esa imagen no se pudo usar. Elige un PNG o un JPG.',
     identidad: 'Tu identidad musical',
     anonimo: 'Tu música',
     resumen: (r: number, d: number, b: number) =>

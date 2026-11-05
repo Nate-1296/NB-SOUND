@@ -392,6 +392,22 @@ pub fn borrar(db: &BaseDeDatos, id: i64) -> NsResult<()> {
     bd(tx.commit())
 }
 
+/// Las playlists manuales que ya tienen la canción (`playlists_para_pista` de la
+/// V1), para que "Añadir a playlist" las marque y deje quitarla.
+///
+/// # Errors
+///
+/// [`NsError::StorageFailure`] si la consulta falla.
+pub fn con_pista(db: &BaseDeDatos, pista: i64) -> NsResult<Vec<i64>> {
+    let conn = db.conexion()?;
+    let mut s = bd(conn.prepare_cached(
+        "SELECT pp.playlist_id FROM playlist_pistas pp JOIN playlists p ON p.id = pp.playlist_id
+         WHERE pp.pista_id = ?1 AND p.tipo = 'manual' AND p.origen = 'usuario'",
+    ))?;
+    let ids = bd(bd(s.query_map([pista], |f| f.get(0)))?.collect::<rusqlite::Result<Vec<i64>>>())?;
+    Ok(ids)
+}
+
 /// Duplica cualquier playlist como una manual del usuario, con las mismas
 /// canciones en el mismo orden (`duplicar_playlist` de la V1). Se llama como la
 /// original con "(copia)", y "(copia 2)", "(copia 3)"… si ese ya existe. Una
