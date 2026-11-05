@@ -94,135 +94,142 @@
   }
 </script>
 
-<section id="dispositivos" aria-labelledby="t-dispositivos">
-  <h2 id="t-dispositivos">{t.dispositivos}</h2>
-  <label class="ajuste interruptor">
-    <span class="rotulo">
-      {t.permitirTelefonos}
-      <small>
-        {t.permitirAyuda}
-        {#if telefonos.estado.direccion}{t.escuchandoEn(telefonos.estado.direccion)}{/if}
-      </small>
-    </span>
-    <input
-      type="checkbox"
-      role="switch"
-      checked={telefonos.estado.activo}
-      onchange={(e) => telefonos.permitir(e.currentTarget.checked)}
-    />
-  </label>
-  <div>
+<div class="grupos">
+  <section class="grupo" aria-labelledby="t-telefonos">
+    <h3 id="t-telefonos" class="titulo-grupo">
+      <Icon nombre="telefono" tamano={20} />{t.telefonos}
+    </h3>
+    <label class="ajuste interruptor">
+      <span class="rotulo">
+        {t.permitirTelefonos}
+        <small>
+          {t.permitirAyuda}
+          {#if telefonos.estado.direccion}{t.escuchandoEn(telefonos.estado.direccion)}{/if}
+        </small>
+      </span>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={telefonos.estado.activo}
+        onchange={(e) => telefonos.permitir(e.currentTarget.checked)}
+      />
+    </label>
+
+    {#if telefonos.lista.length === 0}
+      <p>{t.sinTelefonos}</p>
+    {:else}
+      <ul class="telefonos">
+        {#each telefonos.lista as tel (tel.id)}
+          <li>
+            <Icon nombre="telefono" tamano={22} />
+            <span class="datos">
+              <strong>{tel.nombre}</strong>
+              <small class:vivo={tel.conectado}>
+                {#if tel.controlando}
+                  {t.controlando}
+                {:else if tel.conectado}
+                  {t.conectadoAhora}
+                {:else if tel.ultimaConexion}
+                  {t.ultimaConexion(fecha(tel.ultimaConexion))}
+                {:else}
+                  {t.sinConexiones}
+                {/if}
+              </small>
+            </span>
+            <button
+              type="button"
+              class="boton"
+              aria-label={t.quitarTelefono(tel.nombre)}
+              onclick={() => (quitando = { id: tel.id, nombre: tel.nombre })}
+            >
+              {t.quitar}
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
     <button type="button" class="boton principal" onclick={() => (conectando = true)}>
-      <Icon nombre="telefono" tamano={18} />
+      <Icon nombre="mas" tamano={18} />
       {t.conectarTelefono}
     </button>
-  </div>
+  </section>
 
-  {#if telefonos.lista.length === 0}
-    <p>{t.sinTelefonos}</p>
-  {:else}
-    <ul class="telefonos">
-      {#each telefonos.lista as tel (tel.id)}
-        <li>
-          <Icon nombre="telefono" tamano={22} />
-          <span class="datos">
-            <strong>{tel.nombre}</strong>
-            <small class:vivo={tel.conectado}>
-              {#if tel.controlando}
-                {t.controlando}
-              {:else if tel.conectado}
-                {t.conectadoAhora}
-              {:else if tel.ultimaConexion}
-                {t.ultimaConexion(fecha(tel.ultimaConexion))}
-              {:else}
-                {t.sinConexiones}
-              {/if}
-            </small>
-          </span>
-          <button
-            type="button"
-            class="boton"
-            aria-label={t.quitarTelefono(tel.nombre)}
-            onclick={() => (quitando = { id: tel.id, nombre: tel.nombre })}
-          >
-            {t.quitar}
-          </button>
-        </li>
-      {/each}
-    </ul>
-  {/if}
-
-  <div class="bloque-externo">
-    <h3>{tc.titulo}</h3>
-    <p>{tc.ayuda}</p>
-
-    <div class="ajuste">
-      <span class="rotulo">{tc.origen}</span>
-      <MenuSelector
-        opciones={[
-          { valor: 'favoritas', etiqueta: tc.origenes.favoritas },
-          { valor: 'playlist', etiqueta: tc.origenes.playlist },
-          { valor: 'biblioteca', etiqueta: tc.origenes.biblioteca }
-        ]}
-        bind:valor={origen}
-      />
-    </div>
-
-    {#if origen === 'playlist'}
+  <details class="grupo">
+    <summary>
+      <span class="titulo-grupo"><Icon nombre="exportar" tamano={20} />{tc.titulo}</span>
+      <small>{tc.ayuda}</small>
+    </summary>
+    <div class="cuerpo-copia">
       <div class="ajuste">
-        <span class="rotulo">{tc.playlist}</span>
-        {#if playlists.length === 0}
-          <small>{tc.sinPlaylists}</small>
-        {:else}
-          <MenuSelector
-            opciones={playlists.map((pl) => ({ valor: pl.id, etiqueta: pl.nombre }))}
-            valor={playlistId ?? playlists[0]?.id ?? 0}
-            onchange={(v) => (playlistId = v)}
-          />
+        <span class="rotulo">{tc.origen}</span>
+        <MenuSelector
+          opciones={[
+            { valor: 'favoritas', etiqueta: tc.origenes.favoritas },
+            { valor: 'playlist', etiqueta: tc.origenes.playlist },
+            { valor: 'biblioteca', etiqueta: tc.origenes.biblioteca }
+          ]}
+          bind:valor={origen}
+        />
+      </div>
+
+      {#if origen === 'playlist'}
+        <div class="ajuste">
+          <span class="rotulo">{tc.playlist}</span>
+          {#if playlists.length === 0}
+            <small>{tc.sinPlaylists}</small>
+          {:else}
+            <MenuSelector
+              opciones={playlists.map((pl) => ({ valor: pl.id, etiqueta: pl.nombre }))}
+              valor={playlistId ?? playlists[0]?.id ?? 0}
+              onchange={(v) => (playlistId = v)}
+            />
+          {/if}
+        </div>
+      {/if}
+
+      <div class="ajuste">
+        <span class="rotulo">{tc.estructura}</span>
+        <MenuSelector
+          opciones={[
+            { valor: 'artistaAlbum', etiqueta: tc.estructuras.artistaAlbum },
+            { valor: 'artista', etiqueta: tc.estructuras.artista },
+            { valor: 'plana', etiqueta: tc.estructuras.plana }
+          ]}
+          bind:valor={estructura}
+        />
+      </div>
+
+      <label class="ajuste interruptor">
+        <span class="rotulo">{tc.incrustarPortada}</span>
+        <input type="checkbox" role="switch" bind:checked={incrustarPortada} />
+      </label>
+
+      <label class="ajuste interruptor">
+        <span class="rotulo">{tc.convertirWav}</span>
+        <input type="checkbox" role="switch" bind:checked={convertirAWav} />
+      </label>
+
+      <div class="fila-accion">
+        <button
+          type="button"
+          class="boton"
+          disabled={copiando || (origen === 'playlist' && playlistId === null)}
+          onclick={iniciarCopiaDispositivo}
+        >
+          <Icon nombre="carpeta" tamano={18} />
+          {copiando ? tc.copiando : tc.botonCopiar}
+        </button>
+        {#if mensajeCopia}
+          <small class="estado-copia">{mensajeCopia}</small>
         {/if}
       </div>
-    {/if}
-
-    <div class="ajuste">
-      <span class="rotulo">{tc.estructura}</span>
-      <MenuSelector
-        opciones={[
-          { valor: 'artistaAlbum', etiqueta: tc.estructuras.artistaAlbum },
-          { valor: 'artista', etiqueta: tc.estructuras.artista },
-          { valor: 'plana', etiqueta: tc.estructuras.plana }
-        ]}
-        bind:valor={estructura}
-      />
     </div>
+  </details>
 
-    <label class="ajuste interruptor">
-      <span class="rotulo">{tc.incrustarPortada}</span>
-      <input type="checkbox" role="switch" bind:checked={incrustarPortada} />
-    </label>
-
-    <label class="ajuste interruptor">
-      <span class="rotulo">{tc.convertirWav}</span>
-      <input type="checkbox" role="switch" bind:checked={convertirAWav} />
-    </label>
-
-    <div class="fila-accion">
-      <button
-        type="button"
-        class="boton"
-        disabled={copiando || (origen === 'playlist' && playlistId === null)}
-        onclick={iniciarCopiaDispositivo}
-      >
-        <Icon nombre="carpeta" tamano={18} />
-        {copiando ? tc.copiando : tc.botonCopiar}
-      </button>
-      {#if mensajeCopia}
-        <small class="estado-copia">{mensajeCopia}</small>
-      {/if}
-    </div>
-  </div>
-
-  <BloqueFiesta />
-</section>
+  <section class="grupo">
+    <BloqueFiesta />
+  </section>
+</div>
 
 <DialogoConectar abierto={conectando} oncerrar={() => (conectando = false)} />
 
@@ -243,20 +250,59 @@
 </dialog>
 
 <style>
-  section {
+  .grupos {
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-3);
-    padding: var(--ns-espacio-5);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-lg);
-    background: var(--m3c-surface-container-low);
-    scroll-margin-top: var(--ns-espacio-4);
   }
 
-  h2 {
+  /* Tres tarjetas, una por cosa: antes eran tres bloques seguidos en una sola. */
+  .grupo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-3);
+    padding: var(--ns-espacio-4);
+    border-radius: var(--ns-radio-lg);
+    background: var(--m3c-surface-container-high);
+  }
+
+  .titulo-grupo {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
     margin: 0;
-    font-size: var(--ns-texto-lg);
+    color: var(--m3c-on-surface);
+    font-size: var(--ns-texto-md);
+    font-weight: 700;
+  }
+
+  .titulo-grupo :global(svg) {
+    color: var(--m3c-primary);
+  }
+
+  summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-1);
+    list-style: none;
+    cursor: pointer;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary small {
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+  }
+
+  .cuerpo-copia {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-3);
+    padding-top: var(--ns-espacio-3);
+    border-top: 1px solid var(--m3c-outline-variant);
   }
 
   .ajuste {
@@ -374,6 +420,7 @@
 
   .boton {
     display: inline-flex;
+    align-self: flex-start;
     align-items: center;
     gap: var(--ns-espacio-2);
     height: 2.5rem;
@@ -422,19 +469,6 @@
     justify-content: flex-end;
     gap: var(--ns-espacio-2);
     margin-top: var(--ns-espacio-4);
-  }
-
-  .bloque-externo {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-3);
-    padding-top: var(--ns-espacio-4);
-    border-top: 1px solid var(--m3c-outline-variant);
-  }
-
-  .bloque-externo h3 {
-    margin: 0;
-    font-size: var(--ns-texto-md);
   }
 
   .fila-accion {

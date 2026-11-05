@@ -19,8 +19,12 @@
   } from '#lib/core/ipc/index.ts';
   import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
+  import CabeceraPistas from '#lib/ui/biblioteca/CabeceraPistas.svelte';
   import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
+  import AccionesColeccion from '#lib/ui/AccionesColeccion.svelte';
+  import { ambiente } from '#lib/ui/ambiente.ts';
   import Icon from '#lib/ui/Icon.svelte';
+  import type { Accion } from '#lib/ui/MenuAcciones.svelte';
 
   const t = textos.biblioteca;
   const id = $derived(Number(page.url.searchParams.get('id')));
@@ -65,6 +69,29 @@
     void bibliotecaPistas(c, 0, 500).then((p) => (pistas = p.pistas));
   });
 
+  const acciones = $derived<Accion[]>([
+    {
+      texto: t.anadirACola,
+      icono: 'cola',
+      accion: () =>
+        encolar(
+          pistas.map((p) => p.id),
+          false
+        ),
+      deshabilitada: pistas.length === 0
+    },
+    ...(album?.artistaId
+      ? [
+          {
+            texto: t.abrirArtista,
+            icono: 'artista' as const,
+            accion: () => goto(`/biblioteca/artista?id=${album?.artistaId}`)
+          }
+        ]
+      : []),
+    { texto: t.editarDatos, icono: 'editar', accion: () => (editando = true), separada: true }
+  ]);
+
   function aleatorio() {
     if (!reproductor.instantanea.aleatorio) void reproductor.alternarAleatorio();
     void reproducirLista(consulta, Math.floor(Math.random() * pistas.length));
@@ -72,72 +99,62 @@
 </script>
 
 <section class="detalle">
-  <button
-    type="button"
-    class="volver"
-    onclick={() => {
-      if (typeof window !== 'undefined' && window.history.length > 1) {
-        window.history.back();
-      } else {
-        void goto('/biblioteca?vista=albumes');
-      }
-    }}
-    title={t.album.volver}
-  >
-    <Icon nombre="atras" tamano={18} />
-    <span>{t.album.volver}</span>
-  </button>
+  <header class="franja" use:ambiente={pistas[0]?.id ?? null}>
+    <button
+      type="button"
+      class="volver"
+      onclick={() => {
+        if (typeof window !== 'undefined' && window.history.length > 1) {
+          window.history.back();
+        } else {
+          void goto('/biblioteca?vista=albumes');
+        }
+      }}
+      title={t.album.volver}
+    >
+      <Icon nombre="atras" tamano={18} />
+      <span>{t.album.volver}</span>
+    </button>
+    {#if album}
+      <div class="cabecera">
+        <div class="portada">
+          {#if album.tienePortada}
+            <img src={urlPortada('album', album.id, 640)} alt="" />
+          {:else}
+            <Icon nombre="album" tamano={64} />
+          {/if}
+        </div>
+        <div class="datos">
+          <span class="tipo">{t.tipos[album.tipo as keyof typeof t.tipos] ?? album.tipo}</span>
+          <h1>{album.titulo}</h1>
+          <p class="sub">
+            {#if album.artistaId}
+              <a class="artista" href={`/biblioteca/artista?id=${album.artistaId}`}
+                >{album.artista}</a
+              >
+            {:else}
+              <span class="artista">{album.artista}</span>
+            {/if}
+            {#each [album.anio ?? '', t.album.pistas(album.numPistas, formatoTiempo(album.duracionSeg))].filter((x) => x !== '') as dato (dato)}
+              <span aria-hidden="true">·</span><span>{dato}</span>
+            {/each}
+          </p>
+        </div>
+      </div>
+    {/if}
+  </header>
 
   {#if album === null}
     <p class="vacio">{t.album.noEncontrado}</p>
   {:else if album}
-    <header class="cabecera">
-      <div class="portada">
-        {#if album.tienePortada}
-          <img src={urlPortada('album', album.id, 640)} alt="" />
-        {:else}
-          <Icon nombre="album" tamano={64} />
-        {/if}
-      </div>
-      <div class="datos">
-        <span class="tipo">{album.tipo}</span>
-        <h1>{album.titulo}</h1>
-        <a class="artista" href={`/biblioteca/artista?id=${album.artistaId}`}>{album.artista}</a>
-        <span class="sub">
-          {[album.anio ?? '', t.album.pistas(album.numPistas, formatoTiempo(album.duracionSeg))]
-            .filter((x) => x !== '')
-            .join(' · ')}
-        </span>
-        <div class="botones">
-          <button
-            type="button"
-            class="boton principal"
-            onclick={() => reproducirLista(consulta, 0)}
-          >
-            <Icon nombre="reproducir" tamano={16} />{t.reproducir}
-          </button>
-          <button type="button" class="boton" onclick={aleatorio}>
-            <Icon nombre="aleatorio" tamano={16} />{t.album.aleatorio}
-          </button>
-          <button
-            type="button"
-            class="boton"
-            disabled={pistas.length === 0}
-            onclick={() =>
-              encolar(
-                pistas.map((p) => p.id),
-                false
-              )}
-          >
-            <Icon nombre="cola" tamano={16} />{t.anadirACola}
-          </button>
-          <button type="button" class="boton" onclick={() => (editando = true)}>
-            <Icon nombre="editar" tamano={16} />{t.editarDatos}
-          </button>
-        </div>
-      </div>
-    </header>
+    <AccionesColeccion
+      vacia={pistas.length === 0}
+      onreproducir={() => reproducirLista(consulta, 0)}
+      onaleatorio={aleatorio}
+      {acciones}
+    />
 
+    <CabeceraPistas contexto="album" />
     <ul class="pistas" aria-label={t.lista}>
       {#each pistas as p, i (p.id)}
         <li>
@@ -193,32 +210,45 @@
 
 <style>
   .detalle {
-    position: relative;
+    /* El fondo del lienzo, resuelto aquí: dentro de la franja los tokens son los de
+       la portada, y el degradado tiene que acabar en el color de fuera. */
+    --fondo-lienzo: var(--m3c-surface-container-low);
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-4);
-    border-radius: var(--ns-radio-lg);
-    background: linear-gradient(to bottom, var(--m3c-surface-container-high) 0%, transparent 22rem);
-    padding: var(--ns-espacio-4);
+  }
+
+  .franja {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-4);
+    margin: calc(-1 * var(--ns-espacio-2)) calc(-1 * var(--ns-espacio-5)) 0;
+    padding: var(--ns-espacio-4) var(--ns-espacio-5) var(--ns-espacio-5);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--m3c-primary-container) 70%, var(--fondo-lienzo)) 0%,
+      var(--fondo-lienzo) 100%
+    );
+    color: var(--m3c-on-surface);
   }
 
   .volver {
     display: inline-flex;
+    align-self: flex-start;
     align-items: center;
     gap: var(--ns-espacio-2);
+    padding: 0;
+    border: none;
+    background: none;
     color: var(--m3c-on-surface-variant);
     font: inherit;
     font-size: var(--ns-texto-sm);
-    text-decoration: none;
-    background: none;
-    border: none;
-    padding: 0;
     cursor: pointer;
-    transition: color 120ms ease;
+    transition: color var(--ns-duracion-corta) var(--ns-curva);
   }
 
   .volver:hover {
-    color: var(--m3c-primary);
+    color: var(--m3c-on-surface);
   }
 
   .cabecera {
@@ -231,12 +261,13 @@
     display: grid;
     place-items: center;
     flex: 0 0 auto;
-    width: 13rem;
-    height: 13rem;
+    width: 14rem;
+    height: 14rem;
     overflow: hidden;
     border-radius: var(--ns-radio-md);
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-on-surface-variant);
+    box-shadow: 0 12px 32px var(--m3c-shadow);
   }
 
   .portada img {
@@ -248,59 +279,47 @@
   .datos {
     display: flex;
     flex-direction: column;
-    gap: var(--ns-espacio-1);
+    gap: var(--ns-espacio-2);
     min-width: 0;
   }
 
   .tipo {
-    color: var(--m3c-primary);
     font-size: var(--ns-texto-xs);
     font-weight: 700;
-    text-transform: uppercase;
     letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   h1 {
     margin: 0;
-    font-size: var(--ns-texto-2xl);
-  }
-
-  .artista {
-    color: var(--m3c-on-surface);
-    font-weight: 600;
-    text-decoration: none;
+    font-size: clamp(var(--ns-texto-2xl), 4.5vw, var(--ns-texto-4xl));
+    line-height: 1.02;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .sub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    margin: 0;
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-sm);
   }
 
-  .botones {
-    display: flex;
-    gap: var(--ns-espacio-2);
-    margin-top: var(--ns-espacio-3);
-  }
-
-  .boton {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ns-espacio-2);
-    height: 2.75rem;
-    padding: 0 var(--ns-espacio-5);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-pleno);
-    background: none;
+  .artista {
     color: var(--m3c-on-surface);
-    font: inherit;
     font-weight: 700;
-    cursor: pointer;
+    text-decoration: none;
   }
 
-  .boton.principal {
-    border-color: var(--m3c-primary);
-    background: var(--m3c-primary);
-    color: var(--m3c-on-primary);
+  a.artista:hover {
+    text-decoration: underline;
   }
 
   .pistas {
@@ -312,7 +331,7 @@
   }
 
   .pistas li {
-    height: 4.125rem;
+    height: 3.5rem;
   }
 
   .vacio {

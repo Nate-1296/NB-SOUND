@@ -18,6 +18,7 @@
     urlPortada
   } from '#lib/core/ipc/index.ts';
   import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { duracionDetallada } from '#lib/core/formato.ts';
   import { textos } from '#lib/i18n/index.ts';
   import Icon from '#lib/ui/Icon.svelte';
   import Mosaico from '#lib/ui/playlists/Mosaico.svelte';
@@ -95,9 +96,18 @@
 
 <section class="inicio">
   <header class="saludo">
-    <div class="saludo-texto">
-      <h1>{saludo}</h1>
-    </div>
+    <h1>{saludo}</h1>
+    {#if hayBiblioteca && datos}
+      <p>{t.subtitulo}</p>
+      <ul class="cifras">
+        {#each [{ icono: 'cancion', valor: datos.cifras.pistas.toLocaleString('es'), rotulo: t.pistas }, { icono: 'artista', valor: datos.cifras.artistas.toLocaleString('es'), rotulo: t.artistas }, { icono: 'album', valor: datos.cifras.albumes.toLocaleString('es'), rotulo: t.albumes }, { icono: 'reloj', valor: duracionDetallada(datos.cifras.duracionSeg), rotulo: t.duracion }] as const as c (c.rotulo)}
+          <li>
+            <span class="cifra-icono"><Icon nombre={c.icono} tamano={18} /></span>
+            <span class="cifra-datos"><strong>{c.valor}</strong><span>{c.rotulo}</span></span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
   </header>
 
   {#if datos && !hayBiblioteca}
@@ -202,63 +212,28 @@
     {#if datos.paraVolver.length > 0}
       <h2 class="seccion">{t.vuelve}</h2>
       <p class="seccion-sub">{t.vuelveSub}</p>
-      <div class="vuelve-contenedor">
-        {#if datos.paraVolver[0]}
-          {@const primera = datos.paraVolver[0]}
-          <div class="vuelve-destacado">
-            <button
-              type="button"
-              class="tarjeta-vuelve-destacada"
-              onclick={() => reproducir(idsVolver, 0)}
-            >
-              <div class="destacada-portada-box">
-                <span class="destacada-portada">
-                  {#if primera.pista.tienePortada}
-                    <img src={urlPortada('pista', primera.pista.id, 320)} alt="" />
-                  {:else}
-                    <Icon nombre="cancion" tamano={56} />
-                  {/if}
-                </span>
-                <span class="destacada-play" aria-hidden="true">
-                  <Icon nombre="reproducir" tamano={22} />
-                </span>
-              </div>
-              <div class="destacada-info">
-                <span class="etiqueta">{t.ultima}</span>
-                <strong class="destacada-titulo">{primera.pista.titulo}</strong>
-                <span class="sub">{primera.pista.artista} · {primera.pista.album}</span>
-                <span class="sub">{t.reproducciones(primera.reproducciones)}</span>
-              </div>
+      <ul class="vuelve">
+        {#each datos.paraVolver.slice(0, 9) as e, k (e.pista.id)}
+          <li class:destacada={k === 0}>
+            <button type="button" class="tarjeta-pista" onclick={() => reproducir(idsVolver, k)}>
+              <span class="mini-portada">
+                {#if e.pista.tienePortada}
+                  <img src={urlPortada('pista', e.pista.id, k === 0 ? 320 : 64)} alt="" />
+                {:else}
+                  <Icon nombre="cancion" tamano={k === 0 ? 40 : 18} />
+                {/if}
+              </span>
+              <span class="texto">
+                {#if k === 0}<span class="etiqueta">{t.ultima}</span>{/if}
+                <strong>{e.pista.titulo}</strong>
+                <span class="sub">{e.pista.artista} · {e.pista.album}</span>
+                <span class="sub">{t.reproducciones(e.reproducciones)}</span>
+              </span>
+              <span class="play"><Icon nombre="reproducir" tamano={k === 0 ? 22 : 16} /></span>
             </button>
-          </div>
-        {/if}
-
-        <ul class="vuelve-rejilla">
-          {#each datos.paraVolver.slice(1, 9) as e, k (e.pista.id)}
-            <li>
-              <button
-                type="button"
-                class="tarjeta-pista"
-                onclick={() => reproducir(idsVolver, k + 1)}
-              >
-                <span class="mini-portada">
-                  {#if e.pista.tienePortada}
-                    <img src={urlPortada('pista', e.pista.id, 64)} alt="" />
-                  {:else}
-                    <Icon nombre="cancion" tamano={18} />
-                  {/if}
-                </span>
-                <span class="texto">
-                  <strong>{e.pista.titulo}</strong>
-                  <span class="sub">{e.pista.artista} · {e.pista.album}</span>
-                  <span class="sub">{t.reproducciones(e.reproducciones)}</span>
-                </span>
-                <span class="play"><Icon nombre="reproducir" tamano={16} /></span>
-              </button>
-            </li>
-          {/each}
-        </ul>
-      </div>
+          </li>
+        {/each}
+      </ul>
     {/if}
 
     {#snippet tarjetaPodio(
@@ -360,7 +335,7 @@
             aria-label={t.anterior}
             onclick={(e) => desplazar(e.currentTarget, -1)}
           >
-            <Icon nombre="anterior" tamano={16} />
+            <Icon nombre="izquierda" tamano={18} />
           </button>
           <button
             type="button"
@@ -368,7 +343,7 @@
             aria-label={t.siguiente}
             onclick={(e) => desplazar(e.currentTarget, 1)}
           >
-            <Icon nombre="siguiente" tamano={16} />
+            <Icon nombre="derecha" tamano={18} />
           </button>
         </div>
       </div>
@@ -484,28 +459,121 @@
     gap: var(--ns-espacio-3);
   }
 
+  /* El saludo grande y las cifras de la biblioteca, como la cabecera de la V1. */
   .saludo {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--ns-espacio-4);
-    margin: var(--ns-espacio-1) 0;
-    flex-wrap: wrap;
-  }
-
-  .saludo-texto {
-    display: flex;
-    align-items: baseline;
-    gap: var(--ns-espacio-3);
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: var(--ns-espacio-2);
+    margin: var(--ns-espacio-3) 0 var(--ns-espacio-2);
   }
 
   .saludo h1 {
     margin: 0;
-    font-size: var(--ns-texto-lg);
-    font-weight: 700;
-    line-height: 1.2;
+    max-width: 52rem;
     color: var(--m3c-on-surface);
+    font-size: clamp(var(--ns-texto-xl), 3.2vw, var(--ns-texto-3xl));
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .cifras {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--ns-espacio-3);
+    margin: var(--ns-espacio-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cifras li {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-3);
+    padding: var(--ns-espacio-3) var(--ns-espacio-4);
+    border-radius: var(--ns-radio-lg);
+    background: var(--m3c-surface-container);
+  }
+
+  .cifra-icono {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--ns-radio-pleno);
+    background: color-mix(in srgb, var(--m3c-primary) 16%, transparent);
+    color: var(--m3c-primary);
+  }
+
+  .cifra-datos {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .cifra-datos strong {
+    color: var(--m3c-on-surface);
+    font-size: var(--ns-texto-lg);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .cifra-datos span {
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+  }
+
+  /*
+   * "Vuelve a tu música": la última, grande, ocupa dos columnas y dos filas, como
+   * la tarjeta de la V1; las demás llenan la rejilla de tres sin dejar huecos.
+   */
+  .vuelve {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--ns-espacio-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .vuelve li {
+    display: flex;
+    min-width: 0;
+  }
+
+  .vuelve li.destacada {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+
+  .destacada .tarjeta-pista {
+    gap: var(--ns-espacio-4);
+    padding: var(--ns-espacio-4);
+    background: linear-gradient(
+      135deg,
+      var(--m3c-surface-container) 0%,
+      color-mix(in srgb, var(--m3c-surface-container-high) 70%, var(--m3c-primary-container)) 100%
+    );
+  }
+
+  .destacada .mini-portada {
+    width: 8.5rem;
+    height: 8.5rem;
+    border-radius: var(--ns-radio-md);
+    box-shadow: 0 8px 20px var(--m3c-shadow);
+  }
+
+  .destacada .texto strong {
+    font-size: var(--ns-texto-lg);
+  }
+
+  .destacada .play {
+    width: 3rem;
+    height: 3rem;
+    background: var(--m3c-primary);
+    color: var(--m3c-on-primary);
   }
 
   .saludo p,
@@ -798,124 +866,6 @@
     font-size: var(--ns-texto-lg);
   }
 
-  .vuelve-contenedor {
-    display: flex;
-    gap: var(--ns-espacio-3);
-    align-items: stretch;
-  }
-
-  .vuelve-destacado {
-    flex: 0 0 clamp(14rem, 20vw, 17.5rem);
-    display: flex;
-  }
-
-  .tarjeta-vuelve-destacada {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-3);
-    width: 100%;
-    padding: var(--ns-espacio-3);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-lg);
-    background: linear-gradient(
-      180deg,
-      var(--m3c-surface-container) 0%,
-      var(--m3c-surface-container-low) 100%
-    );
-    color: var(--m3c-on-surface);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-    transition:
-      background-color var(--ns-duracion-corta) var(--ns-curva),
-      border-color var(--ns-duracion-corta) var(--ns-curva),
-      box-shadow var(--ns-duracion-corta) var(--ns-curva);
-  }
-
-  .tarjeta-vuelve-destacada:hover {
-    background: var(--m3c-surface-container-high);
-    border-color: var(--m3c-outline);
-    box-shadow: 0 var(--ns-espacio-2) var(--ns-espacio-4) var(--m3c-shadow);
-  }
-
-  .destacada-portada-box {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1;
-    border-radius: var(--ns-radio-md);
-    overflow: hidden;
-    background: var(--m3c-surface-container-highest);
-    border: 1px solid var(--m3c-outline-variant);
-  }
-
-  .destacada-portada {
-    width: 100%;
-    height: 100%;
-    display: grid;
-    place-items: center;
-    color: var(--m3c-primary);
-  }
-
-  .destacada-portada img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .destacada-play {
-    position: absolute;
-    right: var(--ns-espacio-2);
-    bottom: var(--ns-espacio-2);
-    display: grid;
-    place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: var(--ns-radio-pleno);
-    background: var(--m3c-primary);
-    color: var(--m3c-on-primary);
-    box-shadow: 0 var(--ns-espacio-1) var(--ns-espacio-3) var(--m3c-shadow);
-    opacity: 0.92;
-    transition:
-      transform var(--ns-duracion-corta) var(--ns-curva),
-      opacity var(--ns-duracion-corta) var(--ns-curva);
-  }
-
-  .tarjeta-vuelve-destacada:hover .destacada-play {
-    transform: scale(1.08);
-    opacity: 1;
-  }
-
-  .destacada-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    min-width: 0;
-  }
-
-  .destacada-titulo {
-    font-size: var(--ns-texto-md);
-    font-weight: 700;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .vuelve-rejilla {
-    flex: 1 1 0;
-    min-width: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-    gap: var(--ns-espacio-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    align-content: start;
-  }
-
-  .vuelve-rejilla li {
-    display: flex;
-  }
-
   .podio {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -959,20 +909,10 @@
     border-color: color-mix(in srgb, var(--m3c-primary) 50%, var(--m3c-outline-variant));
   }
 
-  .podio-2 {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--m3c-secondary-container) 35%, var(--m3c-surface-container)) 0%,
-      var(--m3c-surface-container-low) 100%
-    );
-  }
-
+  /* Solo el primero lleva color: con los tres teñidos, el podio pesaba más que la música. */
+  .podio-2,
   .podio-3 {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--m3c-tertiary-container) 35%, var(--m3c-surface-container)) 0%,
-      var(--m3c-surface-container-low) 100%
-    );
+    background: var(--m3c-surface-container);
   }
 
   .podio-insignia {
@@ -1084,7 +1024,7 @@
   }
 
   .pedestal-1 {
-    height: 4.5rem;
+    height: 3rem;
     background: color-mix(
       in srgb,
       var(--m3c-primary-container) 80%,
@@ -1094,27 +1034,19 @@
   }
 
   .pedestal-2 {
-    height: 3.25rem;
-    background: color-mix(
-      in srgb,
-      var(--m3c-secondary-container) 80%,
-      var(--m3c-surface-container-highest)
-    );
-    color: var(--m3c-on-secondary-container);
+    height: 2.25rem;
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface-variant);
   }
 
   .pedestal-3 {
-    height: 2.25rem;
-    background: color-mix(
-      in srgb,
-      var(--m3c-tertiary-container) 80%,
-      var(--m3c-surface-container-highest)
-    );
-    color: var(--m3c-on-tertiary-container);
+    height: 1.5rem;
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface-variant);
   }
 
   .pedestal-num {
-    font-size: var(--ns-texto-xl);
+    font-size: var(--ns-texto-lg);
     font-weight: 900;
     line-height: 1;
     opacity: 0.85;
@@ -1236,7 +1168,7 @@
     gap: var(--ns-espacio-1);
     width: 100%;
     padding: var(--ns-espacio-2);
-    border: 1px solid var(--m3c-outline-variant);
+    border: 1px solid transparent;
     border-radius: var(--ns-radio-lg);
     background: var(--m3c-surface-container-low);
     color: var(--m3c-on-surface);
@@ -1252,8 +1184,6 @@
 
   .tarjeta:hover {
     background: var(--m3c-surface-container);
-    border-color: var(--m3c-outline);
-    box-shadow: 0 var(--ns-espacio-1) var(--ns-espacio-3) var(--m3c-shadow);
   }
 
   .centrada {
@@ -1266,11 +1196,12 @@
     place-items: center;
     width: 100%;
     aspect-ratio: 1;
+    margin-bottom: var(--ns-espacio-1);
     overflow: hidden;
     border-radius: var(--ns-radio-md);
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-on-surface-variant);
-    border: 1px solid var(--m3c-outline-variant);
+    box-shadow: 0 4px 14px var(--m3c-shadow);
   }
 
   .caratula.redonda {
@@ -1300,14 +1231,20 @@
     }
   }
 
+  @container carcasa (max-width: 70rem) {
+    .cifras {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
   @container carcasa (max-width: 52rem) {
-    .vuelve-contenedor {
-      flex-direction: column;
+    .vuelve {
+      grid-template-columns: minmax(0, 1fr);
     }
 
-    .vuelve-destacado {
-      flex: none;
-      width: 100%;
+    .vuelve li.destacada {
+      grid-column: auto;
+      grid-row: auto;
     }
 
     .top-resto {
@@ -1315,15 +1252,15 @@
     }
 
     .pedestal-1 {
-      height: 3.25rem;
+      height: 2.25rem;
     }
 
     .pedestal-2 {
-      height: 2.5rem;
+      height: 1.75rem;
     }
 
     .pedestal-3 {
-      height: 1.75rem;
+      height: 1.25rem;
     }
   }
 </style>

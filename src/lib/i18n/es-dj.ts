@@ -19,26 +19,50 @@ export const esDj = {
     sinCandidatas:
       'Ninguna canción de tu biblioteca encaja con eso. Prueba con otras palabras o con menos exclusiones.',
     ideas: 'Ideas',
+    // Cada ficha es una palabra que el motor entiende: lo comprueba
+    // `dj::ontologia::pruebas::las_fichas_de_la_vista_las_entiende_el_motor`.
     categoriasSugeridas: [
       {
         nombre: 'Voces',
-        chips: ['Voces femeninas', 'Voces masculinas', 'Instrumental sin voz', 'Acústico']
+        chips: ['Voces femeninas', 'Voces masculinas', 'Instrumental', 'Acústico']
       },
       {
         nombre: 'Géneros',
-        chips: ['Rock', 'Electrónica', 'Jazz', 'Pop', 'Clásica', 'Hip hop', 'Indie']
+        chips: [
+          'Reguetón',
+          'Trap',
+          'Pop',
+          'Salsa',
+          'Bachata',
+          'Cumbia',
+          'Rock',
+          'Electrónica',
+          'Hip hop',
+          'R&B',
+          'Indie',
+          'Jazz',
+          'Clásica'
+        ]
       },
       {
         nombre: 'Ánimos',
-        chips: ['Tranquilo', 'Melancólico', 'Alegre', 'Nocturno', 'Cinematográfico', 'Relajante']
+        chips: [
+          'Alegre',
+          'Romántico',
+          'Melancólico',
+          'Nostálgico',
+          'Nocturno',
+          'Cinematográfico',
+          'Tranquilo'
+        ]
       },
       {
         nombre: 'Energía',
-        chips: ['Mucha energía', 'Baja energía', 'Subida progresiva', 'Ritmo bailable']
+        chips: ['Energético', 'Que pegue', 'Suave', 'Relajante', 'Subida progresiva']
       },
       {
-        nombre: 'Contextos',
-        chips: ['Para entrenar', 'Para concentrarme', 'Para viajar', 'Noche de lluvia', 'Fiesta']
+        nombre: 'Momentos',
+        chips: ['Fiesta', 'Para entrenar', 'Para concentrarme', 'Para cocinar', 'Noche de lluvia']
       }
     ],
     sugerencias: [

@@ -1,7 +1,8 @@
 <!--
-  El detalle de un artista: su imagen y cifras, sus álbumes y todas sus canciones,
-  como en la V1 (que exponía todas las pistas y no solo las destacadas). Las
-  canciones van en la ventana virtual, porque un artista puede tener cientos.
+  El detalle de un artista: su imagen y cifras, las más escuchadas, sus álbumes y
+  sus sencillos por separado, y todas sus canciones, como en la V1 (que exponía
+  todas las pistas y no solo las destacadas). Las canciones van en la ventana
+  virtual, porque un artista puede tener cientos.
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
@@ -19,7 +20,10 @@
   } from '#lib/core/ipc/index.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
+  import CabeceraPistas from '#lib/ui/biblioteca/CabeceraPistas.svelte';
   import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
+  import AccionesColeccion from '#lib/ui/AccionesColeccion.svelte';
+  import { ambiente } from '#lib/ui/ambiente.ts';
   import Icon from '#lib/ui/Icon.svelte';
   import ListaVirtual from '#lib/ui/lista/ListaVirtual.svelte';
   import { TAM_BLOQUE } from '#lib/ui/lista/ventana.ts';
@@ -30,6 +34,12 @@
   let artista = $state<ArtistaResumen | null | undefined>(undefined);
   let albumes = $state<AlbumResumen[]>([]);
   let total = $state(0);
+  let populares = $state<PistaResumen[]>([]);
+  let todasLasPopulares = $state(false);
+
+  // `tipo` es el de MusicBrainz: lo que no es un álbum va con los sencillos.
+  const discos = $derived(albumes.filter((a) => a.tipo === 'Album'));
+  const sencillos = $derived(albumes.filter((a) => a.tipo !== 'Album'));
 
   const consulta = $derived<ConsultaPistas>({
     texto: null,
@@ -50,91 +60,129 @@
     void bibliotecaAlbumes({ texto: null, artistaId: id, orden: 'anioDesc' }, 0, 200).then(
       (p) => (albumes = p.albumes)
     );
-    void bibliotecaPistas(c, 0, 1).then((p) => (total = p.total));
+    todasLasPopulares = false;
+    void bibliotecaPistas(c, 0, 10).then((p) => {
+      total = p.total;
+      populares = p.pistas;
+    });
   });
+
+  async function aleatorio() {
+    if (!reproductor.instantanea.aleatorio) await reproductor.alternarAleatorio();
+    await reproducirLista(consulta, Math.floor(Math.random() * Math.max(1, total)));
+  }
 
   async function cargarBloque(b: number): Promise<PistaResumen[]> {
     return (await bibliotecaPistas(consulta, b * TAM_BLOQUE, TAM_BLOQUE)).pistas;
   }
 </script>
 
+{#snippet rejilla(lista: AlbumResumen[], titulo: string, idTitulo: string)}
+  {#if lista.length > 0}
+    <section class="seccion" aria-labelledby={idTitulo}>
+      <h2 id={idTitulo}>{titulo}</h2>
+      <ul class="rejilla">
+        {#each lista as a (a.id)}
+          <li>
+            <a class="tarjeta" href={`/biblioteca/album?id=${a.id}`}>
+              <span class="caratula">
+                {#if a.tienePortada}
+                  <img src={urlPortada('album', a.id, 320)} alt="" loading="lazy" />
+                {:else}
+                  <Icon nombre="album" tamano={40} />
+                {/if}
+              </span>
+              <span class="nombre" title={a.titulo}>{a.titulo}</span>
+              <span class="sub">{a.anio ?? ''}</span>
+            </a>
+          </li>
+        {/each}
+      </ul>
+    </section>
+  {/if}
+{/snippet}
+
 <section class="detalle">
-  <button
-    type="button"
-    class="volver"
-    onclick={() => {
-      if (typeof window !== 'undefined' && window.history.length > 1) {
-        window.history.back();
-      } else {
-        void goto('/biblioteca?vista=artistas');
-      }
-    }}
-    title={t.album.volver}
-  >
-    <Icon nombre="atras" tamano={18} />
-    <span>{t.album.volver}</span>
-  </button>
+  <header class="franja" use:ambiente={populares[0]?.id ?? null}>
+    <button
+      type="button"
+      class="volver"
+      onclick={() => {
+        if (typeof window !== 'undefined' && window.history.length > 1) {
+          window.history.back();
+        } else {
+          void goto('/biblioteca?vista=artistas');
+        }
+      }}
+      title={t.album.volver}
+    >
+      <Icon nombre="atras" tamano={18} />
+      <span>{t.album.volver}</span>
+    </button>
+    {#if artista}
+      <div class="cabecera">
+        <div class="imagen">
+          {#if artista.tieneImagen}
+            <img src={urlPortada('artista', artista.id, 320)} alt="" />
+          {:else}
+            <Icon nombre="artista" tamano={56} />
+          {/if}
+        </div>
+        <div class="datos">
+          <span class="tipo">{t.artista.tipo}</span>
+          <h1>{artista.nombre}</h1>
+          <span class="sub">{t.artista.resumen(artista.numAlbumes, artista.numPistas)}</span>
+        </div>
+      </div>
+    {/if}
+  </header>
 
   {#if artista === null}
     <p class="vacio">{t.artista.noEncontrado}</p>
   {:else if artista}
-    <header class="cabecera">
-      <div class="imagen">
-        {#if artista.tieneImagen}
-          <img src={urlPortada('artista', artista.id, 320)} alt="" />
-        {:else}
-          <Icon nombre="artista" tamano={56} />
-        {/if}
-      </div>
-      <div class="datos">
-        <h1>{artista.nombre}</h1>
-        <span class="sub">{t.artista.resumen(artista.numAlbumes, artista.numPistas)}</span>
-        <div class="acciones">
-          <button type="button" class="boton relleno" onclick={() => reproducirLista(consulta, 0)}>
-            <Icon nombre="reproducir" tamano={16} />{t.reproducir}
-          </button>
-          <button
-            type="button"
-            class="boton"
-            onclick={async () => {
-              await reproductor.orden({ tipo: 'aleatorio', activo: true });
-              await reproducirLista(consulta, 0);
-            }}
-          >
-            <Icon nombre="aleatorio" tamano={16} />{t.artista.aleatorio}
-          </button>
-        </div>
-      </div>
-    </header>
+    <AccionesColeccion
+      vacia={total === 0}
+      onreproducir={() => reproducirLista(consulta, 0)}
+      onaleatorio={aleatorio}
+    />
 
-    {#if albumes.length > 0}
-      <section class="seccion-albumes" aria-labelledby="t-albumes-artista">
-        <h2 id="t-albumes-artista">{t.artista.albumes}</h2>
-        <ul class="rejilla">
-          {#each albumes as a (a.id)}
+    {#if populares.length > 0}
+      <section class="seccion" aria-labelledby="t-populares">
+        <h2 id="t-populares">{t.artista.populares}</h2>
+        <ul class="populares">
+          {#each todasLasPopulares ? populares : populares.slice(0, 5) as p, i (p.id)}
             <li>
-              <a class="tarjeta" href={`/biblioteca/album?id=${a.id}`}>
-                <span class="caratula">
-                  {#if a.tienePortada}
-                    <img src={urlPortada('album', a.id, 320)} alt="" loading="lazy" />
-                  {:else}
-                    <Icon nombre="album" tamano={40} />
-                  {/if}
-                </span>
-                <span class="nombre" title={a.titulo}>{a.titulo}</span>
-                <span class="sub">{a.anio ?? ''}</span>
-              </a>
+              <FilaPista
+                contexto="artista"
+                pista={p}
+                numero={i + 1}
+                sonando={reproductor.instantanea.pistaId === p.id}
+                onreproducir={() => reproducirLista(consulta, i)}
+              />
             </li>
           {/each}
         </ul>
+        {#if populares.length > 5}
+          <button
+            type="button"
+            class="mas"
+            onclick={() => (todasLasPopulares = !todasLasPopulares)}
+          >
+            {todasLasPopulares ? t.artista.mostrarMenos : t.artista.mostrarMas}
+          </button>
+        {/if}
       </section>
     {/if}
 
+    {@render rejilla(discos, t.artista.albumes, 't-albumes-artista')}
+    {@render rejilla(sencillos, t.artista.sencillos, 't-sencillos-artista')}
+
     <h2>{t.artista.canciones}</h2>
     {#if total > 0}
+      <CabeceraPistas contexto="artista" />
       <div class="lista">
         {#key id}
-          <ListaVirtual {total} altoFila={66} {cargarBloque} etiqueta={t.artista.canciones}>
+          <ListaVirtual {total} altoFila={56} {cargarBloque} etiqueta={t.artista.canciones}>
             {#snippet fila(p: PistaResumen, i: number, rapido: boolean)}
               <FilaPista
                 contexto="artista"
@@ -154,33 +202,48 @@
 
 <style>
   .detalle {
+    --fondo-lienzo: var(--m3c-surface-container-low);
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-4);
   }
 
+  .franja {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-4);
+    margin: calc(-1 * var(--ns-espacio-2)) calc(-1 * var(--ns-espacio-5)) 0;
+    padding: var(--ns-espacio-4) var(--ns-espacio-5) var(--ns-espacio-5);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--m3c-primary-container) 70%, var(--fondo-lienzo)) 0%,
+      var(--fondo-lienzo) 100%
+    );
+    color: var(--m3c-on-surface);
+  }
+
   .volver {
     display: inline-flex;
+    align-self: flex-start;
     align-items: center;
     gap: var(--ns-espacio-2);
+    padding: 0;
+    border: none;
+    background: none;
     color: var(--m3c-on-surface-variant);
     font: inherit;
     font-size: var(--ns-texto-sm);
-    text-decoration: none;
-    background: none;
-    border: none;
-    padding: 0;
     cursor: pointer;
-    transition: color 120ms ease;
+    transition: color var(--ns-duracion-corta) var(--ns-curva);
   }
 
   .volver:hover {
-    color: var(--m3c-primary);
+    color: var(--m3c-on-surface);
   }
 
   .cabecera {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: var(--ns-espacio-5);
   }
 
@@ -188,12 +251,13 @@
     display: grid;
     place-items: center;
     flex: 0 0 auto;
-    width: 10rem;
-    height: 10rem;
+    width: 13rem;
+    height: 13rem;
     overflow: hidden;
     border-radius: var(--ns-radio-pleno);
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-on-surface-variant);
+    box-shadow: 0 12px 32px var(--m3c-shadow);
   }
 
   .imagen img {
@@ -205,17 +269,26 @@
   .datos {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: var(--ns-espacio-2);
+    min-width: 0;
+  }
+
+  .tipo {
+    font-size: var(--ns-texto-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   h1 {
     margin: 0;
-    font-size: var(--ns-texto-2xl);
+    font-size: clamp(var(--ns-texto-2xl), 5vw, var(--ns-texto-4xl));
+    line-height: 1.02;
+    overflow-wrap: anywhere;
   }
 
   h2 {
-    margin: var(--ns-espacio-3) 0 0;
+    margin: 0;
     font-size: var(--ns-texto-lg);
   }
 
@@ -224,42 +297,40 @@
     font-size: var(--ns-texto-sm);
   }
 
-  .acciones {
+  .seccion {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: var(--ns-espacio-3);
     margin-top: var(--ns-espacio-2);
   }
 
-  .boton {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ns-espacio-2);
-    height: 2.75rem;
-    padding: 0 var(--ns-espacio-5);
-    border: 1px solid var(--m3c-outline);
+  .populares {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .populares li {
+    height: 3.5rem;
+  }
+
+  .mas {
+    align-self: flex-start;
+    padding: var(--ns-espacio-1) var(--ns-espacio-3);
+    border: none;
     border-radius: var(--ns-radio-pleno);
-    background: transparent;
-    color: var(--m3c-on-surface);
+    background: none;
+    color: var(--m3c-on-surface-variant);
     font: inherit;
+    font-size: var(--ns-texto-sm);
     font-weight: 700;
     cursor: pointer;
-    transition: background-color var(--ns-duracion-corta) var(--ns-curva);
   }
 
-  .boton:hover {
-    background: var(--m3c-surface-container-high);
-  }
-
-  .boton.relleno {
-    border-color: var(--m3c-primary);
-    background: var(--m3c-primary);
-    color: var(--m3c-on-primary);
-  }
-
-  .boton.relleno:hover {
-    background: var(--m3c-primary);
-    opacity: 0.9;
+  .mas:hover {
+    color: var(--m3c-on-surface);
   }
 
   .rejilla {

@@ -16,6 +16,7 @@
     fiestaResolverSugerencia
   } from '#lib/core/ipc/aparte.ts';
   import { textosAparte } from '#lib/i18n/aparte.ts';
+  import Icon from '#lib/ui/Icon.svelte';
 
   const tf = textosAparte.modoFiesta;
 
@@ -88,7 +89,7 @@
 </script>
 
 <div class="bloque-fiesta">
-  <h3>{tf.titulo}</h3>
+  <h3><span class="icono"><Icon nombre="red" tamano={20} /></span>{tf.titulo}</h3>
   <p>{tf.ayuda}</p>
 
   <label class="ajuste interruptor">
@@ -209,11 +210,17 @@
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-3);
-    padding-top: var(--ns-espacio-4);
-    border-top: 1px solid var(--m3c-outline-variant);
+  }
+
+  .icono {
+    display: inline-flex;
+    color: var(--m3c-primary);
   }
 
   h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
     margin: 0;
     font-size: var(--ns-texto-md);
   }

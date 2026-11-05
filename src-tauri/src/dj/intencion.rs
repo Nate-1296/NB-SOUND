@@ -326,6 +326,46 @@ mod tests {
     /// módulo (`to_dict`).
     const DORADAS: &str = include_str!("doradas_intencion.json");
 
+    /// Las fichas y las ideas que la vista del DJ ofrece. Una ficha que el motor no
+    /// entiende se pulsa, se escribe en el campo y no cambia nada: "Mucha energía" y
+    /// "Para viajar" lo hacían.
+    const TEXTOS_DE_LA_VISTA: &str = include_str!("../../../src/lib/i18n/es-dj.ts");
+
+    fn fichas_de_la_vista() -> Vec<String> {
+        let desde = TEXTOS_DE_LA_VISTA
+            .find("categoriasSugeridas")
+            .expect("las fichas siguen en es-dj.ts");
+        let hasta = TEXTOS_DE_LA_VISTA[desde..]
+            .find("  sesion: {")
+            .map_or(TEXTOS_DE_LA_VISTA.len(), |h| desde + h);
+        TEXTOS_DE_LA_VISTA[desde..hasta]
+            .lines()
+            .filter(|l| !l.contains("nombre:") && !l.trim_start().starts_with("//"))
+            .flat_map(|l| l.split('\'').skip(1).step_by(2).map(str::to_owned))
+            .collect()
+    }
+
+    #[test]
+    fn las_fichas_de_la_vista_las_entiende_el_motor() {
+        let fichas = fichas_de_la_vista();
+        assert!(fichas.len() > 30, "no se leyeron las fichas: {fichas:?}");
+        let mudas: Vec<_> = fichas.iter().filter(|f| interpretar(f, 60).vacio).collect();
+        assert!(
+            mudas.is_empty(),
+            "fichas que el motor no entiende: {mudas:?}"
+        );
+    }
+
+    #[test]
+    fn el_ejemplo_del_campo_excluye_el_regueton_con_la_grafia_de_la_rae() {
+        let i = interpretar("algo tranquilo para trabajar de noche, sin reguetón", 60);
+        assert!(
+            i.generos_excluidos.iter().any(|g| g == "reggaeton"),
+            "{:?}",
+            i.generos_excluidos
+        );
+    }
+
     #[test]
     fn cada_frase_da_la_misma_intencion_que_la_v1() {
         let doradas: serde_json::Value = serde_json::from_str(DORADAS).unwrap();

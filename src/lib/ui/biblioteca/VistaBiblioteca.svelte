@@ -27,6 +27,7 @@
   import { estadoBiblioteca, type ModoRejilla } from '#lib/core/estadoVistas.svelte.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
+  import CabeceraPistas from '#lib/ui/biblioteca/CabeceraPistas.svelte';
   import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
   import Icon from '#lib/ui/Icon.svelte';
   import ListaVirtual from '#lib/ui/lista/ListaVirtual.svelte';
@@ -83,6 +84,10 @@
   let favoritas = $state(estadoBiblioteca.pistas.favoritas);
   let sinVerificar = $state(estadoBiblioteca.pistas.sinVerificar);
   let paraCantar = $state(estadoBiblioteca.pistas.paraCantar);
+  // "Verlas en la biblioteca" de la consola de karaoke, también estando ya aquí.
+  $effect(() => {
+    if (page.url.searchParams.has('cantar')) paraCantar = true;
+  });
   let ofertaKaraoke = $state(false);
   let avisoFavoritas = $state<string | null>(null);
 
@@ -449,8 +454,9 @@
             {textoAplicado || favoritas || sinVerificar || paraCantar ? t.vacia : t.vaciaBiblioteca}
           </p>
         {:else if total !== null}
+          <CabeceraPistas />
           {#key version}
-            <ListaVirtual {total} altoFila={66} {cargarBloque} etiqueta={t.lista}>
+            <ListaVirtual {total} altoFila={56} {cargarBloque} etiqueta={t.lista}>
               {#snippet fila(p: PistaResumen, i: number, rapido: boolean)}
                 <FilaPista
                   pista={p}
@@ -726,10 +732,15 @@
   }
 
   .lista {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .lista > :global(.lista) {
     flex: 1;
     min-height: 0;
-    border-top: 1px solid var(--m3c-outline-variant);
-    padding-top: var(--ns-espacio-2);
   }
 
   .vacio {

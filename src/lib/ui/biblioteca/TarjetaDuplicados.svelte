@@ -113,14 +113,15 @@
 </dialog>
 
 <style>
+  /* Vive en el cajón de "Añadir música", junto a sus otras tarjetas. */
   .tarjeta {
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-3);
-    margin-top: var(--ns-espacio-3);
     padding: var(--ns-espacio-4);
+    border: 1px solid var(--m3c-outline-variant);
     border-radius: var(--ns-radio-lg);
-    background: var(--m3c-surface-container);
+    background: var(--m3c-surface-container-high);
   }
 
   .cabecera {

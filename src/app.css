@@ -25,6 +25,9 @@
   --ns-texto-lg: 1.125rem;
   --ns-texto-xl: 1.5rem;
   --ns-texto-2xl: 2rem;
+  /* Los títulos de las cabeceras de álbum, artista y playlist, y el saludo. */
+  --ns-texto-3xl: 2.75rem;
+  --ns-texto-4xl: 3.75rem;
 
   /* Espacio, en una escala de 4 */
   --ns-espacio-1: 0.25rem;

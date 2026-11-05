@@ -29,6 +29,7 @@ export const ICONOS = {
   almacenamiento:
     '<ellipse cx="12" cy="6.25" rx="7.5" ry="2.75"/><path d="M4.5 6.25v11.5c0 1.52 3.36 2.75 7.5 2.75s7.5-1.23 7.5-2.75V6.25"/><path d="M4.5 12c0 1.52 3.36 2.75 7.5 2.75s7.5-1.23 7.5-2.75"/>',
   anterior: '<path d="M6 5v14"/><path d="M18.5 5.5 9 12l9.5 6.5z"/>',
+  anclar: '<path d="M9 3.5h6l-1 5.5 3.5 3.25V13.5h-11v-1.25L10 9z"/><path d="M12 13.5v7"/>',
   apariencia: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17"/>',
   arriba: '<path d="m5.5 15.25 6.5-6.5 6.5 6.5"/>',
   artista:

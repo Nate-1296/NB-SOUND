@@ -342,7 +342,7 @@ export const esAparte = {
   },
 
   copiaDispositivo: {
-    titulo: 'Copiar a tarjeta microSD, USB o reproductor portátil',
+    titulo: 'Copiar a una tarjeta o un USB',
     ayuda:
       'Exporta tu música con nombres válidos para FAT32/exFAT, portada incrustada y archivo de lista .m3u8.',
     origen: 'Qué copiar',
@@ -369,10 +369,10 @@ export const esAparte = {
   },
 
   modoFiesta: {
-    titulo: 'Modo fiesta (QR en red local)',
+    titulo: 'Modo fiesta',
     ayuda:
-      'Abre una página temporal en tu red Wi-Fi para que los invitados busquen canciones y las sugieran desde el navegador sin instalar nada.',
-    interruptor: 'Activar Modo fiesta',
+      'Tus invitados escanean un código y sugieren canciones desde su navegador, sin instalar nada.',
+    interruptor: 'Activar el modo fiesta',
     interruptorAyuda:
       'Solo funciona mientras está encendido. Al apagarlo se cierra el puerto y se borran las sesiones.',
     qrEtiqueta: 'Código QR para unirse al Modo fiesta',
@@ -425,39 +425,29 @@ export const esAparte = {
 
   buscar: {
     bienvenida: {
-      titulo: 'Explora tu música',
-      descripcion: 'Busca por palabras exactas o háblale a tu biblioteca con lenguaje natural.',
-      modoDirecto: 'Búsqueda directa',
-      modoDirectoDesc: 'Títulos, artistas, álbumes y letras exactas',
-      modoSemantico: 'Háblale a tu biblioteca',
-      modoSemanticoDesc: 'Ideas, estados de ánimo, ritmos y géneros',
-      ideasTitulo: 'Ideas para probar'
+      titulo: 'Pídeselo a tu biblioteca',
+      descripcion:
+        'Escribe un título, un artista, una frase de la letra o lo que te apetece escuchar. Prueba con una de estas:'
     },
+    // Cada idea la entiende el descubrimiento: lo comprueba
+    // `descubrir::tests::las_ideas_de_buscar_las_entiende_el_descubrimiento`.
     ideas: [
       'Canciones alegres para empezar el día',
-      'Rock clásico de los 70 y 80',
-      'Música instrumental para concentrarme',
-      'Baladas acústicas con voz femenina',
-      'Jazz suave para una tarde tranquila',
-      'Temas enérgicos para hacer ejercicio',
-      'Canciones melancólicas para una noche de lluvia',
-      'Pop bailable con mucho ritmo',
-      'Música relajante para leer sin prisa',
-      'Bandas sonoras cinematográficas e intensas',
-      'Canciones con solos de guitarra memorables',
-      'Ritmos latinos para animar la casa',
-      'Sonido lo-fi y beats tranquilos',
-      'Álbumes conceptuales para escuchar de corrido',
-      'Temas nocturnos con atmósfera espacial',
-      'Voces masculinas profundas y cálidas',
-      'Fusión flamenca o raíces acústicas',
-      'Electrónica melódica y progresiva',
-      'Canciones de más de 6 minutos de duración',
-      'Música para un viaje en carretera',
-      'Baladas de piano íntimas y desnudas',
-      'Temas con batería potente y bajo marcado',
-      'Joyas escondidas poco escuchadas',
-      'Grandes éxitos de mi colección'
+      'Algo tranquilo para cocinar',
+      'Música para concentrarme',
+      'Temas enérgicos para el gym',
+      'Algo triste para una noche de lluvia',
+      'Música para fiesta',
+      'Canciones suaves para leer',
+      'Para manejar de noche',
+      'Algo chill para relajarme',
+      'Temas intensos y potentes',
+      'Bailables para limpiar la casa',
+      'Canciones lentas y románticas',
+      'Música oscura y nocturna',
+      'Rápidas para correr',
+      'Nostalgia para la tarde',
+      'Para estudiar sin distracciones'
     ]
   }
 };

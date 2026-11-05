@@ -150,6 +150,10 @@ pub const CONCEPTOS: &[Concepto] = &[
             "perreo viejo",
             "reggaeton viejo",
             "reggaetón viejo",
+            // La grafía de la RAE: el ejemplo del propio campo ("sin reguetón") no
+            // se entendía y la exclusión se perdía sin aviso.
+            "regueton",
+            "regueton viejo",
         ],
         ejes: &[
             ("vocal_focus", 0.35),

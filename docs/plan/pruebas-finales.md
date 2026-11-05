@@ -179,3 +179,18 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Cancelar una importación grande a la mitad: lo importado se queda, el resto no vuelve al reabrir.
 - [ ] "Buscar duplicados" sobre la biblioteca migrada no aparta nada que no sea una copia real.
 - [ ] Cambiar la foto de perfil por un PNG y por un JPG grandes: se ve al momento en Tu música.
+
+## Revisión QA-R2 (interfaz)
+
+Lo que la pasada con la aplicación en marcha no pudo comprobar: el puntero del entorno de pruebas no se mueve, y los
+estados de pasar por encima solo se vieron en el código.
+
+- [ ] En una lista de canciones, al pasar por encima el número se cambia por reproducir, aparecen la favorita, "+" y
+      ···; con el teclado, Tab llega a los mismos botones y el número también se cambia.
+- [ ] El menú ··· de una fila, de un álbum y de una playlist se abre junto al botón, se recorre con las flechas y se
+      cierra con Escape; cerca del borde inferior se abre hacia arriba.
+- [ ] La cabecera de un álbum, de un artista y de una playlist toma el color de su portada, y con "Color por portada"
+      apagado se queda con el del tema.
+- [ ] En la consola de karaoke, "Cantar ahora" activa el karaoke de lo que suena y el botón pasa a "Volver a la
+      original"; "Verlas en la biblioteca" abre Pistas con "Listas para cantar" aplicado, también estando ya en
+      Biblioteca.

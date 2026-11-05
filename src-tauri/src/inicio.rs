@@ -157,10 +157,11 @@ pub fn resumen(db: &BaseDeDatos) -> NsResult<Inicio> {
     )?;
     let albumes_que_gustan = albumes(db, &que_gustan)?;
     let albumes_mas_escuchados = albumes(db, &mas_escuchados)?;
-    let album_destacado = albumes_que_gustan
-        .first()
-        .or(albumes_mas_escuchados.first())
-        .cloned();
+    let dia = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs() / 86_400);
+    let album_destacado = destacado_del_dia(&albumes_que_gustan, dia)
+        .or_else(|| destacado_del_dia(&albumes_mas_escuchados, dia));
 
     let artistas_que_suenan = ids(
         db,
@@ -211,9 +212,57 @@ pub fn resumen(db: &BaseDeDatos) -> NsResult<Inicio> {
     })
 }
 
+/// Cuántos de los discos que más gustan entran en el turno del destacado.
+const TURNO_DESTACADO: usize = 10;
+
+/// El "álbum destacado del día": cambia cada día entre los diez que más gustan, y
+/// solo entre los que tienen portada, que es lo que llena la tarjeta. La V1 ponía
+/// siempre el primero, y el título prometía algo que no pasaba; si ninguno tiene
+/// portada, el primero.
+fn destacado_del_dia(albumes: &[AlbumResumen], dia: u64) -> Option<AlbumResumen> {
+    let con_portada: Vec<&AlbumResumen> = albumes
+        .iter()
+        .take(TURNO_DESTACADO)
+        .filter(|a| a.tiene_portada)
+        .collect();
+    if con_portada.is_empty() {
+        return albumes.first().cloned();
+    }
+    let i = usize::try_from(dia % con_portada.len() as u64).unwrap_or(0);
+    con_portada.get(i).map(|a| (*a).clone())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn disco(id: i64, tiene_portada: bool) -> AlbumResumen {
+        AlbumResumen {
+            id,
+            titulo: format!("d{id}"),
+            artista: String::new(),
+            artista_id: 1,
+            anio: None,
+            tipo: "Album".into(),
+            num_pistas: 1,
+            duracion_seg: 0.0,
+            tiene_portada,
+        }
+    }
+
+    #[test]
+    fn el_destacado_cambia_cada_dia_y_solo_entre_los_que_tienen_portada() {
+        let discos = [disco(1, false), disco(2, true), disco(3, true)];
+        let elegidos: Vec<_> = (0..4)
+            .map(|dia| destacado_del_dia(&discos, dia).map(|a| a.id))
+            .collect();
+        assert_eq!(elegidos, [Some(2), Some(3), Some(2), Some(3)]);
+        assert_eq!(
+            destacado_del_dia(&[disco(7, false)], 5).map(|a| a.id),
+            Some(7)
+        );
+        assert!(destacado_del_dia(&[], 5).is_none());
+    }
 
     #[test]
     fn una_biblioteca_vacia_da_un_inicio_vacio() {

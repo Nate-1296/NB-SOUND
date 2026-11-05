@@ -562,6 +562,31 @@ pub fn descubrir(db: &BaseDeDatos, consulta: &str, limite: u32) -> NsResult<Desc
 mod tests {
     use super::*;
 
+    /// Las ideas de la bienvenida de Buscar. Una que no se entiende lleva a "Nada
+    /// en tu biblioteca coincide": "Ritmos latinos para animar la casa" lo hacía.
+    const TEXTOS_DE_BUSCAR: &str = include_str!("../../src/lib/i18n/es-aparte.ts");
+
+    #[test]
+    fn las_ideas_de_buscar_las_entiende_el_descubrimiento() {
+        let desde = TEXTOS_DE_BUSCAR
+            .find("    ideas: [")
+            .expect("las ideas siguen en es-aparte.ts");
+        let hasta = desde
+            + TEXTOS_DE_BUSCAR[desde..]
+                .find(']')
+                .expect("la lista se cierra");
+        let ideas: Vec<&str> = TEXTOS_DE_BUSCAR[desde..hasta]
+            .lines()
+            .filter_map(|l| l.trim().strip_prefix('\'')?.split('\'').next())
+            .collect();
+        assert!(ideas.len() >= 12, "no se leyeron las ideas: {ideas:?}");
+        let mudas: Vec<_> = ideas.iter().filter(|i| interpretar(i).is_empty()).collect();
+        assert!(
+            mudas.is_empty(),
+            "ideas que el descubrimiento no entiende: {mudas:?}"
+        );
+    }
+
     #[test]
     fn la_frase_se_entiende_como_en_la_v1() {
         let p = interpretar("Algo TRISTE y melancólico");

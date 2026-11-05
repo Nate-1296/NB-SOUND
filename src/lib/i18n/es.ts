@@ -50,6 +50,14 @@ export const es = {
     pistas: 'Pistas',
     playlists: 'Playlists',
     sinResultados: (q: string) => `Nada en tu biblioteca coincide con «${q}».`,
+    sinResultadosSub: 'Prueba con menos palabras, otra grafía o una frase de la letra.',
+    resultados: (q: string) => `Resultados de «${q}»`,
+    mejor: 'Mejor resultado',
+    canciones: 'Canciones',
+    todas: 'Todas las canciones',
+    tipoArtista: 'Artista',
+    tipoAlbum: 'Álbum',
+    tipoCancion: 'Canción',
     escribe: 'Escribe arriba para buscar.',
     cerrarBusqueda: 'Cerrar búsqueda'
   },
@@ -179,9 +187,12 @@ export const es = {
     completarSinArchivo: 'No se encuentra el archivo de esta canción.',
     completarFallo: 'No se pudo completar. Vuelve a intentarlo.',
     lista: 'Canciones',
+    columnas: { titulo: 'Título', album: 'Álbum', duracion: 'Duración' },
     vacia: 'No hay canciones que coincidan.',
     vaciaBiblioteca: 'Tu biblioteca está vacía.',
     cargando: 'Cargando',
+    // `albumes.tipo` guarda lo que trajo MusicBrainz o la V1, en inglés.
+    tipos: { Album: 'Álbum', Single: 'Sencillo', EP: 'EP', Compilation: 'Recopilatorio' },
     album: {
       volver: 'Volver a la biblioteca',
       pistas: (n: number, duracion: string) =>
@@ -191,8 +202,13 @@ export const es = {
       masDe: (artista: string) => `Más de ${artista}`
     },
     artista: {
+      tipo: 'Artista',
+      populares: 'Populares',
+      mostrarMas: 'Mostrar más',
+      mostrarMenos: 'Mostrar menos',
       albumes: 'Álbumes',
-      canciones: 'Canciones',
+      sencillos: 'Sencillos y EP',
+      canciones: 'Todas sus canciones',
       aleatorio: 'Aleatorio',
       resumen: (albumes: number, pistas: number) =>
         `${albumes === 1 ? '1 álbum' : `${albumes} álbumes`} · ${pistas === 1 ? '1 pista' : `${pistas} pistas`}`,
@@ -461,6 +477,8 @@ export const es = {
     apariencia: 'Apariencia',
     acercaDe: 'Acerca de',
     dispositivos: 'Dispositivos',
+    dispositivosSub: 'Tu música en el teléfono, en una tarjeta o en la fiesta.',
+    telefonos: 'Tus teléfonos',
     permitirTelefonos: 'Permitir que tus teléfonos se conecten',
     permitirAyuda:
       'NB Sound Mobile sincroniza tu música y controla este equipo desde la misma red Wi-Fi.',
@@ -547,9 +565,6 @@ export const es = {
     arrastrarDesc: 'Puedes arrastrar archivos o carpetas a la ventana en cualquier momento',
     arrastrarActivo: 'Suelta los archivos aquí para comenzar a importar',
     estadoBiblioteca: 'Estado de la biblioteca',
-    totalPistas: (n: number) => (n === 1 ? '1 pista' : `${n} pistas`),
-    totalAlbumes: (n: number) => (n === 1 ? '1 álbum' : `${n} álbumes`),
-    totalArtistas: (n: number) => (n === 1 ? '1 artista' : `${n} artistas`),
     archivosPorRevisar: (n: number) =>
       n === 1 ? '1 archivo pendiente por revisar' : `${n} archivos pendientes por revisar`,
     sinPendientes: 'Todo el contenido catalogado sin incidencias'
@@ -595,23 +610,34 @@ export const es = {
     error: 'No se pudo completar. Vuelve a intentarlo.'
   },
   karaokeConsola: {
-    titulo: 'Consola Karaoke',
-    subtitulo: 'Separación instrumental local con IA.',
-    abrir: 'Consola de karaoke',
-    cerrar: 'Cerrar consola',
-    motorActivo: 'Motor de separación activo',
-    motorNoInstalado: 'Agregado de karaoke no instalado',
+    titulo: 'Karaoke',
+    subtitulo:
+      'Canta cualquier canción de tu biblioteca. La voz se separa en este equipo, sin internet.',
+    abrir: 'Abrir la consola de karaoke',
+    motorNoInstalado: 'Falta el agregado de karaoke',
     motorExplicacion:
-      'Separa la pista vocal de cualquier canción localmente usando htdemucs de Meta.',
-    instalar: 'Instalar agregado',
-    prepararFavoritas: 'Preparar mis favoritas',
-    prepararPistaActual: 'Preparar canción actual',
-    pistaActualLista: 'Canción actual lista para cantar',
+      'Es lo que quita la voz de las canciones. Se descarga una vez y funciona sin conexión.',
+    instalar: 'Instalar el agregado',
+    ahora: 'Ahora suena',
+    nadaSonando: 'Pon una canción para cantarla.',
+    lista: 'Lista para cantar',
+    noLista: 'Sin preparar',
+    preparandoEsta: (pct: number) => `Preparándose · ${pct} %`,
+    cantar: 'Cantar ahora',
+    dejarDeCantar: 'Volver a la original',
+    prepararPistaActual: 'Preparar esta canción',
+    preparandoOtra: (pct: number) => `Preparando otra canción · ${pct} %`,
+    enPreparacion: 'En preparación',
     cancionesEnCola: (n: number) =>
-      `${n === 1 ? '1 canción' : `${n} canciones`} en cola de preparación`,
-    sinPendientes: 'No hay canciones pendientes de preparación.',
-    motorModelo: 'htdemucs (Meta)',
-    progresoActual: (titulo: string, pct: number) => `Preparando «${titulo}» (${pct} %)`
+      n === 1 ? '1 canción más espera su turno.' : `${n} canciones más esperan su turno.`,
+    sinPendientes: 'Nada en preparación. Puedes seguir escuchando mientras se preparan.',
+    repertorio: 'Tu repertorio',
+    listas: (n: number) =>
+      n === 1
+        ? '1 canción lista para cantar'
+        : `${n.toLocaleString('es')} canciones listas para cantar`,
+    verListas: 'Verlas en la biblioteca',
+    prepararFavoritas: 'Preparar mis favoritas'
   }
 } as const;
 

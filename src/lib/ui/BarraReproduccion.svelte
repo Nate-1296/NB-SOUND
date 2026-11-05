@@ -617,12 +617,32 @@
     cursor: default;
   }
 
-  /* Aleatorio, repetición y karaoke: recuadro de acento cuando están activos, como
-     en la V1. */
+  /*
+   * Aleatorio, repetición, karaoke y los paneles: activos, el icono toma el acento
+   * y lleva un punto debajo. Antes se rellenaban con el contenedor primario, que en
+   * la mitad de los temas es casi el color del botón de reproducir: tres círculos
+   * iguales y no se distinguía qué era un botón y qué un estado.
+   */
   .conmutador.activo {
-    background: var(--m3c-primary-container);
-    border-color: var(--m3c-primary);
-    color: var(--m3c-on-primary-container);
+    background: color-mix(in srgb, var(--m3c-primary) 12%, transparent);
+    color: var(--m3c-primary);
+  }
+
+  .conmutador.activo::after {
+    content: '';
+    position: absolute;
+    bottom: 1px;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    border-radius: var(--ns-radio-pleno);
+    background: currentColor;
+    translate: -50% 0;
+  }
+
+  .conmutador.activo:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--m3c-primary) 20%, transparent);
+    color: var(--m3c-primary);
   }
 
   .principal {

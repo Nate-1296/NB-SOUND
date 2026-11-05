@@ -1,10 +1,13 @@
 <!--
-  Los resultados de la búsqueda global, con la disposición de la V1
-  (`VistaBusqueda.qml`): secciones de Artistas, Álbumes y Pistas con su cuenta, y
-  cada resultado con su imagen, su resumen y la flecha para abrirlo. Las pistas
-  van por relevancia (el título pesa más que la letra) y se reproducen desde la
-  elegida. Si la búsqueda expresa una intención ("algo triste"), sus secciones van
-  primero (F5.3.3).
+  Los resultados de la búsqueda global. De la V1 (`VistaBusqueda.qml`) quedan las
+  secciones con su cuenta y las pistas por relevancia (el título pesa más que la
+  letra); arriba, el mejor resultado junto a las primeras canciones, y artistas,
+  álbumes y playlists en rejilla con su imagen, que es como se reconocen. Si la
+  búsqueda expresa una intención ("algo triste"), sus secciones van primero
+  (F5.3.3).
+
+  Escape y la equis de la caja cierran la búsqueda desde la barra superior; la
+  página escuchaba Escape también y volvía atrás dos veces.
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
@@ -22,8 +25,9 @@
     reproducirLista,
     urlPortada
   } from '#lib/core/ipc/index.ts';
-  import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
+  import CabeceraPistas from '#lib/ui/biblioteca/CabeceraPistas.svelte';
   import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
   import Icon from '#lib/ui/Icon.svelte';
   import Mosaico from '#lib/ui/playlists/Mosaico.svelte';
@@ -39,6 +43,7 @@
   let totalPistas = $state(0);
   let playlists = $state<PlaylistResumen[]>([]);
   let listo = $state(false);
+  let descubiertas = $state(false);
 
   const consulta = $derived<ConsultaPistas>({
     texto: q,
@@ -55,6 +60,7 @@
     const c = consulta;
     const v = ++version;
     listo = false;
+    descubiertas = false;
     if (!texto) return;
     void Promise.all([
       bibliotecaArtistas({ texto, orden: 'masPistas' }, 0, 8),
@@ -78,38 +84,46 @@
     listo && totalArtistas + totalAlbumes + totalPistas + playlists.length === 0
   );
 
-  function alPulsar(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      history.back();
-    }
-  }
+  const igual = (a: string) => a.trim().toLocaleLowerCase('es') === q.toLocaleLowerCase('es');
+
+  /** Lo que se buscaba con más probabilidad: lo que se llama exactamente así, o lo primero. */
+  type Mejor =
+    | { tipo: 'artista'; a: ArtistaResumen }
+    | { tipo: 'album'; a: AlbumResumen }
+    | { tipo: 'pista'; p: PistaResumen; i: number };
+  const mejor = $derived.by<Mejor | null>(() => {
+    const artista = artistas.find((a) => igual(a.nombre));
+    if (artista) return { tipo: 'artista', a: artista };
+    const album = albumes.find((a) => igual(a.titulo));
+    if (album) return { tipo: 'album', a: album };
+    const i = pistas.findIndex((p) => igual(p.titulo));
+    if (i >= 0 && pistas[i]) return { tipo: 'pista', p: pistas[i], i };
+    if (artistas[0]) return { tipo: 'artista', a: artistas[0] };
+    if (albumes[0]) return { tipo: 'album', a: albumes[0] };
+    if (pistas[0]) return { tipo: 'pista', p: pistas[0], i: 0 };
+    return null;
+  });
 </script>
 
-<svelte:window onkeydown={alPulsar} />
+{#snippet fila(p: PistaResumen, i: number)}
+  <li>
+    <FilaPista
+      pista={p}
+      numero={i + 1}
+      sonando={reproductor.instantanea.pistaId === p.id}
+      onreproducir={() => reproducirLista(consulta, i)}
+      oncambiada={() => {
+        version += 1;
+      }}
+    />
+  </li>
+{/snippet}
 
 <section class="vista">
-  <header class="tarjeta-titulo">
-    <div class="cabecera-buscar">
-      <button
-        type="button"
-        class="boton-cerrar-buscar"
-        onclick={() => history.back()}
-        aria-label={t.cerrarBusqueda}
-        title={t.cerrarBusqueda}
-      >
-        <Icon nombre="anterior" tamano={18} />
-        <span>{textos.reproduciendo.volver}</span>
-      </button>
-      <div class="buscar-titulos">
-        <h1>{t.titulo}</h1>
-        <p>{t.subtitulo}</p>
-      </div>
-    </div>
-  </header>
-
   {#if q}
+    <h1>{t.resultados(q)}</h1>
     {#await import('#lib/ui/descubrir/SeccionesDescubrir.svelte') then m}
-      <m.default consulta={q} />
+      <m.default consulta={q} onresultado={(si) => (descubiertas = si)} />
     {/await}
   {/if}
 
@@ -117,28 +131,89 @@
     {#await import('#lib/ui/buscar/BienvenidaBuscar.svelte') then m}
       <m.default onseleccionar={(idea) => goto(`/buscar?q=${encodeURIComponent(idea)}`)} />
     {/await}
-  {:else if nada}
-    <p class="vacio">{t.sinResultados(q)}</p>
-  {:else}
-    {#if artistas.length > 0}
-      <h2 class="seccion">{t.artistas}<span class="cuenta">{totalArtistas}</span></h2>
-      <ul class="resultados">
-        {#each artistas as a (a.id)}
-          <li>
-            <a class="resultado" href={`/biblioteca/artista?id=${a.id}`}>
-              <span class="imagen redonda">
-                {#if a.tieneImagen}<img src={urlPortada('artista', a.id, 64)} alt="" />{:else}<Icon
+  {:else if nada && !descubiertas}
+    <div class="vacio">
+      <Icon nombre="buscar" tamano={32} />
+      <p class="vacio-titulo">{t.sinResultados(q)}</p>
+      <p>{t.sinResultadosSub}</p>
+    </div>
+  {:else if listo}
+    {#if mejor}
+      <div class="arriba">
+        <section class="mejor" aria-labelledby="t-mejor">
+          <h2 id="t-mejor" class="seccion">{t.mejor}</h2>
+          {#if mejor.tipo === 'artista'}
+            {@const a = mejor.a}
+            <a class="tarjeta-mejor" href={`/biblioteca/artista?id=${a.id}`}>
+              <span class="imagen-mejor redonda">
+                {#if a.tieneImagen}<img src={urlPortada('artista', a.id, 240)} alt="" />{:else}<Icon
                     nombre="artista"
-                    tamano={20}
+                    tamano={40}
                   />{/if}
               </span>
-              <span class="datos">
-                <span class="nombre">{a.nombre}</span>
-                <span class="sub"
-                  >{textos.biblioteca.artista.resumen(a.numAlbumes, a.numPistas)}</span
-                >
+              <strong>{a.nombre}</strong>
+              <span class="tipo">{t.tipoArtista}</span>
+            </a>
+          {:else if mejor.tipo === 'album'}
+            {@const a = mejor.a}
+            <a class="tarjeta-mejor" href={`/biblioteca/album?id=${a.id}`}>
+              <span class="imagen-mejor">
+                {#if a.tienePortada}<img src={urlPortada('album', a.id, 240)} alt="" />{:else}<Icon
+                    nombre="album"
+                    tamano={40}
+                  />{/if}
               </span>
-              <Icon nombre="derecha" tamano={18} />
+              <strong>{a.titulo}</strong>
+              <span class="tipo">{t.tipoAlbum} · {a.artista}</span>
+            </a>
+          {:else}
+            {@const p = mejor.p}
+            {@const i = mejor.i}
+            <button
+              type="button"
+              class="tarjeta-mejor"
+              onclick={() => reproducirLista(consulta, i)}
+            >
+              <span class="imagen-mejor">
+                {#if p.tienePortada}<img src={urlPortada('pista', p.id, 240)} alt="" />{:else}<Icon
+                    nombre="cancion"
+                    tamano={40}
+                  />{/if}
+              </span>
+              <strong>{p.titulo}</strong>
+              <span class="tipo">{t.tipoCancion} · {p.artista}</span>
+            </button>
+          {/if}
+        </section>
+        {#if pistas.length > 0}
+          <section class="primeras" aria-labelledby="t-canciones">
+            <h2 id="t-canciones" class="seccion">{t.canciones}</h2>
+            <ul class="lista-pistas">
+              {#each pistas.slice(0, 4) as p, i (p.id)}
+                {@render fila(p, i)}
+              {/each}
+            </ul>
+          </section>
+        {/if}
+      </div>
+    {/if}
+
+    {#if artistas.length > 0}
+      <h2 class="seccion">{t.artistas}<span class="cuenta">{totalArtistas}</span></h2>
+      <ul class="rejilla">
+        {#each artistas as a (a.id)}
+          <li>
+            <a class="tarjeta centrada" href={`/biblioteca/artista?id=${a.id}`}>
+              <span class="imagen redonda">
+                {#if a.tieneImagen}<img
+                    src={urlPortada('artista', a.id, 240)}
+                    alt=""
+                    loading="lazy"
+                  />{:else}<Icon nombre="artista" tamano={32} />{/if}
+              </span>
+              <span class="nombre">{a.nombre}</span>
+              <span class="sub">{textos.biblioteca.artista.resumen(a.numAlbumes, a.numPistas)}</span
+              >
             </a>
           </li>
         {/each}
@@ -147,21 +222,21 @@
 
     {#if albumes.length > 0}
       <h2 class="seccion">{t.albumes}<span class="cuenta">{totalAlbumes}</span></h2>
-      <ul class="resultados">
+      <ul class="rejilla">
         {#each albumes as a (a.id)}
           <li>
-            <a class="resultado" href={`/biblioteca/album?id=${a.id}`}>
+            <a class="tarjeta" href={`/biblioteca/album?id=${a.id}`}>
               <span class="imagen">
-                {#if a.tienePortada}<img src={urlPortada('album', a.id, 64)} alt="" />{:else}<Icon
-                    nombre="album"
-                    tamano={20}
-                  />{/if}
+                {#if a.tienePortada}<img
+                    src={urlPortada('album', a.id, 240)}
+                    alt=""
+                    loading="lazy"
+                  />{:else}<Icon nombre="album" tamano={32} />{/if}
               </span>
-              <span class="datos">
-                <span class="nombre">{a.titulo}</span>
-                <span class="sub">{a.artista} · {textos.biblioteca.cuentaPistas(a.numPistas)}</span>
-              </span>
-              <Icon nombre="derecha" tamano={18} />
+              <span class="nombre">{a.titulo}</span>
+              <span class="sub"
+                >{[a.anio ?? '', a.artista].filter((x) => x !== '').join(' · ')}</span
+              >
             </a>
           </li>
         {/each}
@@ -170,38 +245,25 @@
 
     {#if playlists.length > 0}
       <h2 class="seccion">{t.playlists}<span class="cuenta">{playlists.length}</span></h2>
-      <ul class="resultados">
+      <ul class="rejilla">
         {#each playlists as p (p.id)}
           <li>
-            <a class="resultado" href={`/playlists/ver?id=${p.id}`}>
-              <span class="imagen"><Mosaico pistas={p.mosaico} tamano={64} /></span>
-              <span class="datos">
-                <span class="nombre">{p.nombre}</span>
-                <span class="sub">{p.etiqueta} · {textos.biblioteca.cuentaPistas(p.numPistas)}</span
-                >
-              </span>
-              <Icon nombre="derecha" tamano={18} />
+            <a class="tarjeta" href={`/playlists/ver?id=${p.id}`}>
+              <span class="imagen"><Mosaico pistas={p.mosaico} tamano={240} /></span>
+              <span class="nombre">{p.nombre}</span>
+              <span class="sub">{p.etiqueta} · {textos.biblioteca.cuentaPistas(p.numPistas)}</span>
             </a>
           </li>
         {/each}
       </ul>
     {/if}
 
-    {#if pistas.length > 0}
-      <h2 class="seccion">{t.pistas}<span class="cuenta">{totalPistas}</span></h2>
+    {#if pistas.length > 4}
+      <h2 class="seccion">{t.todas}<span class="cuenta">{totalPistas}</span></h2>
+      <CabeceraPistas />
       <ul class="lista-pistas">
         {#each pistas as p, i (p.id)}
-          <li>
-            <FilaPista
-              pista={p}
-              numero={i + 1}
-              sonando={reproductor.instantanea.pistaId === p.id}
-              onreproducir={() => reproducirLista(consulta, i)}
-              oncambiada={() => {
-                version += 1;
-              }}
-            />
-          </li>
+          {@render fila(p, i)}
         {/each}
       </ul>
     {/if}
@@ -213,79 +275,97 @@
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-3);
-  }
-
-  .tarjeta-titulo {
-    padding: var(--ns-espacio-4) var(--ns-espacio-5);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-lg);
-    background: var(--m3c-surface-container);
-  }
-
-  .cabecera-buscar {
-    display: flex;
-    align-items: center;
-    gap: var(--ns-espacio-4);
-  }
-
-  .boton-cerrar-buscar {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ns-espacio-2);
-    height: 2.25rem;
-    padding: 0 var(--ns-espacio-3);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-pleno);
-    background: var(--m3c-surface-container-high);
-    color: var(--m3c-on-surface);
-    font: inherit;
-    font-size: var(--ns-texto-xs);
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color var(--ns-duracion-corta) var(--ns-curva);
-  }
-
-  .boton-cerrar-buscar:hover {
-    background: var(--m3c-surface-container-highest);
-  }
-
-  .buscar-titulos {
-    display: flex;
-    flex-direction: column;
+    padding-top: var(--ns-espacio-3);
   }
 
   h1 {
     margin: 0;
     font-size: var(--ns-texto-xl);
-  }
-
-  .tarjeta-titulo p {
-    margin: var(--ns-espacio-2) 0 0;
-    color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-sm);
+    overflow-wrap: anywhere;
   }
 
   .seccion {
     display: flex;
     align-items: center;
     gap: var(--ns-espacio-2);
-    margin: var(--ns-espacio-3) 0 0;
-    padding-bottom: var(--ns-espacio-1);
-    border-bottom: 1px solid var(--m3c-outline-variant);
-    font-size: var(--ns-texto-md);
+    margin: var(--ns-espacio-4) 0 0;
+    font-size: var(--ns-texto-lg);
   }
 
   .cuenta {
     min-width: 1.5rem;
     padding: 0 var(--ns-espacio-2);
     border-radius: var(--ns-radio-pleno);
-    background: var(--m3c-secondary-container);
-    color: var(--m3c-on-secondary-container);
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
+    font-weight: 600;
     text-align: center;
   }
 
-  .resultados,
+  .arriba {
+    display: grid;
+    grid-template-columns: minmax(16rem, 2fr) minmax(0, 3fr);
+    gap: var(--ns-espacio-5);
+  }
+
+  .mejor,
+  .primeras {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-3);
+    min-width: 0;
+  }
+
+  .tarjeta-mejor {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--ns-espacio-2);
+    padding: var(--ns-espacio-5);
+    border: none;
+    border-radius: var(--ns-radio-lg);
+    background: var(--m3c-surface-container);
+    color: var(--m3c-on-surface);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .tarjeta-mejor:hover {
+    background: var(--m3c-surface-container-high);
+  }
+
+  .imagen-mejor {
+    display: grid;
+    place-items: center;
+    width: 6.5rem;
+    height: 6.5rem;
+    margin-bottom: var(--ns-espacio-2);
+    overflow: hidden;
+    border-radius: var(--ns-radio-md);
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface-variant);
+    box-shadow: 0 8px 20px var(--m3c-shadow);
+  }
+
+  .tarjeta-mejor strong {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: var(--ns-texto-2xl);
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tipo {
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-sm);
+  }
+
   .lista-pistas {
     display: flex;
     flex-direction: column;
@@ -294,65 +374,74 @@
     list-style: none;
   }
 
-  .resultado {
-    display: flex;
-    align-items: center;
-    gap: var(--ns-espacio-3);
-    width: 100%;
-    padding: var(--ns-espacio-2) var(--ns-espacio-3);
-    border: none;
-    border-radius: var(--ns-radio-sm);
-    background: none;
-    color: var(--m3c-on-surface);
-    font: inherit;
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
+  .lista-pistas li {
+    height: 3.5rem;
   }
 
-  .resultado:hover {
+  .rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: var(--ns-espacio-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tarjeta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-1);
+    padding: var(--ns-espacio-2);
+    border-radius: var(--ns-radio-md);
+    color: var(--m3c-on-surface);
+    text-decoration: none;
+    transition: background var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .tarjeta:hover {
     background: var(--m3c-surface-container);
+  }
+
+  .tarjeta.centrada {
+    align-items: center;
+    text-align: center;
   }
 
   .imagen {
     display: grid;
     place-items: center;
-    flex: 0 0 2.75rem;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 100%;
+    aspect-ratio: 1;
+    margin-bottom: var(--ns-espacio-1);
     overflow: hidden;
     border-radius: var(--ns-radio-sm);
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-on-surface-variant);
+    box-shadow: 0 4px 14px var(--m3c-shadow);
   }
 
-  .imagen.redonda {
+  .redonda {
     border-radius: var(--ns-radio-pleno);
   }
 
-  .imagen img {
+  .imagen img,
+  .imagen-mejor img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .datos {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-width: 0;
-  }
-
   .nombre,
   .sub {
-    white-space: nowrap;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .nombre {
-    font-weight: 700;
     font-size: var(--ns-texto-sm);
+    font-weight: 700;
   }
 
   .sub {
@@ -361,6 +450,29 @@
   }
 
   .vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    margin-top: var(--ns-espacio-7);
     color: var(--m3c-on-surface-variant);
+    text-align: center;
+  }
+
+  .vacio p {
+    margin: 0;
+    font-size: var(--ns-texto-sm);
+  }
+
+  .vacio .vacio-titulo {
+    color: var(--m3c-on-surface);
+    font-size: var(--ns-texto-md);
+    font-weight: 700;
+  }
+
+  @container carcasa (max-width: 60rem) {
+    .arriba {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 </style>

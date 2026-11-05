@@ -167,16 +167,16 @@
     {#if cifras}
       <div class="cifras-grid">
         <div class="cifra-item">
-          <span class="cifra-valor">{cifras.pistas}</span>
-          <span class="cifra-etiqueta">{t.totalPistas(cifras.pistas)}</span>
+          <span class="cifra-valor">{cifras.pistas.toLocaleString('es')}</span>
+          <span class="cifra-etiqueta">{textos.inicio.pistas}</span>
         </div>
         <div class="cifra-item">
-          <span class="cifra-valor">{cifras.albumes}</span>
-          <span class="cifra-etiqueta">{t.totalAlbumes(cifras.albumes)}</span>
+          <span class="cifra-valor">{cifras.albumes.toLocaleString('es')}</span>
+          <span class="cifra-etiqueta">{textos.inicio.albumes}</span>
         </div>
         <div class="cifra-item">
-          <span class="cifra-valor">{cifras.artistas}</span>
-          <span class="cifra-etiqueta">{t.totalArtistas(cifras.artistas)}</span>
+          <span class="cifra-valor">{cifras.artistas.toLocaleString('es')}</span>
+          <span class="cifra-etiqueta">{textos.inicio.artistas}</span>
         </div>
       </div>
     {/if}

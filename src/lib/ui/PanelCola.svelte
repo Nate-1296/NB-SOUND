@@ -102,7 +102,7 @@
           </span>
           <span class="datos">
             <span class="titulo">
-              {p?.titulo ?? ''}
+              <span class="texto-titulo">{p?.titulo ?? ''}</span>
               {#if actual}
                 <span class="insignia">{reproductor.sonando ? t.sonando : t.pausada}</span>
               {/if}
@@ -253,14 +253,18 @@
     min-width: 0;
   }
 
-  .titulo,
+  .texto-titulo,
   .sub {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
+  /* El título se corta antes que la insignia: se veía "Vuelie - From… (…)". */
   .titulo {
+    display: flex;
+    align-items: center;
+    min-width: 0;
     font-weight: 700;
     font-size: var(--ns-texto-sm);
   }
@@ -272,6 +276,7 @@
   }
 
   .insignia {
+    flex: 0 0 auto;
     margin-left: var(--ns-espacio-2);
     padding: 0 var(--ns-espacio-2);
     border: 1px solid var(--m3c-primary);

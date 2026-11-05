@@ -13,9 +13,11 @@
 
   interface Props {
     consulta: string;
+    /** Si la frase se entendió y trajo canciones: la página no dice entonces "nada coincide". */
+    onresultado?: (conCanciones: boolean) => void;
   }
 
-  let { consulta }: Props = $props();
+  let { consulta, onresultado }: Props = $props();
   const t = textosAparte.descubrir;
 
   let d = $state<Descubrimiento | null>(null);
@@ -26,7 +28,9 @@
     d = null;
     if (!texto) return;
     void descubrir(texto, 25).then((r) => {
-      if (v === version) d = r;
+      if (v !== version) return;
+      d = r;
+      onresultado?.(r.entendida && r.secciones.length > 0);
     });
   });
 </script>

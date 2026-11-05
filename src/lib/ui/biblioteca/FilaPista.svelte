@@ -1,9 +1,14 @@
 <!--
   @component
   Una canción en una lista, con la disposición de la V1 (`VistaBiblioteca.qml`):
-  número, portada, título con artista, álbum y año debajo, álbum, duración y
-  acciones limpias (reproducir, favorita, añadir a playlist y menú desplegable
-  ··· con acciones secundarias: DIS-03).
+  número, portada, título con el artista debajo, álbum, favorita, duración y las
+  acciones (añadir a playlist y el menú ··· con las secundarias: DIS-03).
+
+  El número se cambia por el botón de reproducir al pasar por encima o con el
+  foco, y por el ecualizador mientras suena: la V1 tenía un botón "Reproducir"
+  por fila y la versión anterior de esta, uno más junto a la favorita. La
+  favorita se ve siempre que lo es, como la estrella de la V1; si no, al pasar.
+  Las columnas las comparte con `CabeceraPistas`.
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
@@ -20,6 +25,7 @@
   import { textos } from '#lib/i18n/index.ts';
 
   import Icon from '../Icon.svelte';
+  import MenuAcciones, { type Accion } from '../MenuAcciones.svelte';
 
   interface Props {
     pista: PistaResumen;
@@ -30,6 +36,8 @@
     onreproducir: () => void;
     /** Sus datos cambiaron: la página recarga la lista para mostrarlo. */
     oncambiada?: () => void;
+    /** Lo que la lista añade al menú: mover o quitar de una playlist. */
+    extra?: readonly Accion[];
   }
 
   let {
@@ -39,7 +47,8 @@
     sonando = false,
     contexto = 'biblioteca',
     onreproducir,
-    oncambiada
+    oncambiada,
+    extra = []
   }: Props = $props();
 
   const t = textos.biblioteca;
@@ -65,21 +74,6 @@
     menuPlaylists?.hidePopover();
   }
 
-  // Popover para más acciones (···)
-  let menuAcciones: HTMLDivElement | undefined = $state();
-  let menuAccionesAbierto = $state(false);
-  function abrirMenuAcciones(e: MouseEvent) {
-    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    if (!menuAcciones) return;
-    menuAcciones.style.top = `${Math.min(r.bottom + 4, window.innerHeight - 300)}px`;
-    menuAcciones.style.left = `${Math.max(8, r.right - 200)}px`;
-    menuAccionesAbierto = true;
-    menuAcciones.showPopover();
-  }
-  function cerrarMenuAcciones() {
-    menuAcciones?.hidePopover();
-  }
-
   let editando = $state(false);
   let borrando = $state(false);
   let completando = $state(false);
@@ -102,11 +96,59 @@
     }
   }
 
-  const subtitulo = $derived(
-    contexto === 'album'
-      ? [pista.artista, pista.anio ?? ''].filter((x) => x !== '').join(' · ')
-      : [pista.artista, pista.album, pista.anio ?? ''].filter((x) => x !== '').join(' · ')
-  );
+  // El álbum tiene su columna; en el álbum, el año está en la cabecera.
+  const subtitulo = $derived(pista.artista);
+
+  const acciones = $derived<Accion[]>([
+    { texto: t.reproducirDespues, icono: 'siguiente', accion: () => encolar([pista.id], true) },
+    { texto: t.anadirACola, icono: 'cola', accion: () => encolar([pista.id], false) },
+    ...extra,
+    ...(pista.albumId !== null && contexto !== 'album'
+      ? [
+          {
+            texto: t.abrirAlbum,
+            icono: 'album' as const,
+            accion: () => goto(`/biblioteca/album?id=${pista.albumId}`),
+            separada: true
+          }
+        ]
+      : []),
+    ...(pista.artistaId !== null && contexto !== 'artista'
+      ? [
+          {
+            texto: t.abrirArtista,
+            icono: 'artista' as const,
+            accion: () => goto(`/biblioteca/artista?id=${pista.artistaId}`),
+            separada: pista.albumId === null || contexto === 'album'
+          }
+        ]
+      : []),
+    ...(pista.verificada
+      ? []
+      : [
+          {
+            texto: t.completarDatos,
+            icono: 'comprobado' as const,
+            accion: completar,
+            deshabilitada: completando,
+            separada: true
+          }
+        ]),
+    {
+      texto: t.editarDatos,
+      icono: 'editar',
+      accion: () => (editando = true),
+      separada: pista.verificada
+    },
+    { texto: t.mostrarEnExplorador, icono: 'carpeta', accion: mostrarArchivo },
+    {
+      texto: t.borrarCancion,
+      icono: 'borrar',
+      accion: () => (borrando = true),
+      destructiva: true,
+      separada: true
+    }
+  ]);
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -132,13 +174,12 @@
       <span class="icono-sonando" title={t.sonando} aria-label={t.sonando}>
         <Icon nombre="ecualizador" tamano={16} />
       </span>
-    {:else if contexto === 'album'}
-      {numero}
     {:else}
-      <span class="icono-cancion">
-        <Icon nombre="cancion" tamano={14} />
-      </span>
+      <span class="cifra">{numero}</span>
     {/if}
+    <button type="button" class="reproducir" aria-label={t.reproducir} onclick={onreproducir}>
+      <Icon nombre="reproducir" tamano={16} />
+    </button>
   </span>
   {#if contexto !== 'album'}
     <span class="portada" aria-hidden="true">
@@ -146,8 +187,8 @@
         <img
           src={urlPortada('pista', pista.id, 64)}
           alt=""
-          width="42"
-          height="42"
+          width="40"
+          height="40"
           loading="lazy"
           onerror={() => (rota = true)}
         />
@@ -170,40 +211,28 @@
   {#if contexto !== 'album'}
     <span class="album" title={pista.album}>{pista.album}</span>
   {/if}
+  <button
+    type="button"
+    class="icono favorita"
+    class:activo={favorita}
+    aria-label={favorita ? t.quitarFavorita : t.marcarFavorita}
+    aria-pressed={favorita}
+    onclick={() => favoritas.alternar(pista)}
+  >
+    <Icon nombre="favorito" tamano={18} />
+  </button>
   <span class="duracion">{formatoTiempo(pista.duracionSeg)}</span>
   <span class="acciones">
-    <button type="button" class="icono reproducir" aria-label={t.reproducir} onclick={onreproducir}>
-      <Icon nombre="reproducir" tamano={16} />
-    </button>
-    <button
-      type="button"
-      class="icono"
-      class:activo={favorita}
-      aria-label={favorita ? t.quitarFavorita : t.marcarFavorita}
-      aria-pressed={favorita}
-      onclick={() => favoritas.alternar(pista)}
-    >
-      <Icon nombre="favorito" tamano={18} />
-    </button>
     <button
       type="button"
       class="icono"
       aria-label={textos.playlists.anadirA}
       aria-haspopup="menu"
+      aria-expanded={menuPlaylistsAbierto}
       onclick={abrirMenuPlaylists}
     >
       <Icon nombre="mas" tamano={18} />
     </button>
-    <button
-      type="button"
-      class="icono secundario"
-      aria-label={t.masAcciones}
-      aria-haspopup="menu"
-      onclick={abrirMenuAcciones}
-    >
-      <Icon nombre="masHorizontal" tamano={18} />
-    </button>
-
     <div
       class="capa"
       popover="auto"
@@ -218,121 +247,7 @@
       {/if}
     </div>
 
-    <div
-      class="capa"
-      popover="auto"
-      bind:this={menuAcciones}
-      ontoggle={(e) => (menuAccionesAbierto = e.newState === 'open')}
-    >
-      {#if menuAccionesAbierto}
-        <div class="menu-contextual" role="menu">
-          <button
-            type="button"
-            role="menuitem"
-            class="opcion-menu"
-            onclick={() => {
-              cerrarMenuAcciones();
-              void encolar([pista.id], true);
-            }}
-          >
-            <Icon nombre="siguiente" tamano={18} />
-            <span>{t.reproducirDespues}</span>
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            class="opcion-menu"
-            onclick={() => {
-              cerrarMenuAcciones();
-              void encolar([pista.id], false);
-            }}
-          >
-            <Icon nombre="cola" tamano={18} />
-            <span>{t.anadirACola}</span>
-          </button>
-          {#if !pista.verificada}
-            <button
-              type="button"
-              role="menuitem"
-              class="opcion-menu"
-              disabled={completando}
-              onclick={() => {
-                cerrarMenuAcciones();
-                completar();
-              }}
-            >
-              <Icon nombre="comprobado" tamano={18} />
-              <span>{t.completarDatos}</span>
-            </button>
-          {/if}
-          <button
-            type="button"
-            role="menuitem"
-            class="opcion-menu"
-            onclick={() => {
-              cerrarMenuAcciones();
-              editando = true;
-            }}
-          >
-            <Icon nombre="editar" tamano={18} />
-            <span>{t.editarDatos}</span>
-          </button>
-          {#if contexto !== 'album' && pista.albumId !== null}
-            <button
-              type="button"
-              role="menuitem"
-              class="opcion-menu"
-              onclick={() => {
-                cerrarMenuAcciones();
-                goto(`/biblioteca/album?id=${pista.albumId}`);
-              }}
-            >
-              <Icon nombre="album" tamano={18} />
-              <span>{t.abrirAlbum}</span>
-            </button>
-          {/if}
-          {#if contexto !== 'artista' && pista.artistaId !== null}
-            <button
-              type="button"
-              role="menuitem"
-              class="opcion-menu"
-              onclick={() => {
-                cerrarMenuAcciones();
-                goto(`/biblioteca/artista?id=${pista.artistaId}`);
-              }}
-            >
-              <Icon nombre="artista" tamano={18} />
-              <span>{t.abrirArtista}</span>
-            </button>
-          {/if}
-          <button
-            type="button"
-            role="menuitem"
-            class="opcion-menu"
-            onclick={() => {
-              cerrarMenuAcciones();
-              mostrarArchivo();
-            }}
-          >
-            <Icon nombre="carpeta" tamano={18} />
-            <span>{t.mostrarEnExplorador}</span>
-          </button>
-          <hr class="separador-menu" />
-          <button
-            type="button"
-            role="menuitem"
-            class="opcion-menu destructiva"
-            onclick={() => {
-              cerrarMenuAcciones();
-              borrando = true;
-            }}
-          >
-            <Icon nombre="borrar" tamano={18} />
-            <span>{t.borrarCancion}</span>
-          </button>
-        </div>
-      {/if}
-    </div>
+    <MenuAcciones {acciones} etiqueta={t.masAcciones} tamano="fila" />
 
     {#if editando}
       {#await import('../edicion/DialogoEditar.svelte') then m}
@@ -364,61 +279,91 @@
 </div>
 
 <style>
+  /* Las mismas columnas que `CabeceraPistas`. */
   .fila {
     display: grid;
-    grid-template-columns: 2.5rem 2.625rem minmax(10rem, 2fr) minmax(6rem, 1fr) 3.5rem auto;
+    grid-template-columns:
+      2.5rem 2.5rem minmax(10rem, 2fr) minmax(6rem, 1fr) 2.25rem 3.25rem
+      4.5rem;
     align-items: center;
     gap: var(--ns-espacio-3);
     height: 100%;
+    min-height: 3.5rem;
     padding: 0 var(--ns-espacio-3);
     border-radius: var(--ns-radio-sm);
-    transition: background 120ms ease;
+    transition: background var(--ns-duracion-corta) var(--ns-curva);
   }
 
   .fila.contexto-album {
-    grid-template-columns: 2.5rem minmax(10rem, 2fr) 3.5rem auto;
+    grid-template-columns: 2.5rem minmax(10rem, 1fr) 2.25rem 3.25rem 4.5rem;
   }
 
-  .icono-sonando {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--m3c-primary);
-  }
-
-  .icono-cancion {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--m3c-outline);
-    opacity: 0.5;
-  }
-
-  .fila:hover {
+  .fila:hover,
+  .fila:focus-within {
     background: var(--m3c-surface-container);
   }
 
   .fila.sonando {
-    background: var(--m3c-surface-container-high);
+    background: color-mix(in srgb, var(--m3c-primary) 10%, transparent);
   }
 
   .fila.sonando .titulo {
     color: var(--m3c-primary);
   }
 
-  .numero,
+  .numero {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 2.25rem;
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .icono-sonando {
+    display: inline-flex;
+    color: var(--m3c-primary);
+  }
+
+  /* El botón ocupa el sitio del número; se ve al pasar o con el foco. */
+  .reproducir {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: none;
+    border-radius: var(--ns-radio-pleno);
+    background: transparent;
+    color: var(--m3c-on-surface);
+    cursor: pointer;
+    opacity: 0;
+  }
+
+  .fila:hover .reproducir,
+  .reproducir:focus-visible {
+    opacity: 1;
+  }
+
+  .fila:hover .cifra,
+  .fila:hover .icono-sonando,
+  .fila:has(.reproducir:focus-visible) .cifra {
+    visibility: hidden;
+  }
+
   .duracion {
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
     font-variant-numeric: tabular-nums;
-    text-align: center;
+    text-align: right;
   }
 
   .portada {
     display: grid;
     place-items: center;
-    width: 2.625rem;
-    height: 2.625rem;
+    width: 2.5rem;
+    height: 2.5rem;
     overflow: hidden;
     border-radius: var(--ns-radio-sm);
     background: var(--m3c-surface-container-highest);
@@ -434,6 +379,7 @@
   .datos {
     display: flex;
     flex-direction: column;
+    gap: 0.125rem;
     min-width: 0;
   }
 
@@ -446,17 +392,15 @@
   }
 
   .titulo {
-    font-weight: 700;
+    color: var(--m3c-on-surface);
+    font-weight: 600;
     font-size: var(--ns-texto-sm);
   }
 
-  .sub {
+  .sub,
+  .album {
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
-  }
-
-  .album {
-    font-size: var(--ns-texto-sm);
   }
 
   .insignia {
@@ -478,60 +422,10 @@
     background: none;
   }
 
-  .menu-contextual {
-    display: flex;
-    flex-direction: column;
-    min-width: 14rem;
-    padding: var(--ns-espacio-1);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-md);
-    background: var(--m3c-surface-container-high);
-    box-shadow: 0 4px 16px var(--m3c-shadow);
-  }
-
-  .separador-menu {
-    margin: var(--ns-espacio-1) 0;
-    border: none;
-    border-top: 1px solid var(--m3c-outline-variant);
-  }
-
-  .opcion-menu {
-    display: flex;
-    align-items: center;
-    gap: var(--ns-espacio-3);
-    padding: var(--ns-espacio-2) var(--ns-espacio-3);
-    border: none;
-    border-radius: var(--ns-radio-sm);
-    background: none;
-    color: var(--m3c-on-surface);
-    font: inherit;
-    font-size: var(--ns-texto-sm);
-    text-align: left;
-    cursor: pointer;
-    transition: background 120ms ease;
-  }
-
-  .opcion-menu:hover:not(:disabled) {
-    background: var(--m3c-surface-container-highest);
-  }
-
-  .opcion-menu:disabled {
-    opacity: 0.38;
-    cursor: default;
-  }
-
-  .opcion-menu.destructiva {
-    color: var(--m3c-error);
-  }
-
-  .opcion-menu.destructiva:hover {
-    background: var(--m3c-error-container);
-    color: var(--m3c-on-error-container);
-  }
-
   .acciones {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: var(--ns-espacio-1);
   }
 
@@ -540,6 +434,7 @@
     place-items: center;
     width: 2.125rem;
     height: 2.125rem;
+    padding: 0;
     border: none;
     border-radius: var(--ns-radio-pleno);
     background: transparent;
@@ -547,13 +442,21 @@
     cursor: pointer;
     opacity: 0;
     transition:
-      opacity 120ms ease,
-      background 120ms ease,
-      color 120ms ease;
+      opacity var(--ns-duracion-corta) var(--ns-curva),
+      background var(--ns-duracion-corta) var(--ns-curva),
+      color var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .acciones :global(.disparador) {
+    opacity: 0;
   }
 
   .fila:hover .icono,
-  .fila:focus-within .icono {
+  .fila:focus-within .icono,
+  .icono[aria-expanded='true'],
+  .fila:hover .acciones :global(.disparador),
+  .fila:focus-within .acciones :global(.disparador),
+  .acciones :global(.disparador[aria-expanded='true']) {
     opacity: 1;
   }
 
@@ -562,27 +465,13 @@
     color: var(--m3c-primary);
   }
 
-  .icono.secundario {
-    opacity: 0.4;
-  }
-
-  .fila:hover .icono.secundario,
-  .fila:focus-within .icono.secundario {
-    opacity: 1;
-  }
-
   .icono:hover {
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-on-surface);
   }
 
-  .icono.reproducir {
+  .icono.activo:hover {
     color: var(--m3c-primary);
-  }
-
-  .icono.reproducir:hover {
-    background: var(--m3c-primary-container);
-    color: var(--m3c-on-primary-container);
   }
 
   @container carcasa (max-width: 75rem) {
@@ -591,7 +480,7 @@
     }
 
     .fila {
-      grid-template-columns: 2.5rem 2.625rem minmax(10rem, 1fr) 3.5rem auto;
+      grid-template-columns: 2.5rem 2.5rem minmax(10rem, 1fr) 2.25rem 3.25rem 4.5rem;
     }
   }
 </style>

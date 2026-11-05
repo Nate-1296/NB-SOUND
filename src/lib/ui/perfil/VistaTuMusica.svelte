@@ -429,7 +429,12 @@
     gap: var(--ns-espacio-5);
     margin: calc(-1 * var(--ns-espacio-2)) calc(-1 * var(--ns-espacio-5)) 0;
     padding: var(--ns-espacio-5);
-    background: linear-gradient(90deg, var(--m3c-primary-container), var(--m3c-surface));
+    /* Acaba en el fondo del lienzo, como las cabeceras de álbum y artista. */
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--m3c-primary-container) 75%, var(--m3c-surface-container-low)) 0%,
+      var(--m3c-surface-container-low) 100%
+    );
   }
 
   .foto {
@@ -528,9 +533,12 @@
     text-decoration: none;
   }
 
+  /* Sobre el degradado del contenedor primario, el texto en primario no se leía. */
   .ficha.acento {
     border-color: var(--m3c-primary);
-    color: var(--m3c-primary);
+    background: var(--m3c-primary);
+    color: var(--m3c-on-primary);
+    font-weight: 600;
   }
 
   .botones {
@@ -646,13 +654,14 @@
     background: var(--m3c-surface-container-highest);
   }
 
+  /* Tres pasos del acento sobre el fondo: el contenedor primario se parece al
+     primario en la mitad de los temas y los tres niveles no se distinguían. */
   .dia.poco {
-    background: var(--m3c-primary-container);
+    background: color-mix(in srgb, var(--m3c-primary) 30%, var(--m3c-surface-container-highest));
   }
 
   .dia.medio {
-    background: var(--m3c-primary);
-    opacity: 0.7;
+    background: color-mix(in srgb, var(--m3c-primary) 62%, var(--m3c-surface-container-highest));
   }
 
   .dia.mucho {
@@ -879,13 +888,14 @@
     background: var(--m3c-surface-container-highest);
   }
 
+  /* Tres pasos del acento sobre el fondo: el contenedor primario se parece al
+     primario en la mitad de los temas y los tres niveles no se distinguían. */
   .celda-hora.poco {
-    background: var(--m3c-primary-container);
+    background: color-mix(in srgb, var(--m3c-primary) 30%, var(--m3c-surface-container-highest));
   }
 
   .celda-hora.medio {
-    background: var(--m3c-primary);
-    opacity: 0.7;
+    background: color-mix(in srgb, var(--m3c-primary) 62%, var(--m3c-surface-container-highest));
   }
 
   .celda-hora.mucho {
