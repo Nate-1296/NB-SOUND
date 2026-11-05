@@ -252,6 +252,23 @@ fn resumen_de(f: &rusqlite::Row<'_>) -> rusqlite::Result<PistaResumen> {
     })
 }
 
+/// El `ORDER BY` de una consulta, con su parámetro si lo lleva. Con texto, la
+/// relevancia es el `rank` de FTS5 (título antes que letra). Lo comparten la
+/// lista y la cola: si la cola ordenaba distinto, el índice de la canción
+/// pulsada apuntaba a otra (en Buscar sonaba una que no era).
+fn orden_de(c: &ConsultaPistas, params: &mut Vec<rusqlite::types::Value>) -> &'static str {
+    let relevancia = (c.orden == OrdenPistas::Relevancia)
+        .then(|| c.texto.as_deref().and_then(crate::db::busqueda::consulta))
+        .flatten();
+    match relevancia {
+        Some(q) => {
+            params.push(rusqlite::types::Value::Text(q));
+            "(SELECT b.rank FROM busqueda b WHERE busqueda MATCH ? AND b.rowid = p.id), p.id"
+        }
+        None => c.orden.sql(),
+    }
+}
+
 /// Un tramo de canciones y el total que cumple la consulta.
 ///
 /// # Errors
@@ -273,17 +290,7 @@ pub fn pistas(
         )
         .map_err(|_| NsError::StorageFailure)?;
     let mut todos = params;
-    // Con texto, la relevancia es el `rank` de FTS5 (título antes que letra).
-    let relevancia = (c.orden == OrdenPistas::Relevancia)
-        .then(|| c.texto.as_deref().and_then(crate::db::busqueda::consulta))
-        .flatten();
-    let orden = match relevancia {
-        Some(q) => {
-            todos.push(rusqlite::types::Value::Text(q));
-            "(SELECT b.rank FROM busqueda b WHERE busqueda MATCH ? AND b.rowid = p.id), p.id"
-        }
-        None => c.orden.sql(),
-    };
+    let orden = orden_de(c, &mut todos);
     todos.push(rusqlite::types::Value::Integer(i64::from(
         limite.min(MAX_TRAMO),
     )));
@@ -324,14 +331,12 @@ pub fn ids_para_cola(
     let conn = db.conexion()?;
     let (donde, mut params) = filtro(c);
     let inicio = indice.saturating_sub(MAX_COLA_DESDE_LISTA / 5);
+    let orden = orden_de(c, &mut params);
     params.push(rusqlite::types::Value::Integer(i64::from(
         MAX_COLA_DESDE_LISTA,
     )));
     params.push(rusqlite::types::Value::Integer(i64::from(inicio)));
-    let sql = format!(
-        "SELECT p.id FROM pistas p WHERE {donde} ORDER BY {} LIMIT ? OFFSET ?",
-        c.orden.sql()
-    );
+    let sql = format!("SELECT p.id FROM pistas p WHERE {donde} ORDER BY {orden} LIMIT ? OFFSET ?");
     let mut s = conn
         .prepare_cached(&sql)
         .map_err(|_| NsError::StorageFailure)?;
@@ -450,6 +455,29 @@ mod pruebas_lista {
         let p = pistas(&db, &consulta(OrdenPistas::TituloAsc), 1, 1).unwrap();
         assert_eq!(p.total, 3);
         assert_eq!(ids(&p), [2]);
+    }
+
+    #[test]
+    fn la_cola_por_relevancia_sigue_el_orden_de_la_lista() {
+        let db = base();
+        // «Hechicera» en la letra de la 1 y en el título de la 2: por relevancia va
+        // primero la 2, por título la 1.
+        db.conexion()
+            .unwrap()
+            .execute(
+                "INSERT INTO letras (pista_id, planas) VALUES (1, 'mi hechicera de noche')",
+                [],
+            )
+            .unwrap();
+        let mut c = consulta(OrdenPistas::Relevancia);
+        c.texto = Some("hechicera".into());
+        let lista = ids(&pistas(&db, &c, 0, 50).unwrap());
+        assert_eq!(lista, [2, 1]);
+        for (i, pulsada) in lista.iter().enumerate() {
+            let (cola, desde) = ids_para_cola(&db, &c, i as u32).unwrap();
+            assert_eq!(cola, lista);
+            assert_eq!(cola[desde as usize], *pulsada, "la que suena es la pulsada");
+        }
     }
 
     #[test]
