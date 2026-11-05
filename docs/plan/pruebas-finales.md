@@ -199,8 +199,16 @@ estados de pasar por encima solo se vieron en el código.
       suena desde la nueva y la vieja queda sin las canciones (y sin carpetas vacías). Lo nuevo que se copie en la
       carpeta nueva se importa solo.
 - [ ] En Tu música, tocar el nombre lo deja editar; Enter guarda, Escape cancela, y Ajustes e Inicio lo ven.
-- [ ] Las playlists ancladas en la barra lateral: al pasar se resaltan, la abierta queda marcada, y con muchas se
-      desplazan sin tapar Por revisar ni Ajustes.
+- [ ] Las playlists ancladas llevan su distintivo en la esquina de la portada, en las cuatro densidades de Playlists.
+- [ ] En pantalla completa con la letra o la portada, al dejar quieto el ratón 3,5 s los controles se esconden
+      aunque la letra siga avanzando, y no queda ninguna franja vacía abajo; al moverlo vuelven.
+- [ ] El minirreproductor se arrastra desde la portada o el fondo; cerrarlo y volverlo a abrir (Ctrl+M) es
+      instantáneo; el botón de volver trae delante la ventana grande.
+- [ ] En la cola, con muchas canciones, la barra de desplazamiento no tapa la duración ni el botón de quitar.
+- [ ] La consola de karaoke con varias canciones pedidas: la primera lleva su barra y su porcentaje, las demás "En
+      espera"; al cerrar NB Sound a la mitad y abrirla, sigue con la misma.
+- [ ] Desplazarse rápido por Biblioteca (pistas, álbumes, artistas) y por Playlists va fluido, y al volver a una
+      vista ya visitada se ve al momento lo de antes.
 - [ ] Al pasar por encima: las tarjetas de Inicio, los carruseles con sus flechas, el botón grande de reproducir (crece
       un poco) y las filas de la sesión del DJ.
 - [ ] Una instalación nueva abre en la bienvenida; "Elegir la carpeta" importa lo que hay en ella y lo sigue vigilando.

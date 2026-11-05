@@ -119,6 +119,7 @@
         }}
         type="search"
         placeholder={t.marcador}
+        title={t.ayudaAtajo}
         autocomplete="off"
         spellcheck="false"
       />
@@ -141,7 +142,6 @@
           <Icon nombre="cerrar" tamano={16} />
         </button>
       {/if}
-      <kbd>{t.atajo}</kbd>
     </label>
   </search>
 
@@ -236,6 +236,12 @@
     outline: 2px solid var(--m3c-primary);
   }
 
+  /* La caja entera ya marca el foco; el contorno del propio campo, dentro,
+     dibujaba un segundo marco. */
+  .caja input:focus-visible {
+    outline-color: transparent;
+  }
+
   .icono-buscar {
     display: grid;
     place-items: center;
@@ -282,19 +288,6 @@
   .boton-borrar:hover {
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-on-surface);
-  }
-
-  kbd {
-    padding: 0.125rem var(--ns-espacio-2);
-    border-radius: var(--ns-radio-sm);
-    background: var(--m3c-surface-container-highest);
-    font-family: var(--ns-font-mono);
-    font-size: var(--ns-texto-xs);
-    flex-shrink: 0;
-  }
-
-  :global(.carcasa[data-ancho='compacto']) kbd {
-    display: none;
   }
 
   .acciones {

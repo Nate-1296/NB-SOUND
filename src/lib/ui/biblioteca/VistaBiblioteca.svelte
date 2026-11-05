@@ -25,6 +25,12 @@
     karaokeEstado,
     karaokePrepararFavoritas
   } from '#lib/core/ipc/index.ts';
+  import {
+    recordado,
+    type PaginaAlbumes,
+    type PaginaArtistas,
+    type PaginaPistas
+  } from '#lib/core/ipc/index.ts';
   import { estadoBiblioteca, type ModoRejilla } from '#lib/core/estadoVistas.svelte.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
@@ -186,6 +192,20 @@
     void cambios.version;
     if (vista !== 'pistas') return;
     const clave = JSON.stringify(c);
+    // Al volver a la pestaña, lo de la última vez al instante (la lista se monta
+    // ya con su primer bloque) y lo nuevo lo refresca sin moverla.
+    if (total === null) {
+      const previa = recordado<PaginaPistas>('biblioteca_pistas', {
+        consulta: c,
+        desde: 0,
+        limite: TAM_BLOQUE
+      });
+      if (previa) {
+        primerBloque = previa.pistas;
+        total = previa.total;
+        claveMontada = clave;
+      }
+    }
     const v = ++pedido;
     void bibliotecaPistas(c, 0, TAM_BLOQUE).then((p) => {
       if (v !== pedido) return;
@@ -222,6 +242,32 @@
   let gridListo = $state(false);
   const PAGINA = 120;
 
+  // Al volver a la pestaña, la rejilla de la última vez al instante; lo nuevo la
+  // sustituye al llegar.
+  function sembrarAlbumes(texto: string | null, orden: OrdenAlbumes) {
+    const previa = recordado<PaginaAlbumes>('biblioteca_albumes', {
+      consulta: { texto, artistaId: null, orden, sencillos },
+      desde: 0,
+      limite: PAGINA
+    });
+    if (!previa) return;
+    albumes = previa.albumes;
+    totalAlbumes = previa.total;
+    gridListo = true;
+  }
+
+  function sembrarArtistas(texto: string | null, orden: OrdenArtistas) {
+    const previa = recordado<PaginaArtistas>('biblioteca_artistas', {
+      consulta: { texto, orden },
+      desde: 0,
+      limite: PAGINA
+    });
+    if (!previa) return;
+    artistas = previa.artistas;
+    totalArtistas = previa.total;
+    gridListo = true;
+  }
+
   $effect(() => {
     void cambios.version;
     const busqueda = textoAplicado || null;
@@ -238,6 +284,7 @@
       }
     } else if (vista === 'albumes') {
       const orden = ordenAlbumes;
+      if (albumes.length === 0) sembrarAlbumes(busqueda, orden);
       const g = ++pedidoGrid;
       cargandoGrid = true;
       void bibliotecaAlbumes(
@@ -253,6 +300,7 @@
       });
     } else if (vista === 'artistas') {
       const orden = ordenArtistas;
+      if (artistas.length === 0) sembrarArtistas(busqueda, orden);
       const g = ++pedidoGrid;
       cargandoGrid = true;
       void bibliotecaArtistas({ texto: busqueda, orden }, 0, PAGINA).then((p) => {
@@ -534,7 +582,12 @@
                 aria-label={`${t.reproducir} ${p.titulo}`}
               >
                 {#if p.tienePortada}
-                  <img src={urlPortada('pista', p.id, 320)} alt="" loading="lazy" />
+                  <img
+                    src={urlPortada('pista', p.id, 320)}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
                 {:else}
                   <Icon nombre="cancion" tamano={40} />
                 {/if}
@@ -568,7 +621,7 @@
           <a class="tarjeta" href={`/biblioteca/album?id=${a.id}`}>
             <span class="caratula">
               {#if a.tienePortada}
-                <img src={urlPortada('album', a.id, 320)} alt="" loading="lazy" />
+                <img src={urlPortada('album', a.id, 320)} alt="" loading="lazy" decoding="async" />
               {:else}
                 <Icon nombre="album" tamano={40} />
               {/if}
@@ -595,7 +648,12 @@
           <a class="tarjeta artista" href={`/biblioteca/artista?id=${a.id}`}>
             <span class="caratula redonda">
               {#if a.tieneImagen}
-                <img src={urlPortada('artista', a.id, 320)} alt="" loading="lazy" />
+                <img
+                  src={urlPortada('artista', a.id, 320)}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
               {:else}
                 <Icon nombre="artista" tamano={40} />
               {/if}
@@ -765,6 +823,12 @@
     background: var(--m3c-surface-container-high);
   }
 
+  /* La caja entera ya marca el foco; el contorno del propio campo, dentro,
+     dibujaba un segundo marco. */
+  .filtro-buscar input:focus-visible {
+    outline-color: transparent;
+  }
+
   .filtro-buscar input {
     flex: 1;
     width: 100%;
@@ -836,6 +900,13 @@
     list-style: none;
   }
 
+  /* Lo que queda fuera de la vista no se pinta: con 120 carátulas con sombra por
+     página, pintarlas todas era lo que hacía pesado el desplazamiento. */
+  .rejilla > li {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 15rem;
+  }
+
   .rejilla.sm {
     grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
     gap: var(--ns-espacio-2);
@@ -896,7 +967,7 @@
     border-radius: var(--ns-radio-sm);
     background: var(--m3c-surface-container-highest);
     color: var(--m3c-on-surface-variant);
-    box-shadow: 0 4px 12px var(--m3c-shadow);
+    box-shadow: 0 2px 6px var(--m3c-shadow);
     cursor: pointer;
     transition:
       transform 160ms ease,
@@ -905,7 +976,7 @@
 
   .tarjeta:hover .caratula {
     transform: scale(1.02);
-    box-shadow: 0 8px 20px var(--m3c-shadow);
+    box-shadow: 0 6px 14px var(--m3c-shadow);
   }
 
   .caratula.redonda {

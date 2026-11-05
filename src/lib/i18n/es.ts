@@ -41,7 +41,7 @@ export const es = {
   busqueda: {
     etiqueta: 'Buscar en tu música',
     marcador: 'Canciones, álbumes, artistas o letras',
-    atajo: 'Ctrl+K',
+    ayudaAtajo: 'Buscar en tu música (Ctrl+K)',
     borrar: 'Borrar búsqueda',
     titulo: 'Buscar',
     subtitulo: 'Encuentra artistas, álbumes, pistas y letras en toda tu biblioteca.',
@@ -88,6 +88,7 @@ export const es = {
     salirPantallaCompleta: 'Salir de pantalla completa (F11)',
     mini: 'Minirreproductor',
     cerrarMini: 'Cerrar el minirreproductor',
+    volverDeMini: 'Volver a la ventana de NB Sound',
     progreso: 'Progreso de la canción',
     repeticion: {
       ninguno: 'Repetir',
@@ -440,6 +441,7 @@ export const es = {
     abrir: 'Abrir',
     anclar: 'Anclar',
     desanclar: 'Desanclar',
+    anclada: 'Anclada',
     reproducir: 'Reproducir',
     aleatorio: 'Aleatorio',
     renombrar: 'Renombrar',
@@ -538,6 +540,7 @@ export const es = {
     temasEspeciales: 'Alto contraste y OLED',
     tipografia: 'Tipografía',
     escala: 'Tamaño de la interfaz',
+    porcentaje: (n: number) => `${n} %`,
     colorPortada:
       'La reproducción, los álbumes, los artistas y las playlists toman el color de su portada',
     muestra: 'NB Sound, tu música',
@@ -639,10 +642,11 @@ export const es = {
     cantar: 'Cantar ahora',
     dejarDeCantar: 'Volver a la original',
     prepararPistaActual: 'Preparar esta canción',
-    preparandoOtra: (pct: number) => `Preparando otra canción · ${pct} %`,
     enPreparacion: 'En preparación',
-    cancionesEnCola: (n: number) =>
-      n === 1 ? '1 canción más espera su turno.' : `${n} canciones más esperan su turno.`,
+    enEspera: 'En espera',
+    yMas: (n: number) => (n === 1 ? 'Y 1 más después.' : `Y ${n} más después.`),
+    siguePorSuCuenta:
+      'Se preparan una detrás de otra mientras escuchas. Si cierras NB Sound, sigue donde lo dejó al volver a abrirlo.',
     sinPendientes: 'Nada en preparación. Puedes seguir escuchando mientras se preparan.',
     repertorio: 'Tu repertorio',
     listas: (n: number) =>

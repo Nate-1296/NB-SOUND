@@ -18,6 +18,7 @@
     reproducirLista,
     urlPortada
   } from '#lib/core/ipc/index.ts';
+  import { recordado, type PaginaPistas } from '#lib/core/ipc/index.ts';
   import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
   import CabeceraPistas from '#lib/ui/biblioteca/CabeceraPistas.svelte';
@@ -53,6 +54,13 @@
     if (!Number.isFinite(id) || id <= 0) {
       album = null;
       return;
+    }
+    // Lo de la última visita, al instante; lo nuevo lo sustituye al llegar.
+    if (album?.id !== id) {
+      album = recordado<AlbumResumen | null>('biblioteca_album', { id });
+      pistas =
+        recordado<PaginaPistas>('biblioteca_pistas', { consulta: c, desde: 0, limite: 500 })
+          ?.pistas ?? [];
     }
     void bibliotecaAlbum(id).then((a) => {
       album = a;

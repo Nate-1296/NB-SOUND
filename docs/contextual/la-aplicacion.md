@@ -236,8 +236,9 @@ tiene su propio carril y no tapa nada.
 
 ### El minirreproductor
 
-Una ventana pequeña que se queda encima de las demás, con la portada, el título, el artista, los controles, el
-progreso, la favorita y cerrar. Responde al instante y se mueve arrastrándola.
+Una ventana pequeña que se queda encima de las demás: la portada a todo el alto, el título y el artista, la
+favorita, anterior, reproducir, siguiente y repetir, y el progreso como borde inferior. Arriba, volver a la ventana
+grande y cerrar. Cerrar solo la esconde, así que volver a abrirla es instantáneo. Se mueve arrastrándola.
 
 ## Las consolas laterales
 

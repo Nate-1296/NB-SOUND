@@ -34,6 +34,19 @@ pub fn consulta(texto: &str) -> Option<String> {
     (!palabras.is_empty()).then(|| palabras.join(" "))
 }
 
+/// La misma consulta restringida al título; con `al_principio`, el título además
+/// empieza por la primera palabra. Sirven para ordenar por escalones: quien
+/// escribe "beb" busca antes "Bebé" que una canción que dice "bebé" veinte veces
+/// en la letra, y el `bm25` solo, con letras largas, las mezclaba.
+pub fn consulta_titulo(texto: &str, al_principio: bool) -> Option<String> {
+    let q = consulta(texto)?;
+    Some(if al_principio {
+        format!("titulo : (^{q})")
+    } else {
+        format!("titulo : ({q})")
+    })
+}
+
 /// Los `id` de las pistas visibles que coinciden, de más a menos relevante.
 ///
 /// # Errors
@@ -109,6 +122,33 @@ mod tests {
         for raro in ["\"hey", "NEAR(", "a AND", "-", "*", "()", "   "] {
             assert!(buscar(&db.conexion().unwrap(), raro, 10).is_ok(), "{raro}");
         }
+    }
+
+    #[test]
+    fn las_consultas_de_titulo_son_validas_y_distinguen_el_principio() {
+        let db = base();
+        let conn = db.conexion().unwrap();
+        let casan = |q: String| -> Vec<i64> {
+            let mut s = conn
+                .prepare("SELECT rowid FROM busqueda WHERE busqueda MATCH ?1 ORDER BY rowid")
+                .unwrap();
+            s.query_map([q], |f| f.get(0))
+                .unwrap()
+                .collect::<rusqlite::Result<_>>()
+                .unwrap()
+        };
+        assert_eq!(casan(consulta_titulo("ray", true).unwrap()), [1]);
+        assert!(casan(consulta_titulo("sol", true).unwrap()).is_empty());
+        assert_eq!(casan(consulta_titulo("sol", false).unwrap()), [1]);
+        assert!(
+            casan(consulta_titulo("bar", false).unwrap()).contains(&2),
+            "el título de la 2 dice bar"
+        );
+        assert!(
+            casan(consulta_titulo("dejaste", false).unwrap()).is_empty(),
+            "la letra no cuenta"
+        );
+        assert_eq!(casan(consulta_titulo("back in", true).unwrap()), [3]);
     }
 
     #[test]

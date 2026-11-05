@@ -43,6 +43,12 @@
     'cantidadPalabras',
     'cantidadLetras'
   ];
+  const ICONOS_MODO = {
+    portada: 'album',
+    audio: 'volumen',
+    redescubrimiento: 'reloj',
+    nunca_eliges: 'aleatorio'
+  } as const satisfies Record<Modo, string>;
   const RETOS = [5, 10, 15];
   const SEGUNDOS = [8, 12, 20];
 
@@ -162,6 +168,7 @@
           disabled={cuenta(m) === 0}
           onclick={() => (modo = m)}
         >
+          <span class="icono-modo"><Icon nombre={ICONOS_MODO[m]} tamano={22} /></span>
           <strong>{t.modos[m].nombre}</strong>
           <span>{t.modos[m].detalle}</span>
           <small>{t.canciones(cuenta(m))}</small>
@@ -235,148 +242,156 @@
         <span class="marcador">{t.marcador(ronda.acertados)}</span>
       </div>
 
-      <div class="pista">
-        {#if conPortada}
-          <div class="portada">
-            {#if reto.tienePortada}
-              <img src={urlPortada('pista', reto.pistaId, 480)} alt="" width="240" height="240" />
-            {:else}
-              <Icon nombre="cancion" tamano={64} />
-            {/if}
-          </div>
-        {/if}
-        <dl class="campos">
-          <dt>{t.campos.titulo}</dt>
-          <dd class:oculto={reto.titulo == null}>
-            {reto.titulo ?? t.oculto}{#if reto.anio}<small class="anio">{reto.anio}</small>{/if}
-          </dd>
-          <dt>{t.campos.artista}</dt>
-          <dd class:oculto={reto.artista == null}>{reto.artista ?? t.oculto}</dd>
-          <dt>{t.campos.album}</dt>
-          <dd class:oculto={reto.album == null}>{reto.album ?? t.oculto}</dd>
-        </dl>
-      </div>
-
-      {#if conSonido && !resuelto}
-        <div class="fila">
-          <button
-            type="button"
-            class="boton relleno"
-            onclick={() => aciegasFragmento().then(nueva)}
-          >
-            <Icon nombre="reproducir" tamano={16} />{t.escuchar}
-          </button>
-          <span class="rotulo">{t.duracionFragmento}</span>
-          {#each SEGUNDOS as s (s)}
-            <button
-              type="button"
-              class="ficha"
-              class:activa={ronda.segundosFragmento === s}
-              aria-pressed={ronda.segundosFragmento === s}
-              onclick={() => jugar({ tipo: 'segundosFragmento', segundos: s })}
-              >{t.segundos(s)}</button
-            >
-          {/each}
-          {#if reproductor.instantanea.ciego}
-            <span class="barra" aria-hidden="true"
-              ><span
-                style:width={`${Math.round(
-                  (reproductor.posicion / Math.max(reproductor.instantanea.duracionSeg, 1)) * 100
-                )}%`}
-              ></span></span
-            >
+      <div class="juego">
+        <div class="portada" class:sonido={!conPortada}>
+          {#if conPortada && reto.tienePortada}
+            <img src={urlPortada('pista', reto.pistaId, 640)} alt="" width="320" height="320" />
+          {:else}
+            <Icon nombre={conPortada ? 'cancion' : 'volumen'} tamano={72} />
           {/if}
         </div>
-      {/if}
+        <div class="mando">
+          <dl class="campos">
+            <dt>{t.campos.titulo}</dt>
+            <dd class:oculto={reto.titulo == null}>
+              {reto.titulo ?? t.oculto}{#if reto.anio}<small class="anio">{reto.anio}</small>{/if}
+            </dd>
+            <dt>{t.campos.artista}</dt>
+            <dd class:oculto={reto.artista == null}>{reto.artista ?? t.oculto}</dd>
+            <dt>{t.campos.album}</dt>
+            <dd class:oculto={reto.album == null}>{reto.album ?? t.oculto}</dd>
+          </dl>
 
-      {#if !resuelto}
-        {#if reto.sePuedeEscribir}
-          <form
-            class="fila"
-            onsubmit={(e) => {
-              e.preventDefault();
-              void comprobar();
-            }}
-          >
-            <input
-              class="campo"
-              maxlength="300"
-              placeholder={t.escribir}
-              aria-label={t.escribir}
-              bind:value={texto}
-            />
-            <button type="submit" class="boton relleno">{t.comprobar}</button>
-          </form>
-        {:else}
-          <div class="fila">
-            <p class="aviso">{t.noSeEscribe}</p>
-            <button type="button" class="boton relleno" onclick={() => jugar({ tipo: 'laSe' })}
-              >{t.laSe}</button
-            >
-          </div>
-        {/if}
-        {#if intento && !intento.acierto}
-          <p class="aviso" role="status">{intento.cerca ? t.cerca : t.fallo}</p>
-        {/if}
-        {#if reto.fallos > 0}<p class="aviso">{t.fallos(reto.fallos)}</p>{/if}
-
-        <div class="fila">
-          <span class="rotulo">{t.indicios}</span>
-          {#each INDICIOS as i (i)}
-            {@const visto = reto.indicios.find((v) => v.indicio === i)}
-            {#if visto}
-              <span class="indicio"
-                >{t.nombresIndicio[i]}: <strong>{valorIndicio(i, visto.valor)}</strong></span
-              >
-            {:else}
+          {#if conSonido && !resuelto}
+            <div class="fila">
               <button
                 type="button"
-                class="ficha"
-                onclick={() => jugar({ tipo: 'indicio', indicio: i })}>{t.nombresIndicio[i]}</button
+                class="boton relleno"
+                onclick={() => aciegasFragmento().then(nueva)}
               >
-            {/if}
-          {/each}
-        </div>
+                <Icon nombre="reproducir" tamano={16} />{t.escuchar}
+              </button>
+              <span class="rotulo">{t.duracionFragmento}</span>
+              {#each SEGUNDOS as s (s)}
+                <button
+                  type="button"
+                  class="ficha"
+                  class:activa={ronda.segundosFragmento === s}
+                  aria-pressed={ronda.segundosFragmento === s}
+                  onclick={() => jugar({ tipo: 'segundosFragmento', segundos: s })}
+                  >{t.segundos(s)}</button
+                >
+              {/each}
+              {#if reproductor.instantanea.ciego}
+                <span class="barra" aria-hidden="true"
+                  ><span
+                    style:width={`${Math.round(
+                      (reproductor.posicion / Math.max(reproductor.instantanea.duracionSeg, 1)) *
+                        100
+                    )}%`}
+                  ></span></span
+                >
+              {/if}
+            </div>
+          {/if}
 
-        <div class="fila">
-          {#if reto.artista == null}
-            <button type="button" class="boton" onclick={() => jugar({ tipo: 'revelarArtista' })}
-              >{t.verArtista}</button
-            >
+          {#if !resuelto}
+            {#if reto.sePuedeEscribir}
+              <form
+                class="fila"
+                onsubmit={(e) => {
+                  e.preventDefault();
+                  void comprobar();
+                }}
+              >
+                <input
+                  class="campo"
+                  maxlength="300"
+                  placeholder={t.escribir}
+                  aria-label={t.escribir}
+                  bind:value={texto}
+                />
+                <button type="submit" class="boton relleno">{t.comprobar}</button>
+              </form>
+            {:else}
+              <div class="fila">
+                <p class="aviso">{t.noSeEscribe}</p>
+                <button type="button" class="boton relleno" onclick={() => jugar({ tipo: 'laSe' })}
+                  >{t.laSe}</button
+                >
+              </div>
+            {/if}
+            {#if intento && !intento.acierto}
+              <p class="aviso" role="status">{intento.cerca ? t.cerca : t.fallo}</p>
+            {/if}
+            {#if reto.fallos > 0}<p class="aviso">{t.fallos(reto.fallos)}</p>{/if}
+
+            <div class="fila">
+              <span class="rotulo">{t.indicios}</span>
+              {#each INDICIOS as i (i)}
+                {@const visto = reto.indicios.find((v) => v.indicio === i)}
+                {#if visto}
+                  <span class="indicio"
+                    >{t.nombresIndicio[i]}: <strong>{valorIndicio(i, visto.valor)}</strong></span
+                  >
+                {:else}
+                  <button
+                    type="button"
+                    class="ficha"
+                    onclick={() => jugar({ tipo: 'indicio', indicio: i })}
+                    >{t.nombresIndicio[i]}</button
+                  >
+                {/if}
+              {/each}
+            </div>
+
+            <div class="fila">
+              {#if reto.artista == null}
+                <button
+                  type="button"
+                  class="boton"
+                  onclick={() => jugar({ tipo: 'revelarArtista' })}>{t.verArtista}</button
+                >
+              {/if}
+              {#if reto.album == null}
+                <button type="button" class="boton" onclick={() => jugar({ tipo: 'revelarAlbum' })}
+                  >{t.verAlbum}</button
+                >
+              {/if}
+              <button type="button" class="boton" onclick={() => jugar({ tipo: 'revelarTodo' })}
+                >{t.rendirse}</button
+              >
+            </div>
+          {:else}
+            {#if reto.estado === 'acertado'}<p class="exito" role="status">{t.acierto}</p>{/if}
+            <div class="fila">
+              <button
+                type="button"
+                class="boton"
+                onclick={() => reto && reproductor.reproducirPistas([reto.pistaId])}
+              >
+                <Icon nombre="reproducir" tamano={16} />{t.escucharEntera}
+              </button>
+              <button
+                type="button"
+                class="boton"
+                disabled={enCola}
+                onclick={() => {
+                  if (!reto) return;
+                  void reproductor.orden({
+                    tipo: 'agregar',
+                    ids: [reto.pistaId],
+                    justoDespues: false
+                  });
+                  enCola = true;
+                }}
+              >
+                <Icon nombre="cola" tamano={16} />{enCola ? t.enCola : t.aLaCola}
+              </button>
+            </div>
           {/if}
-          {#if reto.album == null}
-            <button type="button" class="boton" onclick={() => jugar({ tipo: 'revelarAlbum' })}
-              >{t.verAlbum}</button
-            >
-          {/if}
-          <button type="button" class="boton" onclick={() => jugar({ tipo: 'revelarTodo' })}
-            >{t.rendirse}</button
-          >
         </div>
-      {:else}
-        {#if reto.estado === 'acertado'}<p class="exito" role="status">{t.acierto}</p>{/if}
-        <div class="fila">
-          <button
-            type="button"
-            class="boton"
-            onclick={() => reto && reproductor.reproducirPistas([reto.pistaId])}
-          >
-            <Icon nombre="reproducir" tamano={16} />{t.escucharEntera}
-          </button>
-          <button
-            type="button"
-            class="boton"
-            disabled={enCola}
-            onclick={() => {
-              if (!reto) return;
-              void reproductor.orden({ tipo: 'agregar', ids: [reto.pistaId], justoDespues: false });
-              enCola = true;
-            }}
-          >
-            <Icon nombre="cola" tamano={16} />{enCola ? t.enCola : t.aLaCola}
-          </button>
-        </div>
-      {/if}
+      </div>
 
       <div class="fila navegacion">
         {#if ronda.indice > 0}
@@ -477,7 +492,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-4);
-    max-width: 50rem;
+    max-width: 76rem;
     margin: 0 auto;
     width: 100%;
   }
@@ -529,8 +544,9 @@
   .modo {
     display: flex;
     flex-direction: column;
-    gap: var(--ns-espacio-1);
-    padding: var(--ns-espacio-4);
+    gap: var(--ns-espacio-2);
+    min-height: 11rem;
+    padding: var(--ns-espacio-5);
     border: 1px solid var(--m3c-outline-variant);
     border-radius: var(--ns-radio-xl);
     background: var(--m3c-surface-container);
@@ -561,9 +577,28 @@
     cursor: default;
   }
 
+  .modo strong {
+    font-size: var(--ns-texto-lg);
+  }
+
   .modo span,
   .modo small {
     font-size: var(--ns-texto-sm);
+  }
+
+  .modo small {
+    margin-top: auto;
+  }
+
+  .icono-modo {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: var(--ns-espacio-1);
+    border-radius: var(--ns-radio-pleno);
+    background: color-mix(in srgb, var(--m3c-primary) 14%, transparent);
+    color: var(--m3c-primary);
   }
 
   .modo small {
@@ -596,19 +631,38 @@
     color: var(--m3c-on-surface-variant);
   }
 
-  .pista {
+  /* La portada manda: grande a la izquierda, y todo lo que se juega a su lado.
+     En una ventana estrecha, una encima de lo otro. */
+  .juego {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--ns-espacio-6);
+  }
+
+  .mando {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
     gap: var(--ns-espacio-4);
+    min-width: 0;
+  }
+
+  .mando .fila {
+    justify-content: flex-start;
+  }
+
+  @container carcasa (max-width: 60rem) {
+    .juego {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: center;
+    }
   }
 
   .portada {
     display: grid;
     place-items: center;
-    width: 12rem;
-    height: 12rem;
+    width: clamp(14rem, 42vh, 26rem);
+    aspect-ratio: 1;
     overflow: hidden;
     border-radius: var(--ns-radio-xl);
     background: var(--m3c-surface-container-high);
@@ -622,10 +676,20 @@
     object-fit: cover;
   }
 
+  .portada.sonido {
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--m3c-primary) 22%, var(--m3c-surface-container-high)),
+      var(--m3c-surface-container-high) 70%
+    );
+    color: var(--m3c-primary);
+  }
+
   .campos {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: var(--ns-espacio-2) var(--ns-espacio-4);
+    align-items: baseline;
+    gap: var(--ns-espacio-3) var(--ns-espacio-4);
     margin: 0;
     text-align: left;
   }
@@ -637,6 +701,7 @@
 
   dd {
     margin: 0;
+    font-size: var(--ns-texto-xl);
     font-weight: 700;
   }
 
@@ -676,8 +741,8 @@
   .campo {
     flex: 1;
     min-width: 14rem;
-    max-width: 28rem;
-    height: 2.75rem;
+    max-width: 32rem;
+    height: 3rem;
     padding: 0 var(--ns-espacio-4);
     border: 1px solid var(--m3c-outline-variant);
     border-radius: var(--ns-radio-pleno);

@@ -486,6 +486,7 @@ pub fn run() {
             comandos::ambiente_de_pista,
             comandos::forma_de_onda,
             comandos::abrir_minirreproductor,
+            comandos::dejar_minirreproductor,
             comandos::apariencia,
             comandos::guardar_preferencia,
             comandos::ecualizador,

@@ -131,7 +131,49 @@ export async function call<T>(comando: string, args?: Record<string, unknown>): 
   }
   // Las vistas abiertas se refrescan solas (`cambios.svelte.ts`).
   if (COMANDOS_QUE_CAMBIAN.has(comando)) cambios.avisar();
+  if (COMANDOS_RECORDADOS.has(comando)) recordar(clave(comando, args), r);
   return r;
+}
+
+/*
+ * Lo último que respondieron las lecturas con que se pinta una vista, para que al
+ * volver a ella se vea al instante lo de la vez anterior mientras llega lo nuevo
+ * (stale-while-revalidate). Antes, cada vuelta a Inicio, Tu música o un álbum
+ * empezaba en blanco unos segundos. Solo en memoria y acotado: es una vista
+ * previa, no una copia de la base; la vista siempre vuelve a pedir y se queda con
+ * la respuesta nueva.
+ */
+const COMANDOS_RECORDADOS = new Set([
+  'inicio',
+  'perfil',
+  'resumen_escucha',
+  'playlists_listar',
+  'playlist',
+  'biblioteca_album',
+  'biblioteca_artista',
+  'biblioteca_albumes',
+  'biblioteca_artistas',
+  'biblioteca_pistas'
+]);
+const MAX_RECORDADOS = 80;
+const recordados = new Map<string, unknown>();
+
+function clave(comando: string, args?: Record<string, unknown>): string {
+  return args ? `${comando} ${JSON.stringify(args)}` : comando;
+}
+
+function recordar(k: string, valor: unknown): void {
+  recordados.delete(k);
+  recordados.set(k, valor);
+  if (recordados.size > MAX_RECORDADOS) {
+    const masVieja = recordados.keys().next().value;
+    if (masVieja !== undefined) recordados.delete(masVieja);
+  }
+}
+
+/** Lo que respondió la última vez esta lectura, si se recuerda. */
+export function recordado<T>(comando: string, args?: Record<string, unknown>): T | undefined {
+  return recordados.get(clave(comando, args)) as T | undefined;
 }
 
 /** Comprueba que el runtime responde y devuelve su versión. */
@@ -342,9 +384,9 @@ export function abrirMinirreproductor(): Promise<void> {
   return call<void>('abrir_minirreproductor');
 }
 
-/** Cierra la ventana desde la que se llama (el minirreproductor). */
-export function cerrarEstaVentana(): Promise<void> {
-  return getCurrentWindow().close();
+/** Esconde el minirreproductor; con `volver`, trae delante la ventana principal. */
+export function dejarMinirreproductor(volver: boolean): Promise<void> {
+  return call<void>('dejar_minirreproductor', { volver });
 }
 
 /** Pone o quita la ventana en pantalla completa (F11), como la V1 en las fiestas. */

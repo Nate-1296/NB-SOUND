@@ -199,8 +199,11 @@
     flex-direction: column;
     gap: var(--ns-espacio-1);
     margin: 0;
-    padding: 0;
+    /* Un carril propio para la barra de desplazamiento: las de WebKitGTK flotan
+       encima y tapaban la duración y el botón de quitar de cada fila. */
+    padding: 0 var(--ns-espacio-3) 0 0;
     overflow-y: auto;
+    scrollbar-gutter: stable;
     list-style: none;
   }
 

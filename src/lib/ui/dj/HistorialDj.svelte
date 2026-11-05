@@ -58,8 +58,8 @@
     <input type="search" placeholder={t.buscar} aria-label={t.buscar} bind:value={texto} />
   </label>
 
-  {#if leidas && filas.length === 0}
-    <p class="vacio">{texto.trim() ? t.nada : t.vacio}</p>
+  {#if leidas && filas.length === 0 && texto.trim()}
+    <p class="vacio">{t.nada}</p>
   {/if}
 
   <ul>
@@ -84,6 +84,18 @@
       </li>
     {/each}
   </ul>
+
+  <!-- Ocupa lo que la lista deja libre: con pocas sesiones se ve entero, y a
+       medida que se llena se encoge hasta desaparecer (consulta de contenedor). -->
+  {#if leidas && !texto.trim()}
+    <div class="adorno" aria-hidden={filas.length > 0}>
+      <div class="adorno-contenido">
+        <span class="disco"><Icon nombre="dj" tamano={40} /></span>
+        <strong>{filas.length === 0 ? t.vacio : t.pocas}</strong>
+        <small>{t.adornoTexto}</small>
+      </div>
+    </div>
+  {/if}
 </section>
 
 <style>
@@ -95,8 +107,13 @@
     border: 1px solid var(--m3c-outline-variant);
     border-radius: var(--ns-radio-xl);
     background: var(--m3c-surface-container);
-    max-height: calc(100vh - var(--ns-alto-reproductor) - 2rem);
-    overflow-y: auto;
+    /* Toda la altura del área de contenido: antes medía lo que su lista y dejaba
+       media columna vacía. Las mismas medidas que la carcasa (AppShell). */
+    height: calc(
+      100vh - var(--ns-alto-superior) - var(--ns-alto-reproductor) - var(--ns-espacio-2) * 2 -
+        var(--ns-espacio-6)
+    );
+    min-height: 24rem;
   }
 
   h2 {
@@ -120,6 +137,12 @@
     border-color: var(--m3c-primary);
   }
 
+  /* La caja entera ya marca el foco; el contorno del propio campo, dentro,
+     dibujaba un segundo marco. */
+  .busqueda input:focus-visible {
+    outline-color: transparent;
+  }
+
   .busqueda input {
     flex: 1;
     border: none;
@@ -137,11 +160,71 @@
 
   ul {
     display: flex;
+    flex: 0 1 auto;
     flex-direction: column;
     gap: var(--ns-espacio-1);
+    min-height: 0;
     margin: 0;
     padding: 0;
+    overflow-y: auto;
     list-style: none;
+  }
+
+  .adorno {
+    display: grid;
+    flex: 1 1 0;
+    place-items: center;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: var(--ns-radio-lg);
+    background: radial-gradient(
+      circle at 50% 40%,
+      color-mix(in srgb, var(--m3c-primary) 14%, transparent),
+      transparent 70%
+    );
+    container-type: size;
+  }
+
+  .adorno-contenido {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    max-width: 16rem;
+    padding: var(--ns-espacio-4);
+    text-align: center;
+  }
+
+  .adorno-contenido small {
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    line-height: 1.5;
+  }
+
+  .disco {
+    display: grid;
+    place-items: center;
+    width: 5.5rem;
+    height: 5.5rem;
+    margin-bottom: var(--ns-espacio-2);
+    border: 1px solid color-mix(in srgb, var(--m3c-primary) 40%, transparent);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-high);
+    color: var(--m3c-primary);
+    box-shadow: 0 0 0 0.5rem color-mix(in srgb, var(--m3c-primary) 8%, transparent);
+  }
+
+  /* Poco sitio: primero se va el texto pequeño, luego todo. */
+  @container (max-height: 15rem) {
+    .adorno-contenido small {
+      display: none;
+    }
+  }
+
+  @container (max-height: 10rem) {
+    .adorno-contenido {
+      display: none;
+    }
   }
 
   li {

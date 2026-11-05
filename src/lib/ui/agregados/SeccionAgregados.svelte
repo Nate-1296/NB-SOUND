@@ -34,6 +34,11 @@
     return () => void quitar.then((f) => f());
   });
 
+  // Lo que todavía no se publica no se enseña: un "Todavía no disponible" en
+  // Ajustes promete algo que no se puede hacer. Si ya estaba instalado, se ve
+  // para poder quitarlo.
+  const visibles = $derived(lista.filter((a) => a.publicado || a.instalado));
+
   const megas = (bytes: number) => Math.round(bytes / 1_048_576);
 
   async function instalar(a: EstadoAgregado) {
@@ -51,46 +56,46 @@
   }
 </script>
 
-<section id="agregados" aria-labelledby="t-agregados">
-  <h2 id="t-agregados">{titulo}</h2>
-  <p>{t.ayuda}</p>
-  <ul class="tarjetas">
-    {#each lista as a (a.id)}
-      <li class="tarjeta">
-        <div class="datos">
-          <strong>{t.nombres[a.id]}</strong>
-          <span>{t.descripciones[a.id]}</span>
-          {#if a.id === 'aceleracion' && gpu && !a.instalado}
-            <span class="recomendado">{t.recomendado(gpu.nombre ?? t.gpus[gpu.acelerador])}</span>
-          {/if}
-          {#if a.error}
-            <span class="error" role="alert">{t.errores[a.error] ?? t.error}</span>
-          {/if}
-        </div>
-        <div class="accion">
-          {#if a.progreso !== null}
-            <progress max="1" value={a.progreso} aria-label={t.nombres[a.id]}></progress>
-            <small>{t.descargando(Math.floor(a.progreso * 100))}</small>
-          {:else if !a.publicado}
-            <small>{t.noDisponible} · {t.tamano(megas(a.bytes))}</small>
-          {:else if a.instalado}
-            {#if a.actualizable}
+{#if visibles.length > 0}
+  <section id="agregados" aria-labelledby="t-agregados">
+    <h2 id="t-agregados">{titulo}</h2>
+    <p>{t.ayuda}</p>
+    <ul class="tarjetas">
+      {#each visibles as a (a.id)}
+        <li class="tarjeta">
+          <div class="datos">
+            <strong>{t.nombres[a.id]}</strong>
+            <span>{t.descripciones[a.id]}</span>
+            {#if a.id === 'aceleracion' && gpu && !a.instalado}
+              <span class="recomendado">{t.recomendado(gpu.nombre ?? t.gpus[gpu.acelerador])}</span>
+            {/if}
+            {#if a.error}
+              <span class="error" role="alert">{t.errores[a.error] ?? t.error}</span>
+            {/if}
+          </div>
+          <div class="accion">
+            {#if a.progreso !== null}
+              <progress max="1" value={a.progreso} aria-label={t.nombres[a.id]}></progress>
+              <small>{t.descargando(Math.floor(a.progreso * 100))}</small>
+            {:else if a.instalado}
+              {#if a.actualizable}
+                <button type="button" class="boton principal" onclick={() => instalar(a)}>
+                  {t.actualizar}
+                </button>
+              {/if}
+              <button type="button" class="boton" onclick={() => quitar(a)}>{t.quitar}</button>
+            {:else}
               <button type="button" class="boton principal" onclick={() => instalar(a)}>
-                {t.actualizar}
+                {t.instalar(megas(a.bytes))}
               </button>
             {/if}
-            <button type="button" class="boton" onclick={() => quitar(a)}>{t.quitar}</button>
-          {:else}
-            <button type="button" class="boton principal" onclick={() => instalar(a)}>
-              {t.instalar(megas(a.bytes))}
-            </button>
-          {/if}
-        </div>
-      </li>
-    {/each}
-  </ul>
-  {#if fallo}<p role="alert" class="error">{fallo}</p>{/if}
-</section>
+          </div>
+        </li>
+      {/each}
+    </ul>
+    {#if fallo}<p role="alert" class="error">{fallo}</p>{/if}
+  </section>
+{/if}
 
 <style>
   section {

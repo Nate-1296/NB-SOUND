@@ -23,7 +23,12 @@
     <span class="vacio"><Icon nombre="playlists" tamano={40} /></span>
   {:else}
     {#each visibles as id (id)}
-      <img src={urlPortada('pista', id, lado === 2 ? tamano / 2 : tamano)} alt="" loading="lazy" />
+      <img
+        src={urlPortada('pista', id, lado === 2 ? tamano / 2 : tamano)}
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
     {/each}
   {/if}
 </span>

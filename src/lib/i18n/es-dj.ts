@@ -207,6 +207,9 @@ export const esDj = {
     titulo: 'Historial',
     buscar: 'Buscar en el historial',
     vacio: 'Aún no has pedido ninguna sesión.',
+    pocas: 'Tus sesiones se quedan aquí.',
+    adornoTexto:
+      'Vuelve a cualquiera para escucharla otra vez, ver sus canciones o guardarla como playlist.',
     nada: 'Ninguna sesión coincide.',
     estados: {
       construyendo: 'Preparándose',

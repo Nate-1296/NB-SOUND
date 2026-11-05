@@ -167,21 +167,50 @@
   {#if estado?.instalado}
     <section class="tarjeta" aria-labelledby="k-prep">
       <h3 id="k-prep" class="rotulo">{t.enPreparacion}</h3>
-      {#if preparando && !estaSePrepara}
-        <p class="nota fuerte">{t.preparandoOtra(pct)}</p>
-        <div
-          class="barra"
-          role="progressbar"
-          aria-valuenow={pct}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <span style:width={`${pct}%`}></span>
-        </div>
+      {#if estado.cola.length > 0}
+        <ol class="cola">
+          {#each estado.cola as c (c.pista)}
+            {@const activa = preparando?.pista === c.pista}
+            <li class:activa>
+              <span class="portada mini">
+                {#if c.tienePortada}
+                  <img
+                    src={urlPortada('pista', c.pista, 96)}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                {:else}
+                  <Icon nombre="cancion" tamano={16} />
+                {/if}
+              </span>
+              <span class="datos">
+                <strong>{c.titulo}</strong>
+                <span>{c.artista}</span>
+              </span>
+              <span class="turno">{activa ? `${pct} %` : t.enEspera}</span>
+              {#if activa}
+                <div
+                  class="barra"
+                  role="progressbar"
+                  aria-label={c.titulo}
+                  aria-valuenow={pct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <span style:width={`${pct}%`}></span>
+                </div>
+              {/if}
+            </li>
+          {/each}
+        </ol>
+        {#if estado.pendientes > estado.cola.length}
+          <p class="nota">{t.yMas(estado.pendientes - estado.cola.length)}</p>
+        {/if}
+        <p class="nota">{t.siguePorSuCuenta}</p>
+      {:else}
+        <p class="nota">{t.sinPendientes}</p>
       {/if}
-      <p class="nota">
-        {estado.pendientes > 0 ? t.cancionesEnCola(estado.pendientes) : t.sinPendientes}
-      </p>
     </section>
   {/if}
 
@@ -307,15 +336,52 @@
     transition: width var(--ns-duracion-media) var(--ns-curva);
   }
 
+  .cola {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cola li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--ns-espacio-1) var(--ns-espacio-3);
+    padding: var(--ns-espacio-2);
+    border-radius: var(--ns-radio-md);
+  }
+
+  .cola li.activa {
+    background: var(--m3c-surface-container-highest);
+  }
+
+  .cola li .barra {
+    grid-column: 1 / -1;
+  }
+
+  .portada.mini {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .turno {
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
+  .activa .turno {
+    color: var(--m3c-primary);
+  }
+
   .nota {
     margin: 0;
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-sm);
-  }
-
-  .nota.fuerte {
-    color: var(--m3c-on-surface);
-    font-weight: 600;
   }
 
   .cifra {

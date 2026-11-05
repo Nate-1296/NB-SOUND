@@ -47,6 +47,10 @@ pub struct ResumenEscucha {
     pub radar: RadarAnimos,
     /// 7 días (0 = lunes .. 6 = domingo) × 24 horas (0..24) = 168 celdas en hora local.
     pub mapa_calor: Vec<u32>,
+    /// Con un mes elegido, las reproducciones de cada uno de sus días (tantas
+    /// como días tiene el mes); si no, vacío. Un mes cabe mal en el mapa de días
+    /// por horas: quedaba casi vacío y no decía qué días se escuchó.
+    pub por_dia: Vec<u32>,
     pub top_canciones: Vec<PistaEscuchada>,
     pub top_albumes: Vec<AlbumResumen>,
     pub top_artistas: Vec<ArtistaResumen>,
@@ -278,6 +282,31 @@ pub fn resumen_escucha(db: &BaseDeDatos, periodo: Option<&str>) -> NsResult<Resu
         }
     }
 
+    let por_dia = if periodo_norm.len() == 7 {
+        let dias: i64 = conn
+            .query_row(
+                "SELECT CAST(strftime('%d', ?1 || '-01', '+1 month', '-1 day') AS INTEGER)",
+                [&periodo_norm],
+                |f| f.get(0),
+            )
+            .map_err(|_| NsError::StorageFailure)?;
+        let mut v = vec![0u32; usize::try_from(dias.clamp(0, 31)).unwrap_or(0)];
+        let sql = format!(
+            "SELECT CAST(strftime('%d', h.reproducida_en, 'localtime') AS INTEGER) AS dia, count(*)
+             FROM historial h
+             WHERE h.reproducida_en IS NOT NULL AND ({cond})
+             GROUP BY dia"
+        );
+        for (dia, n) in pares_con_params(&conn, &sql, &params)? {
+            if let Some(c) = usize::try_from(dia - 1).ok().and_then(|i| v.get_mut(i)) {
+                *c = u32::try_from(n.max(0)).unwrap_or(u32::MAX);
+            }
+        }
+        v
+    } else {
+        Vec::new()
+    };
+
     let canciones = pares_con_params(
         &conn,
         &format!(
@@ -343,6 +372,7 @@ pub fn resumen_escucha(db: &BaseDeDatos, periodo: Option<&str>) -> NsResult<Resu
         segundos_escuchados,
         radar,
         mapa_calor,
+        por_dia,
         top_canciones,
         top_albumes,
         top_artistas,
@@ -865,6 +895,11 @@ mod tests {
         assert_eq!(marzo.pistas_distintas, 1);
         assert_eq!(marzo.segundos_escuchados, 300.0);
         assert!((marzo.radar.energia - 0.8).abs() < 1e-6);
+        assert_eq!(marzo.por_dia.len(), 31, "un día por cada día de marzo");
+        assert_eq!(marzo.por_dia.iter().sum::<u32>(), 2);
+        assert!(todo.por_dia.is_empty(), "sin mes elegido no hay calendario");
+        let feb = resumen_escucha(&db, Some("2026-02")).unwrap();
+        assert_eq!(feb.por_dia.len(), 28);
 
         let anio_2025 = resumen_escucha(&db, Some("2025")).unwrap();
         assert_eq!(anio_2025.reproducciones, 1);

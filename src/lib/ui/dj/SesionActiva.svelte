@@ -229,7 +229,13 @@
                 {p.posicion + 1}
               {/if}
             </span>
-            <img class="mini" src={urlPortada('pista', p.pistaId, 64)} alt="" loading="lazy" />
+            <img
+              class="mini"
+              src={urlPortada('pista', p.pistaId, 64)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
             <span class="datos-pista">
               <strong>{p.titulo}</strong>
               <small>{p.artista}</small>

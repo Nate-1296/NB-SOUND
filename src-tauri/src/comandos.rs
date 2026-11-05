@@ -592,6 +592,10 @@ pub async fn forma_de_onda(estado: tauri::State<'_, Estado>, pista_id: i64) -> N
 }
 
 /// Abre el minirreproductor flotante, o lo trae delante si ya está abierto.
+///
+/// La primera vez se crea la ventana; al cerrarla solo se esconde
+/// ([`dejar_minirreproductor`]), y las siguientes aparece al instante: crearla
+/// cada vez arrancaba un webview y la interfaz entera, y tardaba segundos.
 #[tauri::command]
 pub async fn abrir_minirreproductor(app: AppHandle) -> NsResult<()> {
     if let Some(v) = app.get_webview_window("mini") {
@@ -601,7 +605,7 @@ pub async fn abrir_minirreproductor(app: AppHandle) -> NsResult<()> {
     }
     tauri::WebviewWindowBuilder::new(&app, "mini", tauri::WebviewUrl::App("mini".into()))
         .title("NB Sound")
-        .inner_size(470.0, 168.0)
+        .inner_size(440.0, 136.0)
         .resizable(false)
         .always_on_top(true)
         .decorations(false)
@@ -612,6 +616,22 @@ pub async fn abrir_minirreproductor(app: AppHandle) -> NsResult<()> {
             tracing::error!("no se pudo abrir el minirreproductor");
             NsError::Internal
         })
+}
+
+/// Esconde el minirreproductor; con `volver`, trae delante la ventana principal.
+#[tauri::command]
+pub async fn dejar_minirreproductor(app: AppHandle, volver: bool) -> NsResult<()> {
+    if let Some(v) = app.get_webview_window("mini") {
+        let _ = v.hide();
+    }
+    if volver {
+        if let Some(v) = app.get_webview_window("main") {
+            let _ = v.unminimize();
+            let _ = v.show();
+            let _ = v.set_focus();
+        }
+    }
+    Ok(())
 }
 
 // --- Preferencias -------------------------------------------------------------------
@@ -1295,6 +1315,25 @@ pub struct EstadoKaraoke {
     pub preparando: Option<crate::karaoke::Preparando>,
     /// Cuántas esperan en la cola.
     pub pendientes: u32,
+    /// Las primeras de la cola, en el orden en que se prepararán (la que se está
+    /// separando, primero): la consola decía "Preparando otra canción · 40 %" sin
+    /// decir cuál. Como mucho [`CABEZA_COLA_KARAOKE`].
+    pub cola: Vec<EnColaKaraoke>,
+}
+
+/// Cuántas canciones de la cola enseña la consola.
+const CABEZA_COLA_KARAOKE: u32 = 6;
+
+/// Una canción en la cola del karaoke.
+#[derive(Debug, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub struct EnColaKaraoke {
+    #[ts(type = "number")]
+    pub pista: i64,
+    pub titulo: String,
+    pub artista: String,
+    pub tiene_portada: bool,
 }
 
 #[tauri::command]
@@ -1309,6 +1348,31 @@ pub async fn karaoke_estado(estado: tauri::State<'_, Estado>) -> NsResult<Estado
                 |f| f.get(0),
             )
             .map_err(|_| NsError::StorageFailure)?;
+        let conn = db.conexion()?;
+        // El mismo orden que `karaoke::siguiente`.
+        let mut s = conn
+            .prepare(
+                "SELECT s.pista_id, p.titulo, coalesce(p.artista_nombre, ''),
+                        coalesce(p.portada_id, a.portada_id) IS NOT NULL
+                   FROM stems s JOIN pistas p ON p.id = s.pista_id
+                   LEFT JOIN albumes a ON a.id = p.album_id
+                  WHERE s.estado IN ('pendiente', 'separando')
+                  ORDER BY s.estado = 'separando' DESC, s.solicitada_en, s.pista_id
+                  LIMIT ?1",
+            )
+            .map_err(|_| NsError::StorageFailure)?;
+        let cola = s
+            .query_map([CABEZA_COLA_KARAOKE], |f| {
+                Ok(EnColaKaraoke {
+                    pista: f.get(0)?,
+                    titulo: f.get(1)?,
+                    artista: f.get(2)?,
+                    tiene_portada: f.get(3)?,
+                })
+            })
+            .map_err(|_| NsError::StorageFailure)?
+            .collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(|_| NsError::StorageFailure)?;
         let e = crate::agregados::entrada(crate::agregados::IdAgregado::Karaoke)?;
         Ok(EstadoKaraoke {
             instalado: crate::karaoke::modelo_instalado(&rutas).is_some(),
@@ -1316,6 +1380,7 @@ pub async fn karaoke_estado(estado: tauri::State<'_, Estado>) -> NsResult<Estado
             bytes: e.bytes,
             preparando,
             pendientes,
+            cola,
         })
     })
     .await

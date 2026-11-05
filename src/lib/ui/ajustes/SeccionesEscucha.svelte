@@ -29,6 +29,18 @@
     'Atkinson Hyperlegible',
     'Source Sans 3'
   ];
+  const ESCALAS = [75, 90, 100, 110, 125, 150];
+  let grupoEscala = $state<HTMLElement>();
+
+  /**
+   * Cambiar el tamaño recoloca toda la página: sin esto, lo que se acababa de
+   * pulsar se iba de la vista y había que buscarlo para probar otro.
+   */
+  async function elegirEscala(e: number) {
+    await aparienciaActual.cambiar('escala', e);
+    requestAnimationFrame(() => grupoEscala?.scrollIntoView({ block: 'center' }));
+  }
+
   const BANDAS = ['31', '62', '125', '250', '500', '1k', '2k', '4k', '8k', '16k'];
 
   let eq = $state<AjustesEcualizador>({
@@ -279,17 +291,22 @@
       {/each}
     </div>
 
-    <label class="ajuste">
-      <span class="rotulo">{t.escala} · {aparienciaActual.actual.escala}%</span>
-      <input
-        type="range"
-        min="75"
-        max="150"
-        step="5"
-        value={aparienciaActual.actual.escala}
-        onchange={(e) => aparienciaActual.cambiar('escala', Number(e.currentTarget.value))}
-      />
-    </label>
+    <div class="ajuste">
+      <span class="rotulo">{t.escala}</span>
+      <div class="escalas" role="radiogroup" aria-label={t.escala} bind:this={grupoEscala}>
+        {#each ESCALAS as e (e)}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={aparienciaActual.actual.escala === e}
+            class:activa={aparienciaActual.actual.escala === e}
+            onclick={() => void elegirEscala(e)}
+          >
+            {t.porcentaje(e)}
+          </button>
+        {/each}
+      </div>
+    </div>
     <label class="ajuste interruptor">
       <span class="rotulo">{t.colorPortada}</span>
       <input
@@ -337,6 +354,39 @@
     gap: var(--ns-espacio-1);
     font-size: var(--ns-texto-sm);
     font-weight: 600;
+  }
+
+  .escalas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ns-espacio-1);
+    padding: var(--ns-espacio-1);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+  }
+
+  .escalas button {
+    min-width: 3.5rem;
+    height: 2.25rem;
+    padding: 0 var(--ns-espacio-3);
+    border: 0;
+    border-radius: var(--ns-radio-pleno);
+    background: none;
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-sm);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+
+  .escalas button:hover {
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface);
+  }
+
+  .escalas button.activa {
+    background: var(--m3c-primary);
+    color: var(--m3c-on-primary);
   }
 
   .rotulo small {

@@ -85,25 +85,52 @@
     listo && totalArtistas + totalAlbumes + totalPistas + playlists.length === 0
   );
 
-  const igual = (a: string) => a.trim().toLocaleLowerCase('es') === q.toLocaleLowerCase('es');
+  const plano = (a: string) =>
+    a.normalize('NFD').replace(/\p{M}/gu, '').trim().toLocaleLowerCase('es');
 
-  /** Lo que se buscaba con más probabilidad: lo que se llama exactamente así, o lo primero. */
+  /**
+   * Cuánto se parece un nombre a lo escrito: 3 si es exacto, 2 si empieza así,
+   * 1 si una de sus palabras empieza así y 0 si solo lo contiene. Antes ganaba
+   * el primer artista que la base devolviera, y "beb" daba Camilo (por una
+   * canción suya) en vez de Bebe o "Bebé".
+   */
+  function parecido(nombre: string): number {
+    const n = plano(nombre);
+    const b = plano(q);
+    if (!b) return 0;
+    if (n === b) return 3;
+    if (n.startsWith(b)) return 2;
+    return n.split(/[^\p{L}\p{N}]+/u).some((w) => w.startsWith(b)) ? 1 : 0;
+  }
+
+  /** Lo que se buscaba con más probabilidad, según `parecido`. */
   type Mejor =
     | { tipo: 'artista'; a: ArtistaResumen }
     | { tipo: 'album'; a: AlbumResumen }
     | { tipo: 'pista'; p: PistaResumen; i: number };
   const mejor = $derived.by<Mejor | null>(() => {
-    const artista = artistas.find((a) => igual(a.nombre));
-    if (artista) return { tipo: 'artista', a: artista };
-    // La canción antes que el álbum: un sencillo se llama como su canción, y las
-    // pistas ya vienen por relevancia (la más escuchada de las que se llaman así).
-    const i = pistas.findIndex((p) => igual(p.titulo));
-    if (i >= 0 && pistas[i]) return { tipo: 'pista', p: pistas[i], i };
-    const album = albumes.find((a) => igual(a.titulo));
-    if (album) return { tipo: 'album', a: album };
+    // A igual parecido, el artista antes que la canción y la canción antes que
+    // el álbum: un sencillo se llama como su canción, y las pistas ya vienen por
+    // relevancia (la más escuchada de las que se llaman así). Dentro de cada
+    // tipo, el primero que alcanza la mejor nota.
+    let elegido: Mejor | null = null;
+    let nota = 0;
+    const probar = (m: Mejor, nombre: string) => {
+      const n = parecido(nombre);
+      if (n > nota) {
+        nota = n;
+        elegido = m;
+      }
+    };
+    for (const a of artistas) probar({ tipo: 'artista', a }, a.nombre);
+    pistas.forEach((p, i) => probar({ tipo: 'pista', p, i }, p.titulo));
+    for (const a of albumes) probar({ tipo: 'album', a }, a.titulo);
+    if (elegido) return elegido;
+    // Nada se llama así (se encontró por la letra, por ejemplo): la canción más
+    // relevante dice más que el primer artista de la lista.
+    if (pistas[0]) return { tipo: 'pista', p: pistas[0], i: 0 };
     if (artistas[0]) return { tipo: 'artista', a: artistas[0] };
     if (albumes[0]) return { tipo: 'album', a: albumes[0] };
-    if (pistas[0]) return { tipo: 'pista', p: pistas[0], i: 0 };
     return null;
   });
 </script>
@@ -212,6 +239,7 @@
                     src={urlPortada('artista', a.id, 240)}
                     alt=""
                     loading="lazy"
+                    decoding="async"
                   />{:else}<Icon nombre="artista" tamano={32} />{/if}
               </span>
               <span class="nombre">{a.nombre}</span>
@@ -234,6 +262,7 @@
                     src={urlPortada('album', a.id, 240)}
                     alt=""
                     loading="lazy"
+                    decoding="async"
                   />{:else}<Icon nombre="album" tamano={32} />{/if}
               </span>
               <span class="nombre">{a.titulo}</span>

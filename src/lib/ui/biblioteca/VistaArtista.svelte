@@ -19,6 +19,7 @@
     reproducirLista,
     urlPortada
   } from '#lib/core/ipc/index.ts';
+  import { recordado, type PaginaAlbumes, type PaginaPistas } from '#lib/core/ipc/index.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
   import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
@@ -57,6 +58,19 @@
       artista = null;
       return;
     }
+    // Lo de la última visita, al instante; lo nuevo lo sustituye al llegar.
+    if (artista?.id !== id) {
+      artista = recordado<ArtistaResumen | null>('biblioteca_artista', { id });
+      albumes =
+        recordado<PaginaAlbumes>('biblioteca_albumes', {
+          consulta: { texto: null, artistaId: id, orden: 'anioDesc' },
+          desde: 0,
+          limite: 200
+        })?.albumes ?? [];
+      const p = recordado<PaginaPistas>('biblioteca_pistas', { consulta: c, desde: 0, limite: 10 });
+      total = p?.total ?? 0;
+      populares = p?.pistas ?? [];
+    }
     void bibliotecaArtista(id).then((a) => (artista = a));
     void bibliotecaAlbumes({ texto: null, artistaId: id, orden: 'anioDesc' }, 0, 200).then(
       (p) => (albumes = p.albumes)
@@ -88,7 +102,12 @@
             <a class="tarjeta" href={`/biblioteca/album?id=${a.id}`}>
               <span class="caratula">
                 {#if a.tienePortada}
-                  <img src={urlPortada('album', a.id, 320)} alt="" loading="lazy" />
+                  <img
+                    src={urlPortada('album', a.id, 320)}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
                 {:else}
                   <Icon nombre="album" tamano={40} />
                 {/if}

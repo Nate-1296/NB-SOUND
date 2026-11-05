@@ -20,6 +20,7 @@
     playlistsListar,
     reproducirPlaylist
   } from '#lib/core/ipc/index.ts';
+  import { recordado } from '#lib/core/ipc/index.ts';
   import { regenerarPlaylistsAutomaticas } from '#lib/core/ipc/aparte.ts';
   import { estadoPlaylists, type ModoRejilla } from '#lib/core/estadoVistas.svelte.ts';
   import { formatoTiempo } from '#lib/core/reproductor.svelte.ts';
@@ -47,8 +48,16 @@
   let texto = $state(estadoPlaylists.busqueda);
   let categoria = $state<Categoria | null>(estadoPlaylists.categoria);
   let orden = $state<OrdenPlaylists>(estadoPlaylists.orden);
-  let lista = $state<PlaylistResumen[]>([]);
-  let listaLista = $state(false);
+  // Lo de la última visita, al instante: la rejilla no empieza en blanco.
+  const previa = recordado<PlaylistResumen[]>('playlists_listar', {
+    consulta: {
+      texto: estadoPlaylists.busqueda.trim() || null,
+      categoria: estadoPlaylists.categoria,
+      orden: estadoPlaylists.orden
+    }
+  });
+  let lista = $state<PlaylistResumen[]>(previa ?? []);
+  let listaLista = $state(previa !== undefined);
   let seleccionada = $state<number | null>(estadoPlaylists.seleccionadaId);
   let creando = $state(false);
   let creandoInteligente = $state(false);
@@ -277,6 +286,11 @@
             onclick={() => pulsar(p.id)}
           >
             <Mosaico pistas={p.mosaico} />
+            {#if p.anclada}
+              <span class="ancla" title={t.anclada} aria-label={t.anclada}>
+                <Icon nombre="anclar" tamano={15} />
+              </span>
+            {/if}
             <span class="nombre" title={p.nombre}>{p.nombre}</span>
             <span class="detalle"
               >{p.etiqueta} · {t.resumen(p.numPistas, formatoTiempo(p.duracionSeg))}</span
@@ -318,11 +332,6 @@
       </div>
 
       <div class="panel-pistas">
-        <div class="pistas-encabezado">
-          <span class="pistas-titulo">{textos.biblioteca.vistas.pistas}</span>
-          <span class="pistas-cuenta">{elegida.numPistas}</span>
-        </div>
-
         {#if cargandoPistas}
           <div class="pistas-cargando">
             <span>{textos.biblioteca.cargando}</span>
@@ -484,6 +493,12 @@
     background: var(--m3c-surface-container-high);
   }
 
+  /* La caja entera ya marca el foco; el contorno del propio campo, dentro,
+     dibujaba un segundo marco. */
+  .filtro-buscar input:focus-visible {
+    outline-color: transparent;
+  }
+
   .filtro-buscar input {
     flex: 1;
     width: 100%;
@@ -570,7 +585,13 @@
     flex: 0 0 3.5rem;
   }
 
+  .rejilla > li {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 16rem;
+  }
+
   .tarjeta {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--ns-espacio-2);
@@ -587,6 +608,29 @@
       background 140ms ease,
       border-color 140ms ease,
       box-shadow 140ms ease;
+  }
+
+  /* El distintivo de la V1 (VistaPlaylists.qml, PinChip): un círculo con borde
+     de acento sobre la esquina de la portada, legible sobre cualquier mosaico. */
+  .ancla {
+    position: absolute;
+    top: calc(var(--ns-espacio-3) + var(--ns-espacio-2));
+    right: calc(var(--ns-espacio-3) + var(--ns-espacio-2));
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--m3c-primary);
+    box-shadow: 0 1px 4px var(--m3c-shadow);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-primary);
+  }
+
+  .rejilla.lista .ancla {
+    top: calc(50% - 1.75rem - var(--ns-espacio-2));
+    right: auto;
+    left: calc(var(--ns-espacio-3) + 3.5rem - 1.25rem);
   }
 
   .tarjeta:hover {
@@ -701,17 +745,6 @@
     border-top: 1px solid var(--m3c-outline-variant);
     padding-top: var(--ns-espacio-3);
     overflow-y: auto;
-  }
-
-  .pistas-encabezado {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: var(--ns-texto-xs);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--m3c-on-surface-variant);
   }
 
   .pistas-cargando,

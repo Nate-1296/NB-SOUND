@@ -117,8 +117,17 @@
 
   let temporizadorOcultar: ReturnType<typeof setTimeout> | undefined;
 
-  /** En pantalla completa, la reproducción esconde sus controles a los 3,5 s quieta. */
-  function alMoverRaton() {
+  let ultimoPuntero = { x: -1, y: -1 };
+
+  /**
+   * En pantalla completa, la reproducción esconde sus controles a los 3,5 s quieta.
+   * Solo cuenta el ratón que se mueve de verdad: WebKit también emite `mousemove`
+   * cuando lo que hay debajo se desplaza (la letra que avanza sola), y entonces
+   * los controles no se escondían nunca.
+   */
+  function alMoverRaton(e: MouseEvent) {
+    if (e.screenX === ultimoPuntero.x && e.screenY === ultimoPuntero.y) return;
+    ultimoPuntero = { x: e.screenX, y: e.screenY };
     pantalla.controlesVisibles = true;
     if (!enReproduciendo || !pantalla.completa) return;
     clearTimeout(temporizadorOcultar);
@@ -145,6 +154,7 @@
   class="carcasa"
   class:compacta={aparienciaActual.barraLateralCompacta}
   class:sin-lateral={enReproduciendo}
+  class:inmersiva={enReproduciendo && pantalla.completa}
   class:ocultar-controles={enReproduciendo && pantalla.completa && !pantalla.controlesVisibles}
   data-ancho={clase}
   bind:clientWidth={ancho}
@@ -256,6 +266,21 @@
     transform: translateY(100%);
     opacity: 0;
     pointer-events: none;
+  }
+
+  /*
+   * En pantalla completa la reproducción ocupa toda la altura y la barra flota
+   * encima: al esconderse no deja una franja vacía abajo, y el contenido no se
+   * recoloca cada vez que aparece.
+   */
+  .carcasa.inmersiva .lienzo {
+    grid-row: 1 / -1;
+  }
+
+  .carcasa.inmersiva .reproductor {
+    position: relative;
+    z-index: 1;
+    grid-row: 2;
   }
 
   .lateral.oculta,

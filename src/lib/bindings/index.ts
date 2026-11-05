@@ -30,6 +30,7 @@ export type { DatosCompletados } from './DatosCompletados';
 export type { DatosPista } from './DatosPista';
 export type { Descubrimiento } from './Descubrimiento';
 export type { Emparejar } from './Emparejar';
+export type { EnColaKaraoke } from './EnColaKaraoke';
 export type { EstadoAgregado } from './EstadoAgregado';
 export type { EstadoCopia } from './EstadoCopia';
 export type { EstadoDj } from './EstadoDj';

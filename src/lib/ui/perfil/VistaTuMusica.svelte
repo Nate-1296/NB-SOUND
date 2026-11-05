@@ -5,6 +5,11 @@
   mood del día y los días activos del mes; y Lo que más has querido, con los tops
   de canciones, álbumes y artistas.
 -->
+<script lang="ts" module>
+  // El periodo elegido sobrevive a salir y volver a la vista.
+  let ultimoPeriodo = 'todo';
+</script>
+
 <script lang="ts">
   import { untrack } from 'svelte';
   import { cambios } from '#lib/core/cambios.svelte.ts';
@@ -15,6 +20,7 @@
     type Perfil,
     perfil,
     perfilCambiarFoto,
+    recordado,
     urlFotoPerfil,
     urlPortada
   } from '#lib/core/ipc/index.ts';
@@ -31,9 +37,11 @@
 
   const t = textos.tuMusica;
   const tr = textosAparte.resumenEscucha;
-  let datos = $state<Perfil | null>(null);
-  let resumen = $state<ResumenEscucha | null>(null);
-  let periodoActivo = $state<string>('todo');
+  let datos = $state<Perfil | null>(recordado<Perfil>('perfil') ?? null);
+  let periodoActivo = $state<string>(ultimoPeriodo);
+  let resumen = $state<ResumenEscucha | null>(
+    recordado<ResumenEscucha>('resumen_escucha', { periodo: ultimoPeriodo }) ?? null
+  );
   let exportando = $state(false);
   let exportada = $state(false);
   let sinFoto = $state(false);
@@ -52,6 +60,7 @@
 
   function cargarResumen(periodo: string) {
     periodoActivo = periodo;
+    ultimoPeriodo = periodo;
     exportada = false;
     void resumenEscucha(periodo).then((r) => (resumen = r));
   }
@@ -122,6 +131,15 @@
   }
 
   const maxMapaCalor = $derived(resumen ? Math.max(0, ...resumen.mapaCalor) : 0);
+  const maxPorDia = $derived(resumen ? Math.max(0, ...resumen.porDia) : 0);
+
+  /** Huecos antes del día 1 para que caiga en su día de la semana (lunes primero). */
+  const huecosMes = $derived.by(() => {
+    const p = resumen?.periodo ?? '';
+    if (p.length !== 7) return 0;
+    const primero = new Date(Number(p.slice(0, 4)), Number(p.slice(5)) - 1, 1);
+    return (primero.getDay() + 6) % 7;
+  });
 
   const nombre = $derived(aparienciaActual.actual.nombreUsuario ?? t.anonimo);
 
@@ -438,35 +456,57 @@
         </article>
 
         <article class="tarjeta">
-          <span class="etiqueta">{tr.mapaTitulo}</span>
-          <p class="sub">{tr.mapaSub}</p>
-          <div class="rejilla-calor">
-            <div class="fila-calor eje-horas" aria-hidden="true">
-              <span class="etiqueta-dia"></span>
-              <div class="horas-dia marcas-eje">
-                <span class="marca-hora h-0">{tr.marcasHoras.h0}</span>
-                <span class="marca-hora h-6">{tr.marcasHoras.h6}</span>
-                <span class="marca-hora h-12">{tr.marcasHoras.h12}</span>
-                <span class="marca-hora h-18">{tr.marcasHoras.h18}</span>
-                <span class="marca-hora h-23">{tr.marcasHoras.h23}</span>
-              </div>
+          {#if resumen.porDia.length > 0}
+            <!-- Un mes es un calendario: el mapa de días por horas quedaba casi
+                 vacío y no decía qué días se escuchó. -->
+            <span class="etiqueta">{tr.calendarioTitulo}</span>
+            <p class="sub">{tr.calendarioSub}</p>
+            <div class="mes-calendario">
+              {#each tr.diasSemana as nombreDia (nombreDia)}
+                <span class="cabeza-dia" aria-hidden="true">{nombreDia}</span>
+              {/each}
+              {#each Array.from({ length: huecosMes }, (_, k) => k) as k (k)}
+                <span aria-hidden="true"></span>
+              {/each}
+              {#each resumen.porDia as cuenta, d (d)}
+                <span
+                  class="dia-mes celda-hora {nivelMapa(cuenta, maxPorDia)}"
+                  title={tr.celdaDia(d + 1, cuenta)}
+                  aria-label={tr.celdaDia(d + 1, cuenta)}>{d + 1}</span
+                >
+              {/each}
             </div>
-            {#each tr.diasSemana as nombreDia, d (d)}
-              <div class="fila-calor">
-                <span class="etiqueta-dia">{nombreDia}</span>
-                <div class="horas-dia">
-                  {#each Array.from({ length: 24 }, (_, h) => h) as h (h)}
-                    {@const cuenta = resumen.mapaCalor[d * 24 + h] ?? 0}
-                    <span
-                      class="celda-hora {nivelMapa(cuenta, maxMapaCalor)}"
-                      title={tr.celdaMapa(nombreDia, h, cuenta)}
-                      aria-label={tr.celdaMapa(nombreDia, h, cuenta)}
-                    ></span>
-                  {/each}
+          {:else}
+            <span class="etiqueta">{tr.mapaTitulo}</span>
+            <p class="sub">{tr.mapaSub}</p>
+            <div class="rejilla-calor">
+              <div class="fila-calor eje-horas" aria-hidden="true">
+                <span class="etiqueta-dia"></span>
+                <div class="horas-dia marcas-eje">
+                  <span class="marca-hora h-0">{tr.marcasHoras.h0}</span>
+                  <span class="marca-hora h-6">{tr.marcasHoras.h6}</span>
+                  <span class="marca-hora h-12">{tr.marcasHoras.h12}</span>
+                  <span class="marca-hora h-18">{tr.marcasHoras.h18}</span>
+                  <span class="marca-hora h-23">{tr.marcasHoras.h23}</span>
                 </div>
               </div>
-            {/each}
-          </div>
+              {#each tr.diasSemana as nombreDia, d (d)}
+                <div class="fila-calor">
+                  <span class="etiqueta-dia">{nombreDia}</span>
+                  <div class="horas-dia">
+                    {#each Array.from({ length: 24 }, (_, h) => h) as h (h)}
+                      {@const cuenta = resumen.mapaCalor[d * 24 + h] ?? 0}
+                      <span
+                        class="celda-hora {nivelMapa(cuenta, maxMapaCalor)}"
+                        title={tr.celdaMapa(nombreDia, h, cuenta)}
+                        aria-label={tr.celdaMapa(nombreDia, h, cuenta)}
+                      ></span>
+                    {/each}
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
         </article>
       </div>
     {/if}
@@ -976,6 +1016,37 @@
     display: grid;
     grid-template-columns: repeat(24, minmax(0, 1fr));
     gap: 0.15rem;
+  }
+
+  .mes-calendario {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.3rem;
+    margin-top: var(--ns-espacio-2);
+  }
+
+  .cabeza-dia {
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    text-align: center;
+  }
+
+  .dia-mes {
+    display: grid;
+    place-items: center;
+    max-height: 3rem;
+    border-radius: var(--ns-radio-sm);
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dia-mes.mucho {
+    color: var(--m3c-on-primary);
+  }
+
+  .dia-mes.medio {
+    color: var(--m3c-on-surface);
   }
 
   .celda-hora {

@@ -14,6 +14,7 @@
   import {
     type Inicio,
     inicio,
+    recordado,
     reproducirLista,
     reproducirPlaylist,
     sorprendeme,
@@ -26,7 +27,7 @@
   import Mosaico from '#lib/ui/playlists/Mosaico.svelte';
 
   const t = textos.inicio;
-  let datos = $state<Inicio | null>(null);
+  let datos = $state<Inicio | null>(recordado<Inicio>('inicio') ?? null);
 
   $effect(() => {
     void inicio().then((d) => (datos = d));
@@ -370,7 +371,7 @@
       placeholder: 'album' | 'cancion'
     )}
       <span class="caratula">
-        {#if url}<img src={url} alt="" loading="lazy" />{:else}<Icon
+        {#if url}<img src={url} alt="" loading="lazy" decoding="async" />{:else}<Icon
             nombre={placeholder}
             tamano={32}
           />{/if}
@@ -437,6 +438,7 @@
                     src={urlPortada('artista', a.id, 320)}
                     alt=""
                     loading="lazy"
+                    decoding="async"
                   />{:else}<Icon nombre="artista" tamano={32} />{/if}
               </span>
               <strong>{a.nombre}</strong>

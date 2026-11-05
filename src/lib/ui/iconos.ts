@@ -110,7 +110,7 @@ export const ICONOS = {
   repetirUna:
     '<path d="M4.5 11V9a2 2 0 0 1 2-2h13"/><path d="m17 4.5 2.5 2.5L17 9.5"/><path d="M19.5 13v2a2 2 0 0 1-2 2h-13"/><path d="m7 19.5-2.5-2.5L7 14.5"/><path d="M11.25 10.75 12.5 10v4"/>',
   reproducir: '<path d="M7.5 4.75 19.5 12l-12 7.25z"/>',
-  salirPantallaCompleta: '<path d="M8.5 3.5v5h-5M15.5 3.5v5h5M8.5 20.5v-5h-5M15.5 20.5v5h5"/>',
+  salirPantallaCompleta: '<path d="M8.5 3.5v5h-5M15.5 3.5v5h5M8.5 20.5v-5h-5M15.5 20.5v-5h5"/>',
   siguiente: '<path d="M18 5v14"/><path d="M5.5 5.5 15 12l-9.5 6.5z"/>',
   silencio: '<path d="M3.5 9.5h3.5L12 5v14l-5-4.5H3.5z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/>',
   telefono: '<rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M11 18.5h2"/>',

@@ -257,13 +257,28 @@ fn resumen_de(f: &rusqlite::Row<'_>) -> rusqlite::Result<PistaResumen> {
 /// lista y la cola: si la cola ordenaba distinto, el índice de la canción
 /// pulsada apuntaba a otra (en Buscar sonaba una que no era).
 fn orden_de(c: &ConsultaPistas, params: &mut Vec<rusqlite::types::Value>) -> &'static str {
-    let relevancia = (c.orden == OrdenPistas::Relevancia)
-        .then(|| c.texto.as_deref().and_then(crate::db::busqueda::consulta))
+    use crate::db::busqueda::{consulta, consulta_titulo};
+    let texto = (c.orden == OrdenPistas::Relevancia)
+        .then_some(c.texto.as_deref())
         .flatten();
-    match relevancia {
-        Some(q) => {
-            params.push(rusqlite::types::Value::Text(q));
-            "(SELECT b.rank FROM busqueda b WHERE busqueda MATCH ? AND b.rowid = p.id), p.id"
+    let consultas = texto.and_then(|t| {
+        Some((
+            consulta_titulo(t, true)?,
+            consulta_titulo(t, false)?,
+            consulta(t)?,
+        ))
+    });
+    match consultas {
+        Some((empieza, titulo, todo)) => {
+            for q in [empieza, titulo, todo] {
+                params.push(rusqlite::types::Value::Text(q));
+            }
+            // Escalones: el título empieza así, el título lo contiene, el resto
+            // (artista, álbum, letra). Dentro de cada uno, el `rank` de FTS5.
+            "CASE WHEN p.id IN (SELECT rowid FROM busqueda WHERE busqueda MATCH ?) THEN 0
+                  WHEN p.id IN (SELECT rowid FROM busqueda WHERE busqueda MATCH ?) THEN 1
+                  ELSE 2 END,
+             (SELECT b.rank FROM busqueda b WHERE busqueda MATCH ? AND b.rowid = p.id), p.id"
         }
         None => c.orden.sql(),
     }
@@ -447,6 +462,27 @@ mod pruebas_lista {
         let mut c = consulta(OrdenPistas::Relevancia);
         c.texto = Some("bar".into());
         assert_eq!(ids(&pistas(&db, &c, 0, 50).unwrap()), [1, 3]);
+    }
+
+    #[test]
+    fn un_titulo_que_empieza_asi_va_antes_que_uno_que_solo_lo_contiene() {
+        let db = base();
+        let conn = db.conexion().unwrap();
+        conn.execute(
+            "INSERT INTO pistas (id, titulo, ruta) VALUES (10, 'La bebé', 'x'), (11, 'Bebé', 'y'), (12, 'Lean', 'z')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO letras (pista_id, planas) VALUES (12, 'bebe bebe bebe bebe bebe bebe')",
+            [],
+        )
+        .unwrap();
+        let mut c = consulta(OrdenPistas::Relevancia);
+        c.texto = Some("beb".into());
+        assert_eq!(ids(&pistas(&db, &c, 0, 50).unwrap()), [11, 10, 12]);
+        let (cola, _) = ids_para_cola(&db, &c, 0).unwrap();
+        assert_eq!(cola, [11, 10, 12], "la cola sigue el mismo orden");
     }
 
     #[test]

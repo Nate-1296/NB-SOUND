@@ -11,4 +11,10 @@ export type ResumenEscucha = { periodo: string, periodosDisponibles: Array<strin
 /**
  * 7 días (0 = lunes .. 6 = domingo) × 24 horas (0..24) = 168 celdas en hora local.
  */
-mapaCalor: Array<number>, topCanciones: Array<PistaEscuchada>, topAlbumes: Array<AlbumResumen>, topArtistas: Array<ArtistaResumen>, };
+mapaCalor: Array<number>, 
+/**
+ * Con un mes elegido, las reproducciones de cada uno de sus días (tantas
+ * como días tiene el mes); si no, vacío. Un mes cabe mal en el mapa de días
+ * por horas: quedaba casi vacío y no decía qué días se escuchó.
+ */
+porDia: Array<number>, topCanciones: Array<PistaEscuchada>, topAlbumes: Array<AlbumResumen>, topArtistas: Array<ArtistaResumen>, };
