@@ -17,10 +17,15 @@
     djValorar,
     type VistaSesionDj
   } from '#lib/core/ipc/dj.ts';
+  import { urlPortada } from '#lib/core/ipc/index.ts';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
   import { textosDj } from '#lib/i18n/dj.ts';
   import FormaDeOnda from '#lib/ui/FormaDeOnda.svelte';
   import Icon from '#lib/ui/Icon.svelte';
+  import MenuAcciones from '#lib/ui/MenuAcciones.svelte';
+  import Mosaico from '#lib/ui/playlists/Mosaico.svelte';
 
   interface Props {
     sesionId: number;
@@ -32,7 +37,6 @@
   const t = textosDj.sesion;
 
   let sesion = $state<VistaSesionDj | null>(null);
-  let aviso = $state<string | null>(null);
 
   function cargar(id: number) {
     void djSesion(id).then((s) => {
@@ -41,7 +45,6 @@
   }
 
   $effect(() => {
-    aviso = null;
     cargar(sesionId);
   });
 
@@ -71,55 +74,113 @@
 
   async function guardar() {
     await djGuardar(sesionId, '');
-    aviso = t.guardada;
+    notificar.exito(t.guardada);
   }
 
   async function valorar(gusta: boolean) {
     if (!actual) return;
     await djValorar(sesionId, actual.posicion, actual.pistaId, gusta);
-    aviso = t.valorada;
+    notificar.informacion(t.valorada);
   }
+
+  function reproducirOPausar() {
+    if (sonando) void reproductor.pausarReanudar();
+    else void djReproducir(sesionId, 0);
+  }
+
+  const enPausa = $derived(!sonando || reproductor.instantanea.estado === 'pausado');
 </script>
 
 {#if sesion}
   <section class="sesion" aria-labelledby="t-sesion">
-    <header>
-      <span class="estado">
-        {sonando
-          ? reproductor.instantanea.estado === 'pausado'
-            ? t.enPausa
-            : t.sonando
-          : (textosDj.historial.estados[sesion.estado] ?? sesion.estado)}
-      </span>
-      <h2 id="t-sesion">{sesion.peticion}</h2>
-      {#if sesion.pide.length + sesion.evita.length === 0}
-        <p class="nota">{t.general}</p>
-      {:else}
-        <ul class="lectura" aria-label={t.entendi}>
-          {#each sesion.pide as c (c)}
-            <li class="concepto">{t.conceptos[c] ?? c.replaceAll('_', ' ')}</li>
-          {/each}
-          {#if t.curvas[sesion.curva]}
-            <li class="concepto curva">{t.curvas[sesion.curva]}</li>
-          {/if}
-          {#each sesion.evita as c (c)}
-            <li class="concepto evitado">{t.evitare} {t.conceptos[c] ?? c.replaceAll('_', ' ')}</li>
-          {/each}
-        </ul>
-      {/if}
-      <p class="cifras">
-        {t.resumen(
-          sesion.pistas.length,
-          formatoTiempo(sesion.duracionSeg),
-          sesion.artistasDistintos
-        )}
-        · {t.transiciones(sesion.transicionesBuenas, sesion.transicionesTotal)}
-      </p>
-      {#if sesion.estado === 'construyendo'}<p class="nota">{t.construyendo}</p>{/if}
-      {#if sesion.sinAnalisis}
-        <p class="sin-analisis"><Icon nombre="informacion" tamano={16} />{t.sinAnalisis}</p>
-      {/if}
+    <header class="cabecera">
+      <div class="portada">
+        <Mosaico pistas={sesion.pistas.map((p) => p.pistaId)} tamano={320} />
+      </div>
+      <div class="datos">
+        <span class="estado">
+          {sonando
+            ? enPausa
+              ? t.enPausa
+              : t.sonando
+            : (textosDj.historial.estados[sesion.estado] ?? sesion.estado)}
+        </span>
+        <h2 id="t-sesion">{sesion.peticion}</h2>
+        {#if sesion.pide.length + sesion.evita.length === 0}
+          <p class="nota">{t.general}</p>
+        {:else}
+          <ul class="lectura" aria-label={t.entendi}>
+            {#each sesion.pide as c (c)}
+              <li class="concepto">{t.conceptos[c] ?? c.replaceAll('_', ' ')}</li>
+            {/each}
+            {#if t.curvas[sesion.curva]}
+              <li class="concepto curva">{t.curvas[sesion.curva]}</li>
+            {/if}
+            {#each sesion.evita as c (c)}
+              <li class="concepto evitado">
+                {t.evitare}
+                {t.conceptos[c] ?? c.replaceAll('_', ' ')}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+        <p class="cifras">
+          {t.resumen(
+            sesion.pistas.length,
+            formatoTiempo(sesion.duracionSeg),
+            sesion.artistasDistintos
+          )}
+          · {t.transiciones(sesion.transicionesBuenas, sesion.transicionesTotal)}
+        </p>
+      </div>
     </header>
+
+    {#if sesion.estado === 'construyendo'}<p class="nota">{t.construyendo}</p>{/if}
+    {#if sesion.sinAnalisis}
+      <p class="sin-analisis"><Icon nombre="informacion" tamano={16} />{t.sinAnalisis}</p>
+    {/if}
+
+    <div class="acciones">
+      <button
+        type="button"
+        class="reproducir"
+        aria-label={enPausa ? t.escuchar : textos.reproductor.pausar}
+        title={enPausa ? t.escuchar : textos.reproductor.pausar}
+        onclick={reproducirOPausar}
+      >
+        <Icon nombre={enPausa ? 'reproducir' : 'pausa'} tamano={26} />
+      </button>
+      {#if actual}
+        <button
+          type="button"
+          class="redondo"
+          aria-label={t.meGusta}
+          title={t.meGusta}
+          onclick={() => valorar(true)}
+        >
+          <Icon nombre="favorito" tamano={22} />
+        </button>
+        <button
+          type="button"
+          class="redondo"
+          aria-label={t.noMeGusta}
+          title={t.noMeGusta}
+          onclick={() => valorar(false)}
+        >
+          <Icon nombre="noDisponible" tamano={22} />
+        </button>
+      {/if}
+      <button type="button" class="pildora" onclick={regenerar}>
+        <Icon nombre="reintentar" tamano={16} />{t.regenerar}
+      </button>
+      <button type="button" class="pildora" onclick={guardar} disabled={sesion.pistas.length === 0}>
+        <Icon nombre="playlists" tamano={16} />{t.guardar}
+      </button>
+      <MenuAcciones
+        etiqueta={textos.biblioteca.masAcciones}
+        acciones={[{ texto: t.descartar, icono: 'cerrar', accion: descartar, destructiva: true }]}
+      />
+    </div>
 
     {#if sonando}
       <div class="pista-sonando">
@@ -138,54 +199,20 @@
             <span>·</span>
             <span class="punto-salida">{t.salida(formatoTiempo(sonando.salidaSeg))}</span>
           {/if}
+          {#if sonando.mezcla}
+            <span>·</span>
+            <span class="mezclando" role="status">
+              {t.mezclando(t.tecnicas[sonando.mezcla.tecnica], sonando.mezcla.progreso)}
+            </span>
+          {/if}
         </p>
       </div>
     {/if}
 
-    {#if sonando?.mezcla}
-      <div class="mezcla" role="status">
-        <span>{t.mezclando(t.tecnicas[sonando.mezcla.tecnica], sonando.mezcla.progreso)}</span>
-        <span class="barra"
-          ><span style:width={`${Math.round(sonando.mezcla.progreso * 100)}%`}></span></span
-        >
-      </div>
-    {/if}
-
-    <div class="botones">
-      {#if !sonando}
-        <button type="button" class="boton relleno" onclick={() => djReproducir(sesionId, 0)}>
-          <Icon nombre="reproducir" tamano={16} />{t.escuchar}
-        </button>
-      {/if}
-      {#if actual}
-        <button type="button" class="boton" onclick={() => valorar(true)}>
-          <Icon nombre="favorito" tamano={16} />{t.meGusta}
-        </button>
-        <button type="button" class="boton" onclick={() => valorar(false)}>
-          <Icon nombre="noDisponible" tamano={16} />{t.noMeGusta}
-        </button>
-      {/if}
-      <button type="button" class="boton" onclick={regenerar}>
-        <Icon nombre="reintentar" tamano={16} />{t.regenerar}
-      </button>
-      <button type="button" class="boton" onclick={guardar} disabled={sesion.pistas.length === 0}>
-        <Icon nombre="playlists" tamano={16} />{t.guardar}
-      </button>
-      <button type="button" class="boton" onclick={descartar}>
-        <Icon nombre="cerrar" tamano={16} />{t.descartar}
-      </button>
-    </div>
-    {#if aviso}<p class="nota" role="status">{aviso}</p>{/if}
-
     <h3>{t.pistas}</h3>
     <ol class="pistas">
       {#each sesion.pistas as p, k (p.posicion)}
-        {#if k > 0}
-          {@const c = calidad(p.transicion.score)}
-          <li class="transicion {c}" title={p.razones.join(' · ')}>
-            <span class="punto"></span>{t.transicion[c]}
-          </li>
-        {/if}
+        {@const c = k > 0 ? calidad(p.transicion.score) : null}
         <li>
           <button
             type="button"
@@ -195,11 +222,25 @@
             aria-label={t.tocarDesde(p.titulo)}
             onclick={() => djReproducir(sesionId, p.posicion)}
           >
-            <span class="numero">{p.posicion + 1}</span>
-            <span class="datos">
+            <span class="numero">
+              {#if sonando?.posicion === p.posicion}
+                <Icon nombre="ecualizador" tamano={16} />
+              {:else}
+                {p.posicion + 1}
+              {/if}
+            </span>
+            <img class="mini" src={urlPortada('pista', p.pistaId, 64)} alt="" loading="lazy" />
+            <span class="datos-pista">
               <strong>{p.titulo}</strong>
               <small>{p.artista}</small>
             </span>
+            {#if c}
+              <span class="transicion {c}" title={t.transicion[c]}>
+                <span class="punto"></span>{t.transicion[c]}
+              </span>
+            {:else}
+              <span></span>
+            {/if}
             <span class="duracion">{formatoTiempo(p.duracionSeg)}</span>
           </button>
         </li>
@@ -212,34 +253,54 @@
   .sesion {
     display: flex;
     flex-direction: column;
-    gap: var(--ns-espacio-3);
+    gap: var(--ns-espacio-4);
     padding: var(--ns-espacio-5);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-lg);
-    background: var(--m3c-surface-container-low);
+    border-radius: var(--ns-radio-xl);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--m3c-primary-container) 40%, var(--m3c-surface-container)) 0%,
+      var(--m3c-surface-container-low) 22rem
+    );
   }
 
-  header {
+  .cabecera {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--ns-espacio-5);
+  }
+
+  .portada {
+    flex: 0 0 10rem;
+    overflow: hidden;
+    border-radius: var(--ns-radio-md);
+    box-shadow: 0 12px 28px var(--m3c-shadow);
+  }
+
+  .datos {
     display: flex;
     flex-direction: column;
-    gap: var(--ns-espacio-1);
+    gap: var(--ns-espacio-2);
+    min-width: 0;
   }
 
   .estado {
     color: var(--m3c-primary);
     font-size: var(--ns-texto-xs);
     font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
   h2 {
     margin: 0;
-    font-size: var(--ns-texto-lg);
+    font-size: clamp(var(--ns-texto-xl), 3vw, var(--ns-texto-2xl));
+    line-height: 1.1;
+    overflow-wrap: anywhere;
   }
 
   h3 {
-    margin: var(--ns-espacio-2) 0 0;
-    font-size: var(--ns-texto-sm);
+    margin: 0;
+    font-size: var(--ns-texto-md);
   }
 
   p {
@@ -258,7 +319,7 @@
   .concepto {
     padding: var(--ns-espacio-1) var(--ns-espacio-3);
     border-radius: var(--ns-radio-pleno);
-    background: color-mix(in srgb, var(--m3c-primary) 14%, transparent);
+    background: color-mix(in srgb, var(--m3c-primary) 16%, transparent);
     color: var(--m3c-on-surface);
     font-size: var(--ns-texto-xs);
     font-weight: 600;
@@ -269,7 +330,7 @@
   }
 
   .concepto.evitado {
-    background: color-mix(in srgb, var(--m3c-error) 14%, transparent);
+    background: color-mix(in srgb, var(--m3c-error) 16%, transparent);
   }
 
   .nota,
@@ -284,17 +345,78 @@
     gap: var(--ns-espacio-2);
     padding: var(--ns-espacio-2) var(--ns-espacio-3);
     border-radius: var(--ns-radio-md);
-    background: var(--m3c-surface-container);
+    background: var(--m3c-surface-container-high);
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-sm);
   }
 
-  .mezcla {
+  .acciones {
     display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-1);
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ns-espacio-3);
+  }
+
+  .reproducir {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-primary);
+    color: var(--m3c-on-primary);
+    box-shadow: 0 6px 18px var(--m3c-shadow);
+    cursor: pointer;
+    transition: transform var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .reproducir:hover {
+    transform: scale(1.05);
+  }
+
+  .redondo {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--ns-radio-pleno);
+    background: transparent;
+    color: var(--m3c-on-surface-variant);
+    cursor: pointer;
+  }
+
+  .redondo:hover {
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface);
+  }
+
+  .pildora {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
+    height: 2.5rem;
+    padding: 0 var(--ns-espacio-4);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+    background: none;
+    color: var(--m3c-on-surface);
+    font: inherit;
     font-size: var(--ns-texto-sm);
     font-weight: 600;
+    cursor: pointer;
+  }
+
+  .pildora:hover:not(:disabled) {
+    background: var(--m3c-surface-container-highest);
+  }
+
+  .pildora:disabled {
+    opacity: 0.38;
+    cursor: default;
   }
 
   .pista-sonando {
@@ -305,64 +427,20 @@
 
   .puntos-dj {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--ns-espacio-2);
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
-    font-variant-numeric: tabular-nums;
   }
 
-  .punto-entrada {
-    color: var(--m3c-tertiary);
+  .punto-entrada,
+  .mezclando {
+    color: var(--m3c-primary);
+    font-weight: 600;
   }
 
   .punto-salida {
-    color: var(--m3c-secondary);
-  }
-
-  .barra {
-    height: 0.25rem;
-    border-radius: var(--ns-radio-pleno);
-    background: var(--m3c-surface-container-highest);
-    overflow: hidden;
-  }
-
-  .barra span {
-    display: block;
-    height: 100%;
-    background: var(--m3c-primary);
-  }
-
-  .botones {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--ns-espacio-2);
-  }
-
-  .boton {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ns-espacio-1);
-    height: 2.5rem;
-    padding: 0 var(--ns-espacio-4);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-sm);
-    background: none;
-    color: var(--m3c-on-surface);
-    font: inherit;
-    font-size: var(--ns-texto-sm);
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .boton.relleno {
-    border-color: var(--m3c-primary);
-    background: var(--m3c-primary);
-    color: var(--m3c-on-primary);
-  }
-
-  .boton:disabled {
-    opacity: 0.38;
-    cursor: default;
+    color: var(--m3c-tertiary);
   }
 
   .pistas {
@@ -375,15 +453,16 @@
 
   .pista {
     display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    grid-template-columns: 2rem 2.5rem minmax(0, 1fr) auto 3.25rem;
     align-items: center;
     gap: var(--ns-espacio-3);
     width: 100%;
-    padding: var(--ns-espacio-2);
+    min-height: 3.5rem;
+    padding: 0 var(--ns-espacio-3);
     border: none;
     border-radius: var(--ns-radio-sm);
     background: none;
-    color: inherit;
+    color: var(--m3c-on-surface);
     font: inherit;
     text-align: left;
     cursor: pointer;
@@ -394,41 +473,74 @@
   }
 
   .pista.actual {
-    background: var(--m3c-secondary-container);
-    color: var(--m3c-on-secondary-container);
+    background: color-mix(in srgb, var(--m3c-primary) 12%, transparent);
+  }
+
+  .pista.actual strong {
+    color: var(--m3c-primary);
   }
 
   .numero,
   .duracion {
+    display: flex;
+    justify-content: center;
     color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-xs);
+    font-size: var(--ns-texto-sm);
     font-variant-numeric: tabular-nums;
   }
 
-  .datos {
+  .numero {
+    color: var(--m3c-on-surface-variant);
+  }
+
+  .pista.actual .numero {
+    color: var(--m3c-primary);
+  }
+
+  .duracion {
+    justify-content: flex-end;
+    font-size: var(--ns-texto-xs);
+  }
+
+  .mini {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--ns-radio-sm);
+    background: var(--m3c-surface-container-highest);
+    object-fit: cover;
+  }
+
+  .datos-pista {
     display: flex;
     flex-direction: column;
+    gap: 0.125rem;
     min-width: 0;
   }
 
-  .datos strong,
-  .datos small {
+  .datos-pista strong,
+  .datos-pista small {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .datos small {
+  .datos-pista strong {
+    font-size: var(--ns-texto-sm);
+    font-weight: 600;
+  }
+
+  .datos-pista small {
     color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
   }
 
   .transicion {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: var(--ns-espacio-2);
-    padding: 0 var(--ns-espacio-2) 0 var(--ns-espacio-6);
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
+    white-space: nowrap;
   }
 
   .punto {
@@ -444,5 +556,11 @@
 
   .forzada .punto {
     background: var(--m3c-error);
+  }
+
+  @container carcasa (max-width: 60rem) {
+    .transicion {
+      display: none;
+    }
   }
 </style>

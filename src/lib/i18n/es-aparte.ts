@@ -9,6 +9,24 @@ export const esAparte = {
   comun: {
     error: 'No se pudo completar. Vuelve a intentarlo.'
   },
+  bienvenida: {
+    titulo: 'Tu música, en su mejor versión',
+    subtitulo:
+      'NB Sound ordena tu biblioteca, completa portadas y letras, y la hace sonar como merece. Todo en este equipo.',
+    nombre: '¿Cómo te llamamos?',
+    nombreMarcador: 'Tu nombre',
+    carpetaTitulo: 'Tengo una carpeta con mi música',
+    carpetaTexto: 'NB Sound la importa entera y vigila lo que copies en ella después.',
+    carpetaBoton: 'Elegir la carpeta',
+    sueltaTitulo: 'Quiero añadir canciones sueltas',
+    sueltaTexto: 'Elige archivos o arrástralos a la ventana cuando quieras.',
+    sueltaBoton: 'Añadir canciones',
+    copiaTitulo: 'Vengo de otro equipo',
+    copiaTexto: 'Restaura una copia de seguridad de NB Sound: biblioteca, playlists e historial.',
+    copiaBoton: 'Restaurar una copia',
+    buscando: 'Buscando canciones en tu carpeta. Puedes seguir usando NB Sound mientras tanto.',
+    restaurada: 'Copia restaurada. NB Sound se reinicia para aplicarla.'
+  },
   carpetaMusica: {
     cambiar: 'Cambiar',
     titulo: 'Cambiar la carpeta de tu música',

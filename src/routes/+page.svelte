@@ -95,28 +95,28 @@
 </script>
 
 <section class="inicio">
-  <header class="saludo">
-    <h1>{saludo}</h1>
-    {#if hayBiblioteca && datos}
-      <p>{t.subtitulo}</p>
-      <ul class="cifras">
-        {#each [{ icono: 'cancion', valor: datos.cifras.pistas.toLocaleString('es'), rotulo: t.pistas }, { icono: 'artista', valor: datos.cifras.artistas.toLocaleString('es'), rotulo: t.artistas }, { icono: 'album', valor: datos.cifras.albumes.toLocaleString('es'), rotulo: t.albumes }, { icono: 'reloj', valor: duracionDetallada(datos.cifras.duracionSeg), rotulo: t.duracion }] as const as c (c.rotulo)}
-          <li>
-            <span class="cifra-icono"><Icon nombre={c.icono} tamano={18} /></span>
-            <span class="cifra-datos"><strong>{c.valor}</strong><span>{c.rotulo}</span></span>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </header>
-
   {#if datos && !hayBiblioteca}
-    <div class="vacia">
-      <Icon nombre="biblioteca" tamano={40} />
-      <h2>{t.vacia}</h2>
-      <p>{t.vaciaSub}</p>
-    </div>
-  {:else if datos}
+    {#await import('#lib/ui/inicio/BienvenidaInicio.svelte') then m}
+      <m.default />
+    {/await}
+  {:else}
+    <header class="saludo">
+      <h1>{saludo}</h1>
+      {#if hayBiblioteca && datos}
+        <p>{t.subtitulo}</p>
+        <ul class="cifras">
+          {#each [{ icono: 'cancion', valor: datos.cifras.pistas.toLocaleString('es'), rotulo: t.pistas }, { icono: 'artista', valor: datos.cifras.artistas.toLocaleString('es'), rotulo: t.artistas }, { icono: 'album', valor: datos.cifras.albumes.toLocaleString('es'), rotulo: t.albumes }, { icono: 'reloj', valor: duracionDetallada(datos.cifras.duracionSeg), rotulo: t.duracion }] as const as c (c.rotulo)}
+            <li>
+              <span class="cifra-icono"><Icon nombre={c.icono} tamano={18} /></span>
+              <span class="cifra-datos"><strong>{c.valor}</strong><span>{c.rotulo}</span></span>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </header>
+  {/if}
+
+  {#if datos && hayBiblioteca}
     <div class="heroe">
       {#if pistaRetomar}
         <section class="marquesina" aria-labelledby="inicio-retomar">
@@ -586,23 +586,6 @@
 
   .sub {
     font-size: var(--ns-texto-xs);
-  }
-
-  .vacia {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--ns-espacio-2);
-    padding: var(--ns-espacio-7);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-lg);
-    color: var(--m3c-primary);
-    text-align: center;
-  }
-
-  .vacia h2 {
-    margin: 0;
-    color: var(--m3c-on-surface);
   }
 
   .heroe {

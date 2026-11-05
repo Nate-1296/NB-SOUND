@@ -6,6 +6,7 @@ import type { Indicio, Modo } from '#lib/bindings/index.ts';
 
 export const esACiegas = {
   titulo: 'A ciegas',
+  sinMusica: 'Para jugar hace falta música: añade canciones a tu biblioteca y vuelve.',
   subtitulo:
     'Redescubre tu música: adivina canciones por su portada o por unos segundos de sonido.',
   modos: {

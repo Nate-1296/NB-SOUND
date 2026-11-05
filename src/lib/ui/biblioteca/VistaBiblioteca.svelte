@@ -29,6 +29,7 @@
   import { textos } from '#lib/i18n/index.ts';
   import CabeceraPistas from '#lib/ui/biblioteca/CabeceraPistas.svelte';
   import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
+  import EstadoVacio from '#lib/ui/EstadoVacio.svelte';
   import Icon from '#lib/ui/Icon.svelte';
   import ListaVirtual from '#lib/ui/lista/ListaVirtual.svelte';
   import MenuSelector from '#lib/ui/MenuSelector.svelte';
@@ -206,6 +207,8 @@
   let totalArtistas = $state(0);
   let pedidoGrid = 0;
   let cargandoGrid = false;
+  // Para no enseñar "vacía" mientras llega la primera página.
+  let gridListo = $state(false);
   const PAGINA = 120;
 
   $effect(() => {
@@ -234,6 +237,7 @@
         albumes = p.albumes;
         totalAlbumes = p.total;
         cargandoGrid = false;
+        gridListo = true;
       });
     } else if (vista === 'artistas') {
       const orden = ordenArtistas;
@@ -244,6 +248,7 @@
         artistas = p.artistas;
         totalArtistas = p.total;
         cargandoGrid = false;
+        gridListo = true;
       });
     }
   });
@@ -309,6 +314,14 @@
         : t.cuentaArtistas(totalArtistas)
   );
 </script>
+
+{#snippet vacia(filtrada: boolean)}
+  {#if filtrada}
+    <EstadoVacio icono="buscar" titulo={t.sinCoincidencias} texto={t.sinCoincidenciasTexto} />
+  {:else}
+    <EstadoVacio icono="biblioteca" titulo={t.vaciaBiblioteca} texto={t.vaciaTexto} conAnadir />
+  {/if}
+{/snippet}
 
 <section class="vista">
   <header class="cabecera">
@@ -474,9 +487,7 @@
     {#if modoRejilla === 'lista'}
       <div class="lista">
         {#if total === 0}
-          <p class="vacio">
-            {textoAplicado || favoritas || sinVerificar || paraCantar ? t.vacia : t.vaciaBiblioteca}
-          </p>
+          {@render vacia(Boolean(textoAplicado || favoritas || sinVerificar || paraCantar))}
         {:else if total !== null}
           <CabeceraPistas />
           {#key version}
@@ -529,6 +540,10 @@
         <div use:alFinal class="centinela"></div>
       {/if}
     {/if}
+  {:else if vista === 'albumes' && albumes.length === 0 && gridListo}
+    {@render vacia(Boolean(textoAplicado) || estadoBiblioteca.albumes.grupo !== 'todos')}
+  {:else if vista === 'artistas' && artistas.length === 0 && gridListo}
+    {@render vacia(Boolean(textoAplicado))}
   {:else if vista === 'albumes'}
     <ul
       class="rejilla"
@@ -765,12 +780,6 @@
   .lista > :global(.lista) {
     flex: 1;
     min-height: 0;
-  }
-
-  .vacio {
-    color: var(--m3c-on-surface-variant);
-    text-align: center;
-    margin-top: var(--ns-espacio-7);
   }
 
   .densidades {

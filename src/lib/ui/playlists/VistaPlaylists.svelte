@@ -24,6 +24,7 @@
   import { formatoTiempo } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
   import { esAparte } from '#lib/i18n/es-aparte.ts';
+  import EstadoVacio from '#lib/ui/EstadoVacio.svelte';
   import Icon from '#lib/ui/Icon.svelte';
   import MenuSelector from '#lib/ui/MenuSelector.svelte';
   import DialogoInteligente from '#lib/ui/playlists/DialogoInteligente.svelte';
@@ -46,6 +47,7 @@
   let categoria = $state<Categoria | null>(estadoPlaylists.categoria);
   let orden = $state<OrdenPlaylists>(estadoPlaylists.orden);
   let lista = $state<PlaylistResumen[]>([]);
+  let listaLista = $state(false);
   let seleccionada = $state<number | null>(estadoPlaylists.seleccionadaId);
   let creando = $state(false);
   let creandoInteligente = $state(false);
@@ -66,6 +68,7 @@
     void version;
     void playlistsListar(consulta).then((p) => {
       lista = p;
+      listaLista = true;
       if (seleccionada === null || !p.some((x) => x.id === seleccionada)) {
         seleccionada = p[0]?.id ?? null;
       }
@@ -244,6 +247,17 @@
       </div>
     </div>
 
+    {#if listaLista && listaOrdenada.length === 0}
+      {#if texto.trim() || categoria}
+        <EstadoVacio
+          icono="buscar"
+          titulo={textos.biblioteca.sinCoincidencias}
+          texto={textos.biblioteca.sinCoincidenciasTexto}
+        />
+      {:else}
+        <EstadoVacio icono="playlists" titulo={t.vaciasTitulo} texto={t.vaciasTexto} />
+      {/if}
+    {/if}
     <ul
       class="rejilla"
       class:sm={modoRejilla === 'sm'}

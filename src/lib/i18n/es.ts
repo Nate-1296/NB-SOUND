@@ -191,6 +191,9 @@ export const es = {
     columnas: { titulo: 'Título', album: 'Álbum', duracion: 'Duración' },
     vacia: 'No hay canciones que coincidan.',
     vaciaBiblioteca: 'Tu biblioteca está vacía.',
+    vaciaTexto: 'Añade canciones o una carpeta entera: aparecerán aquí con sus portadas y letras.',
+    sinCoincidencias: 'Nada coincide con lo que buscas.',
+    sinCoincidenciasTexto: 'Prueba con menos palabras o quita algún filtro.',
     cargando: 'Cargando',
     // `albumes.tipo` guarda lo que trajo MusicBrainz o la V1, en inglés.
     tipos: { Album: 'Álbum', Single: 'Sencillo', EP: 'EP', Compilation: 'Recopilatorio' },
@@ -339,10 +342,7 @@ export const es = {
     siguiente: 'Siguiente',
     masEscuchados: 'Tus 10 álbumes más escuchados',
     masEscuchadosSub: 'Los discos que más han pasado por reproducción.',
-    sorprendeme: (titulo: string, artista: string) => `Sorpréndeme: «${titulo}» de ${artista}`,
-    vacia: 'Tu biblioteca empieza al importar música',
-    vaciaSub:
-      'NB Sound usará tus archivos locales para mostrar recientes, favoritos y música para retomar sin depender de servicios externos.'
+    sorprendeme: (titulo: string, artista: string) => `Sorpréndeme: «${titulo}» de ${artista}`
   },
   tuMusica: {
     fotoInvalida: 'Esa imagen no se pudo usar. Elige un PNG o un JPG.',
@@ -403,6 +403,9 @@ export const es = {
   playlists: {
     titulo: 'Playlists',
     subtitulo: 'Listas manuales, favoritas y mezclas locales preparadas con tu biblioteca.',
+    vaciasTitulo: 'Aún no hay playlists',
+    vaciasTexto:
+      'Crea la tuya, o pulsa «Crear para mí» cuando tengas música y NB Sound armará unas cuantas con lo que escuchas.',
     nueva: 'Nueva playlist',
     densidad: {
       gridSm: 'Cuadrícula pequeña',

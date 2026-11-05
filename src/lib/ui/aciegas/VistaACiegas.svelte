@@ -30,6 +30,7 @@
   } from '#lib/core/ipc/aciegas.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textosACiegas } from '#lib/i18n/aciegas.ts';
+  import EstadoVacio from '#lib/ui/EstadoVacio.svelte';
   import Icon from '#lib/ui/Icon.svelte';
 
   const t = textosACiegas;
@@ -137,7 +138,9 @@
     <p class="sub">{t.subtitulo}</p>
   </header>
 
-  {#if !ronda}
+  {#if !ronda && disponibles.length > 0 && disponibles.every((d) => d.canciones === 0)}
+    <EstadoVacio icono="aCiegas" titulo={t.sinMusica} conAnadir />
+  {:else if !ronda}
     <div class="modos">
       {#each MODOS as m (m)}
         <button
