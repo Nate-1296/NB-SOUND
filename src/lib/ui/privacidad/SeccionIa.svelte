@@ -155,6 +155,8 @@
   }
 
   input[type='checkbox'] {
+    /* Con un rótulo largo al lado, el flex lo encogía y el interruptor se rompía. */
+    flex-shrink: 0;
     flex: none;
     appearance: none;
     -webkit-appearance: none;

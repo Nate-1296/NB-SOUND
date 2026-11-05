@@ -19,11 +19,14 @@
   const t = textos.biblioteca;
 
   let dialogo: HTMLDialogElement | undefined = $state();
+  let cancelar: HTMLButtonElement | undefined = $state();
   let eliminando = $state(false);
 
   $effect(() => {
     if (dialogo && !dialogo.open) {
       dialogo.showModal();
+      // El foco en Cancelar: con Enter no se quita nada sin querer.
+      cancelar?.focus();
     }
   });
 
@@ -66,7 +69,9 @@
       </button>
     </div>
     <div class="pie">
-      <button type="button" class="boton cancel" onclick={oncerrar}>{t.cancelar}</button>
+      <button type="button" class="boton cancel" bind:this={cancelar} onclick={oncerrar}>
+        {t.cancelar}
+      </button>
     </div>
   </div>
 </dialog>
