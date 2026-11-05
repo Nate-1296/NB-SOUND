@@ -3,6 +3,42 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.7] — 2026-11-05
+
+La revisión de Nathan con la aplicación en marcha: nada se reinicia, todo se recuerda, la interfaz se rehace donde
+hacía falta y la aplicación se repara sola.
+
+### Nada se reinicia y todo se recuerda
+
+- Las vistas abiertas se actualizan solas cuando cambia la biblioteca (borrar, editar, importar, playlists).
+- Se recuerdan la vista de cada pestaña, sus órdenes y filtros, la playlist elegida, la pantalla en la que se estaba
+  y el segundo de la canción, aunque se cierre sin haber pulsado reproducir.
+- Al volver a una vista ya visitada se ve al momento lo de antes mientras llega lo nuevo.
+
+### La aplicación se repara sola
+
+- El karaoke reintenta un fallo pasajero hasta tres veces, y lo que falló por no tener el modelo, al arrancar.
+- La importación reintenta un archivo hasta tres veces antes de darlo por error.
+- Al estrenar una versión, lo que había quedado fallido se intenta otra vez, una sola vez.
+- El karaoke no preparaba las canciones cuyo audio mide un número exacto de trozos al remuestrear (por ejemplo, a
+  48 kHz): fallaban siempre y parecían listas. La consola dice ahora qué prepara, qué espera y qué falló.
+
+### Interfaz
+
+- Barra de reproducción de forma fija; la favorita, añadir a una playlist, el minirreproductor y dónde suena pasan
+  al menú ···, con Sorpréndeme.
+- Inicio sin cifras, con el saludo junto a Sorpréndeme y un podio nuevo para el top 10.
+- Biblioteca › Pistas, Buscar y las canciones de un artista vuelven a la lista de la V1, sin cabecera ni números.
+- Playlists: las ancladas llevan su distintivo; la barra lateral pierde las ancladas.
+- Buscar: el mejor resultado por parecido y las canciones cuyo título empieza así, primero.
+- Pantalla completa sin franja vacía; la letra que avanza ya no cuenta como movimiento del ratón.
+- La cola solo pinta lo que se ve: abre al momento aunque tenga la biblioteca entera.
+- Las barras de desplazamiento ya no se ven por encima de cajones, menús y la cola.
+- Ajustes: el tamaño de la interfaz en botones; los agregados aún no publicados no se muestran.
+- DJ: el historial a toda altura. A ciegas, grande y con la portada a la izquierda.
+- Tu música: un mes se ve como calendario; un año o todo el historial, mes a mes.
+- Minirreproductor rehecho, y reabrirlo es instantáneo.
+
 ## [2.0.6] — 2026-11-04
 
 Perfeccionamiento ergonómico de la vista de Playlists y optimización del lienzo vertical.
