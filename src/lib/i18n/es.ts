@@ -559,6 +559,8 @@ export const es = {
     anadirCarpeta: 'Añadir carpeta',
     catalogando: (n: number) => (n === 1 ? 'Catalogando 1 canción' : `Catalogando ${n} canciones`),
     deTotal: (hechos: number, total: number) => `${hechos} de ${total}`,
+    deTotalCon: (hechos: number, total: number, archivo: string) =>
+      `${hechos} de ${total} · ${archivo}`,
     resumen: (anadidas: number, revisar: number) =>
       revisar > 0
         ? `${anadidas === 1 ? '1 añadida' : `${anadidas} añadidas`}. ${revisar} por revisar`

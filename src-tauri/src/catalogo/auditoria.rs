@@ -16,6 +16,8 @@
 use std::collections::HashSet;
 use std::path::Path;
 
+use rusqlite::OptionalExtension;
+
 use crate::db::{self, BaseDeDatos};
 use crate::error::{NsError, NsResult};
 use crate::paths::Rutas;
@@ -133,6 +135,90 @@ pub fn auditar(db: &BaseDeDatos, rutas: &Rutas, musica: Option<&Path>) -> NsResu
 }
 
 /// Una pasada al arrancar, en su hilo y sin prisa.
+/// La preferencia que dice que las huellas ya se revisaron una vez.
+const HUELLAS_REVISADAS: &str = "huellas_revisadas";
+
+/// Cuántas pistas se corrigen por transacción.
+const TANDA_HUELLAS: usize = 200;
+
+/// Corrige, una sola vez, las huellas de contenido que no son las del archivo.
+///
+/// La V1 calculaba la huella antes de escribir las etiquetas en el archivo, y la
+/// guardaba así: en la biblioteca real solo coincidían 2 de cada 300. Con la
+/// huella vieja, la importación no reconoce un archivo que ya está (lo manda a
+/// Por revisar) y el teléfono marca cada descarga como "sin verificar", porque
+/// comprueba la `x-nb-sound-hash` con la misma regla.
+///
+/// El audio no cambió, solo las etiquetas: la medición, el análisis y los
+/// instrumentales que se hicieron con la huella vieja se pasan a la nueva, para
+/// no repetir horas de trabajo. Devuelve cuántas se corrigieron.
+///
+/// # Errors
+///
+/// [`NsError::StorageFailure`] si la base falla.
+pub fn reparar_huellas(db: &BaseDeDatos, musica: &Path) -> NsResult<usize> {
+    let conn = db.conexion()?;
+    let hecha: bool = conn
+        .query_row(
+            "SELECT 1 FROM preferencias WHERE clave = ?1",
+            [HUELLAS_REVISADAS],
+            |_| Ok(true),
+        )
+        .optional()
+        .map_err(|_| NsError::StorageFailure)?
+        .unwrap_or(false);
+    if hecha {
+        return Ok(0);
+    }
+    let filas: Vec<(i64, String, Option<String>)> = {
+        let mut s = conn
+            .prepare("SELECT id, ruta, sha256 FROM pistas")
+            .map_err(|_| NsError::StorageFailure)?;
+        let filas = s
+            .query_map([], |f| Ok((f.get(0)?, f.get(1)?, f.get(2)?)))
+            .map_err(|_| NsError::StorageFailure)?
+            .collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(|_| NsError::StorageFailure)?;
+        filas
+    };
+    drop(conn);
+    let mut cambios: Vec<(i64, Option<String>, String)> = Vec::new();
+    for (id, ruta, vieja) in filas {
+        let archivo = musica.join(&ruta);
+        let Ok(nueva) = super::duplicados::huella_de_archivo(&archivo) else {
+            continue;
+        };
+        if vieja.as_deref() != Some(nueva.as_str()) {
+            cambios.push((id, vieja, nueva));
+        }
+    }
+    for tanda in cambios.chunks(TANDA_HUELLAS) {
+        let mut conn = db.conexion()?;
+        let tx = db::transaccion_de_escritura(&mut conn)?;
+        for (id, vieja, nueva) in tanda {
+            for sql in [
+                "UPDATE sonoridad SET sha256 = ?2 WHERE pista_id = ?1 AND sha256 IS ?3",
+                "UPDATE analisis_profundo SET sha256 = ?2 WHERE pista_id = ?1 AND sha256 IS ?3",
+                "UPDATE stems SET sha256 = ?2 WHERE pista_id = ?1 AND sha256 IS ?3",
+                "UPDATE pistas SET sha256 = ?2 WHERE id = ?1 AND sha256 IS ?3",
+            ] {
+                tx.execute(sql, rusqlite::params![id, nueva, vieja])
+                    .map_err(|_| NsError::StorageFailure)?;
+            }
+        }
+        tx.commit().map_err(|_| NsError::StorageFailure)?;
+    }
+    let mut conn = db.conexion()?;
+    let tx = db::transaccion_de_escritura(&mut conn)?;
+    tx.execute(
+        "INSERT INTO preferencias (clave, valor) VALUES (?1, 'true') ON CONFLICT (clave) DO NOTHING",
+        [HUELLAS_REVISADAS],
+    )
+    .map_err(|_| NsError::StorageFailure)?;
+    tx.commit().map_err(|_| NsError::StorageFailure)?;
+    Ok(cambios.len())
+}
+
 pub fn arrancar(db: BaseDeDatos, rutas: Rutas) {
     let lanzado = std::thread::Builder::new()
         .name("auditoria".into())
@@ -153,6 +239,19 @@ pub fn arrancar(db: BaseDeDatos, rutas: Rutas) {
                 ),
                 Err(e) => tracing::error!(codigo = e.code(), "no se pudo auditar la biblioteca"),
             }
+            if let Some(m) = musica.as_deref() {
+                match reparar_huellas(&db, m) {
+                    Ok(0) => {}
+                    Ok(n) => tracing::info!(
+                        // no es del usuario: una cuenta.
+                        corregidas = n,
+                        "huellas de contenido corregidas"
+                    ),
+                    Err(e) => {
+                        tracing::error!(codigo = e.code(), "no se pudieron revisar las huellas")
+                    }
+                }
+            }
         });
     if lanzado.is_err() {
         tracing::error!("no se pudo lanzar la auditoría");
@@ -162,6 +261,49 @@ pub fn arrancar(db: BaseDeDatos, rutas: Rutas) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn las_huellas_viejas_se_corrigen_una_vez_y_arrastran_sus_mediciones() {
+        let d = std::env::temp_dir().join(format!("ns-huellas-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        std::fs::write(d.join("a.mp3"), b"con etiquetas nuevas").unwrap();
+        std::fs::write(d.join("b.mp3"), b"igual").unwrap();
+        let buena = super::super::duplicados::huella_de_archivo(&d.join("b.mp3")).unwrap();
+        let vieja = "0".repeat(64);
+        let db = BaseDeDatos::en_memoria().unwrap();
+        db.conexion()
+            .unwrap()
+            .execute_batch(&format!(
+                "INSERT INTO pistas (id, titulo, ruta, sha256) VALUES
+                     (1, 'a', 'a.mp3', '{vieja}'), (2, 'b', 'b.mp3', '{buena}'), (3, 'c', 'falta.mp3', '{vieja}');
+                 INSERT INTO sonoridad (pista_id, sha256, lufs) VALUES (1, '{vieja}', -9.0);"
+            ))
+            .unwrap();
+        assert_eq!(
+            reparar_huellas(&db, &d).unwrap(),
+            1,
+            "solo la que cambió y existe"
+        );
+        let conn = db.conexion().unwrap();
+        let nueva: String = conn
+            .query_row("SELECT sha256 FROM pistas WHERE id = 1", [], |f| f.get(0))
+            .unwrap();
+        assert_eq!(
+            nueva,
+            super::super::duplicados::huella_de_archivo(&d.join("a.mp3")).unwrap()
+        );
+        let medida: String = conn
+            .query_row("SELECT sha256 FROM sonoridad WHERE pista_id = 1", [], |f| {
+                f.get(0)
+            })
+            .unwrap();
+        assert_eq!(medida, nueva, "la medición sigue valiendo");
+        drop(conn);
+        std::fs::write(d.join("a.mp3"), b"otra vez distinto").unwrap();
+        assert_eq!(reparar_huellas(&db, &d).unwrap(), 0, "una sola vez");
+        let _ = std::fs::remove_dir_all(&d);
+    }
 
     #[test]
     fn se_arregla_lo_interno_y_solo_se_cuenta_lo_del_usuario() {

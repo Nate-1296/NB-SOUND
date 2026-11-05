@@ -21,9 +21,7 @@
     <div class="texto">
       <strong>{t.catalogando(p.total)}</strong>
       <span
-        >{t.deTotal(p.hechos, p.total)}{#if p.actual}<span class="actual">
-            · {p.actual}</span
-          >{/if}</span
+        >{p.actual ? t.deTotalCon(p.hechos, p.total, p.actual) : t.deTotal(p.hechos, p.total)}</span
       >
       <progress max={p.total} value={p.hechos}></progress>
     </div>
