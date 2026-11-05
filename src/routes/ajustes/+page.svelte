@@ -126,9 +126,19 @@
     {:else if seccionActiva === 'acerca'}
       <section id="acerca" aria-labelledby="t-acerca">
         <h2 id="t-acerca">{t.acercaDe}</h2>
-        {#await version then v}
-          {#if v}<p>{t.version(v)}</p>{/if}
-        {/await}
+        <div class="marca">
+          <img
+            src={`/logos/logo_${aparienciaActual.actual.tema}.png`}
+            alt=""
+            onerror={(e) => ((e.currentTarget as HTMLImageElement).src = '/logo.png')}
+          />
+          <div>
+            <strong>{t.producto}</strong>
+            {#await version then v}
+              {#if v}<span>{t.version(v)}</span>{/if}
+            {/await}
+          </div>
+        </div>
         {#await import('#lib/ui/ajustes/BloqueActualizacion.svelte') then m}
           <m.default />
         {/await}
@@ -141,6 +151,32 @@
 </div>
 
 <style>
+  .marca {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-4);
+  }
+
+  .marca img {
+    width: 4rem;
+    height: 4rem;
+    border-radius: var(--ns-radio-pleno);
+  }
+
+  .marca div {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .marca strong {
+    font-size: var(--ns-texto-xl);
+  }
+
+  .marca span {
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-sm);
+  }
+
   .ajustes {
     display: grid;
     grid-template-columns: 14rem minmax(0, 1fr);

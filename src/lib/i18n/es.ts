@@ -29,6 +29,7 @@ export const es = {
     tuMusica: 'Tu música',
     ajustes: 'Ajustes',
     porRevisar: 'Por revisar',
+    ancladas: 'Ancladas',
     pendientes: (n: number) => (n === 1 ? '1 pendiente' : `${n} pendientes`),
     colapsarLateral: 'Contraer barra lateral',
     expandirLateral: 'Expandir barra lateral',
@@ -482,6 +483,7 @@ export const es = {
     reproduccion: 'Reproducción',
     apariencia: 'Apariencia',
     acercaDe: 'Acerca de',
+    producto: 'NB Sound',
     dispositivos: 'Dispositivos',
     dispositivosSub: 'Tu música en el teléfono, en una tarjeta o en la fiesta.',
     telefonos: 'Tus teléfonos',
@@ -534,7 +536,8 @@ export const es = {
     temasEspeciales: 'Alto contraste y OLED',
     tipografia: 'Tipografía',
     escala: 'Tamaño de la interfaz',
-    colorPortada: 'La vista de reproducción toma el color de la portada',
+    colorPortada:
+      'La reproducción, los álbumes, los artistas y las playlists toman el color de su portada',
     muestra: 'NB Sound, tu música',
     version: (v: string) => `NB Sound ${v}`,
     licencia: 'Software libre bajo la licencia GPL-3.0-or-later.',
@@ -579,7 +582,6 @@ export const es = {
     titulo: 'Por revisar',
     vacio: 'No hay nada pendiente. Todo lo que importaste está en tu biblioteca.',
     cuenta: (n: number) => (n === 1 ? '1 archivo no importado' : `${n} archivos no importados`),
-    noImportado: 'No importado',
     causas: {
       candidatos_ambiguos: 'Encontramos varias versiones posibles de esta canción',
       puntaje_intermedio: 'No estamos seguros de que sea esta canción',
@@ -603,7 +605,8 @@ export const es = {
     seleccionar: (nombre: string) => `Seleccionar ${nombre}`,
     candidatos: 'Posibles coincidencias',
     tuArchivo: 'Tu archivo',
-    sinDatos: 'Sin datos',
+    sinEtiquetas: 'El archivo no trae etiquetas: ni título, ni artista, ni álbum.',
+    campos: { titulo: 'Título', artista: 'Artista', album: 'Álbum' },
     faltara: 'Entrará sin verificar. Le faltará:',
     falta: { portada: 'portada', letra: 'letra', album: 'álbum', anio: 'año' } as Record<
       string,

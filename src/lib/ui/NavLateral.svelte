@@ -79,6 +79,12 @@
     </section>
   {/each}
 
+  {#if !esCompacta}
+    {#await import('./playlists/PlaylistsAncladas.svelte') then m}
+      <m.default />
+    {/await}
+  {/if}
+
   <ul class="pie">
     {#each pie as destino (destino.id)}
       {@render enlace(destino)}
@@ -123,9 +129,10 @@
     padding-bottom: var(--ns-espacio-2);
   }
 
+  /* Más pequeño que en la V1: deja sitio a las playlists ancladas. */
   .marca img {
-    width: 6.5rem;
-    height: 6.5rem;
+    width: 5rem;
+    height: 5rem;
     border-radius: var(--ns-radio-pleno);
     transition:
       width var(--ns-duracion-corta) var(--ns-curva),
@@ -153,6 +160,13 @@
 
   .pie {
     margin-top: auto;
+  }
+
+  .marca,
+  .seccion,
+  .pie,
+  .pie-colapso {
+    flex-shrink: 0;
   }
 
   .destino {

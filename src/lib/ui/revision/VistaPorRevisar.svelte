@@ -21,8 +21,25 @@
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
   import Icon from '#lib/ui/Icon.svelte';
+  import type { NombreDeIcono } from '#lib/ui/iconos.ts';
 
   const t = textos.porRevisar;
+
+  /** Un icono por clase de motivo: se distingue de un vistazo qué pide cada uno. */
+  const ICONO_CAUSA: Record<string, NombreDeIcono> = {
+    candidatos_ambiguos: 'duplicado',
+    puntaje_intermedio: 'informacion',
+    duracion_marginal: 'informacion',
+    release_type_dudoso: 'album',
+    sin_candidatos: 'buscar',
+    metadata_insuficiente: 'buscar',
+    puntaje_bajo: 'buscar',
+    escritura_fallida: 'advertencia',
+    validacion_post_escritura: 'advertencia',
+    duplicado: 'duplicado',
+    duracion_invalida: 'error',
+    audio_ilegible: 'error'
+  };
 
   let lista = $state<Pendiente[]>([]);
   let seleccion = $state(new Set<number>());
@@ -133,6 +150,9 @@
               aria-label={t.seleccionar(p.nombre)}
               onchange={() => alternar(p.id)}
             />
+            <span class="icono-causa" aria-hidden="true">
+              <Icon nombre={ICONO_CAUSA[p.causa] ?? 'advertencia'} tamano={18} />
+            </span>
             <button
               type="button"
               class="resumen"
@@ -140,9 +160,7 @@
               onclick={() => (abierto = abierto === p.id ? null : p.id)}
             >
               <span class="nombre">{p.nombre}</span>
-              <span class="motivo"
-                ><span class="insignia">{t.noImportado}</span>{t.causas[p.causa] ?? p.causa}</span
-              >
+              <span class="motivo">{t.causas[p.causa] ?? p.causa}</span>
             </button>
             <Icon nombre={abierto === p.id ? 'arriba' : 'abajo'} tamano={18} />
           </div>
@@ -151,9 +169,18 @@
               <div class="comparador">
                 <div class="columna">
                   <h3>{t.tuArchivo}</h3>
-                  <p><strong>{p.titulo ?? t.sinDatos}</strong></p>
-                  <p>{p.artista ?? t.sinDatos}</p>
-                  <p>{p.album ?? t.sinDatos}</p>
+                  {#if !p.titulo && !p.artista && !p.album}
+                    <p class="sin-etiquetas">{t.sinEtiquetas}</p>
+                  {:else}
+                    <dl>
+                      <dt>{t.campos.titulo}</dt>
+                      <dd>{p.titulo ?? '—'}</dd>
+                      <dt>{t.campos.artista}</dt>
+                      <dd>{p.artista ?? '—'}</dd>
+                      <dt>{t.campos.album}</dt>
+                      <dd>{p.album ?? '—'}</dd>
+                    </dl>
+                  {/if}
                   {#if p.duracionSeg}<p>{duracionLarga(p.duracionSeg)}</p>{/if}
                 </div>
                 {#if p.candidatos.length > 0}
@@ -165,9 +192,17 @@
                           <p><strong>{c.titulo}</strong></p>
                           <p>{c.artista}</p>
                           <p>
-                            {c.album}{#if c.anio}
-                              · {c.anio}{/if}{#if c.tipo}
-                              · {c.tipo}{/if}
+                            {[
+                              c.album,
+                              c.anio ?? '',
+                              c.tipo
+                                ? (textos.biblioteca.tipos[
+                                    c.tipo as keyof typeof textos.biblioteca.tipos
+                                  ] ?? c.tipo)
+                                : ''
+                            ]
+                              .filter((x) => x !== '')
+                              .join(' · ')}
                           </p>
                           {#if c.duracionSeg}<p>{duracionLarga(c.duracionSeg)}</p>{/if}
                         </div>
@@ -333,13 +368,36 @@
     font-size: var(--ns-texto-sm);
   }
 
-  .insignia {
-    padding: 0 var(--ns-espacio-2);
+  .icono-causa {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
     border-radius: var(--ns-radio-pleno);
-    background: var(--m3c-error-container);
-    color: var(--m3c-on-error-container);
-    font-size: var(--ns-texto-xs);
-    font-weight: 600;
+    background: color-mix(in srgb, var(--m3c-tertiary) 16%, transparent);
+    color: var(--m3c-tertiary);
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--ns-espacio-1) var(--ns-espacio-3);
+    margin: 0;
+    font-size: var(--ns-texto-sm);
+  }
+
+  dt {
+    color: var(--m3c-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .sin-etiquetas {
+    color: var(--m3c-on-surface-variant);
   }
 
   .detalle {
@@ -384,6 +442,9 @@
   }
 
   .boton {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-2);
     height: 2.25rem;
     padding: 0 var(--ns-espacio-4);
     border: 1px solid var(--m3c-outline-variant);
