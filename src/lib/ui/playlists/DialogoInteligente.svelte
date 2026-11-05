@@ -246,7 +246,7 @@
         </label>
       </div>
 
-      <div class="fila">
+      <div class="fila pares">
         <label>
           <span>{ti.bpmMin}</span>
           <input type="number" min="1" max="400" step="1" bind:value={bpmMin} />
@@ -265,7 +265,7 @@
         </label>
       </div>
 
-      <div class="fila">
+      <div class="fila pares">
         <label>
           <span>{ti.reproduccionesMin}</span>
           <input type="number" min="0" step="1" bind:value={reproduccionesMin} />
@@ -405,6 +405,11 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
     gap: var(--ns-espacio-3);
+  }
+
+  /* Mínimo y máximo, uno al lado del otro: en rejilla libre quedaba uno suelto. */
+  .fila.pares {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   label {

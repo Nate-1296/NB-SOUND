@@ -515,6 +515,12 @@ pub struct ConsultaAlbumes {
     #[ts(type = "number | null")]
     pub artista_id: Option<i64>,
     pub orden: OrdenAlbumes,
+    /// Los grupos de la V1 ("Álbumes" y "Singles/EP"): `false`, solo los de tipo
+    /// `Album`; `true`, los demás; sin decir, todos. Opcional para que las
+    /// consultas que no lo dicen sigan valiendo.
+    #[serde(default)]
+    #[ts(optional)]
+    pub sencillos: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]
@@ -543,6 +549,11 @@ pub fn albumes(
     if let Some(a) = c.artista_id {
         donde.push_str(" AND a.artista_id = ?");
         params.push(Value::Integer(a));
+    }
+    match c.sencillos {
+        Some(false) => donde.push_str(" AND a.tipo = 'Album'"),
+        Some(true) => donde.push_str(" AND a.tipo <> 'Album'"),
+        None => {}
     }
     if let Some(q) = c.texto.as_deref().and_then(crate::db::busqueda::consulta) {
         // Por las canciones: el índice ya sabe de tildes y prefijos. Búsqueda cruzada por título, álbum y artista.
@@ -760,6 +771,7 @@ mod pruebas_albumes {
                 texto: None,
                 artista_id: None,
                 orden: OrdenAlbumes::TituloAsc,
+                sencillos: None,
             },
             0,
             50,
@@ -772,6 +784,36 @@ mod pruebas_albumes {
     }
 
     #[test]
+    fn los_albumes_y_los_sencillos_se_separan_como_en_la_v1() {
+        let db = base();
+        db.conexion()
+            .unwrap()
+            .execute("UPDATE albumes SET tipo = 'Single' WHERE id = 11", [])
+            .unwrap();
+        let ids = |sencillos| {
+            albumes(
+                &db,
+                &ConsultaAlbumes {
+                    texto: None,
+                    artista_id: None,
+                    orden: OrdenAlbumes::TituloAsc,
+                    sencillos,
+                },
+                0,
+                50,
+            )
+            .unwrap()
+            .albumes
+            .iter()
+            .map(|a| a.id)
+            .collect::<Vec<_>>()
+        };
+        assert_eq!(ids(Some(false)), [10]);
+        assert_eq!(ids(Some(true)), [11]);
+        assert_eq!(ids(None).len(), 2);
+    }
+
+    #[test]
     fn buscar_albumes_y_artistas_no_necesita_tildes() {
         let db = base();
         let a = albumes(
@@ -780,6 +822,7 @@ mod pruebas_albumes {
                 texto: Some("suenos".into()),
                 artista_id: None,
                 orden: OrdenAlbumes::TituloAsc,
+                sencillos: None,
             },
             0,
             50,
@@ -810,6 +853,7 @@ mod pruebas_albumes {
                 texto: Some("clavado".into()),
                 artista_id: None,
                 orden: OrdenAlbumes::TituloAsc,
+                sencillos: None,
             },
             0,
             50,

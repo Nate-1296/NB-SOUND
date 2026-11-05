@@ -194,6 +194,11 @@
   }
 
   // --- Álbumes y artistas: por páginas que se añaden al llegar al final ---
+  const sencillos = $derived(
+    estadoBiblioteca.albumes.grupo === 'todos'
+      ? undefined
+      : estadoBiblioteca.albumes.grupo === 'sencillos'
+  );
   let albumes = $state<AlbumResumen[]>([]);
   let artistas = $state<ArtistaResumen[]>([]);
   let pistasRejilla = $state<PistaResumen[]>([]);
@@ -220,7 +225,11 @@
       const orden = ordenAlbumes;
       const g = ++pedidoGrid;
       cargandoGrid = true;
-      void bibliotecaAlbumes({ texto: busqueda, artistaId: null, orden }, 0, PAGINA).then((p) => {
+      void bibliotecaAlbumes(
+        { texto: busqueda, artistaId: null, orden, sencillos },
+        0,
+        PAGINA
+      ).then((p) => {
         if (g !== pedidoGrid) return;
         albumes = p.albumes;
         totalAlbumes = p.total;
@@ -253,7 +262,7 @@
   async function cargarMasAlbumes(g: number, busqueda: string | null) {
     if (albumes.length === 0 || albumes.length >= totalAlbumes) return;
     const p = await bibliotecaAlbumes(
-      { texto: busqueda, artistaId: null, orden: ordenAlbumes },
+      { texto: busqueda, artistaId: null, orden: ordenAlbumes, sencillos },
       albumes.length,
       PAGINA
     );
@@ -338,6 +347,21 @@
     </div>
 
     <div class="filtros-der">
+      {#if vista === 'albumes'}
+        <div class="fichas">
+          {#each ['todos', 'albumes', 'sencillos'] as const as g (g)}
+            <button
+              type="button"
+              class="ficha"
+              class:activa={estadoBiblioteca.albumes.grupo === g}
+              aria-pressed={estadoBiblioteca.albumes.grupo === g}
+              onclick={() => (estadoBiblioteca.albumes.grupo = g)}
+            >
+              {t.grupos[g]}
+            </button>
+          {/each}
+        </div>
+      {/if}
       {#if vista === 'pistas'}
         <div class="fichas">
           <button

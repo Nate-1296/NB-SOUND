@@ -117,6 +117,7 @@ export const es = {
     favoritas: 'Favoritas',
     sinVerificar: 'Sin verificar',
     paraCantar: 'Listas para cantar',
+    grupos: { todos: 'Todos', albumes: 'Álbumes', sencillos: 'Sencillos y EP' },
     prepararFavoritas: 'Preparar mis favoritas',
     favoritasEnCola: (n: number) =>
       n === 0

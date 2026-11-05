@@ -628,7 +628,7 @@
     border: 1px solid var(--m3c-outline-variant);
     min-height: 14rem;
     overflow: hidden;
-    box-shadow: 0 var(--ns-espacio-2) var(--ns-espacio-4) var(--m3c-shadow);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--m3c-shadow) 35%, transparent);
   }
 
   .destacado {
