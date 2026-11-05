@@ -9,6 +9,34 @@ export const esAparte = {
   comun: {
     error: 'No se pudo completar. Vuelve a intentarlo.'
   },
+  carpetaMusica: {
+    cambiar: 'Cambiar',
+    titulo: 'Cambiar la carpeta de tu música',
+    misma: 'Esa ya es la carpeta de tu música.',
+    yaEsta: (n: number) =>
+      n === 1
+        ? 'Tu canción ya está ahí: NB Sound solo tiene que apuntar a la nueva carpeta.'
+        : `Tus ${n.toLocaleString('es')} canciones ya están ahí: NB Sound solo tiene que apuntar a la nueva carpeta.`,
+    faltan: (encontradas: number, total: number) =>
+      encontradas === 0
+        ? `Ahí no hay ninguna de tus ${total.toLocaleString('es')} canciones. NB Sound puede llevarlas: cada una a su misma subcarpeta, y las originales se quitan al terminar.`
+        : `Ahí están ${encontradas.toLocaleString('es')} de tus ${total.toLocaleString('es')} canciones. NB Sound puede llevar las demás: cada una a su misma subcarpeta.`,
+    mover: 'Llevar mi música',
+    usar: 'Usar esta carpeta',
+    usarSinMover: 'Usar sin mover',
+    usarSinMoverAviso:
+      'Si no mueves la música, las canciones que no estén en la carpeta nueva no se podrán reproducir hasta que las lleves tú.',
+    moviendo: (hechas: number, total: number) =>
+      `Llevando tu música… ${hechas.toLocaleString('es')} de ${total.toLocaleString('es')}`,
+    hecho: 'La carpeta de tu música ya es la nueva.',
+    movidas: (n: number) =>
+      n === 1
+        ? 'Una canción movida a la carpeta nueva.'
+        : `${n.toLocaleString('es')} canciones movidas a la carpeta nueva.`,
+    fallo:
+      'No se pudo llevar tu música (¿espacio, permisos?). Todo ha vuelto a su sitio y la carpeta no ha cambiado.',
+    dentro: 'La carpeta nueva no puede estar dentro de la actual, ni al revés.'
+  },
   descubrir: {
     titulo: (que: string) => `Para lo que pides: ${que}`,
     sinAnalisis:

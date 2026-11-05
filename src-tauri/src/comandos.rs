@@ -680,6 +680,73 @@ pub async fn carpeta_musica(estado: tauri::State<'_, Estado>) -> NsResult<Option
     .await
 }
 
+/// "Cambiar" la carpeta de tu música: el selector nativo y lo que hay en la
+/// elegida (cuántas canciones de la biblioteca ya están). No cambia nada todavía:
+/// la elegida espera en el proceso a [`carpeta_musica_aplicar`]. `None` si se
+/// cancela.
+#[tauri::command]
+pub async fn carpeta_musica_elegir(
+    app: AppHandle,
+) -> NsResult<Option<crate::catalogo::carpeta::RevisionCarpeta>> {
+    use tauri_plugin_dialog::DialogExt;
+    tauri::async_runtime::spawn_blocking(move || {
+        let Some(elegida) = app
+            .dialog()
+            .file()
+            .set_title("Carpeta de tu música")
+            .blocking_pick_folder()
+            .and_then(|f| f.into_path().ok())
+        else {
+            return Ok(None);
+        };
+        let elegida = elegida.canonicalize().map_err(|_| NsError::FileNotFound)?;
+        let estado = app.state::<Estado>();
+        let actual = crate::reproductor::carpeta_musica(&*estado.db.conexion()?)?
+            .map(|a| a.canonicalize().unwrap_or(a));
+        let revision = crate::catalogo::carpeta::revisar(&estado.db, actual.as_deref(), &elegida)?;
+        *estado
+            .carpeta_propuesta
+            .lock()
+            .map_err(|_| NsError::Internal)? = Some(elegida);
+        Ok(Some(revision))
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
+/// Aplica la carpeta elegida: apuntando a ella (la música ya está allí) o, con
+/// `mover`, llevando la biblioteca. Mientras mueve emite `carpeta:avance` con
+/// `[hechas, total]`. Devuelve cuántos archivos movió.
+#[tauri::command]
+pub async fn carpeta_musica_aplicar(app: AppHandle, mover: bool) -> NsResult<u32> {
+    use tauri::Emitter;
+    tauri::async_runtime::spawn_blocking(move || {
+        let estado = app.state::<Estado>();
+        let elegida = estado
+            .carpeta_propuesta
+            .lock()
+            .map_err(|_| NsError::Internal)?
+            .take()
+            .ok_or(NsError::InvalidInput)?;
+        if !mover {
+            crate::catalogo::carpeta::fijar(&estado.db, &elegida)?;
+            return Ok(0);
+        }
+        let actual = crate::reproductor::carpeta_musica(&*estado.db.conexion()?)?
+            .ok_or(NsError::InvalidInput)?;
+        let actual = actual.canonicalize().unwrap_or(actual);
+        let mut ultimo = std::time::Instant::now();
+        crate::catalogo::carpeta::mover(&estado.db, &actual, &elegida, |hechas, total| {
+            if hechas == total || ultimo.elapsed() >= std::time::Duration::from_millis(150) {
+                ultimo = std::time::Instant::now();
+                let _ = app.emit("carpeta:avance", [hechas, total]);
+            }
+        })
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
 // --- Privacidad e inteligencia artificial (F4.2.7) ---------------------------------
 
 /// La política de red que cumple la puerta ahora mismo.
@@ -1517,9 +1584,12 @@ pub struct VistaSesionDj {
     pub peticion: String,
     pub estado: String,
     pub minutos: u32,
-    /// El resumen de la intención, con las frases de la V1.
-    pub resumen: String,
-    pub notas: Vec<String>,
+    /// Cómo se entendió el pedido: los conceptos pedidos y los evitados, por su
+    /// nombre en la ontología, y la curva de energía. La vista pone las palabras;
+    /// las frases de la V1 ("Voy a priorizar: club party") se quedan en la base.
+    pub pide: Vec<String>,
+    pub evita: Vec<String>,
+    pub curva: String,
     pub pistas: Vec<crate::dj::sesiones::PistaDeSesion>,
     pub duracion_seg: f64,
     #[ts(type = "number")]
@@ -1601,8 +1671,7 @@ pub async fn dj_sesion(
 ) -> NsResult<VistaSesionDj> {
     en_segundo_plano(&estado, move |db| {
         let s = crate::dj::sesiones::una(db, sesion_id)?.ok_or(NsError::InvalidInput)?;
-        let intencion: crate::dj::intencion::Intencion =
-            serde_json::from_str(&s.intencion).unwrap_or_default();
+        let lectura = crate::dj::intencion::lectura(&s.peticion);
         let r: serde_json::Value = serde_json::from_str(&s.resumen).unwrap_or_default();
         let n = |k: &str| r[k].as_u64().unwrap_or(0);
         let sin_analisis = !db
@@ -1618,8 +1687,9 @@ pub async fn dj_sesion(
             peticion: s.peticion,
             estado: s.estado,
             minutos: s.objetivo_minutos,
-            resumen: intencion.resumen,
-            notas: intencion.notas,
+            pide: lectura.pide,
+            evita: lectura.evita,
+            curva: lectura.curva,
             pistas: crate::dj::sesiones::pistas(db, sesion_id)?,
             duracion_seg: r["duracion_seg"].as_f64().unwrap_or(0.0),
             artistas_distintos: n("artistas_distintos"),

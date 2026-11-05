@@ -194,3 +194,9 @@ estados de pasar por encima solo se vieron en el código.
 - [ ] En la consola de karaoke, "Cantar ahora" activa el karaoke de lo que suena y el botón pasa a "Volver a la
       original"; "Verlas en la biblioteca" abre Pistas con "Listas para cantar" aplicado, también estando ya en
       Biblioteca.
+- [ ] Ajustes > Biblioteca > "Cambiar" la carpeta de tu música: con una copia ya hecha en otro disco, dice que están
+      todas y solo apunta; con una carpeta vacía en otro disco, "Llevar mi música" muestra el avance, la música
+      suena desde la nueva y la vieja queda sin las canciones (y sin carpetas vacías). Lo nuevo que se copie en la
+      carpeta nueva se importa solo.
+- [ ] En Tu música, tocar el nombre lo deja editar; Enter guarda, Escape cancela, y Ajustes e Inicio lo ven.
+

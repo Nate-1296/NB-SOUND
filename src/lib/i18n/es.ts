@@ -348,6 +348,8 @@ export const es = {
     fotoInvalida: 'Esa imagen no se pudo usar. Elige un PNG o un JPG.',
     identidad: 'Tu identidad musical',
     anonimo: 'Tu música',
+    cambiarNombre: 'Cambiar tu nombre',
+    nombreMarcador: 'Cómo quieres que te llame',
     resumen: (r: number, d: number, b: number) =>
       `${r.toLocaleString('es')} reproducciones · ${d.toLocaleString('es')} pistas distintas de ${b.toLocaleString('es')} en biblioteca.`,
     anioFavorito: (a: number) => `Año favorito: ${a}`,

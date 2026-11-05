@@ -7,9 +7,11 @@ import type { PistaDeSesion } from "./PistaDeSesion";
  */
 export type VistaSesionDj = { sesionId: number, peticion: string, estado: string, minutos: number, 
 /**
- * El resumen de la intención, con las frases de la V1.
+ * Cómo se entendió el pedido: los conceptos pedidos y los evitados, por su
+ * nombre en la ontología, y la curva de energía. La vista pone las palabras;
+ * las frases de la V1 ("Voy a priorizar: club party") se quedan en la base.
  */
-resumen: string, notas: Array<string>, pistas: Array<PistaDeSesion>, duracionSeg: number, artistasDistintos: number, transicionesBuenas: number, transicionesTotal: number, 
+pide: Array<string>, evita: Array<string>, curva: string, pistas: Array<PistaDeSesion>, duracionSeg: number, artistasDistintos: number, transicionesBuenas: number, transicionesTotal: number, 
 /**
  * Sin el agregado de análisis el DJ elige con los rasgos básicos, y la vista
  * lo dice (criterio de la Fase 6).

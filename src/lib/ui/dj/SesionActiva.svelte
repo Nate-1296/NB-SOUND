@@ -92,8 +92,21 @@
           : (textosDj.historial.estados[sesion.estado] ?? sesion.estado)}
       </span>
       <h2 id="t-sesion">{sesion.peticion}</h2>
-      {#if sesion.resumen}<p class="resumen">{sesion.resumen}</p>{/if}
-      {#each sesion.notas as n (n)}<p class="nota">{n}</p>{/each}
+      {#if sesion.pide.length + sesion.evita.length === 0}
+        <p class="nota">{t.general}</p>
+      {:else}
+        <ul class="lectura" aria-label={t.entendi}>
+          {#each sesion.pide as c (c)}
+            <li class="concepto">{t.conceptos[c] ?? c.replaceAll('_', ' ')}</li>
+          {/each}
+          {#if t.curvas[sesion.curva]}
+            <li class="concepto curva">{t.curvas[sesion.curva]}</li>
+          {/if}
+          {#each sesion.evita as c (c)}
+            <li class="concepto evitado">{t.evitare} {t.conceptos[c] ?? c.replaceAll('_', ' ')}</li>
+          {/each}
+        </ul>
+      {/if}
       <p class="cifras">
         {t.resumen(
           sesion.pistas.length,
@@ -233,8 +246,30 @@
     margin: 0;
   }
 
-  .resumen {
-    font-size: var(--ns-texto-sm);
+  .lectura {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ns-espacio-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .concepto {
+    padding: var(--ns-espacio-1) var(--ns-espacio-3);
+    border-radius: var(--ns-radio-pleno);
+    background: color-mix(in srgb, var(--m3c-primary) 14%, transparent);
+    color: var(--m3c-on-surface);
+    font-size: var(--ns-texto-xs);
+    font-weight: 600;
+  }
+
+  .concepto.curva {
+    background: var(--m3c-surface-container-highest);
+  }
+
+  .concepto.evitado {
+    background: color-mix(in srgb, var(--m3c-error) 14%, transparent);
   }
 
   .nota,

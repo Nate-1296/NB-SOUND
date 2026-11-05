@@ -186,33 +186,15 @@ fn resumen(positivos: &[Coincidencia], negados: &[Coincidencia], curva: &str) ->
     format!("{}.", partes.join(". "))
 }
 
-/// `parsear_intent`.
-#[must_use]
-pub fn interpretar(prompt: &str, duracion_minutos: u32) -> Intencion {
-    let limpio = prompt.trim();
-    if limpio.is_empty() {
-        return Intencion {
-            vacio: true,
-            duracion_minutos,
-            resumen: "Sesion general sin intencion especifica.".to_owned(),
-            notas: vec!["No ingresaste una indicacion; usare seleccion general.".to_owned()],
-            ..Intencion::default()
-        };
-    }
-    let texto: Vec<char> = ontologia::normalizar(limpio).chars().collect();
-    let coincidencias = ontologia::buscar(limpio);
-    if coincidencias.is_empty() {
-        return Intencion {
-            prompt: limpio.to_owned(),
-            vacio: true,
-            duracion_minutos,
-            resumen: "No reconoci conceptos musicales claros. Hare una seleccion general."
-                .to_owned(),
-            notas: vec!["Prueba con expresiones como 'algo para concentrarme', 'bajos fuertes', 'voces femeninas', 'cinematografico', 'sin EDM agresivo', 'subida progresiva para entrenar'.".to_owned()],
-            ..Intencion::default()
-        };
-    }
+/// Lo pedido y lo negado, con los amplificadores y las contradicciones resueltas.
+struct Separadas {
+    positivos: Vec<Coincidencia>,
+    negados: Vec<Coincidencia>,
+    factores: Vec<(usize, f64)>,
+    pares: Vec<(String, String)>,
+}
 
+fn separar(texto: &[char], coincidencias: Vec<Coincidencia>) -> Separadas {
     let (mut positivos, mut negados) = (Vec::new(), Vec::new());
     let mut factores: Vec<(usize, f64)> = Vec::new();
     let mut amplificador: Option<f64> = None;
@@ -249,6 +231,88 @@ pub fn interpretar(prompt: &str, duracion_minutos: u32) -> Intencion {
     if !pares.is_empty() {
         positivos = resolver(positivos, &pares);
     }
+    Separadas {
+        positivos,
+        negados,
+        factores,
+        pares,
+    }
+}
+
+/// Cómo se entendió un pedido, para enseñarlo: los conceptos pedidos y los
+/// evitados, por su nombre en la ontología, y la curva. La vista los traduce;
+/// el `resumen` de [`Intencion`] es el de la V1, sin tildes y con los nombres
+/// internos ("club party"), y se guarda tal cual porque es parte del registro.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Lectura {
+    pub pide: Vec<String>,
+    pub evita: Vec<String>,
+    pub curva: String,
+}
+
+#[must_use]
+pub fn lectura(prompt: &str) -> Lectura {
+    let limpio = prompt.trim();
+    let texto: Vec<char> = ontologia::normalizar(limpio).chars().collect();
+    let coincidencias = ontologia::buscar(limpio);
+    if limpio.is_empty() || coincidencias.is_empty() {
+        return Lectura {
+            curva: "stable".to_owned(),
+            ..Lectura::default()
+        };
+    }
+    let s = separar(&texto, coincidencias);
+    let nombres = |v: &[Coincidencia]| {
+        let mut n: Vec<String> = Vec::new();
+        for m in v {
+            if !n.iter().any(|x| x == m.concepto.nombre) {
+                n.push(m.concepto.nombre.to_owned());
+            }
+        }
+        n
+    };
+    Lectura {
+        pide: nombres(&s.positivos),
+        evita: nombres(&s.negados),
+        curva: ontologia::curva_energia(&s.positivos)
+            .unwrap_or("stable")
+            .to_owned(),
+    }
+}
+
+/// `parsear_intent`.
+#[must_use]
+pub fn interpretar(prompt: &str, duracion_minutos: u32) -> Intencion {
+    let limpio = prompt.trim();
+    if limpio.is_empty() {
+        return Intencion {
+            vacio: true,
+            duracion_minutos,
+            resumen: "Sesion general sin intencion especifica.".to_owned(),
+            notas: vec!["No ingresaste una indicacion; usare seleccion general.".to_owned()],
+            ..Intencion::default()
+        };
+    }
+    let texto: Vec<char> = ontologia::normalizar(limpio).chars().collect();
+    let coincidencias = ontologia::buscar(limpio);
+    if coincidencias.is_empty() {
+        return Intencion {
+            prompt: limpio.to_owned(),
+            vacio: true,
+            duracion_minutos,
+            resumen: "No reconoci conceptos musicales claros. Hare una seleccion general."
+                .to_owned(),
+            notas: vec!["Prueba con expresiones como 'algo para concentrarme', 'bajos fuertes', 'voces femeninas', 'cinematografico', 'sin EDM agresivo', 'subida progresiva para entrenar'.".to_owned()],
+            ..Intencion::default()
+        };
+    }
+
+    let Separadas {
+        positivos,
+        negados,
+        factores,
+        pares,
+    } = separar(&texto, coincidencias);
     let mut ejes: Mapa = ontologia::agregar_ejes(&positivos, &factores);
     for (eje, v) in ontologia::agregar_ejes(&negados, &factores) {
         ontologia::sumar(&mut ejes, &eje, -v);
@@ -343,6 +407,34 @@ mod tests {
             .filter(|l| !l.contains("nombre:") && !l.trim_start().starts_with("//"))
             .flat_map(|l| l.split('\'').skip(1).step_by(2).map(str::to_owned))
             .collect()
+    }
+
+    #[test]
+    fn cada_concepto_tiene_su_nombre_en_la_vista() {
+        let desde = TEXTOS_DE_LA_VISTA
+            .find("conceptos: {")
+            .expect("los conceptos siguen en es-dj.ts");
+        let hasta = desde + TEXTOS_DE_LA_VISTA[desde..].find('}').expect("se cierran");
+        let bloque = &TEXTOS_DE_LA_VISTA[desde..hasta];
+        let sin_nombre: Vec<_> = ontologia::CONCEPTOS
+            .iter()
+            .map(|c| c.nombre)
+            .filter(|n| !n.starts_with("modifier_"))
+            .filter(|n| !bloque.contains(&format!("{n}: '")))
+            .collect();
+        assert!(
+            sin_nombre.is_empty(),
+            "conceptos sin nombre: {sin_nombre:?}"
+        );
+    }
+
+    #[test]
+    fn la_lectura_dice_lo_pedido_y_lo_evitado_por_su_nombre() {
+        let l = lectura("reguetón para una fiesta, sin trap");
+        assert_eq!(l.pide, ["reggaeton", "club_party"]);
+        assert_eq!(l.evita, ["trap"]);
+        assert_eq!(l.curva, "peak");
+        assert_eq!(lectura("asdf").pide, Vec::<String>::new());
     }
 
     #[test]

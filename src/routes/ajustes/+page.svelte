@@ -4,7 +4,8 @@
 -->
 <script lang="ts">
   import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
-  import { carpetaMusica, perfilCambiarFoto, salud } from '#lib/core/ipc/index.ts';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
+  import { perfilCambiarFoto, salud, urlFotoPerfil } from '#lib/core/ipc/index.ts';
   import { textos } from '#lib/i18n/index.ts';
   import Icon from '#lib/ui/Icon.svelte';
   import type { NombreDeIcono } from '#lib/ui/iconos.ts';
@@ -29,9 +30,23 @@
   const version = salud()
     .then((informe) => informe.version)
     .catch(() => null);
-  const carpeta = carpetaMusica().catch(() => null);
 
   let nombre = $state(aparienciaActual.actual.nombreUsuario ?? '');
+
+  // La foto se ve aquí también: cambiarla sin verla no decía si había funcionado.
+  let sinFoto = $state(false);
+  let versionFoto = $state(0);
+
+  async function cambiarFoto() {
+    try {
+      if (await perfilCambiarFoto()) {
+        sinFoto = false;
+        versionFoto = Date.now();
+      }
+    } catch {
+      notificar.error(textos.tuMusica.fotoInvalida);
+    }
+  }
 </script>
 
 <div class="ajustes">
@@ -56,12 +71,9 @@
     {#if seccionActiva === 'biblioteca'}
       <section id="biblioteca" aria-labelledby="t-biblioteca">
         <h2 id="t-biblioteca">{t.biblioteca}</h2>
-        <div class="ajuste">
-          <span class="rotulo">{t.carpeta}</span>
-          {#await carpeta then c}
-            <code class="valor">{c ?? t.sinCarpeta}</code>
-          {/await}
-        </div>
+        {#await import('#lib/ui/ajustes/BloqueCarpeta.svelte') then m}
+          <m.default />
+        {/await}
         <label class="ajuste">
           <span class="rotulo">{t.nombre}<small>{t.nombreAyuda}</small></span>
           <input
@@ -73,10 +85,19 @@
         </label>
         <div class="ajuste">
           <span class="rotulo">{t.fotoPerfil}<small>{t.fotoPerfilAyuda}</small></span>
-          <button type="button" class="boton-cambiar-foto" onclick={() => void perfilCambiarFoto()}>
-            <Icon nombre="editar" tamano={16} />
-            <span>{t.cambiarFoto}</span>
-          </button>
+          <span class="foto-fila">
+            <span class="foto" aria-hidden="true">
+              {#if !sinFoto}
+                <img src={urlFotoPerfil(versionFoto)} alt="" onerror={() => (sinFoto = true)} />
+              {:else}
+                <Icon nombre="artista" tamano={20} />
+              {/if}
+            </span>
+            <button type="button" class="boton-cambiar-foto" onclick={cambiarFoto}>
+              <Icon nombre="editar" tamano={16} />
+              <span>{t.cambiarFoto}</span>
+            </button>
+          </span>
         </div>
         {#await import('#lib/ui/copia/BloqueCopia.svelte') then m}
           <m.default />
@@ -215,13 +236,6 @@
     font-weight: 400;
   }
 
-  .valor {
-    max-width: 60%;
-    overflow-wrap: anywhere;
-    color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-sm);
-  }
-
   .campo {
     min-width: 14rem;
     height: 2.5rem;
@@ -231,6 +245,29 @@
     background: var(--m3c-surface-container);
     color: var(--m3c-on-surface);
     font: inherit;
+  }
+
+  .foto-fila {
+    display: flex;
+    align-items: center;
+    gap: var(--ns-espacio-3);
+  }
+
+  .foto {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    overflow: hidden;
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface-variant);
+  }
+
+  .foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .boton-cambiar-foto {

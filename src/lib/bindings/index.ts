@@ -88,6 +88,7 @@ export type { ResumenCopiaDispositivo } from './ResumenCopiaDispositivo';
 export type { ResumenDuplicados } from './ResumenDuplicados';
 export type { ResumenEscucha } from './ResumenEscucha';
 export type { RetoVisible } from './RetoVisible';
+export type { RevisionCarpeta } from './RevisionCarpeta';
 export type { Ronda } from './Ronda';
 export type { Seccion } from './Seccion';
 export type { Servicio } from './Servicio';

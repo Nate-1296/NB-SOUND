@@ -95,19 +95,33 @@ pub fn vigilar(db: BaseDeDatos, importador: Importador) {
     let lanzado = std::thread::Builder::new()
         .name("vigilancia".into())
         .spawn(move || {
-            let musica = loop {
-                let fijada = db
-                    .conexion()
-                    .and_then(|c| crate::reproductor::carpeta_musica(&c));
-                if let Ok(Some(m)) = fijada {
-                    break m;
-                }
-                std::thread::sleep(ESPERA_CARPETA);
+            let fijada = || {
+                db.conexion()
+                    .and_then(|c| crate::reproductor::carpeta_musica(&c))
+                    .ok()
+                    .flatten()
             };
-            bucle(&db, &musica, QUIETO, |n| {
-                importador.importar(n);
-                true
-            });
+            // Si la carpeta cambia desde Ajustes, se deja la vieja y se vigila la nueva.
+            loop {
+                let Some(musica) = fijada() else {
+                    std::thread::sleep(ESPERA_CARPETA);
+                    continue;
+                };
+                bucle(
+                    &db,
+                    &musica,
+                    QUIETO,
+                    |n| {
+                        importador.importar(n);
+                        true
+                    },
+                    || fijada().as_deref() == Some(musica.as_path()),
+                );
+                if fijada().as_deref() == Some(musica.as_path()) {
+                    // No se pudo vigilar (la carpeta no existe): se reintenta sin prisa.
+                    std::thread::sleep(ESPERA_CARPETA);
+                }
+            }
         });
     if lanzado.is_err() {
         tracing::error!("no se pudo lanzar la vigilancia de la carpeta de música");
@@ -115,12 +129,14 @@ pub fn vigilar(db: BaseDeDatos, importador: Importador) {
 }
 
 /// El cuerpo del hilo, separado del [`Importador`] para poder probarlo: `mandar`
-/// recibe cada tanda de archivos nuevos y devuelve `false` para terminar.
+/// recibe cada tanda de archivos nuevos y devuelve `false` para terminar, y
+/// `sigue` dice, cada [`ESPERA_CARPETA`], si esta sigue siendo la carpeta.
 fn bucle(
     db: &BaseDeDatos,
     musica: &Path,
     quieto: Duration,
     mut mandar: impl FnMut(Vec<PathBuf>) -> bool,
+    sigue: impl Fn() -> bool,
 ) {
     if !musica.is_dir() {
         return;
@@ -154,7 +170,14 @@ fn bucle(
     }
     // Ruta, tamaño visto y desde cuándo no cambia.
     let mut esperando: HashMap<PathBuf, (u64, Instant)> = HashMap::new();
+    let mut mirada = Instant::now();
     loop {
+        if mirada.elapsed() >= ESPERA_CARPETA {
+            mirada = Instant::now();
+            if !sigue() {
+                return;
+            }
+        }
         match rx.recv_timeout(SONDEO) {
             Ok(rutas) => {
                 for r in rutas {
@@ -259,9 +282,13 @@ mod tests {
         let (tx, rx) = mpsc::channel();
         let (dd, musica) = (db.clone(), d.clone());
         let hilo = std::thread::spawn(move || {
-            bucle(&dd, &musica, Duration::from_millis(300), |n| {
-                tx.send(n).is_ok()
-            });
+            bucle(
+                &dd,
+                &musica,
+                Duration::from_millis(300),
+                |n| tx.send(n).is_ok(),
+                || true,
+            );
         });
         let espera = Duration::from_secs(15);
         assert_eq!(rx.recv_timeout(espera).unwrap(), [d.join("de_antes.mp3")]);

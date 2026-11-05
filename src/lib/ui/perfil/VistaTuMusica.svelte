@@ -120,6 +120,26 @@
   const maxMapaCalor = $derived(resumen ? Math.max(0, ...resumen.mapaCalor) : 0);
 
   const nombre = $derived(aparienciaActual.actual.nombreUsuario ?? t.anonimo);
+
+  // El nombre se cambia aquí, tocándolo, además de en Ajustes: es la misma
+  // preferencia, así que Ajustes y el saludo de Inicio lo ven al momento.
+  let editandoNombre = $state(false);
+  let nombreNuevo = $state('');
+
+  async function guardarNombre() {
+    if (!editandoNombre) return;
+    editandoNombre = false;
+    const limpio = nombreNuevo.trim();
+    if (limpio === (aparienciaActual.actual.nombreUsuario ?? '')) return;
+    await aparienciaActual.cambiar('nombreUsuario', limpio || null).catch(() => {
+      notificar.error(textosAparte.comun.error);
+    });
+  }
+
+  function enfocar(nodo: HTMLInputElement) {
+    nodo.focus();
+    nodo.select();
+  }
   const diasActivos = $derived(datos?.diasDelMes.filter((n) => n > 0).length ?? 0);
 
   function hora(h: number): string {
@@ -154,7 +174,40 @@
     </button>
     <div class="datos">
       <span class="etiqueta">{t.identidad}</span>
-      <h1>{nombre}</h1>
+      {#if editandoNombre}
+        <input
+          class="nombre-campo"
+          aria-label={t.cambiarNombre}
+          placeholder={t.nombreMarcador}
+          maxlength="40"
+          bind:value={nombreNuevo}
+          use:enfocar
+          onkeydown={(e) => {
+            if (e.key === 'Enter') void guardarNombre();
+            if (e.key === 'Escape') {
+              e.stopPropagation();
+              editandoNombre = false;
+            }
+          }}
+          onblur={() => void guardarNombre()}
+        />
+      {:else}
+        <h1>
+          <button
+            type="button"
+            class="nombre"
+            title={t.cambiarNombre}
+            onclick={() => {
+              nombreNuevo = aparienciaActual.actual.nombreUsuario ?? '';
+              editandoNombre = true;
+            }}
+          >
+            {nombre}<span class="lapiz" aria-hidden="true"
+              ><Icon nombre="editar" tamano={22} /></span
+            >
+          </button>
+        </h1>
+      {/if}
       {#if datos}
         <p>{t.resumen(datos.reproducciones, datos.pistasDistintas, datos.pistasEnBiblioteca)}</p>
         <div class="fichas">
@@ -496,7 +549,46 @@
 
   h1 {
     margin: 0;
-    font-size: clamp(var(--ns-texto-2xl), 4vw, 3rem);
+    font-size: clamp(var(--ns-texto-2xl), 4vw, var(--ns-texto-4xl));
+    line-height: 1.05;
+  }
+
+  .nombre {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-3);
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: text;
+  }
+
+  .lapiz {
+    display: inline-flex;
+    color: var(--m3c-on-surface-variant);
+    opacity: 0;
+    transition: opacity var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .nombre:hover .lapiz,
+  .nombre:focus-visible .lapiz {
+    opacity: 1;
+  }
+
+  .nombre-campo {
+    width: min(100%, 28rem);
+    padding: 0 var(--ns-espacio-2);
+    border: none;
+    border-bottom: 2px solid var(--m3c-primary);
+    border-radius: 0;
+    background: transparent;
+    color: var(--m3c-on-surface);
+    font: inherit;
+    font-size: clamp(var(--ns-texto-2xl), 4vw, var(--ns-texto-4xl));
+    font-weight: 700;
+    line-height: 1.05;
   }
 
   h2 {

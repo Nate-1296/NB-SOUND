@@ -29,6 +29,7 @@ import type {
   ResumenCopiaDispositivo,
   ResumenDuplicados,
   ResumenEscucha,
+  RevisionCarpeta,
   SugerenciaFiesta
 } from '#lib/bindings/index.ts';
 
@@ -45,6 +46,7 @@ export type {
   ResumenCopiaDispositivo,
   ResumenDuplicados,
   ResumenEscucha,
+  RevisionCarpeta,
   SugerenciaFiesta
 };
 
@@ -182,6 +184,27 @@ export function copiaRestaurar(): Promise<boolean> {
 /** 0, 1, 7 o 30 días. */
 export function copiaFrecuencia(dias: number): Promise<EstadoCopia> {
   return call<EstadoCopia>('copia_frecuencia', { dias });
+}
+
+// --- La carpeta de tu música -----------------------------------------------------
+
+/**
+ * Elige otra carpeta de música con el selector nativo y dice cuántas canciones de
+ * la biblioteca ya están en ella. No cambia nada hasta `aplicarCarpetaMusica`;
+ * `null` si se cancela.
+ */
+export function elegirCarpetaMusica(): Promise<RevisionCarpeta | null> {
+  return call<RevisionCarpeta | null>('carpeta_musica_elegir');
+}
+
+/** Usa la carpeta elegida; con `mover`, lleva allí la música. Devuelve cuántos archivos movió. */
+export function aplicarCarpetaMusica(mover: boolean): Promise<number> {
+  return call<number>('carpeta_musica_aplicar', { mover });
+}
+
+/** El avance de mover la música: `[hechas, total]`. */
+export function alMoverLaMusica(cada: (avance: [number, number]) => void): Promise<UnlistenFn> {
+  return escuchar<[number, number]>('carpeta:avance', cada);
 }
 
 export function copiaElegirCarpeta(): Promise<EstadoCopia> {

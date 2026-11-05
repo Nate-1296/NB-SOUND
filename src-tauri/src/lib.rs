@@ -66,6 +66,9 @@ pub struct Estado {
     pub equipo: dj::equipo::Equipo,
     /// Lo que "Sorpréndeme" ya sugirió en esta sesión.
     pub sorpresa: sorpresa::Sorpresa,
+    /// La carpeta de música que se eligió en Ajustes y aún no se aplicó: la ruta
+    /// se queda en el proceso y no cruza el puente (ADR-001).
+    pub carpeta_propuesta: std::sync::Mutex<Option<std::path::PathBuf>>,
     /// La ronda de A ciegas: vive en memoria, como en la V1.
     pub a_ciegas: Arc<std::sync::Mutex<a_ciegas::Juego>>,
 }
@@ -295,6 +298,7 @@ pub fn run() {
         equipo: equipo.clone(),
         a_ciegas: Arc::default(),
         sorpresa: sorpresa::Sorpresa::default(),
+        carpeta_propuesta: std::sync::Mutex::new(None),
     };
     let importador_setup = importador.clone();
     let fiesta_setup = Arc::clone(&servidor_fiesta);
@@ -487,6 +491,8 @@ pub fn run() {
             comandos::ecualizador,
             comandos::preselecciones_ecualizador,
             comandos::carpeta_musica,
+            comandos::carpeta_musica_elegir,
+            comandos::carpeta_musica_aplicar,
             comandos::politica_red,
             comandos::cambiar_politica_red,
             comandos::ajustes_ia,
