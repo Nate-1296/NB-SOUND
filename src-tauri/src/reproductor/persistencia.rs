@@ -186,14 +186,37 @@ pub fn guardar_sesion(db: &BaseDeDatos, s: &Sesion, pista_id: Option<i64>) -> Ns
     bd(tx.commit())
 }
 
-/// Una pista que sonó entera: al historial, y una reproducción más.
-pub fn registrar_escucha(db: &BaseDeDatos, pista_id: i64, segundos: f64) -> NsResult<()> {
+/// Lo mínimo que tiene que sonar una canción para contar como escuchada: 30 s,
+/// o la mitad si dura menos de un minuto. Es el criterio habitual de los
+/// servicios de música.
+pub const ESCUCHA_MINIMA_SEG: f64 = 30.0;
+
+/// Si lo que sonó de una pista cuenta como escucha.
+#[must_use]
+pub fn cuenta_como_escucha(escuchado_seg: f64, duracion_seg: f64) -> bool {
+    escuchado_seg > 0.0 && escuchado_seg >= ESCUCHA_MINIMA_SEG.min(duracion_seg * 0.5)
+}
+
+/// Si sonó prácticamente entera: el último 3 % es silencio o el final de la mezcla.
+#[must_use]
+pub fn casi_entera(escuchado_seg: f64, duracion_seg: f64) -> bool {
+    escuchado_seg >= duracion_seg * 0.97
+}
+
+/// Una pista que sonó: al historial, y una reproducción más. `completada` dice si
+/// sonó hasta el final o se pasó a otra después de [`ESCUCHA_MINIMA_SEG`].
+pub fn registrar_escucha(
+    db: &BaseDeDatos,
+    pista_id: i64,
+    segundos: f64,
+    completada: bool,
+) -> NsResult<()> {
     let mut conn = db.conexion()?;
     let tx = db::transaccion_de_escritura(&mut conn)?;
     bd(tx.execute(
         "INSERT INTO historial (pista_id, titulo, artista, escuchado_seg, completada)
-         SELECT id, titulo, artista_nombre, ?2, 1 FROM pistas WHERE id = ?1",
-        rusqlite::params![pista_id, segundos.max(0.0)],
+         SELECT id, titulo, artista_nombre, ?2, ?3 FROM pistas WHERE id = ?1",
+        rusqlite::params![pista_id, segundos.max(0.0), completada],
     ))?;
     bd(tx.execute(
         "UPDATE pistas SET reproducciones = reproducciones + 1,

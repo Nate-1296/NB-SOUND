@@ -246,7 +246,27 @@ impl<B: kira::backend::Backend> Servicio<B> {
     }
 
     /// Toca la pista `indice` desde `desde_seg`; si no se puede abrir, la siguiente.
+    /// Lo que sonaba de la sesión, si se escuchó lo bastante, al historial: al
+    /// saltar a otra, al dejar la sesión o al pedir otra música.
+    fn apuntar_lo_que_sonaba_dj(&mut self) {
+        let pos = self.motor.posicion();
+        let Some(s) = self.dj.as_mut().and_then(|d| d.sonando.take()) else {
+            return;
+        };
+        if s.ficha == pos.ficha
+            && super::persistencia::cuenta_como_escucha(pos.segundos, s.duracion_seg)
+        {
+            let _ = super::persistencia::registrar_escucha(
+                &self.db,
+                s.fila.pista_id,
+                pos.segundos,
+                super::persistencia::casi_entera(pos.segundos, s.duracion_seg),
+            );
+        }
+    }
+
     fn tocar_dj(&mut self, mut indice: usize, desde_seg: f64) {
+        self.apuntar_lo_que_sonaba_dj();
         let mut desde = desde_seg;
         loop {
             let Some(d) = self.dj.as_ref() else {
@@ -337,6 +357,7 @@ impl<B: kira::backend::Backend> Servicio<B> {
 
     /// Deja el modo DJ: la cola del usuario vuelve en pausa donde estaba.
     pub(super) fn salir_dj(&mut self) {
+        self.apuntar_lo_que_sonaba_dj();
         let Some(d) = self.dj.take() else {
             return;
         };
@@ -494,6 +515,13 @@ impl<B: kira::backend::Backend> Servicio<B> {
                     d.entrada_seg = m.entrada_b_seg;
                     d.proxima = None;
                     if let Some(p) = anterior {
+                        // Sonó hasta su punto de salida: para Tu música es una escucha.
+                        let _ = super::persistencia::registrar_escucha(
+                            &self.db,
+                            p.pista_id,
+                            p.duracion_seg,
+                            true,
+                        );
                         let _ = sesiones::registrar(
                             &self.db,
                             d.sesion,
@@ -568,6 +596,16 @@ impl<B: kira::backend::Backend> Servicio<B> {
                         // de cola es un residuo del plato saliente de la mezcla anterior.
                         if es_actual && pos.segundos < dur - 0.5 {
                             continue;
+                        }
+                        // Acabó entera: al historial, y fuera de `sonando` para que
+                        // `tocar_dj` no la vuelva a contar.
+                        if let Some(s) = self.dj.as_mut().and_then(|d| d.sonando.take()) {
+                            let _ = super::persistencia::registrar_escucha(
+                                &self.db,
+                                s.fila.pista_id,
+                                s.duracion_seg,
+                                true,
+                            );
                         }
                         if let Some(i) = self.dj.as_ref().and_then(|d| d.siguiente(d.indice)) {
                             self.tocar_dj(i, 0.0);

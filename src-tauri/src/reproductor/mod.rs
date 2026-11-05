@@ -298,6 +298,7 @@ impl<B: Backend> Servicio<B> {
             Accion::Reproducir { fila, desde_seg } => match self.resolver(fila) {
                 Some((pista, sonando)) => {
                     self.cola_seg_restaurada = 0.0;
+                    self.apuntar_lo_que_sonaba();
                     self.motor.reproducir(pista, desde_seg);
                     self.actual = Some(sonando);
                 }
@@ -313,9 +314,29 @@ impl<B: Backend> Servicio<B> {
             Accion::Pausar => self.motor.pausar(),
             Accion::Reanudar => self.motor.reanudar(),
             Accion::Detener => {
+                self.apuntar_lo_que_sonaba();
                 self.motor.detener();
                 self.actual = None;
             }
+        }
+    }
+
+    /// Al cambiar de canción a mitad: si lo que sonaba se escuchó lo bastante, va
+    /// al historial. Antes solo contaban las que sonaban hasta el final, y pasar
+    /// de canción a los tres minutos no dejaba rastro en Tu música ni en el top.
+    fn apuntar_lo_que_sonaba(&mut self) {
+        let Some(s) = self.actual.take() else {
+            return;
+        };
+        let pos = self.motor.posicion();
+        if pos.ficha == s.ficha && persistencia::cuenta_como_escucha(pos.segundos, s.duracion_seg) {
+            let completada = persistencia::casi_entera(pos.segundos, s.duracion_seg);
+            let _ = persistencia::registrar_escucha(
+                &self.db,
+                s.fila.pista_id,
+                pos.segundos,
+                completada,
+            );
         }
     }
 
@@ -541,6 +562,7 @@ impl<B: Backend> Servicio<B> {
                             &self.db,
                             anterior.fila.pista_id,
                             anterior.duracion_seg,
+                            true,
                         );
                     }
                     let accion = self.cola.fin_de_pista();
@@ -562,6 +584,7 @@ impl<B: Backend> Servicio<B> {
                             &self.db,
                             anterior.fila.pista_id,
                             anterior.duracion_seg,
+                            true,
                         );
                     }
                     let accion = self.cola.fin_de_pista();

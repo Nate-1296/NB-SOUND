@@ -348,8 +348,12 @@ fn una_sesion_del_dj_suena_entera_mezclando_cada_pista_con_la_siguiente() {
             .estado,
         "finalizada"
     );
-    // Lo que suena en una sesión no es la cola: el historial normal no cambia.
-    assert_eq!(cuenta(&e.db, "SELECT count(*) FROM historial"), 0);
+    // Lo que suena en una sesión no toca la cola, pero sí se escuchó: las tres van
+    // al historial, que es de donde salen Tu música y los tops.
+    assert_eq!(
+        cuenta(&e.db, "SELECT count(*) FROM historial WHERE completada = 1"),
+        3
+    );
 }
 
 #[test]
@@ -550,4 +554,37 @@ fn pedir_otra_musica_o_pausar_acaba_el_fragmento() {
     let i = s.instantanea();
     assert!(!i.ciego);
     assert_eq!((i.pista_id, i.estado.as_str()), (Some(3), "pausado"));
+}
+
+#[test]
+fn pasar_de_cancion_tras_escucharla_lo_bastante_la_apunta_y_antes_no() {
+    // Dos segundos: el umbral es la mitad, uno.
+    let e = escenario("parcial", &[(1, 88_200), (2, 88_200), (3, 88_200)]);
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    s.atender(Orden::ReproducirPistas {
+        ids: vec![1, 2, 3],
+        desde: 0,
+    });
+    correr(&mut s, |s| s.instantanea().posicion_seg > 1.3);
+    s.atender(Orden::Siguiente);
+    assert_eq!(
+        cuenta(
+            &e.db,
+            "SELECT count(*) FROM historial WHERE pista_id = 1 AND completada = 0"
+        ),
+        1,
+        "la primera sonó más de la mitad"
+    );
+    correr(&mut s, |s| s.instantanea().posicion_seg > 0.2);
+    s.atender(Orden::Siguiente);
+    assert_eq!(
+        cuenta(&e.db, "SELECT count(*) FROM historial WHERE pista_id = 2"),
+        0,
+        "la segunda apenas sonó"
+    );
+    assert_eq!(
+        cuenta(&e.db, "SELECT reproducciones FROM pistas WHERE id = 1"),
+        1
+    );
 }
