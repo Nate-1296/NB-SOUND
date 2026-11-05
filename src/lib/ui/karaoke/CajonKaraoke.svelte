@@ -211,6 +211,9 @@
       {:else}
         <p class="nota">{t.sinPendientes}</p>
       {/if}
+      {#if estado.fallidas > 0}
+        <p class="nota aviso">{t.fallidas(estado.fallidas)}</p>
+      {/if}
     </section>
   {/if}
 
@@ -376,6 +379,10 @@
 
   .activa .turno {
     color: var(--m3c-primary);
+  }
+
+  .nota.aviso {
+    color: var(--m3c-error);
   }
 
   .nota {

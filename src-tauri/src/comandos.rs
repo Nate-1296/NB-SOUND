@@ -1319,6 +1319,9 @@ pub struct EstadoKaraoke {
     /// separando, primero): la consola decía "Preparando otra canción · 40 %" sin
     /// decir cuál. Como mucho [`CABEZA_COLA_KARAOKE`].
     pub cola: Vec<EnColaKaraoke>,
+    /// Las que no se pudieron preparar: antes desaparecían de la cola sin más, y
+    /// parecía que estaban listas.
+    pub fallidas: u32,
 }
 
 /// Cuántas canciones de la cola enseña la consola.
@@ -1349,6 +1352,13 @@ pub async fn karaoke_estado(estado: tauri::State<'_, Estado>) -> NsResult<Estado
             )
             .map_err(|_| NsError::StorageFailure)?;
         let conn = db.conexion()?;
+        let fallidas: u32 = conn
+            .query_row(
+                "SELECT count(*) FROM stems WHERE estado = 'fallida'",
+                [],
+                |f| f.get(0),
+            )
+            .map_err(|_| NsError::StorageFailure)?;
         // El mismo orden que `karaoke::siguiente`.
         let mut s = conn
             .prepare(
@@ -1381,6 +1391,7 @@ pub async fn karaoke_estado(estado: tauri::State<'_, Estado>) -> NsResult<Estado
             preparando,
             pendientes,
             cola,
+            fallidas,
         })
     })
     .await

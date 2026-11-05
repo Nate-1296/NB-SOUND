@@ -116,6 +116,33 @@ button {
   color: inherit;
 }
 
+/*
+ * Barras de desplazamiento propias. Las nativas de WebKitGTK son de superposición:
+ * se dibujan por encima de todo, también de los cajones, los menús y la cola, y
+ * la de la vista de debajo seguía viéndose unos segundos encima de lo que se
+ * abría. Las que dibuja la página respetan el orden de las capas.
+ */
+::-webkit-scrollbar {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 0.1875rem solid transparent;
+  border-radius: var(--ns-radio-pleno);
+  background: color-mix(in srgb, var(--m3c-on-surface) 22%, transparent);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--m3c-on-surface) 38%, transparent);
+}
+
 :focus-visible {
   outline: 2px solid var(--m3c-primary);
   outline-offset: 2px;

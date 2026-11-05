@@ -103,7 +103,6 @@ export const es = {
     conectarTelefono: 'Conectar un teléfono',
     masOpciones: 'Más opciones',
     anadirAPlaylist: 'Añadir a una playlist',
-    abrirDispositivos: 'Dispositivos',
     sorprendeme: 'Sorpréndeme'
   },
   biblioteca: {
@@ -123,7 +122,6 @@ export const es = {
     sinVerificar: 'Sin verificar',
     paraCantar: 'Listas para cantar',
     grupos: { todos: 'Todos', albumes: 'Álbumes', sencillos: 'Sencillos y EP' },
-    prepararFavoritas: 'Preparar mis favoritas',
     favoritasEnCola: (n: number) =>
       n === 0
         ? 'Tus favoritas ya están listas o en camino.'
@@ -644,6 +642,10 @@ export const es = {
     prepararPistaActual: 'Preparar esta canción',
     enPreparacion: 'En preparación',
     enEspera: 'En espera',
+    fallidas: (n: number) =>
+      n === 1
+        ? '1 canción no se pudo preparar. "Preparar mis favoritas" lo vuelve a intentar si es favorita.'
+        : `${n} canciones no se pudieron preparar. "Preparar mis favoritas" lo vuelve a intentar con las favoritas.`,
     yMas: (n: number) => (n === 1 ? 'Y 1 más después.' : `Y ${n} más después.`),
     siguePorSuCuenta:
       'Se preparan una detrás de otra mientras escuchas. Si cierras NB Sound, sigue donde lo dejó al volver a abrirlo.',

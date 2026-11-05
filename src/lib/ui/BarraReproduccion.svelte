@@ -14,6 +14,7 @@
   import { textos } from '#lib/i18n/index.ts';
 
   import FormaDeOnda from './FormaDeOnda.svelte';
+  import DialogoConectar from './dispositivos/DialogoConectar.svelte';
   import Icon from './Icon.svelte';
 
   const t = textos.reproductor;
@@ -51,6 +52,7 @@
   let capaMenu: HTMLDivElement | undefined = $state();
   let botonMenu: HTMLButtonElement | undefined = $state();
   let menuAbierto = $state(false);
+  let conectando = $state(false);
   function alternarMenu() {
     if (!capaMenu || !botonMenu) return;
     if (menuAbierto) {
@@ -270,19 +272,20 @@
     >
       <Icon nombre="letras" tamano={20} />
     </button>
-    {#if hayPista && i.karaokeDisponible}
-      <button
-        type="button"
-        class="control conmutador"
-        class:activo={i.karaokeActivo}
-        aria-label={t.karaoke}
-        aria-pressed={i.karaokeActivo}
-        title={t.karaoke}
-        onclick={reproductor.alternarKaraoke}
-      >
-        <Icon nombre="microfono" tamano={20} />
-      </button>
-    {/if}
+    <!-- Siempre está, apagado si la canción no está preparada: si aparecía y
+         desaparecía, la barra cambiaba de forma de una canción a otra. -->
+    <button
+      type="button"
+      class="control conmutador"
+      class:activo={i.karaokeActivo}
+      aria-label={t.karaoke}
+      aria-pressed={i.karaokeActivo}
+      title={t.karaoke}
+      disabled={!hayPista || !i.karaokeDisponible}
+      onclick={reproductor.alternarKaraoke}
+    >
+      <Icon nombre="microfono" tamano={20} />
+    </button>
     <button
       type="button"
       bind:this={botonCola}
@@ -294,7 +297,7 @@
       onclick={alternarCola}
     >
       <Icon nombre="cola" tamano={20} />
-      {#if i.cola.length > 0}<span class="cuenta">{i.cola.length}</span>{/if}
+      <span class="cuenta">{i.cola.length > 0 ? i.cola.length : ''}</span>
     </button>
     <div
       class="capa-cola"
@@ -394,12 +397,17 @@
     >
       {#if menuAbierto}
         {#await import('./MenuBarra.svelte') then m}
-          <m.default oncerrar={() => capaMenu?.hidePopover()} />
+          <m.default
+            oncerrar={() => capaMenu?.hidePopover()}
+            onconectar={() => (conectando = true)}
+          />
         {/await}
       {/if}
     </div>
   </div>
 </section>
+
+<DialogoConectar abierto={conectando} oncerrar={() => (conectando = false)} />
 
 <style>
   /*
@@ -612,9 +620,12 @@
     gap: var(--ns-espacio-1);
   }
 
+  /* Ancho de cuatro cifras: la cuenta no empuja a los botones al crecer. */
   .cuenta {
+    min-width: 4ch;
     font-size: var(--ns-texto-xs);
     font-variant-numeric: tabular-nums;
+    text-align: left;
   }
 
   .progreso {

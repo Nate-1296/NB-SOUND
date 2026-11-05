@@ -130,8 +130,23 @@
     return 'mucho';
   }
 
-  const maxMapaCalor = $derived(resumen ? Math.max(0, ...resumen.mapaCalor) : 0);
   const maxPorDia = $derived(resumen ? Math.max(0, ...resumen.porDia) : 0);
+
+  const MESES = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+  const conteoMes = $derived(
+    new Map((resumen?.porMes ?? []).map((c) => [c.mes, c.reproducciones]))
+  );
+  const maxPorMes = $derived(Math.max(0, ...conteoMes.values()));
+  /** Los años de la rejilla: el elegido, o del más reciente al primero con escuchas. */
+  const aniosMeses = $derived.by(() => {
+    const p = resumen?.periodo ?? 'todo';
+    if (/^\d{4}$/.test(p)) return [p];
+    const anios = (resumen?.porMes ?? []).map((c) => Number(c.mes.slice(0, 4)));
+    if (anios.length === 0) return [String(new Date().getFullYear())];
+    const lista: string[] = [];
+    for (let a = Math.max(...anios); a >= Math.min(...anios); a--) lista.push(String(a));
+    return lista;
+  });
 
   /** Huecos antes del día 1 para que caiga en su día de la semana (lunes primero). */
   const huecosMes = $derived.by(() => {
@@ -477,33 +492,29 @@
               {/each}
             </div>
           {:else}
-            <span class="etiqueta">{tr.mapaTitulo}</span>
-            <p class="sub">{tr.mapaSub}</p>
-            <div class="rejilla-calor">
-              <div class="fila-calor eje-horas" aria-hidden="true">
-                <span class="etiqueta-dia"></span>
-                <div class="horas-dia marcas-eje">
-                  <span class="marca-hora h-0">{tr.marcasHoras.h0}</span>
-                  <span class="marca-hora h-6">{tr.marcasHoras.h6}</span>
-                  <span class="marca-hora h-12">{tr.marcasHoras.h12}</span>
-                  <span class="marca-hora h-18">{tr.marcasHoras.h18}</span>
-                  <span class="marca-hora h-23">{tr.marcasHoras.h23}</span>
-                </div>
-              </div>
-              {#each tr.diasSemana as nombreDia, d (d)}
-                <div class="fila-calor">
-                  <span class="etiqueta-dia">{nombreDia}</span>
-                  <div class="horas-dia">
-                    {#each Array.from({ length: 24 }, (_, h) => h) as h (h)}
-                      {@const cuenta = resumen.mapaCalor[d * 24 + h] ?? 0}
-                      <span
-                        class="celda-hora {nivelMapa(cuenta, maxMapaCalor)}"
-                        title={tr.celdaMapa(nombreDia, h, cuenta)}
-                        aria-label={tr.celdaMapa(nombreDia, h, cuenta)}
-                      ></span>
-                    {/each}
-                  </div>
-                </div>
+            <!-- Un año o todo el historial: una fila de doce meses por año. El
+                 mapa de días por horas no decía nada de un periodo tan largo. -->
+            <span class="etiqueta">{tr.mesesTitulo}</span>
+            <p class="sub">{tr.mesesSub}</p>
+            <div class="rejilla-meses">
+              <span aria-hidden="true"></span>
+              {#each MESES as m (m)}
+                <span class="cabeza-mes" aria-hidden="true">{tr.meses[m]}</span>
+              {/each}
+              {#each aniosMeses as anio (anio)}
+                <span class="etiqueta-anio">{anio}</span>
+                {#each MESES as m (m)}
+                  {@const clave = `${anio}-${m}`}
+                  {@const cuenta = conteoMes.get(clave) ?? 0}
+                  <button
+                    type="button"
+                    class="celda-mes celda-hora {nivelMapa(cuenta, maxPorMes)}"
+                    disabled={cuenta === 0}
+                    title={tr.celdaMes(`${tr.meses[m]} ${anio}`, cuenta)}
+                    aria-label={tr.celdaMes(`${tr.meses[m]} ${anio}`, cuenta)}
+                    onclick={() => cargarResumen(clave)}
+                  ></button>
+                {/each}
               {/each}
             </div>
           {/if}
@@ -962,79 +973,29 @@
     font-weight: 500;
   }
 
-  .rejilla-calor {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    margin-top: var(--ns-espacio-2);
-  }
-
-  .fila-calor {
-    display: grid;
-    grid-template-columns: 2.25rem 1fr;
-    align-items: center;
-    gap: var(--ns-espacio-2);
-  }
-
-  .etiqueta-dia {
-    color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-xs);
-  }
-
-  .marcas-eje {
-    margin-bottom: var(--ns-espacio-1);
-  }
-
-  .marca-hora {
-    color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-xs);
-    text-align: center;
-    white-space: nowrap;
-  }
-
-  .marca-hora.h-0 {
-    grid-column: 1 / span 2;
-  }
-
-  .marca-hora.h-6 {
-    grid-column: 7 / span 2;
-  }
-
-  .marca-hora.h-12 {
-    grid-column: 13 / span 2;
-  }
-
-  .marca-hora.h-18 {
-    grid-column: 19 / span 2;
-  }
-
-  .marca-hora.h-23 {
-    grid-column: 23 / span 2;
-  }
-
-  .horas-dia {
-    display: grid;
-    grid-template-columns: repeat(24, minmax(0, 1fr));
-    gap: 0.15rem;
-  }
-
+  /* Siempre seis semanas y celdas de medida fija: al cambiar de mes la tarjeta
+     no crece ni encoge. */
   .mes-calendario {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: auto repeat(6, 2.5rem);
     gap: 0.3rem;
     margin-top: var(--ns-espacio-2);
   }
 
-  .cabeza-dia {
+  .cabeza-dia,
+  .cabeza-mes {
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
     text-align: center;
   }
 
-  .dia-mes {
+  .mes-calendario .dia-mes {
     display: grid;
     place-items: center;
-    max-height: 3rem;
+    aspect-ratio: auto;
+    width: 100%;
+    height: 100%;
     border-radius: var(--ns-radio-sm);
     color: var(--m3c-on-surface-variant);
     font-size: var(--ns-texto-xs);
@@ -1047,6 +1008,39 @@
 
   .dia-mes.medio {
     color: var(--m3c-on-surface);
+  }
+
+  .rejilla-meses {
+    display: grid;
+    grid-template-columns: 3rem repeat(12, minmax(0, 1fr));
+    grid-auto-rows: 3.5rem;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: var(--ns-espacio-2);
+  }
+
+  .etiqueta-anio {
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rejilla-meses .celda-mes {
+    aspect-ratio: auto;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+  }
+
+  .celda-mes:disabled {
+    cursor: default;
+  }
+
+  .celda-mes:hover:not(:disabled) {
+    outline: 2px solid var(--m3c-primary);
+    outline-offset: 1px;
   }
 
   .celda-hora {

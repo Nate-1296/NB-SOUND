@@ -207,6 +207,10 @@ estados de pasar por encima solo se vieron en el código.
 - [ ] En la cola, con muchas canciones, la barra de desplazamiento no tapa la duración ni el botón de quitar.
 - [ ] La consola de karaoke con varias canciones pedidas: la primera lleva su barra y su porcentaje, las demás "En
       espera"; al cerrar NB Sound a la mitad y abrirla, sigue con la misma.
+- [ ] Con un cajón (Karaoke, Dispositivos, Añadir música), la cola o el menú ··· abiertos, la barra de
+      desplazamiento de la vista de debajo no se ve encima.
+- [ ] Reproducir la biblioteca entera y abrir la cola: abre al momento, se desplaza fluida y Vaciar responde.
+- [ ] "Cooler Than Me" (48 kHz) se prepara para karaoke y aparece su micrófono en la barra.
 - [ ] Desplazarse rápido por Biblioteca (pistas, álbumes, artistas) y por Playlists va fluido, y al volver a una
       vista ya visitada se ve al momento lo de antes.
 - [ ] Al pasar por encima: las tarjetas de Inicio, los carruseles con sus flechas, el botón grande de reproducir (crece

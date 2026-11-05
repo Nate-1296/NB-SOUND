@@ -23,4 +23,9 @@ pendientes: number,
  * separando, primero): la consola decía "Preparando otra canción · 40 %" sin
  * decir cuál. Como mucho [`CABEZA_COLA_KARAOKE`].
  */
-cola: Array<EnColaKaraoke>, };
+cola: Array<EnColaKaraoke>, 
+/**
+ * Las que no se pudieron preparar: antes desaparecían de la cola sin más, y
+ * parecía que estaban listas.
+ */
+fallidas: number, };

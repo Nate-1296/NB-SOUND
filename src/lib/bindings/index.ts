@@ -25,6 +25,7 @@ export type { ConsultaAlbumes } from './ConsultaAlbumes';
 export type { ConsultaArtistas } from './ConsultaArtistas';
 export type { ConsultaPistas } from './ConsultaPistas';
 export type { ConsultaPlaylists } from './ConsultaPlaylists';
+export type { ConteoMes } from './ConteoMes';
 export type { DatosAlbum } from './DatosAlbum';
 export type { DatosCompletados } from './DatosCompletados';
 export type { DatosPista } from './DatosPista';

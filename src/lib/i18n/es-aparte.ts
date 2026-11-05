@@ -363,16 +363,15 @@ export const esAparte = {
       nocturna: 'Nocturna',
       melancolica: 'Melancólica'
     },
-    mapaTitulo: 'Mapa de calor por día y hora',
-    mapaSub: 'A qué horas escuchas más música en tu hora local.',
-    marcasHoras: { h0: '00h', h6: '06h', h12: '12h', h18: '18h', h23: '23h' },
     diasSemana: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as const,
+    mesesTitulo: 'Mes a mes',
+    mesesSub: 'Cuánta música escuchaste cada mes. Toca uno para verlo día a día.',
+    celdaMes: (mes: string, escuchas: number) =>
+      `${mes} · ${escuchas} ${escuchas === 1 ? 'escucha' : 'escuchas'}`,
     calendarioTitulo: 'Tu mes, día a día',
     calendarioSub: 'Cuánta música escuchaste cada día del mes.',
     celdaDia: (dia: number, escuchas: number) =>
       `Día ${dia} · ${escuchas} ${escuchas === 1 ? 'escucha' : 'escuchas'}`,
-    celdaMapa: (dia: string, hora: number, escuchas: number) =>
-      `${dia} ${String(hora).padStart(2, '0')}:00 · ${escuchas} ${escuchas === 1 ? 'escucha' : 'escuchas'}`,
     reproduccionesPeriodo: (n: number) =>
       `${n.toLocaleString('es')} ${n === 1 ? 'reproducción' : 'reproducciones'}`,
     meses: {

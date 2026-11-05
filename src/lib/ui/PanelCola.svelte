@@ -6,6 +6,7 @@
   arrastrando o, con el teclado, con Alt+Arriba y Alt+Abajo sobre la fila.
 -->
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { type PistaResumen, pistasResumen, urlPortada } from '#lib/core/ipc/index.ts';
   import { duracionLarga } from '#lib/core/formato.ts';
   import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
@@ -33,6 +34,30 @@
   const total = $derived(i.cola.reduce((s, id) => s + (datos.get(id)?.duracionSeg ?? 0), 0));
 
   let arrastrada = $state<number | null>(null);
+
+  /*
+   * Solo se pintan las filas a la vista, más un margen. Reproducir la biblioteca
+   * entera deja miles de canciones en la cola, y pintarlas todas con su portada
+   * congelaba la aplicación al abrir la cola, aunque fuera para vaciarla.
+   */
+  const MARGEN = 8;
+  let lista = $state<HTMLOListElement>();
+  let scrollTop = $state(0);
+  let altoVista = $state(0);
+  let remPx = $state(16);
+  const paso = $derived(remPx * 3.75);
+  const desde = $derived(Math.max(0, Math.floor(scrollTop / paso) - MARGEN));
+  const hasta = $derived(
+    Math.min(i.cola.length, Math.ceil((scrollTop + altoVista) / paso) + MARGEN)
+  );
+
+  $effect(() => {
+    if (!lista) return;
+    remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    // Al abrir, la que suena a la vista.
+    const indice = untrack(() => reproductor.instantanea.indiceCola) ?? 0;
+    lista.scrollTop = Math.max(0, (indice - 2) * remPx * 3.75);
+  });
 
   function mover(desde: number, hasta: number) {
     if (hasta < 0 || hasta >= i.cola.length || desde === hasta) return;
@@ -71,8 +96,14 @@
   {#if i.cola.length === 0}
     <p class="vacio">{t.vacia}</p>
   {:else}
-    <ol>
-      {#each i.cola as id, k (`${id}-${k}`)}
+    <ol
+      bind:this={lista}
+      bind:clientHeight={altoVista}
+      onscroll={(e) => (scrollTop = e.currentTarget.scrollTop)}
+    >
+      <li class="hueco" aria-hidden="true" style:height={`${desde * paso}px`}></li>
+      {#each i.cola.slice(desde, hasta) as id, j (`${id}-${desde + j}`)}
+        {@const k = desde + j}
         {@const p = datos.get(id)}
         {@const actual = k === i.indiceCola}
         <!-- El teclado llega desde los botones de la fila: Alt+Arriba y Alt+Abajo
@@ -95,10 +126,11 @@
         >
           <span class="asa" aria-hidden="true"><Icon nombre="menu" tamano={16} /></span>
           <span class="portada" aria-hidden="true">
-            {#if p?.tienePortada}<img src={urlPortada('pista', id, 64)} alt="" />{:else}<Icon
-                nombre="cancion"
-                tamano={16}
-              />{/if}
+            {#if p?.tienePortada}<img
+                src={urlPortada('pista', id, 64)}
+                alt=""
+                decoding="async"
+              />{:else}<Icon nombre="cancion" tamano={16} />{/if}
           </span>
           <span class="datos">
             <span class="titulo">
@@ -129,6 +161,11 @@
           </button>
         </li>
       {/each}
+      <li
+        class="hueco"
+        aria-hidden="true"
+        style:height={`${(i.cola.length - hasta) * paso}px`}
+      ></li>
     </ol>
   {/if}
 </section>
@@ -195,9 +232,7 @@
   }
 
   ol {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-1);
+    display: block;
     margin: 0;
     /* Un carril propio para la barra de desplazamiento: las de WebKitGTK flotan
        encima y tapaban la duración y el botón de quitar de cada fila. */
@@ -207,7 +242,15 @@
     list-style: none;
   }
 
+  .hueco {
+    display: block;
+  }
+
+  /* Alto fijo (3,5 rem más 0,25 de separación = el `paso` del script). */
   .fila {
+    box-sizing: border-box;
+    height: 3.5rem;
+    margin-bottom: 0.25rem;
     display: grid;
     grid-template-columns: 1rem 2.5rem minmax(0, 1fr) auto auto auto;
     align-items: center;

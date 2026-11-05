@@ -51,9 +51,22 @@ pub struct ResumenEscucha {
     /// como días tiene el mes); si no, vacío. Un mes cabe mal en el mapa de días
     /// por horas: quedaba casi vacío y no decía qué días se escuchó.
     pub por_dia: Vec<u32>,
+    /// Con un año o todo el historial, las reproducciones de cada mes con alguna
+    /// (`YYYY-MM`), en orden. Ni los días por horas (sin sentido para un año) ni un
+    /// calendario de cientos de días: una fila de doce meses por año.
+    pub por_mes: Vec<ConteoMes>,
     pub top_canciones: Vec<PistaEscuchada>,
     pub top_albumes: Vec<AlbumResumen>,
     pub top_artistas: Vec<ArtistaResumen>,
+}
+
+/// Las reproducciones de un mes.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub struct ConteoMes {
+    pub mes: String,
+    pub reproducciones: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]
@@ -307,6 +320,29 @@ pub fn resumen_escucha(db: &BaseDeDatos, periodo: Option<&str>) -> NsResult<Resu
         Vec::new()
     };
 
+    let por_mes = if periodo_norm.len() == 7 {
+        Vec::new()
+    } else {
+        let sql = format!(
+            "SELECT strftime('%Y-%m', h.reproducida_en, 'localtime') AS mes, count(*)
+             FROM historial h
+             WHERE h.reproducida_en IS NOT NULL AND ({cond})
+             GROUP BY mes ORDER BY mes"
+        );
+        let mut s = conn.prepare(&sql).map_err(|_| NsError::StorageFailure)?;
+        let filas = s
+            .query_map(rusqlite::params_from_iter(params.iter()), |f| {
+                Ok(ConteoMes {
+                    mes: f.get::<_, Option<String>>(0)?.unwrap_or_default(),
+                    reproducciones: u32::try_from(f.get::<_, i64>(1)?.max(0)).unwrap_or(u32::MAX),
+                })
+            })
+            .map_err(|_| NsError::StorageFailure)?
+            .collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(|_| NsError::StorageFailure)?;
+        filas.into_iter().filter(|c| c.mes.len() == 7).collect()
+    };
+
     let canciones = pares_con_params(
         &conn,
         &format!(
@@ -373,6 +409,7 @@ pub fn resumen_escucha(db: &BaseDeDatos, periodo: Option<&str>) -> NsResult<Resu
         radar,
         mapa_calor,
         por_dia,
+        por_mes,
         top_canciones,
         top_albumes,
         top_artistas,
@@ -898,6 +935,13 @@ mod tests {
         assert_eq!(marzo.por_dia.len(), 31, "un día por cada día de marzo");
         assert_eq!(marzo.por_dia.iter().sum::<u32>(), 2);
         assert!(todo.por_dia.is_empty(), "sin mes elegido no hay calendario");
+        let meses: Vec<_> = todo
+            .por_mes
+            .iter()
+            .map(|c| (c.mes.as_str(), c.reproducciones))
+            .collect();
+        assert_eq!(meses, [("2025-11", 1), ("2026-03", 2)]);
+        assert!(marzo.por_mes.is_empty(), "un mes se ve día a día");
         let feb = resumen_escucha(&db, Some("2026-02")).unwrap();
         assert_eq!(feb.por_dia.len(), 28);
 

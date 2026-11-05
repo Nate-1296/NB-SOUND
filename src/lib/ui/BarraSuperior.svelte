@@ -30,13 +30,6 @@
     cajon = cajon === c ? null : c;
   }
 
-  // Otros sitios (el menú ··· de la barra) piden abrir un cajón con este evento.
-  $effect(() => {
-    const abrir = (e: Event) => (cajon = (e as CustomEvent<Cajon>).detail);
-    window.addEventListener('ns:cajon', abrir);
-    return () => window.removeEventListener('ns:cajon', abrir);
-  });
-
   // Cada tecla no es una navegación: se espera a la pausa.
   let espera: ReturnType<typeof setTimeout> | undefined;
 

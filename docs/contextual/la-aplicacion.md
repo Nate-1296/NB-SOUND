@@ -66,8 +66,9 @@ Siempre abajo, siempre visible.
   pantalla completa y el menú **···**.
 
 **El menú ···** de la barra es una ventana flotante como la de la cola, con lo que antes ocupaba sitio junto al
-título: **añadir a una playlist**, **poner o quitar de favoritas**, **minirreproductor** y **dispositivos** (en qué
-equipo suena, cuando hay un teléfono conectado). Así el título, el artista y el álbum largos se leen.
+título: **añadir a una playlist**, **poner o quitar de favoritas**, **minirreproductor** y **dónde suena** (este
+equipo, los teléfonos que lo controlan y "Conectar un teléfono", ahí mismo, sin abrir la consola de dispositivos).
+La barra tiene siempre la misma forma: ni el largo del título ni que la canción tenga karaoke la cambian.
 
 ### El lienzo
 
@@ -165,9 +166,9 @@ Tu identidad musical, sacada de tu historial y solo de él.
   tu hora pico y tus días activos del mes; "Reproducir tu esencia".
 * **Tu actividad**: pistas, artistas y álbumes distintos, tiempo escuchado, el ánimo del día y el calendario del mes.
 * **Lo que más has querido**: top de canciones, de álbumes y de artistas.
-* **Resumen local de escucha**: por mes, por año o de todo el historial, con el radar de ánimos y el mapa de calor
-  de días y horas. El mapa responde al periodo elegido: si eliges un mes, enseña las semanas de ese mes; con un año
-  o con todo, los días de la semana por hora. Se exporta como tarjeta.
+* **Resumen local de escucha**: por mes, por año o de todo el historial, con el radar de ánimos y la actividad del
+  periodo. Un mes se ve como calendario de seis semanas, siempre del mismo tamaño; un año o todo el historial, como
+  una fila de doce meses por año, y tocar un mes lo abre día a día. Se exporta como tarjeta.
 
 Una escucha cuenta desde los 30 segundos (o la mitad, en las canciones de menos de un minuto), suene entera o no, y
 también dentro de una sesión del DJ.
@@ -230,8 +231,8 @@ movimiento. Escape sale de la pantalla completa y luego de la vista.
 
 ### La cola
 
-Desde la barra o con Ctrl+Q: una ventana flotante con las canciones que vienen, su duración total, la que suena
-marcada, reproducir o quitar cada una, reordenar arrastrando o con el teclado, y vaciarla. La barra de desplazamiento
+Desde la barra o con Ctrl+Q: una ventana flotante con las canciones que vienen (aunque sean miles: solo se pintan
+las que se ven), su duración total, la que suena marcada, reproducir o quitar cada una, reordenar arrastrando o con el teclado, y vaciarla. La barra de desplazamiento
 tiene su propio carril y no tapa nada.
 
 ### El minirreproductor

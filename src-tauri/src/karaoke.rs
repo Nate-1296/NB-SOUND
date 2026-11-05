@@ -148,6 +148,11 @@ fn cargar(ruta: &Path) -> NsResult<(Vec<f32>, Vec<f32>)> {
     if origen == TASA {
         return Ok((izq, der));
     }
+    remuestrear(&izq, &der, origen)
+}
+
+/// Lleva el audio a la tasa del modelo.
+fn remuestrear(izq: &[f32], der: &[f32], origen: u32) -> NsResult<(Vec<f32>, Vec<f32>)> {
     let trozo = 4096;
     let mut rs = FftFixedIn::<f32>::new(origen as usize, TASA as usize, trozo, 2, 2)
         .map_err(|_| NsError::Internal)?;
@@ -162,11 +167,16 @@ fn cargar(ruta: &Path) -> NsResult<(Vec<f32>, Vec<f32>)> {
         b.extend_from_slice(&out[1]);
         i += trozo;
     }
-    let resto = rs
-        .process_partial(Some(&[&izq[i..], &der[i..]]), None)
-        .map_err(|_| NsError::Internal)?;
-    a.extend_from_slice(&resto[0]);
-    b.extend_from_slice(&resto[1]);
+    // Si el audio mide un número exacto de trozos no queda resto, y el
+    // remuestreador rechaza un trozo parcial vacío: "Cooler Than Me" (48 kHz,
+    // 2.670 trozos justos) fallaba siempre con INTERNAL.
+    if i < izq.len() {
+        let resto = rs
+            .process_partial(Some(&[&izq[i..], &der[i..]]), None)
+            .map_err(|_| NsError::Internal)?;
+        a.extend_from_slice(&resto[0]);
+        b.extend_from_slice(&resto[1]);
+    }
     let cola = rs
         .process_partial::<&[f32]>(None, None)
         .map_err(|_| NsError::Internal)?;
@@ -546,6 +556,19 @@ impl Karaoke {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn el_remuestreo_acepta_audio_de_trozos_justos_y_con_resto() {
+        // "Cooler Than Me" (48 kHz) mide 2.670 trozos de 4.096 justos y fallaba
+        // siempre con INTERNAL, volviendo a la cola en cada intento.
+        for n in [4_096 * 40, 4_096 * 40 + 1_234] {
+            let izq: Vec<f32> = (0..n).map(|i| ((i as f32) * 0.01).sin() * 0.5).collect();
+            let der = izq.clone();
+            let (a, b) = super::remuestrear(&izq, &der, 48_000).expect("remuestrea");
+            let esperado = (n as f64 * 44_100.0 / 48_000.0).round() as usize;
+            assert_eq!((a.len(), b.len()), (esperado, esperado), "{n} muestras");
+        }
+    }
+
     use super::*;
 
     /// Un modelo de mentira que dice que todo es voz: copia la entrada en los

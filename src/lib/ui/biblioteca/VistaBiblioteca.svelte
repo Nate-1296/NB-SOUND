@@ -21,9 +21,7 @@
     type OrdenPistas,
     type PistaResumen,
     reproducirLista,
-    urlPortada,
-    karaokeEstado,
-    karaokePrepararFavoritas
+    urlPortada
   } from '#lib/core/ipc/index.ts';
   import {
     recordado,
@@ -95,16 +93,6 @@
   $effect(() => {
     if (page.url.searchParams.has('cantar')) paraCantar = true;
   });
-  let ofertaKaraoke = $state(false);
-  let avisoFavoritas = $state<string | null>(null);
-
-  async function prepararFavoritas() {
-    if (!(await karaokeEstado()).instalado) {
-      ofertaKaraoke = true;
-      return;
-    }
-    avisoFavoritas = t.favoritasEnCola(await karaokePrepararFavoritas());
-  }
 
   let ordenPistas = $state<OrdenPistas>(estadoBiblioteca.pistas.orden);
   let ordenAlbumes = $state<OrdenAlbumes>(estadoBiblioteca.albumes.orden);
@@ -464,11 +452,6 @@
           >
             <Icon nombre="microfono" tamano={14} />{t.paraCantar}
           </button>
-          {#if paraCantar}
-            <button type="button" class="ficha" onclick={prepararFavoritas}>
-              <Icon nombre="favorito" tamano={14} />{t.prepararFavoritas}
-            </button>
-          {/if}
         </div>
       {/if}
 
@@ -533,15 +516,6 @@
       </div>
     </div>
   </div>
-
-  {#if vista === 'pistas'}
-    {#if avisoFavoritas && paraCantar}<p class="aviso" role="status">{avisoFavoritas}</p>{/if}
-    {#if ofertaKaraoke}
-      {#await import('#lib/ui/agregados/OfertaAgregado.svelte') then m}
-        <m.default id="karaoke" oncerrar={() => (ofertaKaraoke = false)} />
-      {/await}
-    {/if}
-  {/if}
 
   {#if vista === 'pistas'}
     {#if modoRejilla === 'lista'}
@@ -1012,11 +986,5 @@
 
   .centinela {
     height: 1px;
-  }
-
-  .aviso {
-    margin: 0;
-    color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-sm);
   }
 </style>

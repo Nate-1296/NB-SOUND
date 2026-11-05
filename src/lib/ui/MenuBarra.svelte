@@ -20,9 +20,11 @@
 
   interface Props {
     oncerrar: () => void;
+    /** Abre el diálogo de conectar un teléfono, que vive fuera de este menú. */
+    onconectar: () => void;
   }
 
-  let { oncerrar }: Props = $props();
+  let { oncerrar, onconectar }: Props = $props();
   const t = textos.reproductor;
   const pista = $derived(reproductor.pista);
   const favorita = $derived(pista ? favoritas.es(pista) : false);
@@ -33,9 +35,11 @@
     void abrirMinirreproductor();
   }
 
-  function dispositivos() {
+  // Dónde suena, como el botón que tenía la barra: este equipo y los teléfonos que
+  // lo controlan, aquí mismo. No abre la consola de dispositivos entera.
+  function conectar() {
     oncerrar();
-    window.dispatchEvent(new CustomEvent('ns:cajon', { detail: 'dispositivos' }));
+    onconectar();
   }
 
   async function sorpresa() {
@@ -93,20 +97,27 @@
   {/if}
 
   <hr />
+  <span class="rotulo">{t.destino}</span>
   <div class="destino">
     <Icon nombre="volumen" tamano={20} />
     <span class="datos">
       <strong>{t.esteEquipo}</strong>
-      <small>
-        {telefonos.controlando[0]
-          ? t.controlandoDesde(telefonos.controlando[0].nombre)
-          : t.sonandoAqui}
-      </small>
+      <small>{t.sonandoAqui}</small>
     </span>
   </div>
-  <button type="button" role="menuitem" class="opcion" onclick={dispositivos}>
+  {#each telefonos.controlando as tel (tel.id)}
+    <div class="destino">
+      <Icon nombre="telefono" tamano={20} />
+      <span class="datos">
+        <strong>{tel.nombre}</strong>
+        <small>{t.controlandoDesde(tel.nombre)}</small>
+      </span>
+    </div>
+  {/each}
+  <p class="nota">{t.escucharEnElTelefono}</p>
+  <button type="button" role="menuitem" class="opcion" onclick={conectar}>
     <Icon nombre="telefono" tamano={20} />
-    {t.abrirDispositivos}
+    {t.conectarTelefono}
   </button>
   <hr />
   <button type="button" role="menuitem" class="opcion" onclick={sorpresa}>
@@ -241,5 +252,22 @@
 
   .destino .datos {
     color: var(--m3c-on-surface);
+  }
+
+  .rotulo {
+    padding: var(--ns-espacio-1) var(--ns-espacio-3) 0;
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .nota {
+    margin: 0;
+    padding: 0 var(--ns-espacio-3);
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    line-height: 1.4;
   }
 </style>

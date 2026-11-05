@@ -421,6 +421,12 @@
     overscroll-behavior: contain;
     padding: 35vh 0;
     width: 100%;
+    /* La letra se desplaza sola y con la rueda: una barra aquí solo estorba. */
+    scrollbar-width: none;
+  }
+
+  .vista-letras::-webkit-scrollbar {
+    display: none;
   }
 
   .lista-letras {
