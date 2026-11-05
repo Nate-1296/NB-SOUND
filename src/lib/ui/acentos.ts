@@ -82,8 +82,3 @@ export const ACENTOS: readonly Acento[] = [
 
 /** El acento de fábrica: el tema por defecto de la V1, `negro_puro`. */
 export const ACENTO_POR_DEFECTO: Acento = ACENTOS[0] as Acento;
-
-/** El acento de la V1 con ese id, o el de fábrica si ya no existe. */
-export function acentoPorId(id: string | null | undefined): Acento {
-  return ACENTOS.find((a) => a.id === id) ?? ACENTO_POR_DEFECTO;
-}

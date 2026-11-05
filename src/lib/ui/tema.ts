@@ -19,7 +19,7 @@ export type Tema = 'sistema' | 'claro' | 'oscuro';
 export type Esquema = 'claro' | 'oscuro';
 export type Contraste = 'normal' | 'alto';
 
-export const TEMAS: readonly Tema[] = ['sistema', 'claro', 'oscuro'];
+/** Los que se generan en `paletas.css` (`scripts/generar-paletas.mjs`). */
 export const ESQUEMAS: readonly Esquema[] = ['claro', 'oscuro'];
 
 /**
@@ -40,23 +40,12 @@ export function resolverEsquema(tema: Tema, sistemaOscuro: boolean): Esquema {
   return tema;
 }
 
-export function elSistemaPrefiereOscuro(): boolean {
-  return typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
-}
-
 export interface Apariencia {
   tema: Tema;
   contraste: Contraste;
   /** Semilla del acento; `null` es la de fábrica. */
   semilla: string | null;
 }
-
-/** La V1 solo tenía esquema oscuro, y la V2 arranca igual (enmienda de ADR-008). */
-export const APARIENCIA_DE_FABRICA: Apariencia = {
-  tema: 'oscuro',
-  contraste: 'normal',
-  semilla: null
-};
 
 /**
  * Aplica la apariencia al elemento raíz.

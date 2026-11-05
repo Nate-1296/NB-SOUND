@@ -118,10 +118,7 @@
   bind:clientWidth={ancho}
 >
   <div class="lateral" class:oculta={enReproduciendo}>
-    <NavLateral
-      pendientes={importacion.pendientes}
-      compacta={clase !== 'amplio' || aparienciaActual.barraLateralCompacta}
-    />
+    <NavLateral pendientes={importacion.pendientes} estrecha={clase !== 'amplio'} />
   </div>
   <div class="superior" class:oculta={enReproduciendo}><BarraSuperior /></div>
   <div class="lienzo" class:en-reproduciendo={enReproduciendo}>

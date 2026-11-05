@@ -25,13 +25,13 @@
   interface Props {
     /** Archivos que esperan en Por revisar. */
     pendientes?: number;
-    /** Si la barra lateral está forzada a modo riel por el contenedor. */
-    compacta?: boolean;
+    /** La ventana es estrecha: la barra va en riel aunque el usuario la quiera entera. */
+    estrecha?: boolean;
   }
 
-  let { pendientes = 0, compacta = false }: Props = $props();
+  let { pendientes = 0, estrecha = false }: Props = $props();
 
-  const esCompacta = $derived(compacta || aparienciaActual.barraLateralCompacta);
+  const esCompacta = $derived(estrecha || aparienciaActual.barraLateralCompacta);
   const pie = $derived<Destino[]>(pendientes > 0 ? [POR_REVISAR, AJUSTES] : [AJUSTES]);
   const rutaLogo = $derived(`/logos/logo_${aparienciaActual.actual.tema}.png`);
 </script>
@@ -44,7 +44,7 @@
       class="destino"
       class:activo
       aria-current={activo ? 'page' : undefined}
-      title={aparienciaActual.barraLateralCompacta ? destino.etiqueta : undefined}
+      title={esCompacta ? destino.etiqueta : undefined}
     >
       <span class="icono"><Icon nombre={destino.icono} tamano={20} /></span>
       <span class="etiqueta">{destino.etiqueta}</span>
@@ -85,22 +85,25 @@
     {/each}
   </ul>
 
-  <div class="pie-colapso">
-    <button
-      type="button"
-      class="boton-colapso"
-      onclick={() => aparienciaActual.alternarBarraLateral()}
-      title={esCompacta ? textos.nav.expandirLateral : undefined}
-      aria-label={esCompacta ? textos.nav.expandirLateral : textos.nav.colapsarLateral}
-    >
-      <span class="icono">
-        <Icon nombre={esCompacta ? 'derecha' : 'izquierda'} tamano={20} />
-      </span>
-      <span class="etiqueta">
-        {esCompacta ? textos.nav.expandirLateral : textos.nav.colapsarLateral}
-      </span>
-    </button>
-  </div>
+  <!-- En una ventana estrecha no hay sitio para abrirla: el botón no haría nada. -->
+  {#if !estrecha}
+    <div class="pie-colapso">
+      <button
+        type="button"
+        class="boton-colapso"
+        onclick={() => aparienciaActual.alternarBarraLateral()}
+        title={esCompacta ? textos.nav.expandirLateral : undefined}
+        aria-label={esCompacta ? textos.nav.expandirLateral : textos.nav.colapsarLateral}
+      >
+        <span class="icono">
+          <Icon nombre={esCompacta ? 'derecha' : 'izquierda'} tamano={20} />
+        </span>
+        <span class="etiqueta">
+          {esCompacta ? textos.nav.expandirLateral : textos.nav.colapsarLateral}
+        </span>
+      </button>
+    </div>
+  {/if}
 </nav>
 
 <style>

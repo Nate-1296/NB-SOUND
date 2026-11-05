@@ -9,9 +9,10 @@
  */
 
 import { type Apariencia, apariencia, guardarPreferencia } from '#lib/core/ipc/index.ts';
-import { aplicarTemaV1, aplicarVariables } from '#lib/ui/tema.ts';
+import { aplicarTemaV1, aplicarVariables, TEMA_V1_DE_FABRICA } from '#lib/ui/tema.ts';
 
 const CACHE = 'ns-apariencia';
+const BARRA_COMPACTA = 'ns-barra-lateral-compacta';
 
 interface EnCache {
   tema: string;
@@ -22,7 +23,7 @@ interface EnCache {
 }
 
 const DE_FABRICA: Apariencia = {
-  tema: 'negro_puro',
+  tema: TEMA_V1_DE_FABRICA,
   tipografia: 'Inter',
   escala: 100,
   colorPorPortada: true,
@@ -40,24 +41,26 @@ function aplicarTipografia(raiz: HTMLElement, familia: string, escala: number): 
 
 class EstadoDeApariencia {
   actual = $state<Apariencia>(DE_FABRICA);
-  barraLateralCompacta = $state(
-    typeof localStorage !== 'undefined' &&
-      localStorage.getItem('ns-barra-lateral-compacta') === 'true'
-  );
+  /**
+   * La barra lateral en riel por decisión del usuario (EXP-06). Es de este equipo
+   * y no de la biblioteca: en otra pantalla puede caber entera, así que vive en
+   * `localStorage` como la caché del tema y no en las preferencias.
+   */
+  barraLateralCompacta = $state(false);
 
   alternarBarraLateral(): void {
     this.barraLateralCompacta = !this.barraLateralCompacta;
     try {
-      localStorage.setItem('ns-barra-lateral-compacta', String(this.barraLateralCompacta));
+      localStorage.setItem(BARRA_COMPACTA, String(this.barraLateralCompacta));
     } catch {
-      // Sin almacenamiento disponible
+      // Sin almacenamiento, vale para esta sesión.
     }
   }
 
   /** Lo que haya en caché, sin esperar a nada. Se llama antes del primer pintado. */
   aplicarCache(raiz: HTMLElement): void {
     try {
-      this.barraLateralCompacta = localStorage.getItem('ns-barra-lateral-compacta') === 'true';
+      this.barraLateralCompacta = localStorage.getItem(BARRA_COMPACTA) === 'true';
       const guardado = localStorage.getItem(CACHE);
       if (!guardado) return;
       const c = JSON.parse(guardado) as EnCache;

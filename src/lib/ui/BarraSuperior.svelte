@@ -23,27 +23,12 @@
   );
   let rutaPrevia = $state(page.url.pathname);
 
-  let drawerAbierto = $state<'karaoke' | 'dispositivos' | 'anadir' | null>(null);
-
-  function alternarKaraoke() {
-    drawerAbierto = drawerAbierto === 'karaoke' ? null : 'karaoke';
+  /** Los tres cajones de la barra: uno abierto a la vez, y el mismo botón lo cierra. */
+  type Cajon = 'karaoke' | 'dispositivos' | 'anadir';
+  let cajon = $state<Cajon | null>(null);
+  function alternar(c: Cajon) {
+    cajon = cajon === c ? null : c;
   }
-
-  function alternarDispositivos() {
-    drawerAbierto = drawerAbierto === 'dispositivos' ? null : 'dispositivos';
-  }
-
-  function alternarAnadir() {
-    drawerAbierto = drawerAbierto === 'anadir' ? null : 'anadir';
-  }
-
-  $effect(() => {
-    function alDrawer(e: CustomEvent<'karaoke' | 'dispositivos' | 'anadir' | null>) {
-      drawerAbierto = e.detail;
-    }
-    window.addEventListener('ns:drawer', alDrawer as EventListener);
-    return () => window.removeEventListener('ns:drawer', alDrawer as EventListener);
-  });
 
   // Cada tecla no es una navegación: se espera a la pausa.
   let espera: ReturnType<typeof setTimeout> | undefined;
@@ -157,11 +142,11 @@
     <button
       type="button"
       class="boton-karaoke"
-      class:activo={drawerAbierto === 'karaoke'}
+      class:activo={cajon === 'karaoke'}
       aria-label={textos.karaokeConsola.abrir}
       title={textos.karaokeConsola.abrir}
-      aria-expanded={drawerAbierto === 'karaoke'}
-      onclick={alternarKaraoke}
+      aria-expanded={cajon === 'karaoke'}
+      onclick={() => alternar('karaoke')}
     >
       <Icon nombre="microfono" tamano={18} />
       <span class="texto-karaoke">{textos.karaokeConsola.titulo}</span>
@@ -170,11 +155,11 @@
     <button
       type="button"
       class="boton-dispositivos"
-      class:activo={drawerAbierto === 'dispositivos'}
+      class:activo={cajon === 'dispositivos'}
       aria-label={textos.ajustes.dispositivos}
       title={textos.ajustes.dispositivos}
-      aria-expanded={drawerAbierto === 'dispositivos'}
-      onclick={alternarDispositivos}
+      aria-expanded={cajon === 'dispositivos'}
+      onclick={() => alternar('dispositivos')}
     >
       <Icon nombre="telefono" tamano={18} />
       <span class="texto-dispositivos">{textos.ajustes.dispositivos}</span>
@@ -183,11 +168,11 @@
     <button
       type="button"
       class="boton-anadir"
-      class:activo={drawerAbierto === 'anadir'}
+      class:activo={cajon === 'anadir'}
       aria-label={tImportacion.anadir}
       title={tImportacion.anadir}
-      aria-expanded={drawerAbierto === 'anadir'}
-      onclick={alternarAnadir}
+      aria-expanded={cajon === 'anadir'}
+      onclick={() => alternar('anadir')}
     >
       <Icon nombre="mas" tamano={20} />
       <span class="texto-anadir">{tImportacion.anadir}</span>
@@ -195,17 +180,17 @@
   </div>
 </header>
 
-{#if drawerAbierto === 'karaoke'}
-  {#await import('#lib/ui/karaoke/ConsolaKaraokeDrawer.svelte') then m}
-    <m.default oncerrar={() => (drawerAbierto = null)} />
+{#if cajon === 'karaoke'}
+  {#await import('#lib/ui/karaoke/CajonKaraoke.svelte') then m}
+    <m.default oncerrar={() => (cajon = null)} />
   {/await}
-{:else if drawerAbierto === 'dispositivos'}
-  {#await import('#lib/ui/dispositivos/ConsolaDispositivosDrawer.svelte') then m}
-    <m.default oncerrar={() => (drawerAbierto = null)} />
+{:else if cajon === 'dispositivos'}
+  {#await import('#lib/ui/dispositivos/CajonDispositivos.svelte') then m}
+    <m.default oncerrar={() => (cajon = null)} />
   {/await}
-{:else if drawerAbierto === 'anadir'}
-  {#await import('#lib/ui/importacion/ConsolaImportacionDrawer.svelte') then m}
-    <m.default oncerrar={() => (drawerAbierto = null)} />
+{:else if cajon === 'anadir'}
+  {#await import('#lib/ui/importacion/CajonImportacion.svelte') then m}
+    <m.default oncerrar={() => (cajon = null)} />
   {/await}
 {/if}
 

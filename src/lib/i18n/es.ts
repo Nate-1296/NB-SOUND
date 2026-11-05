@@ -10,6 +10,9 @@ export const es = {
   app: {
     nombre: 'NB Sound'
   },
+  comun: {
+    cerrar: 'Cerrar'
+  },
   avisos: {
     region: 'Avisos',
     regionFallos: 'Fallos',
@@ -48,7 +51,6 @@ export const es = {
     playlists: 'Playlists',
     sinResultados: (q: string) => `Nada en tu biblioteca coincide con «${q}».`,
     escribe: 'Escribe arriba para buscar.',
-    verTodas: (n: number) => `Ver las ${n.toLocaleString('es')} pistas`,
     cerrarBusqueda: 'Cerrar búsqueda'
   },
   reproductor: {
@@ -66,11 +68,7 @@ export const es = {
     marcarFavorita: 'Añadir a favoritas',
     quitarFavorita: 'Quitar de favoritas',
     karaoke: 'Modo karaoke',
-    karaokeNoListo: 'Esta canción aún no está lista para cantar',
-    karaokeListo: 'Karaoke listo para cantar',
-    karaokeError: 'Error al preparar el karaoke',
     karaokePreparar: 'Preparar el karaoke de esta canción',
-    karaokePreparando: (p: number) => `Preparando el karaoke: ${p} %`,
     letras: 'Letras',
     cola: 'Cola',
     colaCon: (n: number) => (n === 1 ? 'Cola, 1 canción' : `Cola, ${n} canciones`),
@@ -298,8 +296,6 @@ export const es = {
     duracion: 'Duración',
     retomar: 'Retomar reproducción',
     continuar: 'Continuar',
-    detalles: 'Detalles',
-    coleccionResumen: 'Colección local',
     destacado: 'Álbum destacado del día',
     verAlbum: 'Ver álbum',
     reproducir: 'Reproducir',
@@ -309,7 +305,6 @@ export const es = {
     reproducciones: (n: number) => (n === 1 ? '1 reproducción' : `${n} reproducciones`),
     top: 'Tu top 10 canciones',
     topSub: 'Las que más has repetido en tu biblioteca.',
-    masReproducida: '#1 más reproducida',
     podio: {
       lugar1: '1.º lugar',
       lugar2: '2.º lugar',
@@ -382,8 +377,6 @@ export const es = {
     sinLetra: 'Esta canción no tiene letra guardada.',
     nadaSonando: 'No suena nada. Elige una canción en tu biblioteca.',
     irA: (t: string) => `Ir a ${t}`,
-    modoDividido: 'Vista dividida',
-    modoCentrado: 'Letras centradas',
     verLetras: 'Ver letras',
     verPortada: 'Ver portada'
   },
@@ -594,7 +587,6 @@ export const es = {
     abrir: 'Consola de karaoke',
     cerrar: 'Cerrar consola',
     motorActivo: 'Motor de separación activo',
-    motorDescargando: 'Descargando modelo de separación',
     motorNoInstalado: 'Agregado de karaoke no instalado',
     motorExplicacion:
       'Separa la pista vocal de cualquier canción localmente usando htdemucs de Meta.',

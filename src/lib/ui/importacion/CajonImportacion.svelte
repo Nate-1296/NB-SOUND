@@ -4,6 +4,7 @@
   Panel lateral para importar pistas, carpetas, ver progreso activo y estado de la biblioteca.
 -->
 <script lang="ts">
+  import Cajon from '#lib/ui/Cajon.svelte';
   import { goto } from '$app/navigation';
   import { importacion } from '#lib/core/importacion.svelte.ts';
   import { anadirMusica, type Cifras, inicio } from '#lib/core/ipc/index.ts';
@@ -57,279 +58,156 @@
     oncerrar();
     void goto('/por-revisar');
   }
-
-  function alPulsar(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      oncerrar();
-    }
-  }
 </script>
 
-<svelte:window onkeydown={alPulsar} />
-
-<div
-  class="fondo-drawer"
-  role="presentation"
-  onclick={oncerrar}
-  onkeydown={(e) => e.key === 'Escape' && oncerrar()}
-></div>
-
-<div class="drawer" aria-label={t.anadir} aria-modal="true" role="dialog">
-  <header class="drawer-cabecera">
-    <div class="drawer-titulos">
-      <div class="icono-titulo">
-        <Icon nombre="mas" tamano={22} />
-        <h2>{t.anadir}</h2>
-      </div>
-      <p class="drawer-sub">{t.subtitulo}</p>
-    </div>
+<Cajon titulo={t.anadir} subtitulo={t.subtitulo} icono="mas" {oncerrar}>
+  <!-- Acciones de importación -->
+  <div class="seccion-acciones">
     <button
       type="button"
-      class="boton-cerrar"
-      onclick={oncerrar}
-      aria-label={t.cerrar}
-      title={t.cerrar}
+      class="tarjeta-accion"
+      onclick={ejecutarAnadirArchivos}
+      disabled={importando || p.activa}
     >
-      <Icon nombre="cerrar" tamano={20} />
+      <div class="accion-icono">
+        <Icon nombre="cancion" tamano={24} />
+      </div>
+      <div class="accion-info">
+        <strong class="accion-titulo">{t.anadirArchivos}</strong>
+        <span class="accion-desc">{t.archivosDesc}</span>
+      </div>
     </button>
-  </header>
 
-  <div class="drawer-cuerpo">
-    <!-- Acciones de importación -->
-    <div class="seccion-acciones">
-      <button
-        type="button"
-        class="tarjeta-accion"
-        onclick={ejecutarAnadirArchivos}
-        disabled={importando || p.activa}
-      >
-        <div class="accion-icono">
-          <Icon nombre="cancion" tamano={24} />
-        </div>
-        <div class="accion-info">
-          <strong class="accion-titulo">{t.anadirArchivos}</strong>
-          <span class="accion-desc">{t.archivosDesc}</span>
-        </div>
-      </button>
-
-      <button
-        type="button"
-        class="tarjeta-accion"
-        onclick={ejecutarAnadirCarpeta}
-        disabled={importando || p.activa}
-      >
-        <div class="accion-icono">
-          <Icon nombre="carpeta" tamano={24} />
-        </div>
-        <div class="accion-info">
-          <strong class="accion-titulo">{t.anadirCarpeta}</strong>
-          <span class="accion-desc">{t.carpetaDesc}</span>
-        </div>
-      </button>
-    </div>
-
-    <!-- Progreso activo de importación -->
-    {#if p.activa}
-      {@const total = Math.max(1, p.total)}
-      {@const pct = Math.min(100, Math.round((p.hechos / total) * 100))}
-      <div class="tarjeta progreso-caja" role="status" aria-live="polite">
-        <div class="progreso-cabecera">
-          <span class="seccion-rotulo">{t.catalogando(p.total)}</span>
-          <span class="progreso-pct">{pct}%</span>
-        </div>
-        <div class="barra-riel" role="progressbar" aria-valuenow={pct}>
-          <div class="barra-fill" style:width={`${pct}%`}></div>
-        </div>
-        <div class="progreso-detalle">
-          <span>{t.deTotal(p.hechos, p.total)}</span>
-          {#if p.actual}
-            <span class="archivo-actual" title={p.actual}>{p.actual}</span>
-          {/if}
-        </div>
+    <button
+      type="button"
+      class="tarjeta-accion"
+      onclick={ejecutarAnadirCarpeta}
+      disabled={importando || p.activa}
+    >
+      <div class="accion-icono">
+        <Icon nombre="carpeta" tamano={24} />
       </div>
-    {/if}
-
-    <!-- Resumen de la última importación -->
-    {#if r}
-      <div class="tarjeta resumen-caja" role="status">
-        <div class="resumen-icono" class:aviso={r.porRevisar > 0}>
-          <Icon nombre={r.porRevisar > 0 ? 'porRevisar' : 'correcto'} tamano={22} />
-        </div>
-        <div class="resumen-info">
-          <strong>{t.resumen(r.importadas, r.porRevisar)}</strong>
-          {#if r.sinVerificar > 0}
-            <span class="resumen-sub">{t.sinVerificar(r.sinVerificar)}</span>
-          {/if}
-          {#if r.porRevisar > 0}
-            <button type="button" class="enlace-accion" onclick={irAPorRevisar}>
-              {t.verPorRevisar}
-            </button>
-          {/if}
-        </div>
-        <button
-          type="button"
-          class="boton-cerrar-resumen"
-          aria-label={t.cerrar}
-          title={t.cerrar}
-          onclick={() => importacion.cerrarResumen()}
-        >
-          <Icon nombre="cerrar" tamano={16} />
-        </button>
+      <div class="accion-info">
+        <strong class="accion-titulo">{t.anadirCarpeta}</strong>
+        <span class="accion-desc">{t.carpetaDesc}</span>
       </div>
-    {/if}
+    </button>
+  </div>
 
-    <!-- Zona de arrastre explicativa -->
-    <div class="tarjeta arrastre-caja" class:activo={importacion.arrastrando}>
-      <div class="arrastre-icono">
-        <Icon nombre="descargar" tamano={24} />
+  <!-- Progreso activo de importación -->
+  {#if p.activa}
+    {@const total = Math.max(1, p.total)}
+    {@const pct = Math.min(100, Math.round((p.hechos / total) * 100))}
+    <div class="tarjeta progreso-caja" role="status" aria-live="polite">
+      <div class="progreso-cabecera">
+        <span class="seccion-rotulo">{t.catalogando(p.total)}</span>
+        <span class="progreso-pct">{pct}%</span>
       </div>
-      <div class="arrastre-info">
-        <strong class="arrastre-titulo">
-          {importacion.arrastrando ? t.arrastrarActivo : t.arrastrarTitulo}
-        </strong>
-        <p class="arrastre-desc">{t.arrastrarDesc}</p>
+      <div class="barra-riel" role="progressbar" aria-valuenow={pct}>
+        <div class="barra-fill" style:width={`${pct}%`}></div>
       </div>
-    </div>
-
-    <!-- Estado y cifras de la biblioteca -->
-    <div class="tarjeta cifras-caja">
-      <span class="seccion-rotulo">{t.estadoBiblioteca}</span>
-
-      {#if cifras}
-        <div class="cifras-grid">
-          <div class="cifra-item">
-            <span class="cifra-valor">{cifras.pistas}</span>
-            <span class="cifra-etiqueta">{t.totalPistas(cifras.pistas)}</span>
-          </div>
-          <div class="cifra-item">
-            <span class="cifra-valor">{cifras.albumes}</span>
-            <span class="cifra-etiqueta">{t.totalAlbumes(cifras.albumes)}</span>
-          </div>
-          <div class="cifra-item">
-            <span class="cifra-valor">{cifras.artistas}</span>
-            <span class="cifra-etiqueta">{t.totalArtistas(cifras.artistas)}</span>
-          </div>
-        </div>
-      {/if}
-
-      <div class="pendientes-bloque">
-        {#if importacion.pendientes > 0}
-          <div class="alerta-pendientes">
-            <Icon nombre="porRevisar" tamano={18} />
-            <span class="pendientes-texto">
-              {t.archivosPorRevisar(importacion.pendientes)}
-            </span>
-          </div>
-          <button type="button" class="boton contorno" onclick={irAPorRevisar}>
-            <Icon nombre="porRevisar" tamano={16} />
-            <span>{t.verPorRevisar}</span>
-          </button>
-        {:else}
-          <div class="insignia-limpio">
-            <Icon nombre="comprobado" tamano={18} />
-            <span>{t.sinPendientes}</span>
-          </div>
+      <div class="progreso-detalle">
+        <span>{t.deTotal(p.hechos, p.total)}</span>
+        {#if p.actual}
+          <span class="archivo-actual" title={p.actual}>{p.actual}</span>
         {/if}
       </div>
     </div>
+  {/if}
 
-    <!-- Gestión de duplicados -->
-    <div class="duplicados-bloque">
-      {#await import('#lib/ui/biblioteca/TarjetaDuplicados.svelte') then m}
-        <m.default />
-      {/await}
+  <!-- Resumen de la última importación -->
+  {#if r}
+    <div class="tarjeta resumen-caja" role="status">
+      <div class="resumen-icono" class:aviso={r.porRevisar > 0}>
+        <Icon nombre={r.porRevisar > 0 ? 'porRevisar' : 'correcto'} tamano={22} />
+      </div>
+      <div class="resumen-info">
+        <strong>{t.resumen(r.importadas, r.porRevisar)}</strong>
+        {#if r.sinVerificar > 0}
+          <span class="resumen-sub">{t.sinVerificar(r.sinVerificar)}</span>
+        {/if}
+        {#if r.porRevisar > 0}
+          <button type="button" class="enlace-accion" onclick={irAPorRevisar}>
+            {t.verPorRevisar}
+          </button>
+        {/if}
+      </div>
+      <button
+        type="button"
+        class="boton-cerrar-resumen"
+        aria-label={t.cerrar}
+        title={t.cerrar}
+        onclick={() => importacion.cerrarResumen()}
+      >
+        <Icon nombre="cerrar" tamano={16} />
+      </button>
+    </div>
+  {/if}
+
+  <!-- Zona de arrastre explicativa -->
+  <div class="tarjeta arrastre-caja" class:activo={importacion.arrastrando}>
+    <div class="arrastre-icono">
+      <Icon nombre="descargar" tamano={24} />
+    </div>
+    <div class="arrastre-info">
+      <strong class="arrastre-titulo">
+        {importacion.arrastrando ? t.arrastrarActivo : t.arrastrarTitulo}
+      </strong>
+      <p class="arrastre-desc">{t.arrastrarDesc}</p>
     </div>
   </div>
-</div>
+
+  <!-- Estado y cifras de la biblioteca -->
+  <div class="tarjeta cifras-caja">
+    <span class="seccion-rotulo">{t.estadoBiblioteca}</span>
+
+    {#if cifras}
+      <div class="cifras-grid">
+        <div class="cifra-item">
+          <span class="cifra-valor">{cifras.pistas}</span>
+          <span class="cifra-etiqueta">{t.totalPistas(cifras.pistas)}</span>
+        </div>
+        <div class="cifra-item">
+          <span class="cifra-valor">{cifras.albumes}</span>
+          <span class="cifra-etiqueta">{t.totalAlbumes(cifras.albumes)}</span>
+        </div>
+        <div class="cifra-item">
+          <span class="cifra-valor">{cifras.artistas}</span>
+          <span class="cifra-etiqueta">{t.totalArtistas(cifras.artistas)}</span>
+        </div>
+      </div>
+    {/if}
+
+    <div class="pendientes-bloque">
+      {#if importacion.pendientes > 0}
+        <div class="alerta-pendientes">
+          <Icon nombre="porRevisar" tamano={18} />
+          <span class="pendientes-texto">
+            {t.archivosPorRevisar(importacion.pendientes)}
+          </span>
+        </div>
+        <button type="button" class="boton contorno" onclick={irAPorRevisar}>
+          <Icon nombre="porRevisar" tamano={16} />
+          <span>{t.verPorRevisar}</span>
+        </button>
+      {:else}
+        <div class="insignia-limpio">
+          <Icon nombre="comprobado" tamano={18} />
+          <span>{t.sinPendientes}</span>
+        </div>
+      {/if}
+    </div>
+  </div>
+
+  <!-- Gestión de duplicados -->
+  <div class="duplicados-bloque">
+    {#await import('#lib/ui/biblioteca/TarjetaDuplicados.svelte') then m}
+      <m.default />
+    {/await}
+  </div>
+</Cajon>
 
 <style>
-  .fondo-drawer {
-    position: fixed;
-    inset: 0;
-    background: color-mix(in srgb, var(--m3c-scrim) 45%, transparent);
-    z-index: 100;
-  }
-
-  .drawer {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: min(26rem, 90vw);
-    background: var(--m3c-surface-container);
-    z-index: 101;
-    box-shadow: -4px 0 24px var(--m3c-shadow);
-    border-left: 1px solid var(--m3c-outline-variant);
-    display: flex;
-    flex-direction: column;
-    animation: deslizar-izq 200ms var(--ns-curva);
-  }
-
-  @keyframes deslizar-izq {
-    from {
-      transform: translateX(100%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-
-  .drawer-cabecera {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: var(--ns-espacio-4) var(--ns-espacio-5);
-    border-bottom: 1px solid var(--m3c-outline-variant);
-    background: var(--m3c-surface-container-high);
-  }
-
-  .icono-titulo {
-    display: flex;
-    align-items: center;
-    gap: var(--ns-espacio-2);
-    color: var(--m3c-primary);
-  }
-
-  .icono-titulo h2 {
-    margin: 0;
-    font-size: var(--ns-texto-lg);
-    font-weight: 700;
-    color: var(--m3c-on-surface);
-  }
-
-  .drawer-sub {
-    margin: var(--ns-espacio-1) 0 0 0;
-    font-size: var(--ns-texto-xs);
-    color: var(--m3c-on-surface-variant);
-  }
-
-  .boton-cerrar {
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    border: none;
-    border-radius: var(--ns-radio-pleno);
-    background: transparent;
-    color: var(--m3c-on-surface-variant);
-    cursor: pointer;
-    transition: background-color var(--ns-duracion-corta) var(--ns-curva);
-  }
-
-  .boton-cerrar:hover {
-    background: var(--m3c-surface-container-highest);
-    color: var(--m3c-on-surface);
-  }
-
-  .drawer-cuerpo {
-    flex: 1;
-    overflow-y: auto;
-    padding: var(--ns-espacio-5);
-    display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-4);
-  }
-
   .seccion-acciones {
     display: flex;
     flex-direction: column;
