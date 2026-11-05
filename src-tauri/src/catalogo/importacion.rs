@@ -286,6 +286,33 @@ impl Importador {
     }
 }
 
+/// Intentos por archivo antes de contarlo como error.
+const INTENTOS: u64 = 3;
+
+/// `procesar` con reintentos: un fallo que no llegó a Por revisar suele ser
+/// pasajero (el archivo aún se estaba copiando, la base ocupada, la red cortada a
+/// la mitad), y antes ese archivo se perdía de la importación sin más.
+fn procesar_con_reintentos(e: &Entorno<'_>, g: &mut Gestor, ruta: &Path) -> Option<Resultado> {
+    for intento in 1..=INTENTOS {
+        match canalizacion::procesar(e, g, ruta) {
+            Ok(r) => return Some(r),
+            Err(error) => {
+                tracing::warn!(
+                    codigo = error.code(),
+                    intento,
+                    "un archivo falló al importarse"
+                );
+                // Si ya no está, no hay nada que reintentar.
+                if intento == INTENTOS || !ruta.is_file() {
+                    return None;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(500 * intento));
+            }
+        }
+    }
+    None
+}
+
 fn bucle(
     r: &Recursos,
     rx: &Receiver<Mensaje>,
@@ -375,7 +402,7 @@ fn bucle(
                 ia: config_ia.clone(),
             };
             let resultado = if ruta.is_file() {
-                canalizacion::procesar(&e, &mut gestor, &ruta).ok()
+                procesar_con_reintentos(&e, &mut gestor, &ruta)
             } else {
                 // Se movió o se borró mientras esperaba: no hay nada que hacer.
                 Some(Resultado::Omitido)

@@ -9,6 +9,7 @@ pub mod a_ciegas;
 pub mod agregados;
 pub mod analisis;
 pub mod audio;
+pub mod autorreparacion;
 pub mod bandeja;
 pub mod biblioteca;
 pub mod catalogo;
@@ -238,6 +239,47 @@ pub fn run() {
             b.enviar(reproductor::Orden::InstrumentalListo(pista));
         }
     });
+    // Al estrenar una versión, lo que había fallado se vuelve a intentar solo
+    // (`autorreparacion.rs`), en su hilo para no retrasar la ventana.
+    {
+        let (db, importador, karaoke) = (db.clone(), importador.clone(), servicio_karaoke.clone());
+        let lanzado = std::thread::Builder::new()
+            .name("autorreparacion".into())
+            .spawn(move || {
+                match autorreparacion::estrena_version(&db, env!("CARGO_PKG_VERSION")) {
+                    Ok(true) => {
+                        if let Err(error) = karaoke::reintentar_fallidas(&db) {
+                            tracing::warn!(
+                                codigo = error.code(),
+                                "no se pudo reintentar el karaoke"
+                            );
+                        }
+                        karaoke.despertar();
+                        match autorreparacion::por_revisar_reintentables(&db) {
+                            Ok(rutas) if !rutas.is_empty() => {
+                                tracing::info!(
+                                    archivos = rutas.len(),
+                                    "se reintenta lo que falló al importar"
+                                );
+                                importador.importar(rutas);
+                            }
+                            Ok(_) => {}
+                            Err(error) => tracing::warn!(
+                                codigo = error.code(),
+                                "no se pudo revisar lo que falló al importar"
+                            ),
+                        }
+                    }
+                    Ok(false) => {}
+                    Err(error) => {
+                        tracing::warn!(codigo = error.code(), "no se pudo comprobar la versión")
+                    }
+                }
+            });
+        if lanzado.is_err() {
+            tracing::error!("no se pudo lanzar la autorreparación");
+        }
+    }
     // El DJ, en su hilo (F6.1.6): sigue construyendo la sesión mientras suena, y
     // cada bloque nuevo llega al reproductor y a la vista.
     let aviso = Arc::clone(&ventana);

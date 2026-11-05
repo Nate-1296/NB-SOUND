@@ -361,7 +361,7 @@ pub fn pedir(db: &BaseDeDatos, pistas: &[i64]) -> NsResult<()> {
         tx.execute(
             "INSERT INTO stems (pista_id, estado) VALUES (?1, 'pendiente')
              ON CONFLICT (pista_id) DO UPDATE SET estado = 'pendiente', error = NULL,
-                 solicitada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                 intentos = 0, solicitada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
              WHERE stems.estado = 'fallida'",
             [p],
         )
@@ -390,7 +390,7 @@ pub fn pedir_favoritas(db: &BaseDeDatos) -> NsResult<u32> {
         .map_err(|_| NsError::StorageFailure)?;
     let reintentadas = tx
         .execute(
-            "UPDATE stems SET estado = 'pendiente', error = NULL
+            "UPDATE stems SET estado = 'pendiente', error = NULL, intentos = 0
              WHERE estado = 'fallida'
                AND pista_id IN (SELECT id FROM pistas WHERE favorita = 1 AND estado = 'biblioteca')",
             [],
@@ -440,6 +440,42 @@ pub fn retomar(db: &BaseDeDatos) -> NsResult<()> {
         db,
         "UPDATE stems SET estado = 'pendiente' WHERE estado = 'separando'",
         [],
+    )?;
+    // Lo que falló por no tener el modelo se vuelve a intentar: si sigue sin
+    // estar, la cola no corre y no se gasta nada.
+    marcar(
+        db,
+        "UPDATE stems SET estado = 'pendiente', error = NULL, intentos = 0
+         WHERE estado = 'fallida' AND error = 'COMPONENT_UNAVAILABLE'",
+        [],
+    )
+}
+
+/// Tras una actualización, todo lo que había fallado se vuelve a intentar desde
+/// cero: la versión nueva puede traer el arreglo (como el del remuestreo).
+///
+/// # Errors
+///
+/// [`NsError::StorageFailure`] si la escritura falla.
+pub fn reintentar_fallidas(db: &BaseDeDatos) -> NsResult<()> {
+    marcar(
+        db,
+        "UPDATE stems SET estado = 'pendiente', error = NULL, intentos = 0,
+             solicitada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+         WHERE estado = 'fallida'",
+        [],
+    )
+}
+
+/// Veces que se intenta una canción antes de darla por fallida.
+pub const MAX_INTENTOS: u32 = 3;
+
+/// Si un fallo puede ser pasajero. Un archivo que no está o no se puede leer no
+/// mejora por insistir; lo demás (el modelo, la memoria, el disco) sí puede.
+fn pasajero(error: &NsError) -> bool {
+    !matches!(
+        error,
+        NsError::FileNotFound | NsError::AudioCorrupted | NsError::FormatUnsupported
     )
 }
 
@@ -487,10 +523,16 @@ fn una(
                 codigo = error.code(),
                 "no se pudo preparar el karaoke de una pista"
             );
+            // Un fallo pasajero vuelve al final de la cola hasta `MAX_INTENTOS`
+            // veces; después, o si no es pasajero, queda fallida y la consola lo
+            // dice.
             marcar(
                 db,
-                "UPDATE stems SET estado = 'fallida', error = ?2 WHERE pista_id = ?1",
-                params![pista, error.code()],
+                "UPDATE stems SET error = ?2,
+                     estado = CASE WHEN ?3 AND intentos < ?4 THEN 'pendiente' ELSE 'fallida' END,
+                     solicitada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                 WHERE pista_id = ?1",
+                params![pista, error.code(), pasajero(&error), MAX_INTENTOS],
             )?;
         }
     }
