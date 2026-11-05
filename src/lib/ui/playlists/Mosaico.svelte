@@ -4,7 +4,7 @@
   la V1. Con una sola, ocupa todo; sin ninguna, un hueco con el icono.
 -->
 <script lang="ts">
-  import { urlPortada } from '$core/ipc';
+  import { urlPortada } from '#lib/core/ipc/index.ts';
 
   import Icon from '../Icon.svelte';
 

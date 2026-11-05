@@ -5,7 +5,7 @@
  * centralizan el tipado y la traducción de errores. Biome rechaza cualquier
  * importación de `@tauri-apps/api` fuera de esta carpeta, también en `.svelte`.
  *
- * Los tipos vienen de `$lib/bindings`, generados desde Rust con `ts-rs`; no se
+ * Los tipos vienen de `#lib/bindings`, generados desde Rust con `ts-rs`; no se
  * escriben a mano.
  */
 
@@ -43,7 +43,7 @@ import type {
   PreseleccionEcualizador,
   ProgresoImportacion,
   Telefono
-} from '$lib/bindings';
+} from '#lib/bindings/index.ts';
 
 export type {
   Acelerador,
@@ -99,7 +99,7 @@ export type {
   ResumenCopia,
   Servicio,
   Telefono
-} from '$lib/bindings';
+} from '#lib/bindings/index.ts';
 
 /** Error del runtime con su código canónico (ver `src-tauri/src/error.rs`). */
 export class NsError extends Error {
@@ -233,6 +233,11 @@ export function mostrarEnExplorador(pistaId: number): Promise<void> {
   return call<void>('mostrar_en_explorador', { pistaId });
 }
 
+/** Reproduce una canción para redescubrir (tecla D) y dice cuál; `null` si no hay otra. */
+export function sorprendeme(): Promise<PistaResumen | null> {
+  return call<PistaResumen | null>('sorprendeme');
+}
+
 export function bibliotecaAlbum(id: number): Promise<AlbumResumen | null> {
   return call<AlbumResumen | null>('biblioteca_album', { id });
 }
@@ -314,43 +319,19 @@ export function abrirMinirreproductor(): Promise<void> {
   return call<void>('abrir_minirreproductor');
 }
 
-/** Cierra o esconde la ventana desde la que se llama (el minirreproductor). */
-export async function cerrarEstaVentana(): Promise<void> {
-  try {
-    const win = getCurrentWindow();
-    await win.hide();
-  } catch {
-    await getCurrentWindow().close();
-  }
+/** Cierra la ventana desde la que se llama (el minirreproductor). */
+export function cerrarEstaVentana(): Promise<void> {
+  return getCurrentWindow().close();
 }
 
-/** Alterna el modo de pantalla completa de la ventana actual. Devuelve si quedó en pantalla completa. */
-export async function alternarPantallaCompleta(): Promise<boolean> {
-  try {
-    const win = getCurrentWindow();
-    const actual = await win.isFullscreen();
-    await win.setFullscreen(!actual);
-    return !actual;
-  } catch {
-    if (typeof document !== 'undefined') {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen?.();
-        return true;
-      }
-      await document.exitFullscreen?.();
-      return false;
-    }
-    return false;
-  }
+/** Pone o quita la ventana en pantalla completa (F11), como la V1 en las fiestas. */
+export function fijarPantallaCompleta(activa: boolean): Promise<void> {
+  return getCurrentWindow().setFullscreen(activa);
 }
 
-/** Devuelve si la ventana actual está en pantalla completa. */
-export async function estaEnPantallaCompleta(): Promise<boolean> {
-  try {
-    return await getCurrentWindow().isFullscreen();
-  } catch {
-    return typeof document !== 'undefined' && Boolean(document.fullscreenElement);
-  }
+/** Si la ventana está en pantalla completa: también se entra y sale desde el gestor de ventanas. */
+export function estaEnPantallaCompleta(): Promise<boolean> {
+  return getCurrentWindow().isFullscreen();
 }
 
 // --- Preferencias -------------------------------------------------------------------

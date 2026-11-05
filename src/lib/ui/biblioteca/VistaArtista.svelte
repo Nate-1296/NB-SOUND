@@ -13,17 +13,16 @@
     bibliotecaArtista,
     bibliotecaPistas,
     type ConsultaPistas,
-    fijarFavorita,
     type PistaResumen,
     reproducirLista,
     urlPortada
-  } from '$core/ipc';
-  import { reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import FilaPista from '$ui/biblioteca/FilaPista.svelte';
-  import Icon from '$ui/Icon.svelte';
-  import ListaVirtual from '$ui/lista/ListaVirtual.svelte';
-  import { TAM_BLOQUE } from '$ui/lista/ventana';
+  } from '#lib/core/ipc/index.ts';
+  import { reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
+  import Icon from '#lib/ui/Icon.svelte';
+  import ListaVirtual from '#lib/ui/lista/ListaVirtual.svelte';
+  import { TAM_BLOQUE } from '#lib/ui/lista/ventana.ts';
 
   const t = textos.biblioteca;
   const id = $derived(Number(page.url.searchParams.get('id')));
@@ -56,13 +55,6 @@
 
   async function cargarBloque(b: number): Promise<PistaResumen[]> {
     return (await bibliotecaPistas(consulta, b * TAM_BLOQUE, TAM_BLOQUE)).pistas;
-  }
-
-  let favoritas = $state(new Map<number, boolean>());
-  function alternarFavorita(p: PistaResumen) {
-    const nueva = !(favoritas.get(p.id) ?? p.favorita);
-    favoritas = new Map(favoritas).set(p.id, nueva);
-    void fijarFavorita(p.id, nueva);
   }
 </script>
 
@@ -146,14 +138,11 @@
             {#snippet fila(p: PistaResumen, i: number, rapido: boolean)}
               <FilaPista
                 contexto="artista"
-                pista={{ ...p, favorita: favoritas.get(p.id) ?? p.favorita }}
+                pista={p}
                 numero={i + 1}
                 {rapido}
                 sonando={reproductor.instantanea.pistaId === p.id}
                 onreproducir={() => reproducirLista(consulta, i)}
-                onanadir={() =>
-                  reproductor.orden({ tipo: 'agregar', ids: [p.id], justoDespues: false })}
-                onfavorita={() => alternarFavorita(p)}
               />
             {/snippet}
           </ListaVirtual>

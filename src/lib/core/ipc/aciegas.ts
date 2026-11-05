@@ -11,7 +11,7 @@ import type {
   ResultadoIntento,
   RetoVisible,
   Ronda
-} from '$lib/bindings';
+} from '#lib/bindings/index.ts';
 
 import { call } from './index';
 

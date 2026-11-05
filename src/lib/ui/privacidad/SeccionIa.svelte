@@ -6,11 +6,11 @@
   clave va al llavero del sistema, del que nunca vuelve a la interfaz.
 -->
 <script lang="ts">
-  import type { ProveedorIa } from '$core/ipc';
-  import { privacidad } from '$core/privacidad.svelte';
-  import { textos } from '$lib/i18n';
-  import { textosAparte } from '$lib/i18n/aparte';
-  import MenuSelector from '$ui/MenuSelector.svelte';
+  import type { ProveedorIa } from '#lib/core/ipc/index.ts';
+  import { privacidad } from '#lib/core/privacidad.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
+  import MenuSelector from '#lib/ui/MenuSelector.svelte';
 
   const t = textos.ajustes;
   const a = textosAparte.privacidad;

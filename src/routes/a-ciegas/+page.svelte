@@ -3,6 +3,6 @@
   arranque (`check-paquete`).
 -->
 
-{#await import('$ui/aciegas/VistaACiegas.svelte') then m}
+{#await import('#lib/ui/aciegas/VistaACiegas.svelte') then m}
   <m.default />
 {/await}

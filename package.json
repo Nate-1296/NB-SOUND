@@ -4,6 +4,10 @@
   "description": "Aplicación de escritorio para la música local: reproducir, catalogar, karaoke y DJ",
   "license": "GPL-3.0-or-later",
   "type": "module",
+  "imports": {
+    "#lib": "./src/lib",
+    "#lib/*": "./src/lib/*"
+  },
   "private": true,
   "repository": {
     "type": "git",

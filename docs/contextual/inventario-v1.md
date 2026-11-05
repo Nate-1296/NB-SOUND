@@ -24,7 +24,7 @@ Base: NB Sound v1.1.16. Unas 111.000 líneas: 60.000 de Python de aplicación (`
 | Letras sincronizadas | `VistaLyrics.qml`, `external/lyrics_client.py` | Se porta | F2.2.6, F4.1.11 | Hecha |
 | Reproducción expandida y minirreproductor | `VistaReproduccionExpandida.qml` | Se porta | F2.2.6 | Hecha |
 | Perfil (identidad musical, ánimo, actividad) | `VistaPerfil.qml` | Se porta como **Tu música** | F2.2.8 | Hecha (Tu música) |
-| Temas (unas 60 paletas, un PNG de logo por paleta) | `ui/modelos_qml.py`, `ui/qml/assets/logo/` | Se rediseña: Material 3, color por portada, las paletas como acentos | F0.2.7, F2.2.7 | Rediseñada (los 63 temas, generados, y el color por portada) |
+| Temas (unas 60 paletas, un PNG de logo por paleta) | `ui/modelos_qml.py`, `ui/qml/assets/logo/` | Se rediseña: Material 3, color por portada, las paletas como acentos | F0.2.7, F2.2.7 | Rediseñada (los 63 temas, generados, cada uno con su logo de la V1, y el color por portada) |
 | Importación | `VistaImportacion.qml`, `core/pipeline.py` | Se rediseña: sin vista; arrastrar, carpeta vigilada y **Por revisar** | F4.2 | Rediseñada (arrastrar, "Añadir música", carpeta vigilada y Por revisar) |
 | Catalogación: normalización, AcoustID, MusicBrainz, Shazam, iTunes, segunda y tercera etapa, desempate por IA | `core/`, `external/` | Se porta | F4.1 | Hecha (`catalogo/`), con la decisión de la V1 reproducida en 400 casos grabados |
 | Duplicados exactos y semánticos | `core/dedupe.py`, `servicios/dedupe_observable.py` | Se porta | F4.1.8 | Hecha |

@@ -3,6 +3,6 @@
   (`check-paquete`).
 -->
 
-{#await import('$ui/playlists/VistaPlaylistDetalle.svelte') then m}
+{#await import('#lib/ui/playlists/VistaPlaylistDetalle.svelte') then m}
   <m.default />
 {/await}

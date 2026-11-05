@@ -15,7 +15,9 @@ use crate::error::{NsError, NsResult};
 pub const CERTIFICADO: &str = "sync_cert.pem";
 pub const CLAVE: &str = "sync_key.pem";
 
-fn base64(texto: &str) -> Option<Vec<u8>> {
+/// Base64 estándar, sin dependencias: lo usan el PEM de la V1 y las firmas de las
+/// actualizaciones.
+pub(crate) fn base64(texto: &str) -> Option<Vec<u8>> {
     let valor = |c: u8| -> Option<u32> {
         Some(match c {
             b'A'..=b'Z' => c - b'A',

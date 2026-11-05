@@ -10,13 +10,13 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { aparienciaActual } from '$core/apariencia.svelte';
-  import { estadoPantalla } from '$core/estadoVistas.svelte';
-  import { ambienteDePista, type Letra, letraDePista, urlPortada } from '$core/ipc';
-  import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import Icon from '$ui/Icon.svelte';
-  import { aplicarApariencia, semillaDesdeHsl } from '$ui/tema';
+  import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
+  import { pantalla } from '#lib/core/pantalla.svelte.ts';
+  import { ambienteDePista, type Letra, letraDePista, urlPortada } from '#lib/core/ipc/index.ts';
+  import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import Icon from '#lib/ui/Icon.svelte';
+  import { aplicarApariencia, semillaDesdeHsl } from '#lib/ui/tema.ts';
 
   const t = textos.reproduciendo;
   const pista = $derived(reproductor.pista);
@@ -104,10 +104,7 @@
 </script>
 
 <section class="vista" class:modo-letras={modo === 'letras'} bind:this={vista}>
-  <header
-    class="cabecera-vista"
-    class:oculta={estadoPantalla.enPantallaCompleta && !estadoPantalla.controlesVisibles}
-  >
+  <header class="cabecera-vista" class:oculta={pantalla.completa && !pantalla.controlesVisibles}>
     <button type="button" class="volver" onclick={volver} title={t.volver}>
       <Icon nombre="atras" tamano={18} />
       <span>{t.volver}</span>

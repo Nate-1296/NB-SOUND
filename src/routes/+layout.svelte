@@ -5,8 +5,8 @@
   import '../app.css';
 
   import { page } from '$app/state';
-  import { aparienciaActual } from '$core/apariencia.svelte';
-  import AppShell from '$ui/AppShell.svelte';
+  import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
+  import AppShell from '#lib/ui/AppShell.svelte';
 
   let { children } = $props();
 

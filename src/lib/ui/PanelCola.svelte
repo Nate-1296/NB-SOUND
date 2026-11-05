@@ -6,10 +6,10 @@
   arrastrando o, con el teclado, con Alt+Arriba y Alt+Abajo sobre la fila.
 -->
 <script lang="ts">
-  import { type PistaResumen, pistasResumen, urlPortada } from '$core/ipc';
-  import { duracionLarga } from '$core/formato';
-  import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
+  import { type PistaResumen, pistasResumen, urlPortada } from '#lib/core/ipc/index.ts';
+  import { duracionLarga } from '#lib/core/formato.ts';
+  import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
 
   import Icon from './Icon.svelte';
 

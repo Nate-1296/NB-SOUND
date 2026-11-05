@@ -5,17 +5,17 @@
   con quitar. Sustituye a la vista Sincronización de la V1.
 -->
 <script lang="ts">
-  import { type PlaylistResumen, playlistsListar } from '$core/ipc';
+  import { type PlaylistResumen, playlistsListar } from '#lib/core/ipc/index.ts';
   import {
     copiaDispositivoEjecutar,
     type EstructuraCarpetas,
     type OrigenCopia
-  } from '$core/ipc/aparte';
-  import { telefonos } from '$core/movil.svelte';
-  import { textos } from '$lib/i18n';
-  import { textosAparte } from '$lib/i18n/aparte';
-  import Icon from '$ui/Icon.svelte';
-  import MenuSelector from '$ui/MenuSelector.svelte';
+  } from '#lib/core/ipc/aparte.ts';
+  import { telefonos } from '#lib/core/movil.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
+  import Icon from '#lib/ui/Icon.svelte';
+  import MenuSelector from '#lib/ui/MenuSelector.svelte';
 
   import BloqueFiesta from './BloqueFiesta.svelte';
   import DialogoConectar from './DialogoConectar.svelte';

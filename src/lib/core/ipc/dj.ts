@@ -4,7 +4,13 @@
  */
 
 import type { UnlistenFn } from '@tauri-apps/api/event';
-import type { FilaHistorial, PedidoDj, PistaDeSesion, Tecnica, VistaSesionDj } from '$lib/bindings';
+import type {
+  FilaHistorial,
+  PedidoDj,
+  PistaDeSesion,
+  Tecnica,
+  VistaSesionDj
+} from '#lib/bindings/index.ts';
 
 import { call, escuchar } from './index';
 

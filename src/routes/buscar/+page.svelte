@@ -16,18 +16,17 @@
     bibliotecaArtistas,
     bibliotecaPistas,
     type ConsultaPistas,
-    fijarFavorita,
     type PistaResumen,
     type PlaylistResumen,
     playlistsListar,
     reproducirLista,
     urlPortada
-  } from '$core/ipc';
-  import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import FilaPista from '$ui/biblioteca/FilaPista.svelte';
-  import Icon from '$ui/Icon.svelte';
-  import Mosaico from '$ui/playlists/Mosaico.svelte';
+  } from '#lib/core/ipc/index.ts';
+  import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
+  import Icon from '#lib/ui/Icon.svelte';
+  import Mosaico from '#lib/ui/playlists/Mosaico.svelte';
 
   const t = textos.busqueda;
   const q = $derived((page.url.searchParams.get('q') ?? '').trim());
@@ -51,12 +50,6 @@
   });
 
   let version = 0;
-  let favoritas = $state(new Map<number, boolean>());
-  function alternarFavorita(p: PistaResumen) {
-    const nueva = !(favoritas.get(p.id) ?? p.favorita);
-    favoritas = new Map(favoritas).set(p.id, nueva);
-    void fijarFavorita(p.id, nueva);
-  }
   $effect(() => {
     const texto = q;
     const c = consulta;
@@ -115,13 +108,13 @@
   </header>
 
   {#if q}
-    {#await import('$ui/descubrir/SeccionesDescubrir.svelte') then m}
+    {#await import('#lib/ui/descubrir/SeccionesDescubrir.svelte') then m}
       <m.default consulta={q} />
     {/await}
   {/if}
 
   {#if !q}
-    {#await import('$ui/buscar/BienvenidaBuscar.svelte') then m}
+    {#await import('#lib/ui/buscar/BienvenidaBuscar.svelte') then m}
       <m.default onseleccionar={(idea) => goto(`/buscar?q=${encodeURIComponent(idea)}`)} />
     {/await}
   {:else if nada}
@@ -200,13 +193,10 @@
         {#each pistas as p, i (p.id)}
           <li>
             <FilaPista
-              pista={{ ...p, favorita: favoritas.get(p.id) ?? p.favorita }}
+              pista={p}
               numero={i + 1}
               sonando={reproductor.instantanea.pistaId === p.id}
               onreproducir={() => reproducirLista(consulta, i)}
-              onanadir={() =>
-                reproductor.orden({ tipo: 'agregar', ids: [p.id], justoDespues: false })}
-              onfavorita={() => alternarFavorita(p)}
               oncambiada={() => {
                 version += 1;
               }}

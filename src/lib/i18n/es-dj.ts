@@ -2,7 +2,7 @@
  * Textos del DJ Privado (F6.1.6). Van aparte del arranque, como `es-aparte.ts`:
  * solo los importa la vista del DJ, que se carga a demanda.
  */
-import type { Tecnica } from '$lib/bindings';
+import type { Tecnica } from '#lib/bindings/index.ts';
 
 export const esDj = {
   titulo: 'DJ Privado',

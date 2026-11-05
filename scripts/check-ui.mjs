@@ -249,7 +249,7 @@ for (const archivo of recorrer(FUENTE)) {
       archivo,
       texto,
       m.index ?? 0,
-      'un medio reproducido desde el esquema propio: WebKitGTK no lo reproduce; tráelo con `enBlob` de `$lib/voz/preparado`'
+      'un medio reproducido desde el esquema propio: WebKitGTK no lo reproduce; tráelo con `enBlob` de `#lib/voz/preparado`'
     );
   }
 

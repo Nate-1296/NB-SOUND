@@ -14,8 +14,8 @@
     fiestaModoAutomatico,
     fiestaRegenerarQr,
     fiestaResolverSugerencia
-  } from '$core/ipc/aparte';
-  import { textosAparte } from '$lib/i18n/aparte';
+  } from '#lib/core/ipc/aparte.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
 
   const tf = textosAparte.modoFiesta;
 

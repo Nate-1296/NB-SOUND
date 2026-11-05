@@ -3,6 +3,6 @@
   (`check-paquete`).
 -->
 
-{#await import('$ui/reproduciendo/VistaReproduciendo.svelte') then m}
+{#await import('#lib/ui/reproduciendo/VistaReproduciendo.svelte') then m}
   <m.default />
 {/await}

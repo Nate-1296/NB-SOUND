@@ -4,17 +4,17 @@
   temas y las tipografías. Se cargan aparte del arranque (`check-paquete`).
 -->
 <script lang="ts">
-  import { aparienciaActual } from '$core/apariencia.svelte';
+  import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
   import {
     type AjustesEcualizador,
     ecualizador,
     type PreseleccionEcualizador,
     preseleccionesEcualizador
-  } from '$core/ipc';
-  import { reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import MenuSelector from '$ui/MenuSelector.svelte';
-  import type { TemaV1 } from '$ui/temas-v1';
+  } from '#lib/core/ipc/index.ts';
+  import { reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import MenuSelector from '#lib/ui/MenuSelector.svelte';
+  import type { TemaV1 } from '#lib/ui/temas-v1.ts';
 
   interface Props {
     seccion?: 'reproduccion' | 'apariencia';
@@ -69,7 +69,7 @@
   // Los 63 temas se cargan aparte: no pesan en el arranque (`check-paquete`).
   let temas = $state<readonly TemaV1[]>([]);
   $effect(() => {
-    void import('$ui/temas-v1').then((m) => (temas = m.TEMAS_V1));
+    void import('#lib/ui/temas-v1.ts').then((m) => (temas = m.TEMAS_V1));
   });
 
   function esClaro(fondo: string): boolean {

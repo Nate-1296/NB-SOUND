@@ -12,7 +12,7 @@
  * alguien, dentro de un año, llame al cliente HTTP desde otro módulo porque le
  * queda a mano. Esto lo impide.
  *
- * Es el mismo mecanismo que mantiene el puente IPC dentro de `$core/ipc`, y por
+ * Es el mismo mecanismo que mantiene el puente IPC dentro de `#lib/core/ipc`, y por
  * el mismo motivo.
  *
  * Uso: node scripts/check-network.mjs

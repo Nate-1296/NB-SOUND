@@ -5,9 +5,9 @@
   diálogo lo dice y se cierra solo.
 -->
 <script lang="ts">
-  import { type Emparejar, movilEmparejar } from '$core/ipc';
-  import { telefonos } from '$core/movil.svelte';
-  import { textos } from '$lib/i18n';
+  import { type Emparejar, movilEmparejar } from '#lib/core/ipc/index.ts';
+  import { telefonos } from '#lib/core/movil.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
 
   interface Props {
     abierto: boolean;

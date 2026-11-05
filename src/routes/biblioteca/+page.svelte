@@ -2,10 +2,10 @@
   Biblioteca: carga diferida para mantener el presupuesto de arranque (F0.4.7).
 -->
 <script lang="ts">
-  import { textos } from '$lib/i18n';
+  import { textos } from '#lib/i18n/index.ts';
 </script>
 
-{#await import('$ui/biblioteca/VistaBiblioteca.svelte')}
+{#await import('#lib/ui/biblioteca/VistaBiblioteca.svelte')}
   <div class="cargando-contenedor">
     <p class="cargando">{textos.biblioteca.cargando}...</p>
   </div>

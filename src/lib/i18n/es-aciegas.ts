@@ -2,7 +2,7 @@
  * Textos de A ciegas (F6.2.2). Van aparte del arranque: solo los importa la vista
  * del juego, que se carga a demanda.
  */
-import type { Indicio, Modo } from '$lib/bindings';
+import type { Indicio, Modo } from '#lib/bindings/index.ts';
 
 export const esACiegas = {
   titulo: 'A ciegas',

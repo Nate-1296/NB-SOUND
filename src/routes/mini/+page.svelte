@@ -6,10 +6,11 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { cerrarEstaVentana, fijarFavorita, urlPortada } from '$core/ipc';
-  import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import Icon from '$ui/Icon.svelte';
+  import { favoritas } from '#lib/core/acciones.svelte.ts';
+  import { cerrarEstaVentana, urlPortada } from '#lib/core/ipc/index.ts';
+  import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import Icon from '#lib/ui/Icon.svelte';
 
   const t = textos.reproductor;
   const i = $derived(reproductor.instantanea);
@@ -19,11 +20,6 @@
   onMount(() => {
     void reproductor.arrancar();
   });
-
-  async function alternarFavorita() {
-    if (!pista) return;
-    void fijarFavorita(pista.id, !pista.favorita);
-  }
 </script>
 
 <main class="mini" data-tauri-drag-region>
@@ -53,10 +49,10 @@
             <button
               type="button"
               class="boton-accion"
-              class:favorita={pista.favorita}
-              aria-label={pista.favorita ? t.quitarFavorita : t.marcarFavorita}
-              title={pista.favorita ? t.quitarFavorita : t.marcarFavorita}
-              onclick={alternarFavorita}
+              class:favorita={favoritas.es(pista)}
+              aria-label={favoritas.es(pista) ? t.quitarFavorita : t.marcarFavorita}
+              title={favoritas.es(pista) ? t.quitarFavorita : t.marcarFavorita}
+              onclick={() => pista && favoritas.alternar(pista)}
             >
               <Icon nombre="favorito" tamano={16} />
             </button>

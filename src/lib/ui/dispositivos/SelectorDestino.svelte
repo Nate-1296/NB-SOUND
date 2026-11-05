@@ -8,8 +8,8 @@
   qué suena en este equipo y qué teléfono lo controla, y se puede conectar uno.
 -->
 <script lang="ts">
-  import { telefonos } from '$core/movil.svelte';
-  import { textos } from '$lib/i18n';
+  import { telefonos } from '#lib/core/movil.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
 
   import DialogoConectar from './DialogoConectar.svelte';
   import Icon from '../Icon.svelte';

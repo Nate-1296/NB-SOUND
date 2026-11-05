@@ -15,7 +15,6 @@
     bibliotecaArtistas,
     bibliotecaPistas,
     type ConsultaPistas,
-    fijarFavorita,
     type OrdenAlbumes,
     type OrdenArtistas,
     type OrdenPistas,
@@ -24,15 +23,15 @@
     urlPortada,
     karaokeEstado,
     karaokePrepararFavoritas
-  } from '$core/ipc';
-  import { estadoBiblioteca, type ModoRejilla } from '$core/estadoVistas.svelte';
-  import { reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import FilaPista from '$ui/biblioteca/FilaPista.svelte';
-  import Icon from '$ui/Icon.svelte';
-  import ListaVirtual from '$ui/lista/ListaVirtual.svelte';
-  import MenuSelector from '$ui/MenuSelector.svelte';
-  import { TAM_BLOQUE } from '$ui/lista/ventana';
+  } from '#lib/core/ipc/index.ts';
+  import { estadoBiblioteca, type ModoRejilla } from '#lib/core/estadoVistas.svelte.ts';
+  import { reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
+  import Icon from '#lib/ui/Icon.svelte';
+  import ListaVirtual from '#lib/ui/lista/ListaVirtual.svelte';
+  import MenuSelector from '#lib/ui/MenuSelector.svelte';
+  import { TAM_BLOQUE } from '#lib/ui/lista/ventana.ts';
 
   type Vista = 'albumes' | 'artistas' | 'pistas';
   const t = textos.biblioteca;
@@ -190,12 +189,6 @@
   }
 
   // Una favorita cambia en el sitio, sin recargar la lista.
-  let favoritasCambiadas = $state(new Map<number, boolean>());
-  function alternarFavorita(p: PistaResumen) {
-    const nueva = !(favoritasCambiadas.get(p.id) ?? p.favorita);
-    favoritasCambiadas = new Map(favoritasCambiadas).set(p.id, nueva);
-    void fijarFavorita(p.id, nueva);
-  }
 
   // --- Álbumes y artistas: por páginas que se añaden al llegar al final ---
   let albumes = $state<AlbumResumen[]>([]);
@@ -444,7 +437,7 @@
   {#if vista === 'pistas'}
     {#if avisoFavoritas && paraCantar}<p class="aviso" role="status">{avisoFavoritas}</p>{/if}
     {#if ofertaKaraoke}
-      {#await import('$ui/agregados/OfertaAgregado.svelte') then m}
+      {#await import('#lib/ui/agregados/OfertaAgregado.svelte') then m}
         <m.default id="karaoke" oncerrar={() => (ofertaKaraoke = false)} />
       {/await}
     {/if}
@@ -462,14 +455,11 @@
             <ListaVirtual {total} altoFila={66} {cargarBloque} etiqueta={t.lista}>
               {#snippet fila(p: PistaResumen, i: number, rapido: boolean)}
                 <FilaPista
-                  pista={{ ...p, favorita: favoritasCambiadas.get(p.id) ?? p.favorita }}
+                  pista={p}
                   numero={i + 1}
                   {rapido}
                   sonando={reproductor.instantanea.pistaId === p.id}
                   onreproducir={() => reproducirLista(consulta, i)}
-                  onanadir={() =>
-                    reproductor.orden({ tipo: 'agregar', ids: [p.id], justoDespues: false })}
-                  onfavorita={() => alternarFavorita(p)}
                   oncambiada={() => recargas++}
                 />
               {/snippet}

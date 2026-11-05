@@ -5,10 +5,10 @@
   construye mientras suena.
 -->
 <script lang="ts">
-  import { djPedir } from '$core/ipc/dj';
-  import { textosDj } from '$lib/i18n/dj';
-  import Icon from '$ui/Icon.svelte';
-  import Spinner from '$ui/Spinner.svelte';
+  import { djPedir } from '#lib/core/ipc/dj.ts';
+  import { textosDj } from '#lib/i18n/dj.ts';
+  import Icon from '#lib/ui/Icon.svelte';
+  import Spinner from '#lib/ui/Spinner.svelte';
 
   interface Props {
     onpedida: (sesionId: number) => void;

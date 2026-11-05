@@ -10,9 +10,15 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { aparienciaActual } from '$core/apariencia.svelte';
-  import { AJUSTES, estaActivo, POR_REVISAR, SECCIONES, type Destino } from '$core/navegacion';
-  import { textos } from '$lib/i18n';
+  import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
+  import {
+    AJUSTES,
+    estaActivo,
+    POR_REVISAR,
+    SECCIONES,
+    type Destino
+  } from '#lib/core/navegacion.ts';
+  import { textos } from '#lib/i18n/index.ts';
 
   import Icon from './Icon.svelte';
 

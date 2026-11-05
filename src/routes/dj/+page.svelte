@@ -3,6 +3,6 @@
   arranque (`check-paquete`).
 -->
 
-{#await import('$ui/dj/VistaDj.svelte') then m}
+{#await import('#lib/ui/dj/VistaDj.svelte') then m}
   <m.default />
 {/await}

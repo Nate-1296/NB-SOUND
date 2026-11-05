@@ -4,14 +4,15 @@
   las playlists manuales y, arriba, crear una nueva con la canción dentro.
 -->
 <script lang="ts">
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import {
     agregarAPlaylist,
     type PlaylistResumen,
     playlistPistas,
     playlistsListar,
     quitarDePlaylist
-  } from '$core/ipc';
-  import { textos } from '$lib/i18n';
+  } from '#lib/core/ipc/index.ts';
+  import { textos } from '#lib/i18n/index.ts';
 
   import Icon from '../Icon.svelte';
   import DialogoPlaylist from './DialogoPlaylist.svelte';
@@ -59,19 +60,13 @@
       await quitarDePlaylist(p.id, pistas[0]);
       contenidas.delete(p.id);
       contenidas = new Set(contenidas);
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', {
-          detail: { tipo: 'info', mensaje: t.quitada(p.nombre) }
-        })
-      );
+      notificar.informacion(t.quitada(p.nombre));
     } else {
       const entraron = await agregarAPlaylist(p.id, pistas);
       contenidas.add(p.id);
       contenidas = new Set(contenidas);
       const msg = entraron > 0 ? t.anadida(p.nombre) : t.yaEstaba(p.nombre);
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', { detail: { tipo: 'exito', mensaje: msg } })
-      );
+      notificar.exito(msg);
     }
   }
 </script>
@@ -109,11 +104,7 @@
     void agregarAPlaylist(id, pistas).then(() => {
       contenidas.add(id);
       contenidas = new Set(contenidas);
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', {
-          detail: { tipo: 'exito', mensaje: t.anadida(nombre) }
-        })
-      );
+      notificar.exito(t.anadida(nombre));
     });
   }}
   oncerrar={() => (creando = false)}

@@ -7,7 +7,6 @@
  * no se puede guardar, el interruptor vuelve a como estaba.
  */
 
-import type { AjustesIa, PoliticaDeRed, ProveedorIa, Servicio } from '$core/ipc';
 import {
   ajustesIa,
   borrarClaveIa,
@@ -15,7 +14,8 @@ import {
   guardarAjustesIa,
   guardarClaveIa,
   politicaRed
-} from '$core/ipc/aparte';
+} from '#lib/core/ipc/aparte.ts';
+import type { AjustesIa, PoliticaDeRed, ProveedorIa, Servicio } from '#lib/core/ipc/index.ts';
 
 /** Los servicios de la sección Privacidad, en el orden de `net.rs`. La IA tiene su
  * sección y los agregados la suya (Fase 5). */

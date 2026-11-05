@@ -6,19 +6,25 @@
   de canciones, álbumes y artistas.
 -->
 <script lang="ts">
-  import { aparienciaActual } from '$core/apariencia.svelte';
-  import { duracionDetallada } from '$core/formato';
-  import { type Perfil, perfil, perfilCambiarFoto, urlFotoPerfil, urlPortada } from '$core/ipc';
+  import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
+  import { duracionDetallada } from '#lib/core/formato.ts';
+  import {
+    type Perfil,
+    perfil,
+    perfilCambiarFoto,
+    urlFotoPerfil,
+    urlPortada
+  } from '#lib/core/ipc/index.ts';
   import {
     exportarResumenEscucha,
     type RadarAnimos,
     type ResumenEscucha,
     resumenEscucha
-  } from '$core/ipc/aparte';
-  import { reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import { textosAparte } from '$lib/i18n/aparte';
-  import Icon from '$ui/Icon.svelte';
+  } from '#lib/core/ipc/aparte.ts';
+  import { reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
+  import Icon from '#lib/ui/Icon.svelte';
 
   const t = textos.tuMusica;
   const tr = textosAparte.resumenEscucha;

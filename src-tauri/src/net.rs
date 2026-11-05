@@ -419,81 +419,133 @@ pub async fn buscar_actualizacion<R: tauri::Runtime>(
     }))
 }
 
+/// Un destino de descarga en memoria, para lo que se verifica entero antes de
+/// usarse (la actualización de un paquete del sistema).
 #[cfg(target_os = "linux")]
-struct ArchivoDestino(std::fs::File);
+#[derive(Default)]
+struct EnMemoria(Vec<u8>);
 
 #[cfg(target_os = "linux")]
-impl Destino for ArchivoDestino {
+impl Destino for EnMemoria {
     fn empezar(&mut self, continuada: bool) -> std::io::Result<()> {
-        use std::io::Seek;
-        if continuada {
-            self.0.seek(std::io::SeekFrom::End(0)).map(|_| ())
-        } else {
-            self.0.set_len(0)?;
-            self.0.seek(std::io::SeekFrom::Start(0)).map(|_| ())
+        if !continuada {
+            self.0.clear();
         }
+        Ok(())
     }
 
     fn escribir(&mut self, bloque: &[u8]) -> std::io::Result<()> {
-        use std::io::Write;
-        self.0.write_all(bloque)
+        self.0.extend_from_slice(bloque);
+        Ok(())
     }
 }
 
+/// El texto de minisign que Tauri guarda otra vez en base64 (clave o firma).
 #[cfg(target_os = "linux")]
-async fn actualizar_linux_sistema(red: &Red, version: &str) -> NsResult<bool> {
-    const CLAVE_PUBLICA: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU1RDkwQTgyMzREQjM4QTcKUldTbk9OczBnZ3JaVmRhV1VqM1VjQXVmOGZxOFBMZk5zemV0Ums4WXBYMWlyM2x6TUt0Qk5ocy8K";
-    let url_tar = format!("https://github.com/Nate-1296/NB-SOUND/releases/download/v{version}/NB.Sound_{version}_amd64.tar.gz");
-    let url_sig = format!("{url_tar}.sig");
+fn texto_de_tauri(b64: &[u8]) -> Option<String> {
+    let b = crate::identidad_movil::base64(std::str::from_utf8(b64).ok()?)?;
+    String::from_utf8(b).ok()
+}
 
-    // 1. Descargar la firma de la publicación
-    let sig_bytes = red.obtener(Servicio::Actualizaciones, &url_sig, &[])?;
-    let sig_str = std::str::from_utf8(&sig_bytes).map_err(|_| NsError::IntegrityMismatch)?;
-    let sig =
-        minisign_verify::Signature::decode(sig_str).map_err(|_| NsError::IntegrityMismatch)?;
-    let pk = minisign_verify::PublicKey::from_base64(CLAVE_PUBLICA)
-        .map_err(|_| NsError::IntegrityMismatch)?;
+/// La clave pública de `tauri.conf.json`, como la escribe `tauri signer`.
+#[cfg(target_os = "linux")]
+fn clave_de_tauri(b64: &str) -> Option<minisign_verify::PublicKey> {
+    minisign_verify::PublicKey::decode(&texto_de_tauri(b64.as_bytes())?).ok()
+}
 
-    // 2. Descargar el archivo tarball a un archivo temporal
-    let ruta_tar = std::env::temp_dir().join(format!("nb-sound-update-{version}.tar.gz"));
-    {
-        let archivo = std::fs::File::create(&ruta_tar).map_err(|_| NsError::StorageFailure)?;
-        let mut destino = ArchivoDestino(archivo);
-        red.descargar(
-            Servicio::Actualizaciones,
-            &url_tar,
-            0,
-            &mut destino,
-            &mut |_| {},
-        )?;
-    }
+/// Comprueba `contenido` con una firma de `tauri signer`. Las dos llegan como las
+/// escribe Tauri: el texto de minisign (clave o firma) codificado otra vez en
+/// base64. Es la misma comprobación que hace el plugin con lo que instala él.
+///
+/// # Errors
+///
+/// [`NsError::IntegrityMismatch`] si la clave o la firma no se entienden o no
+/// corresponden al contenido.
+#[cfg(target_os = "linux")]
+fn verificar_firma(clave_publica: &str, firma: &[u8], contenido: &[u8]) -> NsResult<()> {
+    let clave = clave_de_tauri(clave_publica).ok_or(NsError::IntegrityMismatch)?;
+    let firma = texto_de_tauri(firma)
+        .and_then(|t| minisign_verify::Signature::decode(&t).ok())
+        .ok_or(NsError::IntegrityMismatch)?;
+    clave
+        .verify(contenido, &firma, false)
+        .map_err(|_| NsError::IntegrityMismatch)
+}
 
-    // 3. Comprobar la firma criptográfica del tarball
-    let bytes_tar = std::fs::read(&ruta_tar).map_err(|_| NsError::StorageFailure)?;
-    if pk.verify(&bytes_tar, &sig, false).is_err() {
-        let _ = std::fs::remove_file(&ruta_tar);
-        return Err(NsError::IntegrityMismatch);
-    }
-    drop(bytes_tar);
+/// El archivo `.tar.gz` de la misma publicación que `descarga` (la URL del
+/// paquete que eligió el plugin): se cambia solo el último tramo, para no repetir
+/// aquí el repositorio.
+#[cfg(target_os = "linux")]
+fn url_hermana(descarga: &str, version: &str) -> Option<String> {
+    let (base, _) = descarga.rsplit_once('/')?;
+    Some(format!("{base}/NB.Sound_{version}_amd64.tar.gz"))
+}
 
-    // 4. Extraer en la raíz del sistema mediante sudo -n o pkexec
-    let ruta_str = ruta_tar.to_string_lossy().to_string();
-    let res_sudo = std::process::Command::new("sudo")
-        .args(["-n", "tar", "-xzf", &ruta_str, "-C", "/"])
-        .status();
-
-    let exito = match res_sudo {
-        Ok(s) if s.success() => true,
-        _ => {
-            let res_pkexec = std::process::Command::new("pkexec")
-                .args(["tar", "-xzf", &ruta_str, "-C", "/"])
-                .status();
-            matches!(res_pkexec, Ok(s) if s.success())
-        }
+/// Si esta instalación es un paquete del sistema que su gestor no puede
+/// actualizar: el `.tar.gz` de Linux se hace con el contenido del `.deb` (y el
+/// binario dice ser un `.deb`), pero se instala en distribuciones sin `dpkg`,
+/// como Arch. Ahí el plugin descargaría el `.deb` para fallar al instalarlo.
+#[cfg(target_os = "linux")]
+fn paquete_sin_gestor() -> bool {
+    use tauri::utils::config::BundleType;
+    let gestor = match tauri::utils::platform::bundle_type() {
+        Some(BundleType::Deb) => "dpkg",
+        Some(BundleType::Rpm) => "rpm",
+        _ => return false,
     };
+    let en_path = std::env::var_os("PATH")
+        .is_some_and(|path| std::env::split_paths(&path).any(|d| d.join(gestor).is_file()));
+    !en_path
+}
 
-    let _ = std::fs::remove_file(&ruta_tar);
-    Ok(exito)
+/// Instala el `.tar.gz` firmado de la publicación sobre `/usr`. Se verifica en
+/// memoria y se le pasa a `tar` por la entrada estándar: entre comprobar la firma
+/// y extraer no hay ningún archivo que otro proceso pueda cambiar. Pide permisos
+/// con `sudo -n` (sin contraseña, si el usuario lo configuró) o, si no, con
+/// `pkexec`, que pregunta en una ventana del sistema.
+#[cfg(target_os = "linux")]
+fn instalar_tar(red: &Red, clave_publica: &str, descarga: &str, version: &str) -> NsResult<()> {
+    use std::io::Write as _;
+    use std::process::{Command, Stdio};
+
+    let url = url_hermana(descarga, version).ok_or(NsError::Internal)?;
+    let firma = red.obtener(Servicio::Actualizaciones, &format!("{url}.sig"), &[])?;
+    let mut paquete = EnMemoria::default();
+    red.descargar(
+        Servicio::Actualizaciones,
+        &url,
+        0,
+        &mut paquete,
+        &mut |_| {},
+    )?;
+    verificar_firma(clave_publica, &firma, &paquete.0)?;
+
+    // Solo lo que cuelga de `usr/`, y sin cambiar los permisos de las carpetas
+    // que ya existen.
+    let argumentos = ["tar", "--no-overwrite-dir", "-xzf", "-", "-C", "/", "usr"];
+    let extraer = |programa: &str, previos: &[&str]| -> bool {
+        let Ok(mut hijo) = Command::new(programa)
+            .args(previos)
+            .args(argumentos)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+        else {
+            return false;
+        };
+        let escrito = hijo
+            .stdin
+            .take()
+            .is_some_and(|mut entrada| entrada.write_all(&paquete.0).is_ok());
+        hijo.wait().is_ok_and(|s| s.success()) && escrito
+    };
+    if extraer("sudo", &["-n"]) || extraer("pkexec", &[]) {
+        Ok(())
+    } else {
+        tracing::warn!("no se pudo instalar el paquete del sistema");
+        Err(NsError::ComponentUnavailable)
+    }
 }
 
 /// Descarga la versión más nueva, comprueba su firma y la instala. Quien llama
@@ -505,35 +557,50 @@ async fn actualizar_linux_sistema(red: &Red, version: &str) -> NsResult<bool> {
 /// no es la de NB Sound.
 pub async fn instalar_actualizacion<R: tauri::Runtime>(
     app: &tauri::AppHandle<R>,
-    red: &Red,
+    red: &std::sync::Arc<Red>,
 ) -> NsResult<bool> {
     let Some(nueva) = consultar(app, red).await? else {
         return Ok(false);
     };
 
-    let resultado = nueva.download_and_install(|_, _| {}, || {}).await;
-    if resultado.is_ok() {
+    #[cfg(target_os = "linux")]
+    if paquete_sin_gestor() {
+        let clave = app
+            .config()
+            .plugins
+            .0
+            .get("updater")
+            .and_then(|u| u.get("pubkey"))
+            .and_then(serde_json::Value::as_str)
+            .ok_or(NsError::Internal)?
+            .to_owned();
+        let red = std::sync::Arc::clone(red);
+        let descarga = nueva.download_url.to_string();
+        let version = nueva.version.clone();
+        tauri::async_runtime::spawn_blocking(move || {
+            instalar_tar(&red, &clave, &descarga, &version)
+        })
+        .await
+        .map_err(|_| NsError::Internal)??;
         return Ok(true);
     }
 
-    let e = resultado.unwrap_err();
-    tracing::warn!("no se pudo instalar la actualización con el actualizador estándar");
-
-    #[cfg(target_os = "linux")]
-    {
-        if let Ok(true) = actualizar_linux_sistema(red, &nueva.version).await {
-            return Ok(true);
-        }
-    }
-
-    Err(match e {
-        tauri_plugin_updater::Error::Minisign(_)
-        | tauri_plugin_updater::Error::SignatureUtf8(_)
-        | tauri_plugin_updater::Error::SignedVersionMismatch { .. }
-        | tauri_plugin_updater::Error::MissingSignedVersion => NsError::IntegrityMismatch,
-        tauri_plugin_updater::Error::Io(_) => NsError::ComponentUnavailable,
-        _ => NsError::NetworkFailure,
-    })
+    nueva
+        .download_and_install(|_, _| {}, || {})
+        .await
+        .map_err(|e| {
+            tracing::warn!("no se pudo instalar la actualización");
+            match e {
+                tauri_plugin_updater::Error::Minisign(_)
+                | tauri_plugin_updater::Error::SignatureUtf8(_)
+                | tauri_plugin_updater::Error::SignedVersionMismatch { .. }
+                | tauri_plugin_updater::Error::MissingSignedVersion => NsError::IntegrityMismatch,
+                // Sin permisos para escribir donde está instalada.
+                tauri_plugin_updater::Error::Io(_) => NsError::ComponentUnavailable,
+                _ => NsError::NetworkFailure,
+            }
+        })?;
+    Ok(true)
 }
 
 /// El anfitrión de una URL `https://`. Las demás no se admiten: nada sale en
@@ -552,6 +619,32 @@ fn anfitrion_de(url: &str) -> Option<&str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn la_clave_de_tauri_conf_se_entiende_y_rechaza_una_firma_ajena() {
+        let conf: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        let clave = conf["plugins"]["updater"]["pubkey"].as_str().unwrap();
+        assert!(clave_de_tauri(clave).is_some());
+        assert_eq!(
+            verificar_firma(clave, b"no es una firma", b"contenido"),
+            Err(NsError::IntegrityMismatch)
+        );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn el_tar_se_busca_en_la_misma_publicacion_que_el_paquete() {
+        assert_eq!(
+            url_hermana(
+                "https://github.com/x/y/releases/download/v2.1.0/NB.Sound_2.1.0_amd64.deb",
+                "2.1.0"
+            )
+            .as_deref(),
+            Some("https://github.com/x/y/releases/download/v2.1.0/NB.Sound_2.1.0_amd64.tar.gz")
+        );
+    }
 
     fn con(servicios: &[Servicio]) -> Red {
         Red::new(PoliticaDeRed {

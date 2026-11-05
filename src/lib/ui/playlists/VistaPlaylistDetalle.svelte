@@ -5,12 +5,12 @@
   creadas por el usuario.
 -->
 <script lang="ts">
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import {
     anclarPlaylist,
     borrarPlaylist,
-    fijarFavorita,
     moverEnPlaylist,
     type PistaResumen,
     type PlaylistResumen,
@@ -18,16 +18,16 @@
     playlistPistas,
     quitarDePlaylist,
     reproducirPlaylist
-  } from '$core/ipc';
-  import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import { esAparte } from '$lib/i18n/es-aparte';
-  import FilaPista from '$ui/biblioteca/FilaPista.svelte';
-  import DialogoConfirmar from '$ui/DialogoConfirmar.svelte';
-  import Icon from '$ui/Icon.svelte';
-  import DialogoInteligente from '$ui/playlists/DialogoInteligente.svelte';
-  import DialogoPlaylist from '$ui/playlists/DialogoPlaylist.svelte';
-  import Mosaico from '$ui/playlists/Mosaico.svelte';
+  } from '#lib/core/ipc/index.ts';
+  import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import { esAparte } from '#lib/i18n/es-aparte.ts';
+  import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
+  import DialogoConfirmar from '#lib/ui/DialogoConfirmar.svelte';
+  import Icon from '#lib/ui/Icon.svelte';
+  import DialogoInteligente from '#lib/ui/playlists/DialogoInteligente.svelte';
+  import DialogoPlaylist from '#lib/ui/playlists/DialogoPlaylist.svelte';
+  import Mosaico from '#lib/ui/playlists/Mosaico.svelte';
 
   const t = textos.playlists;
   const ti = esAparte.inteligentes;
@@ -62,11 +62,7 @@
       await moverEnPlaylist(id, desde, hasta);
     } catch {
       pistas = anterior;
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', {
-          detail: { tipo: 'error', mensaje: esAparte.comun.error }
-        })
-      );
+      notificar.error(esAparte.comun.error);
     }
   }
 
@@ -78,11 +74,7 @@
       version += 1;
     } catch {
       pistas = anterior;
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', {
-          detail: { tipo: 'error', mensaje: esAparte.comun.error }
-        })
-      );
+      notificar.error(esAparte.comun.error);
     }
   }
 
@@ -94,13 +86,6 @@
     if (!datos) return;
     await borrarPlaylist(id);
     await goto('/playlists');
-  }
-
-  function alternarFavorita(i: number) {
-    const p = pistas[i];
-    if (!p) return;
-    pistas[i] = { ...p, favorita: !p.favorita };
-    void fijarFavorita(p.id, !p.favorita);
   }
 </script>
 
@@ -196,9 +181,6 @@
               numero={i + 1}
               sonando={reproductor.instantanea.pistaId === p.id}
               onreproducir={() => reproducirPlaylist(id, i)}
-              onanadir={() =>
-                reproductor.orden({ tipo: 'agregar', ids: [p.id], justoDespues: false })}
-              onfavorita={() => alternarFavorita(i)}
             />
             {#if datos.editable}
               <span class="orden">

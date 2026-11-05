@@ -10,6 +10,12 @@ export const es = {
   app: {
     nombre: 'NB Sound'
   },
+  avisos: {
+    region: 'Avisos',
+    regionFallos: 'Fallos',
+    cerrar: 'Cerrar el aviso',
+    veces: (n: number) => `${n} veces`
+  },
   nav: {
     principal: 'Navegación principal',
     inicio: 'Inicio',
@@ -132,7 +138,17 @@ export const es = {
       masPistas: 'Más pistas'
     },
     reproducir: 'Reproducir',
-    anadirACola: 'Añadir a cola',
+    anadirACola: 'Añadir a la cola',
+    reproducirDespues: 'Reproducir a continuación',
+    anadidasACola: (n: number) =>
+      n === 1 ? 'Añadida a la cola' : `${n.toLocaleString('es')} canciones añadidas a la cola`,
+    sonaraDespues: (n: number) =>
+      n === 1
+        ? 'Sonará a continuación'
+        : `${n.toLocaleString('es')} canciones sonarán a continuación`,
+    colaFallo: 'No se pudo cambiar la cola.',
+    favoritaFallo: 'No se pudo guardar la favorita.',
+    explorarFallo: 'El archivo de esta canción ya no está en el disco.',
     abrirAlbum: 'Abrir álbum',
     abrirArtista: 'Abrir artista',
     marcarFavorita: 'Marcar como favorita',
@@ -144,9 +160,12 @@ export const es = {
     mostrarEnExplorador: 'Mostrar en el explorador',
     borrarCancion: 'Eliminar canción',
     confirmarBorrarTitulo: '¿Eliminar canción?',
-    confirmarBorrarDetalle: (titulo: string) => `Elige cómo deseas eliminar «${titulo}»:`,
-    borrarSoloBiblioteca: 'Quitar solo de la biblioteca',
-    borrarTambienArchivo: 'Eliminar también el archivo del equipo',
+    confirmarBorrarDetalle: (titulo: string) =>
+      `«${titulo}» saldrá de la biblioteca, de tus playlists y del móvil. Su archivo puede quedarse donde está o ir a la papelera, desde donde se recupera.`,
+    borrarSoloBiblioteca: 'Quitar de la biblioteca',
+    borrarTambienArchivo: 'Quitar y mover el archivo a la papelera',
+    borrada: (titulo: string) => `«${titulo}» ya no está en la biblioteca`,
+    borrarFallo: 'No se pudo quitar la canción. Su archivo no se tocó.',
     cancelar: 'Cancelar',
     sonando: 'Reproduciéndose actualmente',
     completando: 'Buscando sus datos',

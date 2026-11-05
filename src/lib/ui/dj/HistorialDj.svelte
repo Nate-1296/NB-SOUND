@@ -5,10 +5,10 @@
 -->
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { alCambiarDj, djEliminar, djHistorial, type FilaHistorial } from '$core/ipc/dj';
-  import { formatoTiempo } from '$core/reproductor.svelte';
-  import { textosDj } from '$lib/i18n/dj';
-  import Icon from '$ui/Icon.svelte';
+  import { alCambiarDj, djEliminar, djHistorial, type FilaHistorial } from '#lib/core/ipc/dj.ts';
+  import { formatoTiempo } from '#lib/core/reproductor.svelte.ts';
+  import { textosDj } from '#lib/i18n/dj.ts';
+  import Icon from '#lib/ui/Icon.svelte';
 
   interface Props {
     seleccionada: number | null;

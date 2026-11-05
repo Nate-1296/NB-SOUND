@@ -21,6 +21,7 @@ pub mod db;
 pub mod descubrir;
 pub mod dj;
 pub mod error;
+pub mod explorador;
 pub mod fiesta;
 pub mod gpu;
 pub mod identidad_movil;
@@ -42,6 +43,7 @@ pub mod rasgos;
 pub mod reproductor;
 pub mod secrets;
 pub mod security;
+pub mod sorpresa;
 pub mod telemetry;
 
 use std::sync::Arc;
@@ -62,6 +64,8 @@ pub struct Estado {
     pub karaoke: karaoke::Karaoke,
     pub dj: dj::director::Director,
     pub equipo: dj::equipo::Equipo,
+    /// Lo que "Sorpréndeme" ya sugirió en esta sesión.
+    pub sorpresa: sorpresa::Sorpresa,
     /// La ronda de A ciegas: vive en memoria, como en la V1.
     pub a_ciegas: Arc<std::sync::Mutex<a_ciegas::Juego>>,
 }
@@ -290,6 +294,7 @@ pub fn run() {
         dj: director,
         equipo: equipo.clone(),
         a_ciegas: Arc::default(),
+        sorpresa: sorpresa::Sorpresa::default(),
     };
     let importador_setup = importador.clone();
     let fiesta_setup = Arc::clone(&servidor_fiesta);
@@ -449,6 +454,7 @@ pub fn run() {
             comandos::fijar_favorita,
             comandos::borrar_pista,
             comandos::mostrar_en_explorador,
+            comandos::sorprendeme,
             comandos::duplicados_resumen,
             comandos::purgar_duplicados,
             comandos::biblioteca_album,

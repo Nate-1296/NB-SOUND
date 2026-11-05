@@ -6,8 +6,8 @@
  * Añadir un destino exige enmendar ese ADR.
  */
 
-import { textos } from '$lib/i18n';
-import type { NombreDeIcono } from '$ui/iconos';
+import { textos } from '#lib/i18n/index.ts';
+import type { NombreDeIcono } from '#lib/ui/iconos.ts';
 
 export interface Destino {
   readonly id: string;

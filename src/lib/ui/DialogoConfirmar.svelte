@@ -5,7 +5,7 @@
   inicial en Cancelar, cierre con Escape y botón de confirmación destacable.
 -->
 <script lang="ts">
-  import { textos } from '$lib/i18n';
+  import { textos } from '#lib/i18n/index.ts';
   import Icon from './Icon.svelte';
 
   interface Props {

@@ -5,9 +5,13 @@
   escuchando mientras se instala. Se carga aparte del arranque.
 -->
 <script lang="ts">
-  import { type EstadoAgregado, type IdAgregado, NsError } from '$core/ipc';
-  import { agregadoInstalar, agregadosEstado, alCambiarLosAgregados } from '$core/ipc/aparte';
-  import { textosAparte } from '$lib/i18n/aparte';
+  import { type EstadoAgregado, type IdAgregado, NsError } from '#lib/core/ipc/index.ts';
+  import {
+    agregadoInstalar,
+    agregadosEstado,
+    alCambiarLosAgregados
+  } from '#lib/core/ipc/aparte.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
 
   interface Props {
     id: IdAgregado;

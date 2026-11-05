@@ -10,7 +10,7 @@ import {
   importacionProgreso,
   type ProgresoImportacion,
   porRevisarContar
-} from '$core/ipc';
+} from '#lib/core/ipc/index.ts';
 
 const QUIETO: ProgresoImportacion = {
   activa: false,

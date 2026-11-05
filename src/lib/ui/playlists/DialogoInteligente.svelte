@@ -3,16 +3,16 @@
   Diálogo para crear o editar una lista inteligente viva (F8.2).
 -->
 <script lang="ts">
-  import { NsError } from '$core/ipc';
+  import { NsError } from '#lib/core/ipc/index.ts';
   import {
     crearPlaylistInteligente,
     editarPlaylistInteligente,
     type OrdenInteligente,
     type ReglaInteligente
-  } from '$core/ipc/aparte';
-  import { textos } from '$lib/i18n';
-  import { esAparte } from '$lib/i18n/es-aparte';
-  import MenuSelector from '$ui/MenuSelector.svelte';
+  } from '#lib/core/ipc/aparte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import { esAparte } from '#lib/i18n/es-aparte.ts';
+  import MenuSelector from '#lib/ui/MenuSelector.svelte';
 
   interface Props {
     abierto: boolean;

@@ -16,17 +16,17 @@
     playlistPistas,
     playlistsListar,
     reproducirPlaylist
-  } from '$core/ipc';
-  import { regenerarPlaylistsAutomaticas } from '$core/ipc/aparte';
-  import { estadoPlaylists, type ModoRejilla } from '$core/estadoVistas.svelte';
-  import { formatoTiempo } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import { esAparte } from '$lib/i18n/es-aparte';
-  import Icon from '$ui/Icon.svelte';
-  import MenuSelector from '$ui/MenuSelector.svelte';
-  import DialogoInteligente from '$ui/playlists/DialogoInteligente.svelte';
-  import DialogoPlaylist from '$ui/playlists/DialogoPlaylist.svelte';
-  import Mosaico from '$ui/playlists/Mosaico.svelte';
+  } from '#lib/core/ipc/index.ts';
+  import { regenerarPlaylistsAutomaticas } from '#lib/core/ipc/aparte.ts';
+  import { estadoPlaylists, type ModoRejilla } from '#lib/core/estadoVistas.svelte.ts';
+  import { formatoTiempo } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import { esAparte } from '#lib/i18n/es-aparte.ts';
+  import Icon from '#lib/ui/Icon.svelte';
+  import MenuSelector from '#lib/ui/MenuSelector.svelte';
+  import DialogoInteligente from '#lib/ui/playlists/DialogoInteligente.svelte';
+  import DialogoPlaylist from '#lib/ui/playlists/DialogoPlaylist.svelte';
+  import Mosaico from '#lib/ui/playlists/Mosaico.svelte';
 
   const t = textos.playlists;
   const ti = esAparte.inteligentes;

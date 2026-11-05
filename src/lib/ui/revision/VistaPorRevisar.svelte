@@ -8,17 +8,17 @@
   la papelera del sistema.
 -->
 <script lang="ts">
-  import { importacion } from '$core/importacion.svelte';
+  import { importacion } from '#lib/core/importacion.svelte.ts';
   import {
     type Pendiente,
     porRevisarDescartar,
     porRevisarImportar,
     porRevisarListar,
     porRevisarReintentar
-  } from '$core/ipc';
-  import { duracionLarga } from '$core/formato';
-  import { textos } from '$lib/i18n';
-  import Icon from '$ui/Icon.svelte';
+  } from '#lib/core/ipc/index.ts';
+  import { duracionLarga } from '#lib/core/formato.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import Icon from '#lib/ui/Icon.svelte';
 
   const t = textos.porRevisar;
 

@@ -3,11 +3,11 @@
   Navegación reactiva con panel lateral y renderizado exclusivo de la sección activa.
 -->
 <script lang="ts">
-  import { aparienciaActual } from '$core/apariencia.svelte';
-  import { carpetaMusica, perfilCambiarFoto, salud } from '$core/ipc';
-  import { textos } from '$lib/i18n';
-  import Icon from '$ui/Icon.svelte';
-  import type { NombreDeIcono } from '$ui/iconos';
+  import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
+  import { carpetaMusica, perfilCambiarFoto, salud } from '#lib/core/ipc/index.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import Icon from '#lib/ui/Icon.svelte';
+  import type { NombreDeIcono } from '#lib/ui/iconos.ts';
 
   const t = textos.ajustes;
 
@@ -78,28 +78,28 @@
             <span>{t.cambiarFoto}</span>
           </button>
         </div>
-        {#await import('$ui/copia/BloqueCopia.svelte') then m}
+        {#await import('#lib/ui/copia/BloqueCopia.svelte') then m}
           <m.default />
         {/await}
       </section>
     {:else if seccionActiva === 'reproduccion'}
-      {#await import('$ui/ajustes/SeccionesEscucha.svelte') then m}
+      {#await import('#lib/ui/ajustes/SeccionesEscucha.svelte') then m}
         <m.default seccion="reproduccion" />
       {/await}
     {:else if seccionActiva === 'apariencia'}
-      {#await import('$ui/ajustes/SeccionesEscucha.svelte') then m}
+      {#await import('#lib/ui/ajustes/SeccionesEscucha.svelte') then m}
         <m.default seccion="apariencia" />
       {/await}
     {:else if seccionActiva === 'agregados'}
-      {#await import('$ui/agregados/SeccionAgregados.svelte') then m}
+      {#await import('#lib/ui/agregados/SeccionAgregados.svelte') then m}
         <m.default />
       {/await}
     {:else if seccionActiva === 'privacidad'}
-      {#await import('$ui/privacidad/SeccionesPrivacidad.svelte') then m}
+      {#await import('#lib/ui/privacidad/SeccionesPrivacidad.svelte') then m}
         <m.default seccion="privacidad" />
       {/await}
     {:else if seccionActiva === 'ia'}
-      {#await import('$ui/privacidad/SeccionesPrivacidad.svelte') then m}
+      {#await import('#lib/ui/privacidad/SeccionesPrivacidad.svelte') then m}
         <m.default seccion="ia" />
       {/await}
     {:else if seccionActiva === 'acerca'}
@@ -108,7 +108,7 @@
         {#await version then v}
           {#if v}<p>{t.version(v)}</p>{/if}
         {/await}
-        {#await import('$ui/ajustes/BloqueActualizacion.svelte') then m}
+        {#await import('#lib/ui/ajustes/BloqueActualizacion.svelte') then m}
           <m.default />
         {/await}
         <p>{t.licencia}</p>

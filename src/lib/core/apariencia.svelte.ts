@@ -8,8 +8,8 @@
  * corrige.
  */
 
-import { type Apariencia, apariencia, guardarPreferencia } from '$core/ipc';
-import { aplicarTemaV1, aplicarVariables } from '$ui/tema';
+import { type Apariencia, apariencia, guardarPreferencia } from '#lib/core/ipc/index.ts';
+import { aplicarTemaV1, aplicarVariables } from '#lib/ui/tema.ts';
 
 const CACHE = 'ns-apariencia';
 

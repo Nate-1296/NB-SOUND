@@ -19,11 +19,6 @@ export default defineConfig({
         precompress: false,
         strict: true
       }),
-      alias: {
-        $lib: 'src/lib',
-        $core: 'src/lib/core',
-        $ui: 'src/lib/ui'
-      },
       compilerOptions: {
         runes: true
       }

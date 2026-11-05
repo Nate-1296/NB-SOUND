@@ -5,16 +5,16 @@
   seguir usando la aplicación. Se carga aparte del arranque.
 -->
 <script lang="ts">
-  import { type EstadoAgregado, NsError, type Gpu } from '$core/ipc';
+  import { type EstadoAgregado, NsError, type Gpu } from '#lib/core/ipc/index.ts';
   import {
     agregadoInstalar,
     agregadoQuitar,
     agregadosEstado,
     alCambiarLosAgregados,
     gpuDetectada
-  } from '$core/ipc/aparte';
-  import { textos } from '$lib/i18n';
-  import { textosAparte } from '$lib/i18n/aparte';
+  } from '#lib/core/ipc/aparte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
 
   const t = textosAparte.agregados;
   const titulo = textos.ajustes.agregados;

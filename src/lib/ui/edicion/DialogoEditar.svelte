@@ -6,9 +6,9 @@
   solo si se juntó con otro que ya existía).
 -->
 <script lang="ts">
-  import { NsError } from '$core/ipc';
-  import { datosAlbum, datosPista, editarAlbum, editarPista } from '$core/ipc/aparte';
-  import { textosAparte } from '$lib/i18n/aparte';
+  import { NsError } from '#lib/core/ipc/index.ts';
+  import { datosAlbum, datosPista, editarAlbum, editarPista } from '#lib/core/ipc/aparte.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
 
   interface Props {
     tipo: 'pista' | 'album';

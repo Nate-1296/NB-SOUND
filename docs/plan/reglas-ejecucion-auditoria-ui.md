@@ -31,7 +31,7 @@ Antes de tocar cualquier línea de código para resolver los puntos del informe 
 
 ### 1.3. Presupuesto del Paquete de Arranque (`scripts/check-paquete.mjs`)
 1. **Límite estricto de 250 KB sin comprimir en el arranque:** SvelteKit incluye todos los nodos `+page.svelte` en el cálculo del paquete inicial.
-2. **Carga diferida real (`import()`):** Las vistas ricas o modales secundarios (como el rediseño de Ajustes, diálogos de confirmación, panel de duplicados o bienvenida de búsqueda) deben vivir en módulos bajo `src/lib/ui/` cargados dinámicamente con `{#await import('$ui/...')}` desde la ruta o al abrirse, y **jamás** ser importados estáticamente por ningún módulo del arranque.
+2. **Carga diferida real (`import()`):** Las vistas ricas o modales secundarios (como el rediseño de Ajustes, diálogos de confirmación, panel de duplicados o bienvenida de búsqueda) deben vivir en módulos bajo `src/lib/ui/` cargados dinámicamente con `{#await import('#lib/ui/...')}` desde la ruta o al abrirse, y **jamás** ser importados estáticamente por ningún módulo del arranque.
 
 ### 1.4. Puente IPC, Rust, SQLite y Seguridad (`check-comandos`, `check-puente`, `check-bindings`, `check-error-contract`, `check-rutas`, `check-transacciones`, `check-listas`, `check-registro`, `check-plataforma`)
 1. **Comandos asíncronos por defecto:** Todo `#[tauri::command]` en Rust debe ser `async fn` o `#[tauri::command(async)]`. Solo puede ser síncrono si toca directamente `WebviewWindow`, `Window`, diálogos nativos o bandeja del sistema, e incluye el comentario `// Se queda en el hilo principal: <motivo>`.
@@ -164,7 +164,7 @@ A continuación se detalla cómo implementar cada ítem del documento de QA cump
 
 #### EXP-08: Botón de reproducción aleatoria en cabecera de Playlist
 - **Cómo hacerlo sin romper nada:**
-  1. En `src/lib/ui/playlists/VistaPlaylistDetalle.svelte` (o `src/routes/playlists/ver/+page.svelte`), añadir junto al botón principal de reproducir un botón secundario con `<Icon nombre="aleatorio" />` y texto `{t.aleatorio}` desde `$lib/i18n`.
+  1. En `src/lib/ui/playlists/VistaPlaylistDetalle.svelte` (o `src/routes/playlists/ver/+page.svelte`), añadir junto al botón principal de reproducir un botón secundario con `<Icon nombre="aleatorio" />` y texto `{t.aleatorio}` desde `#lib/i18n`.
   2. Al pulsarlo, activar el modo aleatorio y lanzar la cola mezclada de las pistas de la playlist.
 
 #### EXP-09: Menú contextual de acciones en resultados de Búsqueda
@@ -203,7 +203,7 @@ A continuación se detalla cómo implementar cada ítem del documento de QA cump
 - **Cómo hacerlo sin romper nada:**
   1. En `src/routes/ajustes/+page.svelte`, sustituir la lista de anclas `<a href="#...">` por navegación de estado reactivo `let seccionActiva = $state<'biblioteca' | 'reproduccion' | 'apariencia' | 'dispositivos' | 'agregados' | 'privacidad' | 'ia' | 'acerca'>('biblioteca')`.
   2. En el panel izquierdo (`<nav class="indice" aria-label={t.secciones}>`), usar botones de pestaña con `<Icon nombre="..." />`, texto e indicador activo (`aria-current={seccionActiva === ... ? 'page' : undefined}`).
-  3. En el panel derecho (`.contenido`), renderizar **únicamente** la sección activa (`{#if seccionActiva === 'apariencia'} ... {/if}`), manteniendo los `{#await import('$ui/...')}` para que cada sub-panel se cargue bajo demanda y `check-paquete.mjs` mantenga el arranque muy por debajo de 250 KB.
+  3. En el panel derecho (`.contenido`), renderizar **únicamente** la sección activa (`{#if seccionActiva === 'apariencia'} ... {/if}`), manteniendo los `{#await import('#lib/ui/...')}` para que cada sub-panel se cargue bajo demanda y `check-paquete.mjs` mantenga el arranque muy por debajo de 250 KB.
   4. En la sección de Apariencia (`SeccionesEscucha.svelte`), agrupar los 63 temas por categorías (Oscuros, Claros, Alto Contraste / Especiales) y reemplazar los 3 círculos planos por una **mini-maqueta visual** (`.maqueta-tema`) que pinte en miniatura la barra lateral, cabecera, tarjeta y botón de acento usando las variables del tema.
 
 #### DIS-02 y COMP-05: Restauración de los 64 logotipos dinámicos por tema

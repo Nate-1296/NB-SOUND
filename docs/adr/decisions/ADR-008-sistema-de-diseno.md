@@ -20,8 +20,8 @@ tokens `--m3c-*` generados por `scripts/generar-paletas.mjs` y Material Color Ut
   base por álbum. Se calcula una vez por portada, nunca en el webview. La interfaz cambia de esquema con una sola
   transición corta; en reposo no se anima nada. El sistema tonal de Material 3 garantiza el contraste.
 * Se puede desactivar ("color por portada") y elegir un acento fijo. Las 60 paletas de la V1 pasan a ser
-  **colores semilla** para el acento fijo. Los 60 PNG del logo, uno por paleta, desaparecen: queda un solo
-  logo, el de la V1 (`logo_512.png`), que es una ilustración y no admite teñirse sin redibujarla.
+  **colores semilla** para el acento fijo. Cada tema conserva su logo de la V1 (ver la enmienda del 2026-11-01
+  más abajo).
 * La barra de progreso interpola la posición con `requestAnimationFrame` a partir de los eventos de estado del
   motor (reproducir, pausar, seek, duración), solo mientras suena y la ventana es visible. El puente no lleva
   eventos de posición a 30 o 60 Hz.
@@ -55,6 +55,9 @@ En consecuencia, lo de arriba cambia en cuatro puntos:
   aplicación con su licencia.
 * **Las listas son continuas, como en la V1**, no páginas como en NB Books. F0.4.7 midió una ventana virtual de alto
   fijo con bloques alineados sin un solo fotograma largo con 100.000 filas (P9, cerrada).
-* **Los logotipos sincronizados por tema vuelven a la barra lateral (DIS-02, COMP-05):** Se restauran los logotipos dinámicos para cada uno de los temas en `static/logos/logo_[tema].png`, conectando la marca a `aparienciaActual.actual.tema` con fallback a `/logo.png`, garantizando coherencia cromática con la identidad visual histórica.
+* **Enmienda del 2026-11-01 (Nathan, DIS-02): vuelve un logo por tema.** Descartarlos dejaba la marca naranja en
+  los 62 temas que no lo son. Los 63 PNG de la V1 viven en `static/logos/logo_<tema>.png`, reducidos a 208 px (el
+  doble de lo que se pintan: de 36 MB a 2,6 MB en el instalador); la barra lateral elige el del tema y, si falta,
+  usa `static/logo.png`.
 * La carcasa de la Fase 0 (clara, con acento cian) es provisional: F2.2.1 la ajusta a la disposición de la V1.
 

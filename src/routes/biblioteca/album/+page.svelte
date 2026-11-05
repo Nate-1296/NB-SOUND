@@ -3,6 +3,6 @@
   en el arranque (`check-paquete`).
 -->
 
-{#await import('$ui/biblioteca/VistaAlbum.svelte') then m}
+{#await import('#lib/ui/biblioteca/VistaAlbum.svelte') then m}
   <m.default />
 {/await}

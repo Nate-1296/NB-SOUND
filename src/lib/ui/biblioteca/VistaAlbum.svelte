@@ -12,15 +12,14 @@
     bibliotecaAlbumes,
     bibliotecaPistas,
     type ConsultaPistas,
-    fijarFavorita,
     type PistaResumen,
     reproducirLista,
     urlPortada
-  } from '$core/ipc';
-  import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import FilaPista from '$ui/biblioteca/FilaPista.svelte';
-  import Icon from '$ui/Icon.svelte';
+  } from '#lib/core/ipc/index.ts';
+  import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
+  import Icon from '#lib/ui/Icon.svelte';
 
   const t = textos.biblioteca;
   const id = $derived(Number(page.url.searchParams.get('id')));
@@ -64,13 +63,6 @@
     });
     void bibliotecaPistas(c, 0, 500).then((p) => (pistas = p.pistas));
   });
-
-  function alternarFavorita(i: number) {
-    const p = pistas[i];
-    if (!p) return;
-    pistas[i] = { ...p, favorita: !p.favorita };
-    void fijarFavorita(p.id, !p.favorita);
-  }
 
   function aleatorio() {
     if (!reproductor.instantanea.aleatorio) void reproductor.alternarAleatorio();
@@ -142,9 +134,6 @@
             numero={i + 1}
             sonando={reproductor.instantanea.pistaId === p.id}
             onreproducir={() => reproducirLista(consulta, i)}
-            onanadir={() =>
-              reproductor.orden({ tipo: 'agregar', ids: [p.id], justoDespues: false })}
-            onfavorita={() => alternarFavorita(i)}
             oncambiada={() => recargas++}
           />
         </li>
@@ -173,7 +162,7 @@
     {/if}
   {/if}
   {#if editando}
-    {#await import('$ui/edicion/DialogoEditar.svelte') then m}
+    {#await import('#lib/ui/edicion/DialogoEditar.svelte') then m}
       <m.default
         tipo="album"
         {id}

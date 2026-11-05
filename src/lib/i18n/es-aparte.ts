@@ -390,24 +390,25 @@ export const esAparte = {
 
   duplicados: {
     titulo: 'Canciones duplicadas',
-    descripcion: 'Detecta archivos redundantes o repetidos de tu biblioteca para liberar espacio.',
-    sinDuplicados: 'No se han detectado canciones duplicadas en tu biblioteca.',
-    encontrados: (n: number, espacio: string) =>
+    descripcion:
+      'Copias que NB Sound apartó al importar porque ya tenías la canción. No se ven ni van al móvil.',
+    sinDuplicados: 'No hay copias apartadas.',
+    encontrados: (n: number, megas: number) =>
       n === 1
-        ? `1 canción duplicada detectada (${espacio} recuperables)`
-        : `${n} canciones duplicadas detectadas (${espacio} recuperables)`,
+        ? `1 copia apartada (${megas.toLocaleString('es')} MB)`
+        : `${n.toLocaleString('es')} copias apartadas (${megas.toLocaleString('es')} MB)`,
     limpiar: 'Limpiar duplicados',
     confirmarTitulo: '¿Limpiar canciones duplicadas?',
     confirmarPregunta: (n: number) =>
-      `¿Deseas purgar ${n} pistas duplicadas? Se conservará únicamente la copia de mayor calidad.`,
-    borrarArchivos: 'Eliminar también los archivos duplicados del disco',
-    purgarBtn: 'Purgar duplicados',
+      `Se quitarán ${n.toLocaleString('es')} copias de la biblioteca. La canción original no se toca.`,
+    borrarArchivos: 'Mover también sus archivos a la papelera',
+    purgarBtn: 'Limpiar',
     cancelar: 'Cancelar',
     purgadas: (n: number) =>
       n === 1
-        ? '1 canción duplicada eliminada con éxito'
-        : `${n} canciones duplicadas eliminadas con éxito`,
-    error: 'Error al purgar duplicados'
+        ? '1 copia quitada de la biblioteca'
+        : `${n.toLocaleString('es')} copias quitadas de la biblioteca`,
+    error: 'No se pudieron limpiar las copias.'
   },
 
   buscar: {

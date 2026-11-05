@@ -5,9 +5,9 @@
   terminar, con un enlace a Por revisar si hay algo pendiente.
 -->
 <script lang="ts">
-  import { importacion } from '$core/importacion.svelte';
-  import { textos } from '$lib/i18n';
-  import Icon from '$ui/Icon.svelte';
+  import { importacion } from '#lib/core/importacion.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import Icon from '#lib/ui/Icon.svelte';
 
   const t = textos.importacion;
   const p = $derived(importacion.progreso);

@@ -242,242 +242,105 @@ pub async fn fijar_favorita(
     .await
 }
 
-/// Borra una pista de la biblioteca y opcionalmente su archivo del disco.
+/// La carpeta de la música, si el usuario ya tiene una.
+fn musica(db: &crate::db::BaseDeDatos) -> NsResult<Option<std::path::PathBuf>> {
+    crate::reproductor::carpeta_musica(&*db.conexion()?)
+}
+
+/// Quita una pista de la biblioteca y, si se pide, manda su archivo a la papelera.
+/// Si estaba en la cola, sale de ella.
 #[tauri::command]
 pub async fn borrar_pista(
+    app: AppHandle,
     estado: tauri::State<'_, Estado>,
     id: i64,
     borrar_archivo: bool,
 ) -> NsResult<()> {
-    let db = estado.db.clone();
-    let importador = estado.importador.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        let mut conn = db.conexion()?;
-        let ruta: String = conn
-            .query_row("SELECT ruta FROM pistas WHERE id = ?1", [id], |f| f.get(0))
-            .map_err(|_| NsError::FileNotFound)?;
-
-        let tx = crate::db::transaccion_de_escritura(&mut conn)?;
-        tx.execute("DELETE FROM pistas WHERE id = ?1", [id])
-            .map_err(|_| NsError::StorageFailure)?;
-        tx.commit().map_err(|_| NsError::StorageFailure)?;
-
-        if borrar_archivo {
-            let _ = importador.con_entorno(|entorno| {
-                if let Ok(archivo) =
-                    crate::security::resolve_within(&entorno.musica, std::path::Path::new(&ruta))
-                {
-                    if archivo.is_file() {
-                        let _ = std::fs::remove_file(&archivo);
-                    }
-                }
-                Ok(())
-            });
-        }
-        tracing::info!(id = id, "pista borrada de la biblioteca");
-        Ok(())
+    let rutas = estado.rutas.clone();
+    en_segundo_plano(&estado, move |db| {
+        crate::catalogo::borrado::borrar_pista(
+            db,
+            &rutas,
+            musica(db)?.as_deref(),
+            id,
+            borrar_archivo,
+        )
     })
-    .await
-    .map_err(|_| NsError::Internal)?
+    .await?;
+    if let Ok(r) = reproductor(&app) {
+        r.enviar(Orden::Purgar(id));
+    }
+    Ok(())
 }
 
-fn abrir_en_explorador(archivo: &std::path::Path) {
-    #[cfg(target_os = "windows")]
-    {
-        let _ = std::process::Command::new("explorer")
-            .arg("/select,")
-            .arg(archivo)
-            .spawn();
-    }
-    #[cfg(target_os = "macos")]
-    {
-        let _ = std::process::Command::new("open")
-            .arg("-R")
-            .arg(archivo)
-            .spawn();
-    }
-    #[cfg(target_os = "linux")]
-    {
-        let ruta_uri = format!("file://{}", archivo.to_string_lossy());
-        let status = std::process::Command::new("dbus-send")
-            .args([
-                "--session",
-                "--dest=org.freedesktop.FileManager1",
-                "--type=method_call",
-                "/org/freedesktop/FileManager1",
-                "org.freedesktop.FileManager1.ShowItems",
-                &format!("array:string:{ruta_uri}"),
-                "string:",
-            ])
-            .status();
-
-        if !matches!(status, Ok(s) if s.success()) {
-            if let Some(padre) = archivo.parent() {
-                let _ = std::process::Command::new("xdg-open").arg(padre).spawn();
-            }
-        }
-    }
-}
-
-/// Muestra el archivo de una pista en el gestor de archivos nativo del sistema.
+/// Señala el archivo de una pista en el gestor de archivos del sistema. La ruta
+/// no cruza el puente: la resuelve el runtime desde el id.
 #[tauri::command]
 pub async fn mostrar_en_explorador(
     estado: tauri::State<'_, Estado>,
     pista_id: i64,
 ) -> NsResult<()> {
-    let db = estado.db.clone();
-    let importador = estado.importador.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        let conn = db.conexion()?;
-        let ruta: String = conn
-            .query_row("SELECT ruta FROM pistas WHERE id = ?1", [pista_id], |f| {
-                f.get(0)
-            })
-            .map_err(|_| NsError::FileNotFound)?;
-
-        importador.con_entorno(|entorno| {
-            let archivo =
-                crate::security::resolve_within(&entorno.musica, std::path::Path::new(&ruta))
-                    .or_else(|_| {
-                        std::path::PathBuf::from(&ruta)
-                            .canonicalize()
-                            .map_err(|_| NsError::FileNotFound)
-                    })?;
-            if !archivo.exists() {
-                return Err(NsError::FileNotFound);
-            }
-            abrir_en_explorador(&archivo);
-            tracing::info!(id = pista_id, "archivo mostrado en el explorador");
-            Ok(())
-        })
+    en_segundo_plano(&estado, move |db| {
+        let archivo = crate::catalogo::borrado::archivo_de(db, musica(db)?.as_deref(), pista_id)?;
+        crate::explorador::mostrar(&archivo);
+        Ok(())
     })
     .await
-    .map_err(|_| NsError::StorageFailure)?
 }
 
-/// Información de duplicados detectados en la biblioteca (FDB-02, COMP-07).
-#[derive(Debug, Clone, Serialize, TS)]
-#[ts(export, export_to = "../../src/lib/bindings/")]
-#[serde(rename_all = "camelCase")]
-pub struct ResumenDuplicados {
-    pub total: u32,
-    #[ts(type = "number")]
-    pub bytes_recuperables: u64,
-}
-
+/// "Sorpréndeme" (tecla D, como en la V1): reproduce una canción elegida al azar
+/// entre las que conviene redescubrir y devuelve cuál, para anunciarla. `None` si
+/// no hay otra que la que suena.
 #[tauri::command]
-pub async fn duplicados_resumen(estado: tauri::State<'_, Estado>) -> NsResult<ResumenDuplicados> {
+pub async fn sorprendeme(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<Option<PistaResumen>> {
+    let actual = reproductor(&app)?.instantanea().and_then(|i| i.pista_id);
     let db = estado.db.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        let conn = db.conexion()?;
-        let (total, bytes): (u32, Option<i64>) = conn
-            .query_row(
-                "WITH dup_sha AS (
-                    SELECT id, tamano,
-                           ROW_NUMBER() OVER (PARTITION BY sha256 ORDER BY id ASC) as rn
-                    FROM pistas
-                    WHERE sha256 IS NOT NULL AND sha256 != ''
-                ),
-                dup_meta AS (
-                    SELECT id, tamano,
-                           ROW_NUMBER() OVER (PARTITION BY lower(trim(titulo)), lower(trim(artista_nombre)), round(duracion_seg) ORDER BY id ASC) as rn
-                    FROM pistas
-                    WHERE (sha256 IS NULL OR sha256 = '') AND titulo IS NOT NULL AND artista_nombre IS NOT NULL
-                ),
-                todos_dup AS (
-                    SELECT id, tamano FROM pistas WHERE estado = 'duplicado'
-                    UNION
-                    SELECT id, tamano FROM dup_sha WHERE rn > 1
-                    UNION
-                    SELECT id, tamano FROM dup_meta WHERE rn > 1
-                )
-                SELECT COUNT(*), COALESCE(SUM(tamano), 0) FROM todos_dup",
-                [],
-                |f| Ok((f.get(0)?, f.get(1)?)),
-            )
-            .map_err(|_| NsError::StorageFailure)?;
-        Ok(ResumenDuplicados {
-            total,
-            bytes_recuperables: bytes.unwrap_or(0).max(0) as u64,
+    let app_ = app.clone();
+    let elegida =
+        tauri::async_runtime::spawn_blocking(move || -> NsResult<Option<PistaResumen>> {
+            let estado = app_.state::<Estado>();
+            let Some(id) = estado.sorpresa.siguiente(&db, actual)? else {
+                return Ok(None);
+            };
+            Ok(biblioteca::resumenes(&db, &[id])?.into_iter().next())
         })
-    })
-    .await
-    .map_err(|_| NsError::Internal)?
+        .await
+        .map_err(|_| NsError::Internal)??;
+    if let Some(p) = &elegida {
+        reproductor(&app)?.enviar(Orden::ReproducirPista(p.id));
+    }
+    Ok(elegida)
 }
 
+/// Las copias que apartó la deduplicación (FDB-02).
+#[tauri::command]
+pub async fn duplicados_resumen(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::catalogo::borrado::ResumenDuplicados> {
+    en_segundo_plano(&estado, crate::catalogo::borrado::duplicados).await
+}
+
+/// Quita las copias apartadas y, si se pide, manda sus archivos a la papelera.
+/// Devuelve cuántas se quitaron.
 #[tauri::command]
 pub async fn purgar_duplicados(
     estado: tauri::State<'_, Estado>,
     borrar_archivos: bool,
 ) -> NsResult<u32> {
-    let db = estado.db.clone();
-    let importador = estado.importador.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        let mut conn = db.conexion()?;
-        let mut s = conn
-            .prepare(
-                "WITH dup_sha AS (
-                    SELECT id, ruta,
-                           ROW_NUMBER() OVER (PARTITION BY sha256 ORDER BY id ASC) as rn
-                    FROM pistas
-                    WHERE sha256 IS NOT NULL AND sha256 != ''
-                ),
-                dup_meta AS (
-                    SELECT id, ruta,
-                           ROW_NUMBER() OVER (PARTITION BY lower(trim(titulo)), lower(trim(artista_nombre)), round(duracion_seg) ORDER BY id ASC) as rn
-                    FROM pistas
-                    WHERE (sha256 IS NULL OR sha256 = '') AND titulo IS NOT NULL AND artista_nombre IS NOT NULL
-                ),
-                todos_dup AS (
-                    SELECT id, ruta FROM pistas WHERE estado = 'duplicado'
-                    UNION
-                    SELECT id, ruta FROM dup_sha WHERE rn > 1
-                    UNION
-                    SELECT id, ruta FROM dup_meta WHERE rn > 1
-                )
-                SELECT id, ruta FROM todos_dup",
-            )
-            .map_err(|_| NsError::StorageFailure)?;
-        let filas = s
-            .query_map([], |f| Ok((f.get::<_, i64>(0)?, f.get::<_, String>(1)?)))
-            .map_err(|_| NsError::StorageFailure)?
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|_| NsError::StorageFailure)?;
-        drop(s);
-
-        if filas.is_empty() {
-            return Ok(0);
-        }
-
-        let total = filas.len() as u32;
-
-        if borrar_archivos {
-            let _ = importador.con_entorno(|entorno| {
-                for (_, ruta) in &filas {
-                    if let Ok(archivo) =
-                        crate::security::resolve_within(&entorno.musica, std::path::Path::new(ruta))
-                    {
-                        if archivo.is_file() {
-                            let _ = std::fs::remove_file(&archivo);
-                        }
-                    }
-                }
-                Ok(())
-            });
-        }
-
-        let tx = crate::db::transaccion_de_escritura(&mut conn)?;
-        for (id, _) in &filas {
-            let _ = tx.execute("DELETE FROM pistas WHERE id = ?1", [*id]);
-        }
-        let _ = tx.execute("DELETE FROM pistas WHERE estado = 'duplicado'", []);
-        tx.commit().map_err(|_| NsError::StorageFailure)?;
-
-        tracing::info!(total = total, "duplicados purgados de la biblioteca");
-        Ok(total)
+    // Las apartadas no se ven ni se encolan: la cola no tiene nada que purgar.
+    let rutas = estado.rutas.clone();
+    en_segundo_plano(&estado, move |db| {
+        crate::catalogo::borrado::limpiar_duplicados(
+            db,
+            &rutas,
+            musica(db)?.as_deref(),
+            borrar_archivos,
+        )
     })
     .await
-    .map_err(|_| NsError::Internal)?
 }
 
 #[tauri::command]
@@ -850,7 +713,8 @@ pub async fn perfil(estado: tauri::State<'_, Estado>) -> NsResult<crate::perfil:
     en_segundo_plano(&estado, crate::perfil::perfil).await
 }
 
-/// Cambia la foto de perfil del usuario mediante el selector nativo de archivos.
+/// Cambia la foto de perfil por una imagen elegida con el selector nativo.
+/// Devuelve `false` si se canceló. La ruta no cruza el puente IPC.
 #[tauri::command]
 pub async fn perfil_cambiar_foto(app: AppHandle) -> NsResult<bool> {
     use tauri_plugin_dialog::DialogExt;
@@ -863,34 +727,13 @@ pub async fn perfil_cambiar_foto(app: AppHandle) -> NsResult<bool> {
             .dialog()
             .file()
             .set_title("Elegir foto de perfil")
-            .add_filter("Imágenes", &["png", "jpg", "jpeg", "webp"])
+            .add_filter("Imágenes", &["png", "jpg", "jpeg"])
             .blocking_pick_file()
             .and_then(|f| f.into_path().ok())
         else {
             return Ok(false);
         };
-        let bytes = std::fs::read(&archivo).map_err(|_| NsError::FileNotFound)?;
-        let ext = archivo
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("jpg")
-            .to_lowercase();
-        let ext = if ext == "png" { "png" } else { "jpg" };
-        let nombre_archivo = format!("foto.{ext}");
-        let carpeta = rutas.datos.join("perfil");
-        std::fs::create_dir_all(&carpeta).map_err(|_| NsError::StorageFailure)?;
-        let destino = carpeta.join(&nombre_archivo);
-        std::fs::write(&destino, bytes).map_err(|_| NsError::StorageFailure)?;
-
-        let conn = db.conexion()?;
-        let valor_json =
-            serde_json::to_string(&nombre_archivo).map_err(|_| NsError::StorageFailure)?;
-        conn.execute(
-            "INSERT INTO preferencias (clave, valor) VALUES ('foto_perfil', ?1)
-             ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor",
-            [&valor_json],
-        )
-        .map_err(|_| NsError::StorageFailure)?;
+        crate::perfil::cambiar_foto(&db, &rutas.datos, &archivo)?;
         Ok(true)
     })
     .await

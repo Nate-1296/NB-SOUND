@@ -9,17 +9,17 @@
 -->
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
-  import { goto } from '$app/navigation';
   import { page } from '$app/state';
 
-  import { accionDeTecla, esCampoDeTexto } from '$core/atajos';
-  import { aparienciaActual } from '$core/apariencia.svelte';
-  import { estadoPantalla } from '$core/estadoVistas.svelte';
-  import { abrirMinirreproductor, alternarPantallaCompleta, bibliotecaPistas } from '$core/ipc';
-  import { importacion } from '$core/importacion.svelte';
-  import { telefonos } from '$core/movil.svelte';
-  import { reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
+  import { accionDeTecla, esCampoDeTexto } from '#lib/core/atajos.ts';
+  import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
+  import { abrirMinirreproductor, sorprendeme } from '#lib/core/ipc/index.ts';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
+  import { importacion } from '#lib/core/importacion.svelte.ts';
+  import { pantalla } from '#lib/core/pantalla.svelte.ts';
+  import { telefonos } from '#lib/core/movil.svelte.ts';
+  import { reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
 
   import { clasificarAncho } from './anchos';
   import BarraReproduccion from './BarraReproduccion.svelte';
@@ -39,6 +39,7 @@
 
   onMount(() => {
     void reproductor.arrancar();
+    void pantalla.sincronizar();
     void telefonos.arrancar();
     void importacion.arrancar();
   });
@@ -73,52 +74,10 @@
         window.dispatchEvent(new CustomEvent('ns:vista', { detail: { letras: false } })),
       cola: () => window.dispatchEvent(new CustomEvent('ns:cola')),
       mini: abrirMinirreproductor,
-      pantallaCompleta: async () => {
-        await alternarPantallaCompleta();
-        window.dispatchEvent(new CustomEvent('ns:pantalla-completa'));
-      },
+      pantallaCompleta: () => pantalla.alternar(),
       sorprendeme: async () => {
-        try {
-          const res = await bibliotecaPistas(
-            {
-              texto: null,
-              favoritas: false,
-              sinVerificar: false,
-              albumId: null,
-              artistaId: null,
-              orden: 'menosReproducidas'
-            },
-            0,
-            50
-          );
-          if (res.pistas.length > 0) {
-            const indice = Math.floor(Math.random() * res.pistas.length);
-            const pistaElegida = res.pistas[indice];
-            const ids = res.pistas.map((p) => p.id);
-            for (let j = ids.length - 1; j > 0; j--) {
-              const k = Math.floor(Math.random() * (j + 1));
-              const ej = ids[j];
-              const ek = ids[k];
-              if (ej !== undefined && ek !== undefined) {
-                ids[j] = ek;
-                ids[k] = ej;
-              }
-            }
-            await r.reproducirPistas(ids, 0);
-            if (pistaElegida) {
-              window.dispatchEvent(
-                new CustomEvent('ns:notificacion', {
-                  detail: {
-                    tipo: 'info',
-                    mensaje: textos.inicio.sorprendeme(pistaElegida.titulo, pistaElegida.artista)
-                  }
-                })
-              );
-            }
-          }
-        } catch {
-          // Si no hay pistas o falla la consulta no se interrumpe
-        }
+        const p = await sorprendeme().catch(() => null);
+        if (p) notificar.informacion(textos.inicio.sorprendeme(p.titulo, p.artista));
       }
     };
     void acciones[accion]();
@@ -126,35 +85,35 @@
 
   let temporizadorOcultar: ReturnType<typeof setTimeout> | undefined;
 
+  /** En pantalla completa, la reproducción esconde sus controles a los 3,5 s quieta. */
   function alMoverRaton() {
-    if (!enReproduciendo || !estadoPantalla.enPantallaCompleta) {
-      estadoPantalla.controlesVisibles = true;
-      return;
-    }
-    estadoPantalla.controlesVisibles = true;
+    pantalla.controlesVisibles = true;
+    if (!enReproduciendo || !pantalla.completa) return;
     clearTimeout(temporizadorOcultar);
     temporizadorOcultar = setTimeout(() => {
-      estadoPantalla.controlesVisibles = false;
+      pantalla.controlesVisibles = false;
     }, 3500);
   }
 
   $effect(() => {
-    if (!enReproduciendo || !estadoPantalla.enPantallaCompleta) {
+    if (!enReproduciendo || !pantalla.completa) {
       clearTimeout(temporizadorOcultar);
-      estadoPantalla.controlesVisibles = true;
+      pantalla.controlesVisibles = true;
     }
   });
 </script>
 
-<svelte:window onkeydown={alPulsar} onmousemove={alMoverRaton} />
+<svelte:window
+  onkeydown={alPulsar}
+  onmousemove={alMoverRaton}
+  onresize={() => void pantalla.sincronizar()}
+/>
 
 <div
   class="carcasa"
   class:compacta={aparienciaActual.barraLateralCompacta}
   class:sin-lateral={enReproduciendo}
-  class:ocultar-controles={enReproduciendo &&
-    estadoPantalla.enPantallaCompleta &&
-    !estadoPantalla.controlesVisibles}
+  class:ocultar-controles={enReproduciendo && pantalla.completa && !pantalla.controlesVisibles}
   data-ancho={clase}
   bind:clientWidth={ancho}
 >
@@ -186,7 +145,7 @@
     <m.default />
   {/await}
 {/if}
-{#await import('$ui/ToastContenedor.svelte') then m}
+{#await import('./Avisos.svelte') then m}
   <m.default />
 {/await}
 

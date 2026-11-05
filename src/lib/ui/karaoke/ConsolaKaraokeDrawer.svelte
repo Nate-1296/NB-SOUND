@@ -11,10 +11,10 @@
     karaokeEstado,
     karaokePreparar,
     karaokePrepararFavoritas
-  } from '$core/ipc';
-  import { reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import Icon from '$ui/Icon.svelte';
+  } from '#lib/core/ipc/index.ts';
+  import { reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import Icon from '#lib/ui/Icon.svelte';
 
   const { oncerrar }: { oncerrar: () => void } = $props();
 
@@ -339,7 +339,7 @@
   }
 
   .pista-titulo {
-    font-size: var(--ns-texto-base);
+    font-size: var(--ns-texto-md);
     color: var(--m3c-on-surface);
   }
 

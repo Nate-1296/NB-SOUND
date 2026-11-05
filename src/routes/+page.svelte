@@ -9,12 +9,18 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { aparienciaActual } from '$core/apariencia.svelte';
-  import { type Inicio, inicio, reproducirLista, reproducirPlaylist, urlPortada } from '$core/ipc';
-  import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
-  import Icon from '$ui/Icon.svelte';
-  import Mosaico from '$ui/playlists/Mosaico.svelte';
+  import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
+  import {
+    type Inicio,
+    inicio,
+    reproducirLista,
+    reproducirPlaylist,
+    urlPortada
+  } from '#lib/core/ipc/index.ts';
+  import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import Icon from '#lib/ui/Icon.svelte';
+  import Mosaico from '#lib/ui/playlists/Mosaico.svelte';
 
   const t = textos.inicio;
   let datos = $state<Inicio | null>(null);
@@ -887,7 +893,7 @@
   }
 
   .destacada-titulo {
-    font-size: var(--ns-texto-base);
+    font-size: var(--ns-texto-md);
     font-weight: 700;
     overflow: hidden;
     white-space: nowrap;
@@ -1060,7 +1066,7 @@
   }
 
   .podio-1 .podio-texto strong {
-    font-size: var(--ns-texto-base);
+    font-size: var(--ns-texto-md);
   }
 
   .podio-escuchas {

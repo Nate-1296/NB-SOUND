@@ -200,7 +200,7 @@ for (const archivo of recorrer(FUENTE)) {
       archivo,
       original,
       desplazamiento,
-      `texto incrustado "${contenido.trim().slice(0, 45)}": tiene que venir de $lib/i18n`
+      `texto incrustado "${contenido.trim().slice(0, 45)}": tiene que venir de #lib/i18n`
     );
   }
 

@@ -41,7 +41,7 @@ Si el trabajo depende de una decisión no tomada, **no se empieza**: se plantea 
 | Un solo producto, sin modos ni vistas de diagnóstico | [ADR-007](docs/adr/decisions/ADR-007-arquitectura-de-informacion.md) |
 | Ningún error viaja como cadena | `check-error-contract` |
 | Los tipos del puente se generan | `ts-rs` + `check-bindings` |
-| Ningún componente llama al puente fuera de `$core/ipc` | Lint `noRestrictedImports` |
+| Ningún componente llama al puente fuera de `#lib/core/ipc` | Lint `noRestrictedImports` |
 | Ningún comando del puente es síncrono | `check-comandos` |
 | Toda escritura abre `BEGIN IMMEDIATE` | `check-transacciones` |
 | El webview nunca reproduce audio; el audio es del motor de Rust | `check-ui` y [ADR-003](docs/adr/decisions/ADR-003-motor-de-audio.md) |

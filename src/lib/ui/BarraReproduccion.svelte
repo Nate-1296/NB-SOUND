@@ -8,17 +8,12 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { estadoPantalla } from '$core/estadoVistas.svelte';
-  import {
-    abrirMinirreproductor,
-    alternarPantallaCompleta,
-    estaEnPantallaCompleta,
-    fijarFavorita,
-    urlPortada
-  } from '$core/ipc';
-  import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
-  import { telefonos } from '$core/movil.svelte';
-  import { textos } from '$lib/i18n';
+  import { favoritas } from '#lib/core/acciones.svelte.ts';
+  import { abrirMinirreproductor, urlPortada } from '#lib/core/ipc/index.ts';
+  import { telefonos } from '#lib/core/movil.svelte.ts';
+  import { pantalla } from '#lib/core/pantalla.svelte.ts';
+  import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
 
   import SelectorDestino from './dispositivos/SelectorDestino.svelte';
   import FormaDeOnda from './FormaDeOnda.svelte';
@@ -73,7 +68,8 @@
     capaPlaylist.showPopover();
   }
 
-  // Popover de volumen para pantallas compactas donde el deslizador inline se oculta.
+  // En ventanas estrechas el deslizador no cabe en la barra: el altavoz abre una
+  // capa con él. Con el deslizador a la vista, el altavoz silencia.
   let capaVolumen: HTMLDivElement | undefined = $state();
   let botonVolumen: HTMLButtonElement | undefined = $state();
   let volumenAbierto = $state(false);
@@ -81,9 +77,8 @@
 
   function alternarVolumen() {
     if (!capaVolumen || !botonVolumen) return;
-    const sliderVisible = deslizadorBarra ? deslizadorBarra.offsetParent !== null : false;
-    if (sliderVisible) {
-      void reproductor.volumen(reproductor.instantanea.volumen > 0 ? 0 : 1);
+    if (deslizadorBarra?.offsetParent) {
+      void reproductor.alternarSilencio();
       return;
     }
     if (volumenAbierto) {
@@ -94,13 +89,6 @@
     capaVolumen.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
     capaVolumen.style.bottom = `${window.innerHeight - r.top + 8}px`;
     capaVolumen.showPopover();
-  }
-
-  async function alternarFavoritaPista() {
-    if (!pista) return;
-    const nuevo = !pista.favorita;
-    pista.favorita = nuevo;
-    await fijarFavorita(pista.id, nuevo);
   }
 
   /** Letras y pantalla completa abren la vista de reproducción; otra vez, vuelven. */
@@ -119,33 +107,14 @@
 
   // Los atajos de la carcasa (`atajos.ts`) piden la cola y la vista ampliada con
   // estos eventos: la barra es la dueña de las dos.
-  let enPantallaCompleta = $state(false);
-  async function conmutarPantallaCompleta() {
-    enPantallaCompleta = await alternarPantallaCompleta();
-    estadoPantalla.enPantallaCompleta = enPantallaCompleta;
-  }
-
   $effect(() => {
     const cola = () => alternarCola();
     const vista = (e: Event) => abrirVista((e as CustomEvent<{ letras: boolean }>).detail.letras);
-    const actualizarPantalla = () => {
-      void estaEnPantallaCompleta().then((v) => {
-        enPantallaCompleta = v;
-        estadoPantalla.enPantallaCompleta = v;
-      });
-    };
-    actualizarPantalla();
     window.addEventListener('ns:cola', cola);
     window.addEventListener('ns:vista', vista);
-    window.addEventListener('ns:pantalla-completa', actualizarPantalla);
-    window.addEventListener('resize', actualizarPantalla);
-    window.addEventListener('fullscreenchange', actualizarPantalla);
     return () => {
       window.removeEventListener('ns:cola', cola);
       window.removeEventListener('ns:vista', vista);
-      window.removeEventListener('ns:pantalla-completa', actualizarPantalla);
-      window.removeEventListener('resize', actualizarPantalla);
-      window.removeEventListener('fullscreenchange', actualizarPantalla);
     };
   });
 
@@ -211,11 +180,11 @@
       <button
         type="button"
         class="control-favorita"
-        class:activo={pista.favorita}
-        aria-label={pista.favorita ? t.quitarFavorita : t.marcarFavorita}
-        title={pista.favorita ? t.quitarFavorita : t.marcarFavorita}
-        aria-pressed={pista.favorita}
-        onclick={alternarFavoritaPista}
+        class:activo={favoritas.es(pista)}
+        aria-label={favoritas.es(pista) ? t.quitarFavorita : t.marcarFavorita}
+        title={favoritas.es(pista) ? t.quitarFavorita : t.marcarFavorita}
+        aria-pressed={favoritas.es(pista)}
+        onclick={() => pista && favoritas.alternar(pista)}
       >
         <Icon nombre="favorito" tamano={18} />
       </button>
@@ -406,7 +375,7 @@
             type="button"
             class="control"
             aria-label={i.volumen > 0 ? t.silenciar : t.quitarSilencio}
-            onclick={() => reproductor.volumen(i.volumen > 0 ? 0 : 1)}
+            onclick={reproductor.alternarSilencio}
           >
             <Icon nombre={i.volumen > 0 ? 'volumen' : 'silencio'} tamano={18} />
           </button>
@@ -450,16 +419,13 @@
     <button
       type="button"
       class="control conmutador"
-      class:activo={enPantallaCompleta}
-      aria-label={enPantallaCompleta ? t.salirPantallaCompleta : t.pantallaCompleta}
-      aria-pressed={enPantallaCompleta}
-      title={enPantallaCompleta ? t.salirPantallaCompleta : t.pantallaCompleta}
-      onclick={conmutarPantallaCompleta}
+      class:activo={pantalla.completa}
+      aria-label={pantalla.completa ? t.salirPantallaCompleta : t.pantallaCompleta}
+      aria-pressed={pantalla.completa}
+      title={pantalla.completa ? t.salirPantallaCompleta : t.pantallaCompleta}
+      onclick={() => pantalla.alternar()}
     >
-      <Icon
-        nombre={enPantallaCompleta ? 'salirPantallaCompleta' : 'pantallaCompleta'}
-        tamano={20}
-      />
+      <Icon nombre={pantalla.completa ? 'salirPantallaCompleta' : 'pantallaCompleta'} tamano={20} />
     </button>
   </div>
 </section>

@@ -65,7 +65,7 @@ const MANIFIESTO = join(RAIZ, '.svelte-kit', 'output', 'client', '.vite', 'manif
 /** Lo que, si cambia, cambia el paquete. */
 const FUENTES = ['src', 'vite.config.js', 'package.json', 'pnpm-lock.yaml'];
 
-const ALIAS = { '$lib/': 'src/lib/', '$ui/': 'src/lib/ui/', '$core/': 'src/lib/core/' };
+const ALIAS = { '#lib/': 'src/lib/' };
 
 const JSON_PEDIDO = process.argv.includes('--json');
 

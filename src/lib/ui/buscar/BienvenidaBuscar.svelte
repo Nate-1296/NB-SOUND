@@ -5,8 +5,8 @@
   presupuesto de arranque de la aplicación (250 KB).
 -->
 <script lang="ts">
-  import { textosAparte } from '$lib/i18n/aparte';
-  import Icon from '$ui/Icon.svelte';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
+  import Icon from '#lib/ui/Icon.svelte';
 
   interface Props {
     onseleccionar: (idea: string) => void;
@@ -101,7 +101,7 @@
 
   .modo-info h3 {
     margin: 0;
-    font-size: var(--ns-texto-base);
+    font-size: var(--ns-texto-md);
     font-weight: 700;
   }
 

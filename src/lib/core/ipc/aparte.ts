@@ -30,7 +30,7 @@ import type {
   ResumenDuplicados,
   ResumenEscucha,
   SugerenciaFiesta
-} from '$lib/bindings';
+} from '#lib/bindings/index.ts';
 
 import { call, escuchar } from './index';
 

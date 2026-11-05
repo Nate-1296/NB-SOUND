@@ -1,85 +1,125 @@
 /**
- * Sistema transversal de notificaciones Toast (COMP-03).
+ * El avisador: el único sitio por el que la aplicación cuenta lo que ha pasado.
  *
- * Mantiene la cola de avisos y permite notificar éxito, información, error
- * o progreso de procesos en segundo plano con auto-cierre temporizado.
+ * Es un singleton, y como en NB Books, de donde viene: hay una
+ * pantalla, y dos colas de avisos compitiendo por la misma esquina se taparían
+ * la una a la otra. La cola vive en `notificaciones.ts`, que es pura; aquí solo
+ * está el reloj y el estado reactivo.
+ *
+ * **No traduce.** El texto llega ya traducido de quien llama, que es el que
+ * tiene el diccionario a mano. Un avisador que tradujera obligaría a que cada
+ * clave del diccionario pasara por aquí.
  */
 
-export type TipoNotificacion = 'exito' | 'info' | 'error' | 'progreso';
+import {
+  type ClaseDeNotificacion,
+  caducar,
+  descartar,
+  encolar,
+  type Notificacion,
+  type PeticionDeAviso,
+  posponer
+} from './notificaciones';
 
-export interface Notificacion {
-  id: string;
-  tipo: TipoNotificacion;
-  mensaje: string;
-  duracionMs?: number;
-  progreso?: number;
+let cola = $state<Notificacion[]>([]);
+let siguienteId = 1;
+
+/**
+ * Si la cuenta atrás está detenida porque alguien está mirando.
+ *
+ * Lo enciende quien pinta cuando el puntero entra en la pila o el foco cae
+ * dentro. Sin esto, un fallo con su código podría irse a mitad de leerlo, que es
+ * el motivo por el que antes no caducaba.
+ */
+let pausada = false;
+
+/**
+ * Repaso periódico de la cola.
+ *
+ * Uno solo para todas, y solo mientras hay algo que caducar: un temporizador por
+ * notificación deja temporizadores vivos cuando la ventana se cierra a mitad, y
+ * uno permanente despierta el proceso cada segundo sin nada que hacer.
+ */
+let repaso: ReturnType<typeof setInterval> | null = null;
+
+/** Cada cuánto se repasa la cola, en milisegundos. */
+const REPASO = 250;
+
+function vigilar(): void {
+  if (repaso !== null) return;
+  repaso = setInterval(() => {
+    // En pausa no se caduca nada: se mueve el reloj de cada aviso, para que al
+    // soltar siga por donde iba en lugar de empezar de cero.
+    if (pausada) {
+      cola = posponer(cola, REPASO);
+      return;
+    }
+    cola = caducar(cola, Date.now());
+    if (cola.length === 0 && repaso !== null) {
+      clearInterval(repaso);
+      repaso = null;
+    }
+  }, REPASO);
 }
 
-class GestorNotificaciones {
-  lista = $state<Notificacion[]>([]);
-
-  notificar(tipo: TipoNotificacion, mensaje: string, duracionMs = 4000): string {
-    const id = Math.random().toString(36).slice(2, 9);
-    const item: Notificacion = { id, tipo, mensaje, duracionMs };
-    this.lista.push(item);
-    if (duracionMs > 0) {
-      setTimeout(() => this.quitar(id), duracionMs);
-    }
-    return id;
-  }
-
-  exito(mensaje: string, duracionMs = 3500): string {
-    return this.notificar('exito', mensaje, duracionMs);
-  }
-
-  info(mensaje: string, duracionMs = 4000): string {
-    return this.notificar('info', mensaje, duracionMs);
-  }
-
-  error(mensaje: string, duracionMs = 5000): string {
-    return this.notificar('error', mensaje, duracionMs);
-  }
-
-  progreso(id: string, mensaje: string, progreso: number): void {
-    const item = this.lista.find((n) => n.id === id);
-    if (item) {
-      item.mensaje = mensaje;
-      item.progreso = progreso;
-    } else {
-      this.lista.push({ id, tipo: 'progreso', mensaje, progreso, duracionMs: 0 });
-    }
-  }
-
-  quitar(id: string): void {
-    this.lista = this.lista.filter((n) => n.id !== id);
-  }
+function anunciar(peticion: PeticionDeAviso): void {
+  cola = encolar(cola, peticion, Date.now(), siguienteId);
+  siguienteId += 1;
+  vigilar();
 }
 
-export const notificaciones = new GestorNotificaciones();
+/**
+ * El avisador.
+ *
+ * Se usa como `notificar.exito('Nota guardada')`. Los tres verbos existen para
+ * que quien llama no tenga que acordarse de una cadena: pasar la clase como
+ * texto invita a escribirla mal y a que el aviso salga con el color que no es.
+ */
+export const notificar = {
+  exito(mensaje: string, detalle?: string): void {
+    anunciar({ clase: 'exito', mensaje, detalle });
+  },
+  informacion(mensaje: string, detalle?: string): void {
+    anunciar({ clase: 'informacion', mensaje, detalle });
+  },
+  /**
+   * Un fallo. No caduca: se queda hasta que lo cierren.
+   *
+   * El detalle es el sitio del código canónico. Nunca se enseña
+   * `error.message`: en un `NsError` el mensaje **es** el código, y el texto en
+   * palabras lo pone quien llama, con su diccionario.
+   */
+  error(mensaje: string, detalle?: string): void {
+    anunciar({ clase: 'error', mensaje, detalle });
+  }
+};
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('ns:notificacion', (e: Event) => {
-    const d = (
-      e as CustomEvent<{
-        tipo: TipoNotificacion | 'quitar';
-        id?: string;
-        mensaje?: string;
-        progreso?: number;
-        duracionMs?: number;
-      }>
-    ).detail;
-    if (!d) return;
-    if (d.tipo === 'quitar' && d.id) {
-      notificaciones.quitar(d.id);
-    } else if (
-      d.tipo === 'progreso' &&
-      d.id &&
-      d.mensaje !== undefined &&
-      d.progreso !== undefined
-    ) {
-      notificaciones.progreso(d.id, d.mensaje, d.progreso);
-    } else if (d.mensaje) {
-      notificaciones.notificar(d.tipo as TipoNotificacion, d.mensaje, d.duracionMs);
+/** Lo que hay que pintar, y cómo se quita. */
+export const notificaciones = {
+  get lista(): readonly Notificacion[] {
+    return cola;
+  },
+  cerrar(id: number): void {
+    cola = descartar(cola, id);
+  },
+  /**
+   * Detiene o reanuda la cuenta atrás de todos los avisos.
+   *
+   * La enciende quien pinta mientras el puntero está encima o el foco dentro: un
+   * fallo lleva su código en la segunda línea, y que se vaya a mitad de copiarlo
+   * sería el defecto que se arregló al dejar de hacerlos eternos.
+   */
+  pausar(detenida: boolean): void {
+    pausada = detenida;
+  },
+  /** Vacía la cola. Solo para las pruebas: en la aplicación nada la usa. */
+  vaciar(): void {
+    cola = [];
+    if (repaso !== null) {
+      clearInterval(repaso);
+      repaso = null;
     }
-  });
-}
+  }
+};
+
+export type { ClaseDeNotificacion, Notificacion };

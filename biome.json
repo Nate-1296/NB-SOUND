@@ -57,9 +57,9 @@
           "level": "error",
           "options": {
             "paths": {
-              "@tauri-apps/api": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
-              "@tauri-apps/api/core": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
-              "@tauri-apps/api/event": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md"
+              "@tauri-apps/api": "El puente IPC solo se invoca desde #lib/core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
+              "@tauri-apps/api/core": "El puente IPC solo se invoca desde #lib/core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
+              "@tauri-apps/api/event": "El puente IPC solo se invoca desde #lib/core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md"
             }
           }
         }
@@ -102,9 +102,9 @@
               "level": "error",
               "options": {
                 "paths": {
-                  "@tauri-apps/api": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
-                  "@tauri-apps/api/core": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
-                  "@tauri-apps/api/event": "El puente IPC solo se invoca desde $core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md"
+                  "@tauri-apps/api": "El puente IPC solo se invoca desde #lib/core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
+                  "@tauri-apps/api/core": "El puente IPC solo se invoca desde #lib/core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md",
+                  "@tauri-apps/api/event": "El puente IPC solo se invoca desde #lib/core/ipc. Ver docs/adr/decisions/ADR-001-pila-tecnologica.md"
                 }
               }
             }

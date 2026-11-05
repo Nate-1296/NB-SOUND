@@ -16,11 +16,11 @@
     djSesion,
     djValorar,
     type VistaSesionDj
-  } from '$core/ipc/dj';
-  import { formatoTiempo, reproductor } from '$core/reproductor.svelte';
-  import { textosDj } from '$lib/i18n/dj';
-  import FormaDeOnda from '$ui/FormaDeOnda.svelte';
-  import Icon from '$ui/Icon.svelte';
+  } from '#lib/core/ipc/dj.ts';
+  import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textosDj } from '#lib/i18n/dj.ts';
+  import FormaDeOnda from '#lib/ui/FormaDeOnda.svelte';
+  import Icon from '#lib/ui/Icon.svelte';
 
   interface Props {
     sesionId: number;

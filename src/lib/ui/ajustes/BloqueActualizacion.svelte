@@ -6,11 +6,12 @@
   Rust antes de tocar nada. Se carga aparte del arranque.
 -->
 <script lang="ts">
-  import { NsError } from '$core/ipc';
-  import { actualizacionBuscar, actualizacionInstalar } from '$core/ipc/aparte';
-  import type { Actualizacion } from '$lib/bindings';
-  import { textosAparte } from '$lib/i18n/aparte';
-  import Spinner from '$ui/Spinner.svelte';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
+  import { NsError } from '#lib/core/ipc/index.ts';
+  import { actualizacionBuscar, actualizacionInstalar } from '#lib/core/ipc/aparte.ts';
+  import type { Actualizacion } from '#lib/bindings/index.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
+  import Spinner from '#lib/ui/Spinner.svelte';
 
   const t = textosAparte.actualizacion;
 
@@ -33,17 +34,12 @@
       nueva = await actualizacionBuscar();
       const txt = nueva ? t.disponible(nueva.version) : t.alDia;
       mensaje = txt;
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', {
-          detail: { tipo: nueva ? 'info' : 'exito', mensaje: txt }
-        })
-      );
+      if (nueva) notificar.informacion(txt);
+      else notificar.exito(txt);
     } catch (error) {
       const err = explicar(error);
       mensaje = err;
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', { detail: { tipo: 'error', mensaje: err } })
-      );
+      notificar.error(err);
     } finally {
       ocupado = false;
     }
@@ -57,9 +53,7 @@
     } catch (error) {
       const err = explicar(error);
       mensaje = err;
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', { detail: { tipo: 'error', mensaje: err } })
-      );
+      notificar.error(err);
     } finally {
       ocupado = false;
     }

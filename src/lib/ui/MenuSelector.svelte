@@ -4,8 +4,8 @@
   Reemplaza el elemento nativo <select> con un botón interactivo y un menú flotante accesible.
 -->
 <script lang="ts" generics="T extends string | number">
-  import Icon from '$ui/Icon.svelte';
-  import type { NombreDeIcono } from '$ui/iconos';
+  import Icon from '#lib/ui/Icon.svelte';
+  import type { NombreDeIcono } from '#lib/ui/iconos.ts';
 
   interface Opcion {
     valor: T;

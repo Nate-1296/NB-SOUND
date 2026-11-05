@@ -12,7 +12,7 @@ import {
   movilQuitar,
   movilTelefonos,
   type Telefono
-} from '$core/ipc';
+} from '#lib/core/ipc/index.ts';
 
 class Telefonos {
   estado = $state<EstadoMovil>({ activo: false, direccion: null, alArrancar: false });

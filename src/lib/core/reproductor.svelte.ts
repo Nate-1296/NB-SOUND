@@ -18,7 +18,7 @@ import {
   pistasResumen,
   reproductorEstado,
   reproductorOrden
-} from '$core/ipc';
+} from '#lib/core/ipc/index.ts';
 
 const VACIA: Instantanea = {
   estado: 'detenido',
@@ -125,6 +125,18 @@ class EstadoDelReproductor {
   anterior = () => this.orden({ tipo: 'anterior' });
   buscar = (segundos: number) => this.orden({ tipo: 'buscar', segundos });
   volumen = (valor: number) => this.orden({ tipo: 'volumen', valor });
+
+  /** El volumen de antes de silenciar, para volver a él y no al máximo. */
+  #antesDeSilenciar = 1;
+
+  alternarSilencio = () => {
+    const actual = this.instantanea.volumen;
+    if (actual > 0) {
+      this.#antesDeSilenciar = actual;
+      return this.volumen(0);
+    }
+    return this.volumen(this.#antesDeSilenciar);
+  };
   alternarAleatorio = () => this.orden({ tipo: 'aleatorio', activo: !this.instantanea.aleatorio });
 
   /** Ninguno, todo y una, en ese orden, como en la V1. */

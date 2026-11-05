@@ -10,6 +10,7 @@ use std::f64::consts::PI;
 use std::path::Path;
 
 use rusqlite::types::Value;
+use rusqlite::OptionalExtension;
 use serde::Serialize;
 use ts_rs::TS;
 
@@ -696,6 +697,89 @@ pub fn perfil(db: &BaseDeDatos) -> NsResult<Perfil> {
     })
 }
 
+// --- La foto de perfil -----------------------------------------------------------
+
+/// El lado más largo con que se guarda la foto: se pinta a 160 px como mucho, y el
+/// doble basta para pantallas densas.
+const LADO_FOTO: u32 = 512;
+/// Lo más grande que se acepta leer. Una foto de móvil ronda los 5 MB; más es un
+/// archivo equivocado, y leerlo entero bloquearía el hilo un buen rato.
+const MAX_FOTO: u64 = 32 * 1024 * 1024;
+
+/// Cambia la foto de perfil por la imagen de `origen`.
+///
+/// Se decodifica (lo que no es PNG o JPEG no entra), se reduce y se guarda como
+/// PNG con su huella por nombre, en `datos/perfil/<2>/<huella>.png`: la misma forma
+/// que dejó el importador de la V1. Al cambiar el nombre cambia la respuesta de
+/// `portada://localhost/perfil`, y la anterior se borra si ya nadie la usa.
+///
+/// # Errors
+///
+/// [`NsError::FileNotFound`] si no se puede leer; [`NsError::InvalidInput`] si
+/// no es una imagen o es demasiado grande; [`NsError::StorageFailure`] si no se
+/// puede escribir.
+pub fn cambiar_foto(db: &BaseDeDatos, datos: &Path, origen: &Path) -> NsResult<()> {
+    use sha2::{Digest, Sha256};
+    use std::fmt::Write as _;
+
+    let tamano = std::fs::metadata(origen)
+        .map_err(|_| NsError::FileNotFound)?
+        .len();
+    if tamano > MAX_FOTO {
+        return Err(NsError::InvalidInput);
+    }
+    let imagen = image::open(origen).map_err(|_| NsError::InvalidInput)?;
+    let reducida = if imagen.width().max(imagen.height()) > LADO_FOTO {
+        imagen.thumbnail(LADO_FOTO, LADO_FOTO)
+    } else {
+        imagen
+    };
+    let mut png = Vec::new();
+    reducida
+        .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+        .map_err(|_| NsError::Internal)?;
+    let huella = Sha256::digest(&png)
+        .iter()
+        .fold(String::with_capacity(64), |mut s, b| {
+            let _ = write!(s, "{b:02x}");
+            s
+        });
+    let relativa = format!("{}/{huella}.png", &huella[..2]);
+    let carpeta = datos.join("perfil");
+    let destino = carpeta.join(&relativa);
+    if let Some(padre) = destino.parent() {
+        std::fs::create_dir_all(padre).map_err(|_| NsError::StorageFailure)?;
+    }
+    std::fs::write(&destino, &png).map_err(|_| NsError::StorageFailure)?;
+
+    let mut conn = db.conexion()?;
+    let tx = crate::db::transaccion_de_escritura(&mut conn)?;
+    let anterior: Option<String> = tx
+        .query_row(
+            "SELECT valor FROM preferencias WHERE clave = 'foto_perfil'",
+            [],
+            |f| f.get::<_, String>(0),
+        )
+        .optional()
+        .map_err(|_| NsError::StorageFailure)?
+        .and_then(|v| serde_json::from_str::<String>(&v).ok());
+    tx.execute(
+        "INSERT INTO preferencias (clave, valor) VALUES ('foto_perfil', ?1)
+         ON CONFLICT (clave) DO UPDATE SET valor = excluded.valor,
+             actualizada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
+        [serde_json::Value::from(relativa.as_str()).to_string()],
+    )
+    .map_err(|_| NsError::StorageFailure)?;
+    tx.commit().map_err(|_| NsError::StorageFailure)?;
+
+    if let Some(vieja) = anterior.filter(|v| *v != relativa) {
+        if let Ok(ruta) = crate::security::resolve_within(&carpeta, Path::new(&vieja)) {
+            let _ = std::fs::remove_file(ruta);
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -801,5 +885,51 @@ mod tests {
         let leido = std::fs::read_to_string(&ruta).unwrap();
         let _ = std::fs::remove_file(&ruta);
         assert!(leido.contains("<polygon"));
+    }
+
+    #[test]
+    fn la_foto_nueva_se_guarda_por_contenido_y_reemplaza_a_la_anterior() {
+        let d = std::env::temp_dir().join(format!("ns-foto-perfil-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        let db = BaseDeDatos::en_memoria().unwrap();
+        let grande = d.join("grande.png");
+        image::RgbImage::from_pixel(1000, 600, image::Rgb([200, 10, 10]))
+            .save(&grande)
+            .unwrap();
+        cambiar_foto(&db, &d, &grande).unwrap();
+        let leer = || -> String {
+            let v: String = db
+                .conexion()
+                .unwrap()
+                .query_row(
+                    "SELECT valor FROM preferencias WHERE clave = 'foto_perfil'",
+                    [],
+                    |f| f.get(0),
+                )
+                .unwrap();
+            serde_json::from_str(&v).unwrap()
+        };
+        let primera = leer();
+        let guardada = image::open(d.join("perfil").join(&primera)).unwrap();
+        assert_eq!((guardada.width(), guardada.height()), (512, 307));
+
+        let otra = d.join("otra.jpg");
+        image::RgbImage::from_pixel(40, 40, image::Rgb([10, 200, 10]))
+            .save(&otra)
+            .unwrap();
+        cambiar_foto(&db, &d, &otra).unwrap();
+        assert_ne!(leer(), primera);
+        assert!(!d.join("perfil").join(&primera).exists());
+
+        // Lo que no es una imagen no cambia nada.
+        std::fs::write(d.join("falsa.png"), b"no soy un png").unwrap();
+        let actual = leer();
+        assert_eq!(
+            cambiar_foto(&db, &d, &d.join("falsa.png")),
+            Err(NsError::InvalidInput)
+        );
+        assert_eq!(leer(), actual);
+        let _ = std::fs::remove_dir_all(d);
     }
 }

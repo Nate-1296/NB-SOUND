@@ -6,7 +6,8 @@
   puente. Se carga aparte del arranque.
 -->
 <script lang="ts">
-  import { type EstadoCopia, NsError } from '$core/ipc';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
+  import { type EstadoCopia, NsError } from '#lib/core/ipc/index.ts';
   import {
     copiaCrear,
     copiaElegirCarpeta,
@@ -14,9 +15,9 @@
     copiaFrecuencia,
     copiaRestaurar,
     reiniciar
-  } from '$core/ipc/aparte';
-  import { textosAparte } from '$lib/i18n/aparte';
-  import MenuSelector from '$ui/MenuSelector.svelte';
+  } from '#lib/core/ipc/aparte.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
+  import MenuSelector from '#lib/ui/MenuSelector.svelte';
 
   const t = textosAparte.copia;
   const FRECUENCIAS = [0, 1, 7, 30];
@@ -46,17 +47,13 @@
       const txt = r ? t.creada((r.bytes / 1_048_576).toFixed(1), r.portadas) : null;
       mensaje = txt;
       if (txt) {
-        window.dispatchEvent(
-          new CustomEvent('ns:notificacion', { detail: { tipo: 'exito', mensaje: txt } })
-        );
+        notificar.exito(txt);
       }
       estado = await copiaEstado();
     } catch (error) {
       const err = explicar(error);
       mensaje = err;
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', { detail: { tipo: 'error', mensaje: err } })
-      );
+      notificar.error(err);
     } finally {
       ocupado = false;
     }
@@ -69,16 +66,12 @@
     try {
       if (await copiaRestaurar()) {
         estado = await copiaEstado();
-        window.dispatchEvent(
-          new CustomEvent('ns:notificacion', { detail: { tipo: 'exito', mensaje: t.pendiente } })
-        );
+        notificar.exito(t.pendiente);
       }
     } catch (error) {
       const err = explicar(error);
       mensaje = err;
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', { detail: { tipo: 'error', mensaje: err } })
-      );
+      notificar.error(err);
     } finally {
       ocupado = false;
     }
@@ -90,9 +83,7 @@
     } catch (error) {
       const err = explicar(error);
       mensaje = err;
-      window.dispatchEvent(
-        new CustomEvent('ns:notificacion', { detail: { tipo: 'error', mensaje: err } })
-      );
+      notificar.error(err);
     }
   }
 

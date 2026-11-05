@@ -4,8 +4,8 @@
   Panel lateral para sincronización remota, gestión de teléfonos y modo fiesta.
 -->
 <script lang="ts">
-  import { textos } from '$lib/i18n';
-  import Icon from '$ui/Icon.svelte';
+  import { textos } from '#lib/i18n/index.ts';
+  import Icon from '#lib/ui/Icon.svelte';
   import SeccionDispositivos from './SeccionDispositivos.svelte';
 
   const { oncerrar }: { oncerrar: () => void } = $props();

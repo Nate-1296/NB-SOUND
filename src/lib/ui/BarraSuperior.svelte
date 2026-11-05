@@ -9,7 +9,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { textos } from '$lib/i18n';
+  import { textos } from '#lib/i18n/index.ts';
   import { untrack } from 'svelte';
 
   import Icon from './Icon.svelte';
@@ -196,15 +196,15 @@
 </header>
 
 {#if drawerAbierto === 'karaoke'}
-  {#await import('$ui/karaoke/ConsolaKaraokeDrawer.svelte') then m}
+  {#await import('#lib/ui/karaoke/ConsolaKaraokeDrawer.svelte') then m}
     <m.default oncerrar={() => (drawerAbierto = null)} />
   {/await}
 {:else if drawerAbierto === 'dispositivos'}
-  {#await import('$ui/dispositivos/ConsolaDispositivosDrawer.svelte') then m}
+  {#await import('#lib/ui/dispositivos/ConsolaDispositivosDrawer.svelte') then m}
     <m.default oncerrar={() => (drawerAbierto = null)} />
   {/await}
 {:else if drawerAbierto === 'anadir'}
-  {#await import('$ui/importacion/ConsolaImportacionDrawer.svelte') then m}
+  {#await import('#lib/ui/importacion/ConsolaImportacionDrawer.svelte') then m}
     <m.default oncerrar={() => (drawerAbierto = null)} />
   {/await}
 {/if}

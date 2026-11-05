@@ -6,11 +6,11 @@
   arranque.
 -->
 <script lang="ts">
-  import { reproductor } from '$core/reproductor.svelte';
-  import { textosDj } from '$lib/i18n/dj';
-  import HistorialDj from '$ui/dj/HistorialDj.svelte';
-  import PedirSesion from '$ui/dj/PedirSesion.svelte';
-  import SesionActiva from '$ui/dj/SesionActiva.svelte';
+  import { reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textosDj } from '#lib/i18n/dj.ts';
+  import HistorialDj from '#lib/ui/dj/HistorialDj.svelte';
+  import PedirSesion from '#lib/ui/dj/PedirSesion.svelte';
+  import SesionActiva from '#lib/ui/dj/SesionActiva.svelte';
 
   const t = textosDj;
 

@@ -5,10 +5,10 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { importacion } from '$core/importacion.svelte';
-  import { anadirMusica, type Cifras, inicio } from '$core/ipc';
-  import { textos } from '$lib/i18n';
-  import Icon from '$ui/Icon.svelte';
+  import { importacion } from '#lib/core/importacion.svelte.ts';
+  import { anadirMusica, type Cifras, inicio } from '#lib/core/ipc/index.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import Icon from '#lib/ui/Icon.svelte';
   import { onMount } from 'svelte';
 
   const { oncerrar }: { oncerrar: () => void } = $props();
@@ -235,7 +235,7 @@
 
     <!-- Gestión de duplicados -->
     <div class="duplicados-bloque">
-      {#await import('$ui/biblioteca/TarjetaDuplicados.svelte') then m}
+      {#await import('#lib/ui/biblioteca/TarjetaDuplicados.svelte') then m}
         <m.default />
       {/await}
     </div>
@@ -360,7 +360,7 @@
       var(--m3c-primary-container) 15%
     );
     border-color: var(--m3c-primary);
-    box-shadow: var(--ns-sombra-1);
+    box-shadow: 0 2px 8px var(--m3c-shadow);
   }
 
   .tarjeta-accion:disabled {

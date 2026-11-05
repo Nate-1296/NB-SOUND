@@ -75,10 +75,15 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           includeUpdaterJson: true
           args: --config {"bundle":{"createUpdaterArtifacts":true}}
+      # El .tar.gz es el contenido del .deb para las distribuciones sin dpkg (Arch y
+      # derivadas). Va firmado con la misma clave que lo demás: la aplicación lo
+      # instala ella misma (`net.rs`, `instalar_tar`) y sin firma se negaría.
       - name: Paquete de sistema .tar.gz (Linux)
         if: runner.os == 'Linux'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           version=$(node -p "require('./package.json').version")
           etiqueta="${{ github.ref_type == 'tag' && github.ref_name || '' }}"
@@ -90,4 +95,6 @@ jobs:
           tar -ztvf "$archivo" | grep -q "usr/bin/fpcalc"
           tar -ztvf "$archivo" | grep -q "usr/lib/NB Sound/libonnxruntime.so"
           tar -ztvf "$archivo" | grep -q "usr/share/applications/NB Sound.desktop"
-          gh release upload "$etiqueta" "$archivo" --clobber
+          pnpm tauri signer sign "$archivo"
+          test -s "$archivo.sig"
+          gh release upload "$etiqueta" "$archivo" "$archivo.sig" --clobber

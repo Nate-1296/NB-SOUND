@@ -6,7 +6,7 @@
  * y se reinicia naturalmente al cerrar y volver a abrir la aplicación.
  */
 
-import type { OrdenAlbumes, OrdenArtistas, OrdenPistas } from '$core/ipc';
+import type { OrdenAlbumes, OrdenArtistas, OrdenPistas } from '#lib/core/ipc/index.ts';
 
 export type ModoRejilla = 'sm' | 'md' | 'lg' | 'lista';
 export type VistaBiblioteca = 'albumes' | 'artistas' | 'pistas';
@@ -50,10 +50,3 @@ class EstadoPlaylists {
 }
 
 export const estadoPlaylists = new EstadoPlaylists();
-
-class EstadoPantalla {
-  enPantallaCompleta = $state(false);
-  controlesVisibles = $state(true);
-}
-
-export const estadoPantalla = new EstadoPantalla();

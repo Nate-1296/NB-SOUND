@@ -6,10 +6,10 @@
   aparte del arranque.
 -->
 <script lang="ts">
-  import { type Descubrimiento, urlPortada } from '$core/ipc';
-  import { descubrir } from '$core/ipc/aparte';
-  import { reproductor } from '$core/reproductor.svelte';
-  import { textosAparte } from '$lib/i18n/aparte';
+  import { type Descubrimiento, urlPortada } from '#lib/core/ipc/index.ts';
+  import { descubrir } from '#lib/core/ipc/aparte.ts';
+  import { reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
 
   interface Props {
     consulta: string;

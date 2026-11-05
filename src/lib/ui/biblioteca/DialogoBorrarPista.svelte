@@ -1,10 +1,12 @@
 <!--
   @component
-  Diálogo para eliminar una canción de la biblioteca o también del equipo (ADR-007, EXP-05).
+  Quitar una canción de la biblioteca (EXP-05), y si se quiere, mandar su archivo a
+  la papelera: nunca se borra del todo (ADR-002).
 -->
 <script lang="ts">
-  import { borrarPista } from '$core/ipc';
-  import { textos } from '$lib/i18n';
+  import { borrarPista } from '#lib/core/ipc/index.ts';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
 
   interface Props {
     pistaId: number;
@@ -31,9 +33,10 @@
     try {
       await borrarPista(pistaId, borrarArchivo);
       dialogo?.close();
+      notificar.exito(t.borrada(titulo));
       oneliminada();
     } catch {
-      // fallo
+      notificar.error(t.borrarFallo);
     } finally {
       eliminando = false;
     }

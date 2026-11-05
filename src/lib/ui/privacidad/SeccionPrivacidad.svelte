@@ -5,9 +5,9 @@
   todo está apagado.
 -->
 <script lang="ts">
-  import { privacidad, SERVICIOS_EN_LINEA } from '$core/privacidad.svelte';
-  import { textos } from '$lib/i18n';
-  import { textosAparte } from '$lib/i18n/aparte';
+  import { privacidad, SERVICIOS_EN_LINEA } from '#lib/core/privacidad.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
+  import { textosAparte } from '#lib/i18n/aparte.ts';
 
   const t = textos.ajustes;
   const a = textosAparte.privacidad;

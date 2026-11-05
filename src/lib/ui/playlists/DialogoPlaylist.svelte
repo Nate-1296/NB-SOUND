@@ -4,8 +4,8 @@
   (nombre vacío o repetido) se dicen debajo del campo, con su texto.
 -->
 <script lang="ts">
-  import { crearPlaylist, NsError, renombrarPlaylist } from '$core/ipc';
-  import { textos } from '$lib/i18n';
+  import { crearPlaylist, NsError, renombrarPlaylist } from '#lib/core/ipc/index.ts';
+  import { textos } from '#lib/i18n/index.ts';
 
   interface Props {
     abierto: boolean;

@@ -7,15 +7,17 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { encolar, favoritas } from '#lib/core/acciones.svelte.ts';
   import {
     completarDatos,
     mostrarEnExplorador,
     NsError,
     type PistaResumen,
     urlPortada
-  } from '$core/ipc';
-  import { formatoTiempo } from '$core/reproductor.svelte';
-  import { textos } from '$lib/i18n';
+  } from '#lib/core/ipc/index.ts';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
+  import { formatoTiempo } from '#lib/core/reproductor.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
 
   import Icon from '../Icon.svelte';
 
@@ -26,8 +28,6 @@
     sonando?: boolean;
     contexto?: 'biblioteca' | 'album' | 'artista' | 'playlist';
     onreproducir: () => void;
-    onanadir: () => void;
-    onfavorita: () => void;
     /** Sus datos cambiaron: la página recarga la lista para mostrarlo. */
     oncambiada?: () => void;
   }
@@ -39,13 +39,16 @@
     sonando = false,
     contexto = 'biblioteca',
     onreproducir,
-    onanadir,
-    onfavorita,
     oncambiada
   }: Props = $props();
 
   const t = textos.biblioteca;
   let rota = $state(false);
+  const favorita = $derived(favoritas.es(pista));
+
+  function mostrarArchivo() {
+    mostrarEnExplorador(pista.id).catch(() => notificar.error(t.explorarFallo));
+  }
 
   // Popover para añadir a playlists
   let menuPlaylists: HTMLDivElement | undefined = $state();
@@ -175,10 +178,10 @@
     <button
       type="button"
       class="icono"
-      class:activo={pista.favorita}
-      aria-label={pista.favorita ? t.quitarFavorita : t.marcarFavorita}
-      aria-pressed={pista.favorita}
-      onclick={onfavorita}
+      class:activo={favorita}
+      aria-label={favorita ? t.quitarFavorita : t.marcarFavorita}
+      aria-pressed={favorita}
+      onclick={() => favoritas.alternar(pista)}
     >
       <Icon nombre="favorito" tamano={18} />
     </button>
@@ -229,7 +232,19 @@
             class="opcion-menu"
             onclick={() => {
               cerrarMenuAcciones();
-              onanadir();
+              void encolar([pista.id], true);
+            }}
+          >
+            <Icon nombre="siguiente" tamano={18} />
+            <span>{t.reproducirDespues}</span>
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            class="opcion-menu"
+            onclick={() => {
+              cerrarMenuAcciones();
+              void encolar([pista.id], false);
             }}
           >
             <Icon nombre="cola" tamano={18} />
@@ -296,7 +311,7 @@
             class="opcion-menu"
             onclick={() => {
               cerrarMenuAcciones();
-              void mostrarEnExplorador(pista.id);
+              mostrarArchivo();
             }}
           >
             <Icon nombre="carpeta" tamano={18} />

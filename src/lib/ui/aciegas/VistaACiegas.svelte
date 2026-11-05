@@ -13,7 +13,7 @@
 
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { urlPortada } from '$core/ipc';
+  import { urlPortada } from '#lib/core/ipc/index.ts';
   import {
     aciegasDisponibles,
     aciegasFragmento,
@@ -27,10 +27,10 @@
     type ModoDisponible,
     type ResultadoIntento,
     type Ronda
-  } from '$core/ipc/aciegas';
-  import { reproductor } from '$core/reproductor.svelte';
-  import { textosACiegas } from '$lib/i18n/aciegas';
-  import Icon from '$ui/Icon.svelte';
+  } from '#lib/core/ipc/aciegas.ts';
+  import { reproductor } from '#lib/core/reproductor.svelte.ts';
+  import { textosACiegas } from '#lib/i18n/aciegas.ts';
+  import Icon from '#lib/ui/Icon.svelte';
 
   const t = textosACiegas;
   const MODOS: Modo[] = ['portada', 'audio', 'redescubrimiento', 'nunca_eliges'];
