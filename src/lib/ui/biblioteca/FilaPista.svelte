@@ -38,6 +38,12 @@
     oncambiada?: () => void;
     /** Lo que la lista añade al menú: mover o quitar de una playlist. */
     extra?: readonly Accion[];
+    /**
+     * Con número: el álbum, la playlist y los populares, donde el orden significa
+     * algo. En la biblioteca y en Buscar no: no es un ranking (Nathan, QA-R2), y
+     * reproducir y el ecualizador van sobre la portada.
+     */
+    numerada?: boolean;
   }
 
   let {
@@ -48,7 +54,8 @@
     contexto = 'biblioteca',
     onreproducir,
     oncambiada,
-    extra = []
+    extra = [],
+    numerada = contexto === 'album' || contexto === 'playlist'
   }: Props = $props();
 
   const t = textos.biblioteca;
@@ -156,6 +163,7 @@
   class="fila"
   class:sonando
   class:contexto-album={contexto === 'album'}
+  class:sin-numero={!numerada}
   role="row"
   tabindex="0"
   ondblclick={(e) => {
@@ -169,20 +177,22 @@
     }
   }}
 >
-  <span class="numero">
-    {#if sonando}
-      <span class="icono-sonando" title={t.sonando} aria-label={t.sonando}>
-        <Icon nombre="ecualizador" tamano={16} />
-      </span>
-    {:else}
-      <span class="cifra">{numero}</span>
-    {/if}
-    <button type="button" class="reproducir" aria-label={t.reproducir} onclick={onreproducir}>
-      <Icon nombre="reproducir" tamano={16} />
-    </button>
-  </span>
+  {#if numerada}
+    <span class="numero">
+      {#if sonando}
+        <span class="icono-sonando" title={t.sonando} aria-label={t.sonando}>
+          <Icon nombre="ecualizador" tamano={16} />
+        </span>
+      {:else}
+        <span class="cifra">{numero}</span>
+      {/if}
+      <button type="button" class="reproducir" aria-label={t.reproducir} onclick={onreproducir}>
+        <Icon nombre="reproducir" tamano={16} />
+      </button>
+    </span>
+  {/if}
   {#if contexto !== 'album'}
-    <span class="portada" aria-hidden="true">
+    <span class="portada">
       {#if pista.tienePortada && !rapido && !rota}
         <img
           src={urlPortada('pista', pista.id, 64)}
@@ -190,10 +200,26 @@
           width="40"
           height="40"
           loading="lazy"
+          decoding="async"
           onerror={() => (rota = true)}
         />
       {:else}
         <Icon nombre="cancion" tamano={18} />
+      {/if}
+      {#if !numerada}
+        {#if sonando}
+          <span class="velo sonando-velo" title={t.sonando} aria-label={t.sonando}>
+            <Icon nombre="ecualizador" tamano={16} />
+          </span>
+        {/if}
+        <button
+          type="button"
+          class="velo reproducir"
+          aria-label={t.reproducir}
+          onclick={onreproducir}
+        >
+          <Icon nombre="reproducir" tamano={16} />
+        </button>
       {/if}
     </span>
   {/if}
@@ -296,6 +322,41 @@
 
   .fila.contexto-album {
     grid-template-columns: 2.5rem minmax(10rem, 1fr) 2.25rem 3.25rem 4.5rem;
+  }
+
+  .fila.sin-numero {
+    grid-template-columns: 2.5rem minmax(10rem, 2fr) minmax(6rem, 1fr) 2.25rem 3.25rem 4.5rem;
+  }
+
+  .portada {
+    position: relative;
+  }
+
+  /* Sin número, reproducir y el ecualizador van sobre la portada. */
+  .velo {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: none;
+    border-radius: inherit;
+    background: color-mix(in srgb, var(--m3c-scrim) 55%, transparent);
+    color: var(--m3c-on-surface);
+  }
+
+  .sonando-velo {
+    color: var(--m3c-primary);
+  }
+
+  .fila.sin-numero .reproducir {
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .fila.sin-numero:hover .reproducir,
+  .fila.sin-numero .reproducir:focus-visible {
+    opacity: 1;
   }
 
   .fila:hover,
@@ -481,6 +542,10 @@
 
     .fila {
       grid-template-columns: 2.5rem 2.5rem minmax(10rem, 1fr) 2.25rem 3.25rem 4.5rem;
+    }
+
+    .fila.sin-numero {
+      grid-template-columns: 2.5rem minmax(10rem, 1fr) 2.25rem 3.25rem 4.5rem;
     }
   }
 </style>

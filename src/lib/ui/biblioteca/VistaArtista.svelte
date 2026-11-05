@@ -21,7 +21,6 @@
   } from '#lib/core/ipc/index.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
-  import CabeceraPistas from '#lib/ui/biblioteca/CabeceraPistas.svelte';
   import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
   import AccionesColeccion from '#lib/ui/AccionesColeccion.svelte';
   import { ambiente } from '#lib/ui/ambiente.ts';
@@ -156,6 +155,7 @@
             <li>
               <FilaPista
                 contexto="artista"
+                numerada
                 pista={p}
                 numero={i + 1}
                 sonando={reproductor.instantanea.pistaId === p.id}
@@ -181,7 +181,6 @@
 
     <h2>{t.artista.canciones}</h2>
     {#if total > 0}
-      <CabeceraPistas contexto="artista" />
       <div class="lista">
         {#key id}
           <ListaVirtual {total} altoFila={56} {cargarBloque} etiqueta={t.artista.canciones}>

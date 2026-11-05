@@ -16,10 +16,11 @@
     inicio,
     reproducirLista,
     reproducirPlaylist,
+    sorprendeme,
     urlPortada
   } from '#lib/core/ipc/index.ts';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
-  import { duracionDetallada } from '#lib/core/formato.ts';
   import { textos } from '#lib/i18n/index.ts';
   import Icon from '#lib/ui/Icon.svelte';
   import Mosaico from '#lib/ui/playlists/Mosaico.svelte';
@@ -69,6 +70,11 @@
     }
   }
 
+  async function sorpresa() {
+    const p = await sorprendeme().catch(() => null);
+    if (p) notificar.informacion(t.sorprendeme(p.titulo, p.artista));
+  }
+
   function reproducir(ids: number[], desde = 0) {
     void reproductor.reproducirPistas(ids, desde);
   }
@@ -104,16 +110,10 @@
   {:else}
     <header class="saludo">
       <h1>{saludo}</h1>
-      {#if hayBiblioteca && datos}
-        <p>{t.subtitulo}</p>
-        <ul class="cifras">
-          {#each [{ icono: 'cancion', valor: datos.cifras.pistas.toLocaleString('es'), rotulo: t.pistas }, { icono: 'artista', valor: datos.cifras.artistas.toLocaleString('es'), rotulo: t.artistas }, { icono: 'album', valor: datos.cifras.albumes.toLocaleString('es'), rotulo: t.albumes }, { icono: 'reloj', valor: duracionDetallada(datos.cifras.duracionSeg), rotulo: t.duracion }] as const as c (c.rotulo)}
-            <li>
-              <span class="cifra-icono"><Icon nombre={c.icono} tamano={18} /></span>
-              <span class="cifra-datos"><strong>{c.valor}</strong><span>{c.rotulo}</span></span>
-            </li>
-          {/each}
-        </ul>
+      {#if hayBiblioteca}
+        <button type="button" class="sorprendeme" onclick={sorpresa} title={t.sorprendemeAyuda}>
+          <Icon nombre="aleatorio" tamano={18} />{textos.reproductor.sorprendeme}
+        </button>
       {/if}
     </header>
   {/if}
@@ -241,8 +241,6 @@
     {#snippet tarjetaPodio(
       p: NonNullable<typeof datos>['top'][number],
       lugar: number,
-      insignia: string,
-      clase: 'oro' | 'plata' | 'bronce',
       ordenIdx: number
     )}
       <button
@@ -250,26 +248,20 @@
         class="podio-tarjeta podio-{lugar}"
         onclick={() => reproducir(idsTop, ordenIdx)}
       >
-        <div class="podio-insignia {clase}">{insignia}</div>
-        <div class="podio-portada-box">
-          <span class="podio-portada">
-            {#if p.pista.tienePortada}
-              <img src={urlPortada('pista', p.pista.id, lugar === 1 ? 320 : 240)} alt="" />
-            {:else}
-              <Icon nombre="cancion" tamano={lugar === 1 ? 40 : 32} />
-            {/if}
-          </span>
-          <span class="podio-play"><Icon nombre="reproducir" tamano={lugar === 1 ? 22 : 18} /></span
-          >
-        </div>
-        <div class="podio-texto">
+        <span class="podio-portada">
+          {#if p.pista.tienePortada}
+            <img src={urlPortada('pista', p.pista.id, 320)} alt="" />
+          {:else}
+            <Icon nombre="cancion" tamano={40} />
+          {/if}
+          <span class="podio-play"><Icon nombre="reproducir" tamano={24} /></span>
+        </span>
+        <span class="podio-texto">
           <strong title={p.pista.titulo}>{p.pista.titulo}</strong>
           <span class="sub">{p.pista.artista}</span>
           <span class="podio-escuchas">{t.reproducciones(p.reproducciones)}</span>
-        </div>
-        <div class="podio-pedestal pedestal-{lugar}">
-          <span class="pedestal-num">{lugar}</span>
-        </div>
+        </span>
+        <span class="pedestal" aria-label={t.podio[`lugar${lugar}` as 'lugar1']}>{lugar}</span>
       </button>
     {/snippet}
 
@@ -302,16 +294,36 @@
         {@const p0 = datos.top[0]}
         {@const p1 = datos.top[1]}
         {@const p2 = datos.top[2]}
+        {@const p3 = datos.top[3]}
         <div class="podio">
-          {@render tarjetaPodio(p1, 2, t.podio.lugar2, 'plata', 1)}
-          {@render tarjetaPodio(p0, 1, t.podio.lugar1, 'oro', 0)}
-          {@render tarjetaPodio(p2, 3, t.podio.lugar3, 'bronce', 2)}
+          {@render tarjetaPodio(p1, 2, 1)}
+          {@render tarjetaPodio(p0, 1, 0)}
+          {@render tarjetaPodio(p2, 3, 2)}
         </div>
 
-        {#if datos.top.length > 3}
-          <ol class="top-resto" start="4">
-            {#each datos.top.slice(3) as e, k (e.pista.id)}
-              {@render itemTop(e, k + 4, k + 3)}
+        {#if p3}
+          <!-- El cuarto se queda a las puertas del podio: más grande que el resto. -->
+          <button type="button" class="cuarto" onclick={() => reproducir(idsTop, 3)}>
+            <span class="cuarto-num">4</span>
+            <span class="cuarto-portada">
+              {#if p3.pista.tienePortada}<img
+                  src={urlPortada('pista', p3.pista.id, 160)}
+                  alt=""
+                />{:else}<Icon nombre="cancion" tamano={28} />{/if}
+            </span>
+            <span class="texto">
+              <strong>{p3.pista.titulo}</strong>
+              <span class="sub">{p3.pista.artista}</span>
+            </span>
+            <span class="podio-escuchas">{t.reproducciones(p3.reproducciones)}</span>
+            <span class="sub">{formatoTiempo(p3.pista.duracionSeg)}</span>
+          </button>
+        {/if}
+
+        {#if datos.top.length > 4}
+          <ol class="top-resto" start="5">
+            {#each datos.top.slice(4) as e, k (e.pista.id)}
+              {@render itemTop(e, k + 5, k + 4)}
             {/each}
           </ol>
         {/if}
@@ -461,70 +473,46 @@
     gap: var(--ns-espacio-3);
   }
 
-  /* El saludo grande y las cifras de la biblioteca, como la cabecera de la V1. */
+  /* El saludo a la izquierda y Sorpréndeme a la derecha, en la misma línea. */
   .saludo {
     display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-2);
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ns-espacio-3) var(--ns-espacio-5);
     margin: var(--ns-espacio-3) 0 var(--ns-espacio-2);
   }
 
   .saludo h1 {
+    flex: 1 1 24rem;
     margin: 0;
-    max-width: 52rem;
     color: var(--m3c-on-surface);
-    font-size: clamp(var(--ns-texto-xl), 3.2vw, var(--ns-texto-3xl));
+    font-size: clamp(var(--ns-texto-lg), 1.8vw, var(--ns-texto-xl));
     font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.01em;
+    line-height: 1.2;
     text-wrap: balance;
   }
 
-  .cifras {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--ns-espacio-3);
-    margin: var(--ns-espacio-3) 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .cifras li {
-    display: flex;
-    align-items: center;
-    gap: var(--ns-espacio-3);
-    padding: var(--ns-espacio-3) var(--ns-espacio-4);
-    border-radius: var(--ns-radio-lg);
-    background: var(--m3c-surface-container);
-  }
-
-  .cifra-icono {
-    display: grid;
-    place-items: center;
+  .sorprendeme {
+    display: inline-flex;
     flex: 0 0 auto;
-    width: 2.5rem;
+    align-items: center;
+    gap: var(--ns-espacio-2);
     height: 2.5rem;
+    padding: 0 var(--ns-espacio-5);
+    border: 1px solid color-mix(in srgb, var(--m3c-primary) 45%, transparent);
     border-radius: var(--ns-radio-pleno);
-    background: color-mix(in srgb, var(--m3c-primary) 16%, transparent);
+    background: color-mix(in srgb, var(--m3c-primary) 12%, transparent);
     color: var(--m3c-primary);
+    font: inherit;
+    font-size: var(--ns-texto-sm);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--ns-duracion-corta) var(--ns-curva);
   }
 
-  .cifra-datos {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .cifra-datos strong {
-    color: var(--m3c-on-surface);
-    font-size: var(--ns-texto-lg);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  .cifra-datos span {
-    color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-xs);
+  .sorprendeme:hover {
+    background: color-mix(in srgb, var(--m3c-primary) 22%, transparent);
   }
 
   /*
@@ -578,7 +566,6 @@
     color: var(--m3c-on-primary);
   }
 
-  .saludo p,
   .seccion-sub,
   .sub {
     margin: 0;
@@ -851,105 +838,54 @@
     font-size: var(--ns-texto-lg);
   }
 
+  /*
+   * El podio: tres portadas grandes sobre sus pedestales, el primero en el centro
+   * y más alto. Sin tarjetas teñidas: el color lo pone el pedestal.
+   */
   .podio {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--ns-espacio-3);
     align-items: end;
-    margin-top: var(--ns-espacio-2);
-    margin-bottom: var(--ns-espacio-4);
+    gap: var(--ns-espacio-5);
+    max-width: 46rem;
+    margin: var(--ns-espacio-3) auto 0;
+    width: 100%;
   }
 
   .podio-tarjeta {
-    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    padding: var(--ns-espacio-3) var(--ns-espacio-3) 0;
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-xl) var(--ns-radio-xl) 0 0;
-    background: var(--m3c-surface-container);
+    gap: var(--ns-espacio-3);
+    padding: 0;
+    border: none;
+    background: none;
     color: var(--m3c-on-surface);
     font: inherit;
     text-align: center;
     cursor: pointer;
-    transition:
-      background-color var(--ns-duracion-corta) var(--ns-curva),
-      border-color var(--ns-duracion-corta) var(--ns-curva),
-      box-shadow var(--ns-duracion-corta) var(--ns-curva);
-  }
-
-  .podio-tarjeta:hover {
-    border-color: var(--m3c-outline);
-    box-shadow: 0 var(--ns-espacio-3) var(--ns-espacio-5) var(--m3c-shadow);
-  }
-
-  .podio-1 {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--m3c-primary-container) 40%, var(--m3c-surface-container-high)) 0%,
-      var(--m3c-surface-container) 100%
-    );
-    border-color: color-mix(in srgb, var(--m3c-primary) 50%, var(--m3c-outline-variant));
-  }
-
-  /* Solo el primero lleva color: con los tres teñidos, el podio pesaba más que la música. */
-  .podio-2,
-  .podio-3 {
-    background: var(--m3c-surface-container);
-  }
-
-  .podio-insignia {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.125rem var(--ns-espacio-3);
-    border-radius: var(--ns-radio-pleno);
-    font-size: var(--ns-texto-xs);
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    margin-bottom: var(--ns-espacio-2);
-  }
-
-  .podio-insignia.oro {
-    background: var(--m3c-primary);
-    color: var(--m3c-on-primary);
-  }
-
-  .podio-insignia.plata {
-    background: var(--m3c-secondary);
-    color: var(--m3c-on-secondary);
-  }
-
-  .podio-insignia.bronce {
-    background: var(--m3c-tertiary);
-    color: var(--m3c-on-tertiary);
-  }
-
-  .podio-portada-box {
-    position: relative;
-    width: 6.5rem;
-    height: 6.5rem;
-    margin-bottom: var(--ns-espacio-2);
-  }
-
-  .podio-1 .podio-portada-box {
-    width: 8rem;
-    height: 8rem;
   }
 
   .podio-portada {
+    position: relative;
     display: grid;
     place-items: center;
-    width: 100%;
-    height: 100%;
-    border-radius: var(--ns-radio-lg);
+    width: min(100%, 9rem);
+    aspect-ratio: 1;
     overflow: hidden;
+    border-radius: var(--ns-radio-lg);
     background: var(--m3c-surface-container-highest);
-    border: 1px solid var(--m3c-outline-variant);
-    box-shadow: 0 var(--ns-espacio-1) var(--ns-espacio-3) var(--m3c-shadow);
+    color: var(--m3c-on-surface-variant);
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--m3c-shadow) 60%, transparent);
+    transition: transform var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .podio-1 .podio-portada {
+    width: min(100%, 11.5rem);
+  }
+
+  .podio-tarjeta:hover .podio-portada {
+    transform: scale(1.03);
   }
 
   .podio-portada img {
@@ -960,17 +896,21 @@
 
   .podio-play {
     position: absolute;
-    inset: 0;
+    right: var(--ns-espacio-2);
+    bottom: var(--ns-espacio-2);
     display: grid;
     place-items: center;
-    background: color-mix(in srgb, var(--m3c-scrim) 40%, transparent);
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-primary);
     color: var(--m3c-on-primary);
-    border-radius: var(--ns-radio-lg);
     opacity: 0;
     transition: opacity var(--ns-duracion-corta) var(--ns-curva);
   }
 
-  .podio-tarjeta:hover .podio-play {
+  .podio-tarjeta:hover .podio-play,
+  .podio-tarjeta:focus-visible .podio-play {
     opacity: 1;
   }
 
@@ -979,92 +919,112 @@
     flex-direction: column;
     gap: 0.125rem;
     width: 100%;
-    padding: 0 var(--ns-espacio-1);
-    margin-bottom: var(--ns-espacio-3);
+    min-width: 0;
   }
 
   .podio-texto strong {
-    font-size: var(--ns-texto-sm);
     overflow: hidden;
-    white-space: nowrap;
+    font-size: var(--ns-texto-md);
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .podio-1 .podio-texto strong {
-    font-size: var(--ns-texto-md);
+    font-size: var(--ns-texto-lg);
   }
 
   .podio-escuchas {
-    font-size: var(--ns-texto-xs);
     color: var(--m3c-primary);
-    font-weight: 600;
+    font-size: var(--ns-texto-xs);
+    font-weight: 700;
   }
 
-  .podio-pedestal {
+  .pedestal {
+    display: grid;
+    place-items: center;
     width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--ns-radio-sm) var(--ns-radio-sm) 0 0;
-  }
-
-  .pedestal-1 {
-    height: 3rem;
-    background: color-mix(
-      in srgb,
-      var(--m3c-primary-container) 80%,
-      var(--m3c-surface-container-highest)
-    );
-    color: var(--m3c-on-primary-container);
-  }
-
-  .pedestal-2 {
-    height: 2.25rem;
-    background: var(--m3c-surface-container-highest);
-    color: var(--m3c-on-surface-variant);
-  }
-
-  .pedestal-3 {
-    height: 1.5rem;
-    background: var(--m3c-surface-container-highest);
-    color: var(--m3c-on-surface-variant);
-  }
-
-  .pedestal-num {
-    font-size: var(--ns-texto-lg);
+    height: 3.5rem;
+    border-radius: var(--ns-radio-md) var(--ns-radio-md) 0 0;
+    background: color-mix(in srgb, var(--m3c-primary) 18%, var(--m3c-surface-container));
+    color: var(--m3c-on-surface);
+    font-size: var(--ns-texto-2xl);
     font-weight: 900;
-    line-height: 1;
-    opacity: 0.85;
+  }
+
+  .podio-1 .pedestal {
+    height: 5.5rem;
+    background: linear-gradient(
+      180deg,
+      var(--m3c-primary),
+      color-mix(in srgb, var(--m3c-primary) 55%, var(--m3c-surface-container))
+    );
+    color: var(--m3c-on-primary);
+    font-size: var(--ns-texto-3xl);
+  }
+
+  .podio-3 .pedestal {
+    height: 2.5rem;
+    background: color-mix(in srgb, var(--m3c-primary) 10%, var(--m3c-surface-container));
+    font-size: var(--ns-texto-xl);
+  }
+
+  /* El cuarto, a las puertas del podio. */
+  .cuarto {
+    display: grid;
+    grid-template-columns: 3rem 4.5rem minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--ns-espacio-4);
+    width: 100%;
+    margin-top: var(--ns-espacio-4);
+    padding: var(--ns-espacio-3) var(--ns-espacio-5);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-lg);
+    background: var(--m3c-surface-container);
+    color: var(--m3c-on-surface);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .cuarto:hover {
+    background: var(--m3c-surface-container-high);
+  }
+
+  .cuarto-num {
+    color: var(--m3c-primary);
+    font-size: var(--ns-texto-2xl);
+    font-weight: 900;
+    text-align: center;
+  }
+
+  .cuarto-portada {
+    display: grid;
+    place-items: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    overflow: hidden;
+    border-radius: var(--ns-radio-md);
+    background: var(--m3c-surface-container-highest);
+  }
+
+  .cuarto-portada img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cuarto .texto strong {
+    font-size: var(--ns-texto-md);
   }
 
   .top-resto {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--ns-espacio-2);
-    margin: 0;
+    margin: var(--ns-espacio-2) 0 0;
     padding: 0;
     list-style: none;
-  }
-
-  .top-resto li:first-child {
-    grid-column: 1 / -1;
-  }
-
-  .top-resto li:first-child .fila-top {
-    padding: var(--ns-espacio-3) var(--ns-espacio-4);
-    background: color-mix(
-      in srgb,
-      var(--m3c-surface-container) 85%,
-      var(--m3c-primary-container) 15%
-    );
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-lg);
-  }
-
-  .top-resto li:first-child .fila-top:hover {
-    background: var(--m3c-surface-container-high);
-    border-color: var(--m3c-primary);
-    box-shadow: 0 4px 12px var(--m3c-shadow);
   }
 
   .top {
@@ -1216,12 +1176,6 @@
     }
   }
 
-  @container carcasa (max-width: 70rem) {
-    .cifras {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
   @container carcasa (max-width: 52rem) {
     .vuelve {
       grid-template-columns: minmax(0, 1fr);
@@ -1234,18 +1188,6 @@
 
     .top-resto {
       grid-template-columns: minmax(0, 1fr);
-    }
-
-    .pedestal-1 {
-      height: 2.25rem;
-    }
-
-    .pedestal-2 {
-      height: 1.75rem;
-    }
-
-    .pedestal-3 {
-      height: 1.25rem;
     }
   }
 </style>

@@ -28,7 +28,6 @@
   import { estadoBiblioteca, type ModoRejilla } from '#lib/core/estadoVistas.svelte.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
-  import CabeceraPistas from '#lib/ui/biblioteca/CabeceraPistas.svelte';
   import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
   import EstadoVacio from '#lib/ui/EstadoVacio.svelte';
   import Icon from '#lib/ui/Icon.svelte';
@@ -502,7 +501,6 @@
         {#if total === 0}
           {@render vacia(Boolean(textoAplicado || favoritas || sinVerificar || paraCantar))}
         {:else if total !== null}
-          <CabeceraPistas />
           {#key version}
             <ListaVirtual {total} altoFila={56} {cargarBloque} {recarga} etiqueta={t.lista}>
               {#snippet fila(p: PistaResumen, i: number, rapido: boolean)}

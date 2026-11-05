@@ -28,7 +28,6 @@
   } from '#lib/core/ipc/index.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
-  import CabeceraPistas from '#lib/ui/biblioteca/CabeceraPistas.svelte';
   import FilaPista from '#lib/ui/biblioteca/FilaPista.svelte';
   import Icon from '#lib/ui/Icon.svelte';
   import Mosaico from '#lib/ui/playlists/Mosaico.svelte';
@@ -264,7 +263,6 @@
 
     {#if pistas.length > 4}
       <h2 class="seccion">{t.todas}<span class="cuenta">{totalPistas}</span></h2>
-      <CabeceraPistas />
       <ul class="lista-pistas">
         {#each pistas as p, i (p.id)}
           {@render fila(p, i)}

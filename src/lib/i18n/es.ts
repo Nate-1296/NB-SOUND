@@ -312,12 +312,10 @@ export const es = {
       'Hay artistas esperando otra vuelta.',
       'Tu música local tiene mucho por mostrar.'
     ],
-    subtitulo:
-      'Retoma, descubre y revisa lo que más valor tiene en tu biblioteca local. Sin servicios externos: solo tus archivos.',
+    sorprendemeAyuda: 'Pon una canción tuya que hace tiempo no suena (D)',
     pistas: 'Pistas',
     artistas: 'Artistas',
     albumes: 'Álbumes',
-    duracion: 'Duración',
     retomar: 'Retomar reproducción',
     continuar: 'Continuar',
     destacado: 'Álbum destacado del día',
