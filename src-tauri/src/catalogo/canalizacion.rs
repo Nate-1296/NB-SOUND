@@ -167,8 +167,28 @@ fn a_por_revisar(
     e: &Entorno<'_>,
     ruta: &Path,
     causa: &'static str,
-    datos: serde_json::Value,
+    mut datos: serde_json::Value,
 ) -> NsResult<Resultado> {
+    // "Buscar de nuevo" importa el archivo que ya está en Por revisar, guardado
+    // con su huella por nombre: el nombre con el que llegó es el de la fila vieja.
+    // Sin esto, el pendiente reaparecía como "a0666ccf….mp3".
+    if ruta.starts_with(e.rutas.por_revisar()) {
+        let anterior: Option<String> = e
+            .db
+            .conexion()?
+            .query_row(
+                "SELECT json_extract(metadatos, '$.nombre_original') FROM por_revisar WHERE ruta = ?1",
+                [ruta.to_string_lossy()],
+                |f| f.get(0),
+            )
+            .optional()
+            .ok()
+            .flatten()
+            .flatten();
+        if let (Some(n), Some(o)) = (anterior, datos.as_object_mut()) {
+            o.insert("nombre_original".to_owned(), serde_json::Value::String(n));
+        }
+    }
     let huella = huella_de_archivo(ruta).unwrap_or_default();
     let ext = ruta
         .extension()
@@ -1164,5 +1184,48 @@ mod tests {
         for v in todas {
             assert!(validas.contains(&causa_por_revisar(v)), "{v:?}");
         }
+    }
+
+    #[test]
+    fn buscar_de_nuevo_conserva_el_nombre_con_el_que_llego() {
+        let m = montar("nombre-original");
+        let e = m.entorno();
+        std::fs::create_dir_all(m.rutas.por_revisar()).unwrap();
+        let guardado = m.rutas.por_revisar().join("a0666ccf.mp3");
+        std::fs::write(&guardado, b"audio").unwrap();
+        m.db.conexion()
+            .unwrap()
+            .execute(
+                "INSERT INTO por_revisar (ruta, causa, metadatos) VALUES (?1, 'sin_candidatos', ?2)",
+                params![
+                    guardado.to_string_lossy(),
+                    json!({"nombre_original": "Mi canción.mp3"}).to_string()
+                ],
+            )
+            .unwrap();
+        a_por_revisar(
+            &e,
+            &guardado,
+            "duplicado",
+            json!({"nombre_original": "a0666ccf.mp3"}),
+        )
+        .unwrap();
+        let nombres: Vec<String> =
+            m.db.conexion()
+                .unwrap()
+                .prepare("SELECT json_extract(metadatos, '$.nombre_original') FROM por_revisar")
+                .unwrap()
+                .query_map([], |f| f.get(0))
+                .unwrap()
+                .collect::<rusqlite::Result<_>>()
+                .unwrap();
+        assert!(
+            nombres.contains(&"Mi canción.mp3".to_owned()),
+            "{nombres:?}"
+        );
+        assert!(
+            !nombres.iter().any(|n| n.starts_with("a0666ccf")),
+            "{nombres:?}"
+        );
     }
 }
