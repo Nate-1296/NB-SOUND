@@ -280,6 +280,20 @@ export function borrarPlaylist(id: number): Promise<void> {
   return call<void>('borrar_playlist', { id });
 }
 
+/** Una copia manual con las mismas canciones; devuelve su id. */
+export function duplicarPlaylist(id: number): Promise<number> {
+  return call<number>('duplicar_playlist', { id });
+}
+
+export function vaciarPlaylist(id: number): Promise<void> {
+  return call<void>('vaciar_playlist', { id });
+}
+
+/** La playlist entera a la cola; devuelve cuántas canciones entraron. */
+export function encolarPlaylist(id: number, justoDespues: boolean): Promise<number> {
+  return call<number>('encolar_playlist', { id, justoDespues });
+}
+
 /** Añade al final sin repetir; devuelve cuántas entraron. */
 export function agregarAPlaylist(id: number, pistas: number[]): Promise<number> {
   return call<number>('agregar_a_playlist', { id, pistas });
@@ -437,6 +451,11 @@ export function importacionProgreso(): Promise<ProgresoImportacion> {
 }
 
 /** El selector nativo de archivos (o de carpeta) y lo elegido a la cola. */
+/** Para la importación en curso después del archivo que se procesa. */
+export function cancelarImportacion(): Promise<void> {
+  return call<void>('importacion_cancelar');
+}
+
 export function anadirMusica(carpeta: boolean): Promise<number> {
   return call<number>('anadir_musica', { carpeta });
 }
@@ -463,6 +482,11 @@ export function porRevisarContar(): Promise<number> {
 /** Tal como está (`candidato` nulo) o con el candidato elegido. */
 export function porRevisarImportar(id: number, candidato: number | null): Promise<number> {
   return call<number>('por_revisar_importar', { id, candidato });
+}
+
+/** Señala el archivo de un pendiente en el gestor de archivos. */
+export function porRevisarMostrar(id: number): Promise<void> {
+  return call<void>('por_revisar_mostrar', { id });
 }
 
 export function porRevisarDescartar(ids: number[]): Promise<void> {

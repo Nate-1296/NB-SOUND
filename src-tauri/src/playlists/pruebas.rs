@@ -347,3 +347,23 @@ fn regenerar_automaticas_crea_las_que_alcanzan_el_minimo_y_respeta_las_editadas(
         .any(|p| p.nombre == "Favoritas que siguen sonando");
     assert!(sigue, "la editada por el usuario se conserva visible");
 }
+
+#[test]
+fn duplicar_copia_el_orden_y_no_repite_nombre_y_vaciar_solo_en_manuales() {
+    let db = base();
+    let id = crear(&db, "Viaje", None).unwrap();
+    agregar(&db, id, &[3, 1]).unwrap();
+    let copia = duplicar(&db, id).unwrap();
+    let otra = duplicar(&db, id).unwrap();
+    assert_eq!(una(&db, copia).unwrap().unwrap().nombre, "Viaje (copia)");
+    assert_eq!(una(&db, otra).unwrap().unwrap().nombre, "Viaje (copia 2)");
+    assert_eq!(ids(&db, copia).unwrap(), [3, 1]);
+    // Una automática se copia como manual, editable.
+    let auto = duplicar(&db, 50).unwrap();
+    assert!(una(&db, auto).unwrap().unwrap().editable);
+
+    vaciar(&db, copia).unwrap();
+    assert!(ids(&db, copia).unwrap().is_empty());
+    assert_eq!(ids(&db, id).unwrap(), [3, 1], "la original no se toca");
+    assert_eq!(vaciar(&db, 50), Err(NsError::PathNotAllowed));
+}

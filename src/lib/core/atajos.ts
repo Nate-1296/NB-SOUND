@@ -21,7 +21,8 @@ export type AccionDeAtajo =
   | 'subirVolumen'
   | 'bajarVolumen'
   | 'pantallaCompleta'
-  | 'sorprendeme';
+  | 'sorprendeme'
+  | 'salir';
 
 export interface Tecla {
   key: string;
@@ -47,7 +48,8 @@ const SIMPLES: Readonly<Record<string, AccionDeAtajo>> = {
   '+': 'subirVolumen',
   '=': 'subirVolumen',
   '-': 'bajarVolumen',
-  F11: 'pantallaCompleta'
+  // La V1 salía con Escape de la reproducción ampliada (`StandardKey.Cancel`).
+  Escape: 'salir'
 };
 
 const CON_CONTROL: Readonly<Record<string, AccionDeAtajo>> = {

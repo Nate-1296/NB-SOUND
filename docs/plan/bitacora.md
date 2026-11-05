@@ -174,3 +174,18 @@ falta para publicar y el prompt de la Fase 8.
 | `c673bb1` | F8.5 (ficha + ADR) | Ficha de F8.5 en `docs/plan/fase-8-nuevas.md` y propuesta de modelo de confianza en `docs/adr/decisions/ADR-012-modo-fiesta.md` (estado `Propuesto`, bloqueada hasta la aprobación de Nathan antes de escribir código) | — |
 | `53d0b1d` | F8.5 | Modo fiesta en `fiesta.rs` tras la aprobación de ADR-012 por Nathan: listener HTTP efímero e independiente (`8831..=8899`), token de sesión de 128 bits en `/f/{token}` verificado en tiempo constante, cinco únicas rutas, cuotas por invitado e IP, rotación instantánea del QR, moderación manual o encolado automático al final de la cola, comandos `fiesta_*` y panel `BloqueFiesta.svelte` en Ajustes > Dispositivos. Cierre de la Fase 8 (5/5) | Rechazo sin token (`401`), página e interfaz web, búsqueda, límite de 3 sugerencias pendientes por invitado (`429`), aprobación que encola la pista, bloqueo de invitado/IP (`403`), modo automático y rotación del token en `fiesta.rs` |
 | (siguiente) | F5.1.1 / P13 | Publicada la Release `agregados-1` en `Nate-1296/NB-SOUND` con `karaoke-1.zip` (`htdemucs` fp16, 145,7 MB), `analisis-1.zip` (MusiCNN + 7 cabezas, 3,5 MB) y `texto-dj-1.zip` (`all-MiniLM-L6-v2` + `tokenizer.json`, 83,0 MB), y compilados sus URLs, tamaños y SHA-256 en `agregados.rs` | `agregados::tests` |
+
+## 2026-11-01 a 2026-11-03: ronda de observaciones (2.0.1 a 2.0.6)
+
+Hecha con otro asistente a partir de las observaciones de Nathan
+([primera ronda](./observaciones-antes-pruebas-finales.md), [segunda](./observaciones-2-antes-pruebas-finales.md)).
+Sus commits (`2e9e3db` a `c4ba896`) no citan iteración ni van firmados; lo que traían se revisó entero en la entrada
+siguiente.
+
+## 2026-11-04: revisión de la ronda de observaciones (QA-R1)
+
+| Commit | Iteración | Qué se hizo | Pruebas nuevas |
+|---|---|---|---|
+| `e3aeb98` | QA-R1 | Lo que podía perder música: "Limpiar duplicados" adivinaba copias por título y duración y borraba sus archivos (23 grupos de canciones distintas en la biblioteca real); borrar una canción no usaba la papelera ni limpiaba álbum, artista, instrumental y cola. La actualización del `.tar.gz` de Linux no podía funcionar (sin firma en la CI, clave mal decodificada) y abría una carrera para escalar privilegios en `/tmp`. Foto de perfil validada y por huella; "Sorpréndeme" de la V1 en Rust; el avisador de NB Books; favorita y cola en un solo módulo; logos de 36 MB a 2,6 MB; imports `#lib` de SvelteKit 3 | `catalogo/borrado.rs` (8), `explorador.rs` (2), `sorpresa.rs` (5), foto en `perfil.rs`, firma y URL en `net.rs`, la cola de avisos de NB Books |
+| `e9b22a6` | QA-R1 | Un solo cajón lateral (`Cajon.svelte`, un `<dialog>` modal) para las tres consolas de la barra superior; el botón de plegar la barra lateral fuera de las ventanas estrechas; fuera textos, exports y un oyente sin uso | — |
+| (siguiente) | QA-R1 | Lo de la V1 que faltaba: cancelar la importación, duplicar y vaciar playlists, mandarlas a la cola, añadir canciones desde la propia playlist, el álbum a la cola, "Reproducir a continuación", abrir la carpeta de un pendiente de Por revisar, Escape para salir de la reproducción ampliada y el barrido de duplicados observables sobre la biblioteca (`dedupe_observable.py`, que el inventario daba por portado y no lo estaba) | Cancelación en `importacion.rs`, duplicar y vaciar en `playlists/pruebas.rs`, barrido en `duplicados.rs`, Escape en `atajos.test.ts` |

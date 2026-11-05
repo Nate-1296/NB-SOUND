@@ -4,6 +4,7 @@
   y sus canciones en orden.
 -->
 <script lang="ts">
+  import { encolar } from '#lib/core/acciones.svelte.ts';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import {
@@ -117,6 +118,18 @@
           </button>
           <button type="button" class="boton" onclick={aleatorio}>
             <Icon nombre="aleatorio" tamano={16} />{t.album.aleatorio}
+          </button>
+          <button
+            type="button"
+            class="boton"
+            disabled={pistas.length === 0}
+            onclick={() =>
+              encolar(
+                pistas.map((p) => p.id),
+                false
+              )}
+          >
+            <Icon nombre="cola" tamano={16} />{t.anadirACola}
           </button>
           <button type="button" class="boton" onclick={() => (editando = true)}>
             <Icon nombre="editar" tamano={16} />{t.editarDatos}

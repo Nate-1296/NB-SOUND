@@ -188,8 +188,6 @@
     return (await bibliotecaPistas(consulta, b * TAM_BLOQUE, TAM_BLOQUE)).pistas;
   }
 
-  // Una favorita cambia en el sitio, sin recargar la lista.
-
   // --- Álbumes y artistas: por páginas que se añaden al llegar al final ---
   let albumes = $state<AlbumResumen[]>([]);
   let artistas = $state<ArtistaResumen[]>([]);

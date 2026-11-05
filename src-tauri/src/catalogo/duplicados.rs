@@ -310,6 +310,120 @@ impl Gestor {
     }
 }
 
+/// Una pista de la biblioteca en el barrido observable.
+struct EnBarrido {
+    id: i64,
+    duracion: Option<f64>,
+    /// `_puntaje_conservar`: favorita, grabación, ISRC, bitrate, tamaño y
+    /// reproducciones, en ese orden.
+    puntaje: (bool, bool, bool, i64, i64, i64),
+}
+
+/// El barrido de duplicados observables sobre la biblioteca ya catalogada
+/// (`servicios/dedupe_observable.py`): pistas con el mismo título, artista y
+/// álbum normalizados y la duración a 3 s o menos. En cada grupo se queda la
+/// mejor (favorita, identidad, bitrate, tamaño, escuchas; si empatan, la más
+/// antigua) y las demás pasan a `duplicado`: dejan de verse y de ir al móvil,
+/// pero no se borran ni se toca su archivo, así que se puede deshacer.
+///
+/// A diferencia del eje observable de la importación, no exige la misma
+/// portada: la V1 lo quitó porque dos importaciones del mismo álbum guardan la
+/// portada dos veces con huellas distintas. Sin álbum no hay clave: el mismo
+/// título de un artista en un recopilatorio no cuenta como copia.
+///
+/// Devuelve cuántas se apartaron.
+///
+/// # Errors
+///
+/// [`NsError::StorageFailure`] si la base falla.
+pub fn barrer_observables(db: &BaseDeDatos) -> NsResult<u32> {
+    let mut grupos: HashMap<(String, String, String), Vec<EnBarrido>> = HashMap::new();
+    {
+        let conn = db.conexion()?;
+        let mut s = conn
+            .prepare(
+                "SELECT id, titulo, artista_nombre, album_titulo, duracion_seg, favorita,
+                        mbid_grabacion IS NOT NULL AND mbid_grabacion <> '',
+                        isrc IS NOT NULL AND isrc <> '',
+                        coalesce(bitrate_kbps, 0), tamano, reproducciones
+                 FROM pistas WHERE estado = 'biblioteca' ORDER BY id",
+            )
+            .map_err(|_| NsError::StorageFailure)?;
+        let filas = s
+            .query_map([], |f| {
+                Ok((
+                    f.get::<_, String>(1)?,
+                    f.get::<_, String>(2)?,
+                    f.get::<_, String>(3)?,
+                    EnBarrido {
+                        id: f.get(0)?,
+                        duracion: f.get(4)?,
+                        puntaje: (
+                            f.get(5)?,
+                            f.get(6)?,
+                            f.get(7)?,
+                            f.get(8)?,
+                            f.get(9)?,
+                            f.get(10)?,
+                        ),
+                    },
+                ))
+            })
+            .map_err(|_| NsError::StorageFailure)?;
+        for fila in filas {
+            let (titulo, artista, album, p) = fila.map_err(|_| NsError::StorageFailure)?;
+            let clave = (
+                normalizar_para_comparar(&titulo),
+                normalizar_para_comparar(&artista),
+                normalizar_para_comparar(&album),
+            );
+            if clave.0.is_empty() || clave.1.is_empty() || clave.2.is_empty() {
+                continue;
+            }
+            grupos.entry(clave).or_default().push(p);
+        }
+    }
+    let mut apartar = Vec::new();
+    for miembros in grupos.values().filter(|m| m.len() > 1) {
+        // Mayor puntaje; a igualdad, el id más bajo (la que llegó antes).
+        let Some(mejor) = miembros
+            .iter()
+            .max_by(|a, b| a.puntaje.cmp(&b.puntaje).then(b.id.cmp(&a.id)))
+        else {
+            continue;
+        };
+        let Some(dm) = mejor.duracion else { continue };
+        apartar.extend(
+            miembros
+                .iter()
+                .filter(|p| p.id != mejor.id)
+                .filter(|p| p.duracion.is_some_and(|d| (d - dm).abs() <= TOLERANCIA_SEG))
+                .map(|p| p.id),
+        );
+    }
+    if apartar.is_empty() {
+        return Ok(0);
+    }
+    let mut conn = db.conexion()?;
+    let tx = crate::db::transaccion_de_escritura(&mut conn)?;
+    let mut n = 0u32;
+    for id in &apartar {
+        n += u32::try_from(
+            tx.execute(
+                "UPDATE pistas SET estado = 'duplicado',
+                     actualizada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                 WHERE id = ?1 AND estado = 'biblioteca'",
+                [id],
+            )
+            .map_err(|_| NsError::StorageFailure)?,
+        )
+        .unwrap_or(0);
+    }
+    tx.commit().map_err(|_| NsError::StorageFailure)?;
+    tracing::info!(apartadas = n, "barrido de duplicados observables");
+    Ok(n)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -417,5 +531,40 @@ mod tests {
         };
         assert_eq!(c.valor(), 0.73);
         assert_eq!(Calidad::default().valor(), 0.0);
+    }
+
+    #[test]
+    fn el_barrido_aparta_la_copia_peor_y_respeta_lo_que_no_es_la_misma_cancion() {
+        let db = BaseDeDatos::en_memoria().unwrap();
+        db.conexion()
+            .unwrap()
+            .execute_batch(
+                "INSERT INTO pistas (id, titulo, artista_nombre, album_titulo, duracion_seg,
+                                     bitrate_kbps, favorita, ruta) VALUES
+                     (1, 'Rayando el sol', 'Maná', '¿Dónde jugarán los niños?', 250, 128, 0, 'a'),
+                     (2, 'Rayando el Sol', 'MANÁ', 'Donde jugaran los ninos', 251, 320, 0, 'b'),
+                     (3, 'Rayando el sol', 'Maná', '¿Dónde jugarán los niños?', 300, 320, 0, 'c'),
+                     (4, 'Rayando el sol', 'Maná', 'Grandes éxitos', 250, 320, 0, 'd'),
+                     (5, 'Oye', 'Maná', '', 200, 320, 0, 'e'),
+                     (6, 'Oye', 'Maná', '', 200, 128, 0, 'f'),
+                     (7, 'Vivir sin aire', 'Maná', 'En vivo', 240, 128, 1, 'g'),
+                     (8, 'Vivir sin aire', 'Maná', 'En vivo', 240, 320, 0, 'h');",
+            )
+            .unwrap();
+        assert_eq!(barrer_observables(&db).unwrap(), 2);
+        let apartadas: Vec<i64> = {
+            let conn = db.conexion().unwrap();
+            let mut s = conn
+                .prepare("SELECT id FROM pistas WHERE estado = 'duplicado' ORDER BY id")
+                .unwrap();
+            s.query_map([], |f| f.get(0))
+                .unwrap()
+                .collect::<Result<_, _>>()
+                .unwrap()
+        };
+        // La de 128 kbps cede ante la de 320; la de otra duración y la del
+        // recopilatorio no son copias; sin álbum no hay clave; la favorita manda.
+        assert_eq!(apartadas, [1, 8]);
+        assert_eq!(barrer_observables(&db).unwrap(), 0, "es idempotente");
     }
 }

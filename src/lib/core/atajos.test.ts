@@ -20,6 +20,9 @@ describe('los atajos de la V1', () => {
     expect(accionDeTecla(t('m', { metaKey: true }))).toBe('mini');
     expect(accionDeTecla(t('F11'))).toBe('pantallaCompleta');
     expect(accionDeTecla(t('F11', { escribiendo: true }))).toBe('pantallaCompleta');
+    expect(accionDeTecla(t('d'))).toBe('sorprendeme');
+    expect(accionDeTecla(t('Escape'))).toBe('salir');
+    expect(accionDeTecla(t('Escape', { escribiendo: true }))).toBeNull();
   });
 
   it('no actúan mientras se escribe, salvo los de Ctrl', () => {

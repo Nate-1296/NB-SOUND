@@ -55,6 +55,9 @@
     if (!accion) return;
     // Un botón con el foco ya responde al espacio: no se toca dos veces.
     if (accion === 'pausarReanudar' && document.activeElement instanceof HTMLButtonElement) return;
+    // Con un diálogo o un menú abierto, Escape es suyo.
+    if (accion === 'salir' && document.querySelector('dialog[open], [popover]:popover-open'))
+      return;
     e.preventDefault();
     const i = reproductor.instantanea;
     const r = reproductor;
@@ -75,6 +78,11 @@
       cola: () => window.dispatchEvent(new CustomEvent('ns:cola')),
       mini: abrirMinirreproductor,
       pantallaCompleta: () => pantalla.alternar(),
+      // Primero se sale de la pantalla completa; después, de la reproducción ampliada.
+      salir: () => {
+        if (pantalla.completa) return pantalla.alternar();
+        if (enReproduciendo) history.back();
+      },
       sorprendeme: async () => {
         const p = await sorprendeme().catch(() => null);
         if (p) notificar.informacion(textos.inicio.sorprendeme(p.titulo, p.artista));

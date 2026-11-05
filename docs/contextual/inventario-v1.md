@@ -27,7 +27,7 @@ Base: NB Sound v1.1.16. Unas 111.000 líneas: 60.000 de Python de aplicación (`
 | Temas (unas 60 paletas, un PNG de logo por paleta) | `ui/modelos_qml.py`, `ui/qml/assets/logo/` | Se rediseña: Material 3, color por portada, las paletas como acentos | F0.2.7, F2.2.7 | Rediseñada (los 63 temas, generados, cada uno con su logo de la V1, y el color por portada) |
 | Importación | `VistaImportacion.qml`, `core/pipeline.py` | Se rediseña: sin vista; arrastrar, carpeta vigilada y **Por revisar** | F4.2 | Rediseñada (arrastrar, "Añadir música", carpeta vigilada y Por revisar) |
 | Catalogación: normalización, AcoustID, MusicBrainz, Shazam, iTunes, segunda y tercera etapa, desempate por IA | `core/`, `external/` | Se porta | F4.1 | Hecha (`catalogo/`), con la decisión de la V1 reproducida en 400 casos grabados |
-| Duplicados exactos y semánticos | `core/dedupe.py`, `servicios/dedupe_observable.py` | Se porta | F4.1.8 | Hecha |
+| Duplicados exactos y semánticos | `core/dedupe.py`, `servicios/dedupe_observable.py` | Se porta | F4.1.8, QA-R1 | Hecha: los tres ejes al importar (`duplicados.rs`) y, desde QA-R1, el barrido observable sobre la biblioteca tras cada importación o a mano en Añadir música |
 | Overrides de catalogación | `core/overrides.py` | Se porta como "editar metadatos" | F4.2.5 | Hecha (`catalogo/correcciones.rs`, `catalogo/edicion.rs`) |
 | Portadas e imágenes de artista (seis fuentes) | `core/assets_pipeline.py` | Se porta | F4.1.10 | Hecha |
 | Transcodificación a MP3 al importar | `external/transcoder.py` | **Se elimina**: cada archivo se queda en su formato; la V1 convertía FLAC a MP3 y perdía calidad ([enmienda de ADR-006](../adr/decisions/ADR-006-agregados.md#enmienda-del-2026-10-29-ffmpeg-no-viaja-dentro)) | F4.1.9 | Eliminada |

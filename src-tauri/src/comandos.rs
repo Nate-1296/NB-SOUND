@@ -323,6 +323,13 @@ pub async fn duplicados_resumen(
     en_segundo_plano(&estado, crate::catalogo::borrado::duplicados).await
 }
 
+/// Busca copias en la biblioteca ya catalogada (el barrido observable de la V1)
+/// y las aparta; devuelve cuántas. No borra nada.
+#[tauri::command]
+pub async fn buscar_duplicados(estado: tauri::State<'_, Estado>) -> NsResult<u32> {
+    en_segundo_plano(&estado, crate::catalogo::duplicados::barrer_observables).await
+}
+
 /// Quita las copias apartadas y, si se pide, manda sus archivos a la papelera.
 /// Devuelve cuántas se quitaron.
 #[tauri::command]
@@ -432,6 +439,34 @@ pub async fn renombrar_playlist(
 #[tauri::command]
 pub async fn borrar_playlist(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<()> {
     en_segundo_plano(&estado, move |db| playlists::borrar(db, id)).await
+}
+
+/// Una copia manual de la playlist, con sus canciones; devuelve su `id`.
+#[tauri::command]
+pub async fn duplicar_playlist(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<i64> {
+    en_segundo_plano(&estado, move |db| playlists::duplicar(db, id)).await
+}
+
+#[tauri::command]
+pub async fn vaciar_playlist(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| playlists::vaciar(db, id)).await
+}
+
+/// Manda la playlist entera a la cola, al final o detrás de la que suena.
+/// Devuelve cuántas canciones entraron.
+#[tauri::command]
+pub async fn encolar_playlist(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    id: i64,
+    justo_despues: bool,
+) -> NsResult<u32> {
+    let ids = en_segundo_plano(&estado, move |db| playlists::ids(db, id)).await?;
+    let n = u32::try_from(ids.len()).unwrap_or(u32::MAX);
+    if !ids.is_empty() {
+        reproductor(&app)?.enviar(Orden::Agregar { ids, justo_despues });
+    }
+    Ok(n)
 }
 
 #[tauri::command]
@@ -955,6 +990,13 @@ pub async fn importacion_progreso(
     Ok(estado.importador.progreso())
 }
 
+/// Para la importación en curso tras el archivo que se procesa; lo importado se queda.
+#[tauri::command]
+pub async fn importacion_cancelar(estado: tauri::State<'_, Estado>) -> NsResult<()> {
+    estado.importador.cancelar();
+    Ok(())
+}
+
 /// "Añadir música": el selector nativo de archivos o de carpeta, y lo elegido a
 /// la cola. Las rutas no cruzan el puente: las elige el sistema y se quedan en
 /// Rust.
@@ -1018,6 +1060,16 @@ pub async fn por_revisar_importar(
     })
     .await
     .map_err(|_| NsError::Internal)?
+}
+
+/// Señala el archivo de un pendiente en el gestor de archivos del sistema.
+#[tauri::command]
+pub async fn por_revisar_mostrar(estado: tauri::State<'_, Estado>, id: i64) -> NsResult<()> {
+    en_segundo_plano(&estado, move |db| {
+        crate::explorador::mostrar(&crate::catalogo::por_revisar::archivo(db, id)?);
+        Ok(())
+    })
+    .await
 }
 
 #[tauri::command]

@@ -155,7 +155,7 @@ export const es = {
     sinVerificarInsignia: 'Sin verificar',
     completarDatos: 'Completar datos',
     editarDatos: 'Editar datos',
-    mostrarEnExplorador: 'Mostrar en el explorador',
+    mostrarEnExplorador: 'Mostrar en su carpeta',
     borrarCancion: 'Eliminar canción',
     confirmarBorrarTitulo: '¿Eliminar canción?',
     confirmarBorrarDetalle: (titulo: string) =>
@@ -418,6 +418,17 @@ export const es = {
     aleatorio: 'Aleatorio',
     renombrar: 'Renombrar',
     borrar: 'Borrar',
+    encolar: 'Añadir a la cola',
+    duplicar: 'Duplicar',
+    duplicada: (nombre: string) => `Copia creada: «${nombre}»`,
+    vaciar: 'Vaciar',
+    confirmarVaciarTitulo: '¿Vaciar la playlist?',
+    confirmarVaciar: (nombre: string) =>
+      `Se quitarán todas las canciones de «${nombre}». Las canciones siguen en tu biblioteca.`,
+    vaciada: 'Playlist vaciada',
+    anadirCanciones: 'Añadir canciones',
+    buscarParaAnadir: 'Busca en tu biblioteca para añadir',
+    yaEnLista: 'Ya está en la playlist',
     confirmarBorrar: (nombre: string) =>
       `¿Borrar «${nombre}»? Las canciones siguen en tu biblioteca.`,
     quitar: 'Quitar de la playlist',
@@ -510,6 +521,7 @@ export const es = {
     ia: 'Inteligencia artificial'
   },
   importacion: {
+    cancelar: 'Cancelar la importación: lo ya añadido se queda',
     soltar: 'Suelta para añadir a tu biblioteca',
     soltarAyuda:
       'Canciones o carpetas enteras. Lo que no se pueda identificar queda en Por revisar.',

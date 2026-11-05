@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
   import { importacion } from '#lib/core/importacion.svelte.ts';
+  import { cancelarImportacion } from '#lib/core/ipc/index.ts';
   import { textos } from '#lib/i18n/index.ts';
   import Icon from '#lib/ui/Icon.svelte';
 
@@ -26,6 +27,15 @@
       >
       <progress max={p.total} value={p.hechos}></progress>
     </div>
+    <button
+      type="button"
+      class="cerrar"
+      aria-label={t.cancelar}
+      title={t.cancelar}
+      onclick={() => void cancelarImportacion()}
+    >
+      <Icon nombre="cerrar" tamano={16} />
+    </button>
   </div>
 {:else if r}
   <div class="tarjeta" role="status">

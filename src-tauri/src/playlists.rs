@@ -392,6 +392,72 @@ pub fn borrar(db: &BaseDeDatos, id: i64) -> NsResult<()> {
     bd(tx.commit())
 }
 
+/// Duplica cualquier playlist como una manual del usuario, con las mismas
+/// canciones en el mismo orden (`duplicar_playlist` de la V1). Se llama como la
+/// original con "(copia)", y "(copia 2)", "(copia 3)"… si ese ya existe. Una
+/// automática o inteligente se copia tal como está ahora: la copia ya no cambia
+/// sola, que es para lo que se duplica. Devuelve el `id` de la copia.
+///
+/// # Errors
+///
+/// [`NsError::FileNotFound`] si no existe.
+pub fn duplicar(db: &BaseDeDatos, id: i64) -> NsResult<i64> {
+    let orden = ids(db, id)?;
+    let mut conn = db.conexion()?;
+    let tx = db::transaccion_de_escritura(&mut conn)?;
+    let (nombre, descripcion): (String, Option<String>) = bd(tx
+        .query_row(
+            "SELECT nombre, descripcion FROM playlists WHERE id = ?1",
+            [id],
+            |f| Ok((f.get(0)?, f.get(1)?)),
+        )
+        .optional())?
+    .ok_or(NsError::FileNotFound)?;
+    let mut n = 1;
+    let nombre = loop {
+        let candidato = if n == 1 {
+            format!("{nombre} (copia)")
+        } else {
+            format!("{nombre} (copia {n})")
+        };
+        match validar_nombre(&tx, &candidato, None) {
+            Err(NsError::NameTaken) => n += 1,
+            otro => break otro?,
+        }
+    };
+    bd(tx.execute(
+        "INSERT INTO playlists (nombre, descripcion, tipo, subtipo, origen)
+         VALUES (?1, ?2, 'manual', 'usuario', 'usuario')",
+        rusqlite::params![nombre, descripcion],
+    ))?;
+    let copia = tx.last_insert_rowid();
+    for (posicion, pista) in orden.iter().enumerate() {
+        bd(tx.execute(
+            "INSERT INTO playlist_pistas (playlist_id, pista_id, posicion) VALUES (?1, ?2, ?3)",
+            rusqlite::params![copia, pista, posicion as i64],
+        ))?;
+    }
+    bd(tx.commit())?;
+    Ok(copia)
+}
+
+/// Quita todas las canciones de una playlist manual (`vaciar_playlist` de la V1).
+///
+/// # Errors
+///
+/// [`NsError::PathNotAllowed`] si no es una playlist manual.
+pub fn vaciar(db: &BaseDeDatos, id: i64) -> NsResult<()> {
+    let mut conn = db.conexion()?;
+    let tx = db::transaccion_de_escritura(&mut conn)?;
+    exigir_editable(&tx, id)?;
+    bd(tx.execute("DELETE FROM playlist_pistas WHERE playlist_id = ?1", [id]))?;
+    bd(tx.execute(
+        "UPDATE playlists SET actualizada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?1",
+        [id],
+    ))?;
+    bd(tx.commit())
+}
+
 /// Añade canciones al final, sin repetir las que ya estaban. Devuelve cuántas
 /// entraron.
 ///

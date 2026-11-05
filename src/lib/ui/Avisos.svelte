@@ -82,14 +82,16 @@
    * `pointer-events: none` en el contenedor para que la columna vacía no se coma
    * los clics del contenido de debajo.
    */
+  /* Al centro, sobre los controles: la esquina la usa el progreso de la importación. */
   .avisos {
     position: fixed;
-    right: var(--ns-espacio-5);
+    left: 50%;
     bottom: calc(var(--ns-alto-reproductor) + var(--ns-espacio-3));
     z-index: 60;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
+    translate: -50% 0;
     gap: var(--ns-espacio-2);
     max-width: min(26rem, calc(100vw - 2 * var(--ns-espacio-5)));
     pointer-events: none;

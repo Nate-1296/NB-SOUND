@@ -12,11 +12,13 @@
   import {
     type Pendiente,
     porRevisarDescartar,
+    porRevisarMostrar,
     porRevisarImportar,
     porRevisarListar,
     porRevisarReintentar
   } from '#lib/core/ipc/index.ts';
   import { duracionLarga } from '#lib/core/formato.ts';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
   import Icon from '#lib/ui/Icon.svelte';
 
@@ -206,6 +208,16 @@
                   onclick={() => hacer(() => porRevisarDescartar([p.id]))}
                 >
                   {t.descartar}
+                </button>
+                <button
+                  type="button"
+                  class="boton"
+                  onclick={() =>
+                    porRevisarMostrar(p.id).catch(() =>
+                      notificar.error(textos.biblioteca.explorarFallo)
+                    )}
+                >
+                  <Icon nombre="carpeta" tamano={16} />{textos.biblioteca.mostrarEnExplorador}
                 </button>
               </div>
             </div>

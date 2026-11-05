@@ -9,15 +9,20 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import {
+    agregarAPlaylist,
     anclarPlaylist,
+    bibliotecaPistas,
     borrarPlaylist,
+    duplicarPlaylist,
+    encolarPlaylist,
     moverEnPlaylist,
     type PistaResumen,
     type PlaylistResumen,
     playlist,
     playlistPistas,
     quitarDePlaylist,
-    reproducirPlaylist
+    reproducirPlaylist,
+    vaciarPlaylist
   } from '#lib/core/ipc/index.ts';
   import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
@@ -38,6 +43,11 @@
   let renombrando = $state(false);
   let editandoRegla = $state(false);
   let confirmandoBorrado = $state(false);
+  let confirmandoVaciado = $state(false);
+  let anadiendo = $state(false);
+  let busqueda = $state('');
+  let encontradas = $state<PistaResumen[]>([]);
+  const enLista = $derived(new Set(pistas.map((p) => p.id)));
   let version = $state(0);
 
   $effect(() => {
@@ -74,6 +84,73 @@
       version += 1;
     } catch {
       pistas = anterior;
+      notificar.error(esAparte.comun.error);
+    }
+  }
+
+  // "Añadir canciones" desde la propia playlist, como la V1 (`buscar_pistas_para_playlist`).
+  let espera: ReturnType<typeof setTimeout> | undefined;
+  $effect(() => {
+    const q = busqueda.trim();
+    clearTimeout(espera);
+    if (!anadiendo || q === '') {
+      encontradas = [];
+      return;
+    }
+    espera = setTimeout(async () => {
+      const r = await bibliotecaPistas(
+        {
+          texto: q,
+          favoritas: false,
+          sinVerificar: false,
+          paraCantar: false,
+          albumId: null,
+          artistaId: null,
+          orden: 'tituloAsc'
+        },
+        0,
+        30
+      ).catch(() => null);
+      if (r && busqueda.trim() === q) encontradas = r.pistas;
+    }, 200);
+    return () => clearTimeout(espera);
+  });
+
+  async function anadir(p: PistaResumen) {
+    try {
+      await agregarAPlaylist(id, [p.id]);
+      notificar.exito(t.anadida(datos?.nombre ?? ''));
+      version += 1;
+    } catch {
+      notificar.error(esAparte.comun.error);
+    }
+  }
+
+  async function encolar() {
+    try {
+      notificar.exito(textos.biblioteca.anadidasACola(await encolarPlaylist(id, false)));
+    } catch {
+      notificar.error(textos.biblioteca.colaFallo);
+    }
+  }
+
+  async function duplicar() {
+    try {
+      const copia = await duplicarPlaylist(id);
+      notificar.exito(t.duplicada(datos?.nombre ?? ''));
+      await goto(`/playlists/ver?id=${copia}`);
+    } catch {
+      notificar.error(esAparte.comun.error);
+    }
+  }
+
+  async function vaciar() {
+    confirmandoVaciado = false;
+    try {
+      await vaciarPlaylist(id);
+      notificar.exito(t.vaciada);
+      version += 1;
+    } catch {
       notificar.error(esAparte.comun.error);
     }
   }
@@ -137,6 +214,9 @@
           >
             <Icon nombre="aleatorio" tamano={16} />{t.aleatorio}
           </button>
+          <button type="button" class="boton" disabled={pistas.length === 0} onclick={encolar}>
+            <Icon nombre="cola" tamano={16} />{t.encolar}
+          </button>
           {#if datos.categoria !== 'meGusta'}
             <button
               type="button"
@@ -155,6 +235,24 @@
               <Icon nombre="editar" tamano={16} />{t.renombrar}
             </button>
           {/if}
+          {#if datos.editable}
+            <button
+              type="button"
+              class="boton"
+              aria-pressed={anadiendo}
+              onclick={() => (anadiendo = !anadiendo)}
+            >
+              <Icon nombre="mas" tamano={16} />{t.anadirCanciones}
+            </button>
+          {/if}
+          <button type="button" class="boton" onclick={duplicar}>
+            <Icon nombre="copiar" tamano={16} />{t.duplicar}
+          </button>
+          {#if datos.editable && pistas.length > 0}
+            <button type="button" class="boton" onclick={() => (confirmandoVaciado = true)}>
+              {t.vaciar}
+            </button>
+          {/if}
           {#if datos.reglaInteligente}
             <button type="button" class="boton" onclick={() => (editandoRegla = true)}>
               <Icon nombre="editar" tamano={16} />{ti.editar}
@@ -168,6 +266,40 @@
         </div>
       </div>
     </header>
+
+    {#if anadiendo}
+      <section class="anadir" aria-label={t.anadirCanciones}>
+        <input
+          type="search"
+          class="campo"
+          placeholder={t.buscarParaAnadir}
+          aria-label={t.buscarParaAnadir}
+          bind:value={busqueda}
+        />
+        {#if encontradas.length > 0}
+          <ul class="resultados">
+            {#each encontradas as p (p.id)}
+              <li>
+                <span class="resultado">
+                  <strong>{p.titulo}</strong>
+                  <span class="sub">{p.artista} · {p.album}</span>
+                </span>
+                <button
+                  type="button"
+                  class="mini"
+                  disabled={enLista.has(p.id)}
+                  aria-label={enLista.has(p.id) ? t.yaEnLista : t.anadirA}
+                  title={enLista.has(p.id) ? t.yaEnLista : t.anadirA}
+                  onclick={() => anadir(p)}
+                >
+                  <Icon nombre={enLista.has(p.id) ? 'comprobado' : 'mas'} tamano={16} />
+                </button>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </section>
+    {/if}
 
     {#if pistas.length === 0}
       <p class="vacio">{t.vacia}</p>
@@ -244,6 +376,18 @@
           version += 1;
         }}
         oncerrar={() => (editandoRegla = false)}
+      />
+    {/if}
+
+    {#if confirmandoVaciado}
+      <DialogoConfirmar
+        abierto={confirmandoVaciado}
+        titulo={t.confirmarVaciarTitulo}
+        mensaje={t.confirmarVaciar(datos.nombre)}
+        destructivo={true}
+        textoConfirmar={t.vaciar}
+        onconfirmar={vaciar}
+        oncerrar={() => (confirmandoVaciado = false)}
       />
     {/if}
 
@@ -388,6 +532,55 @@
   .orden {
     display: flex;
     gap: var(--ns-espacio-1);
+  }
+
+  .anadir {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-2);
+    padding: var(--ns-espacio-4);
+    border-radius: var(--ns-radio-lg);
+    background: var(--m3c-surface-container);
+  }
+
+  .campo {
+    padding: var(--ns-espacio-2) var(--ns-espacio-3);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-high);
+    color: var(--m3c-on-surface);
+    font: inherit;
+  }
+
+  .resultados {
+    display: flex;
+    flex-direction: column;
+    max-height: 18rem;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  .resultados li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ns-espacio-3);
+    padding: var(--ns-espacio-2) var(--ns-espacio-1);
+  }
+
+  .resultado {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .resultado strong,
+  .resultado .sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .mini {

@@ -260,6 +260,17 @@ pub fn descartar(db: &BaseDeDatos, id: i64) -> NsResult<()> {
     resolver(db, id)
 }
 
+/// Dónde está un pendiente, para enseñarlo en el gestor de archivos (`abrir_directorio`
+/// de la V1). No sale del puente: lo abre el runtime.
+///
+/// # Errors
+///
+/// [`NsError::FileNotFound`] si ya no está pendiente o su archivo no existe.
+pub fn archivo(db: &BaseDeDatos, id: i64) -> NsResult<PathBuf> {
+    let (ruta, _) = fila(db, id)?;
+    ruta.canonicalize().map_err(|_| NsError::FileNotFound)
+}
+
 /// La ruta de un pendiente, para devolverlo a la cola de importación.
 ///
 /// # Errors

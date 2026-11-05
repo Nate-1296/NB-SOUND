@@ -7,7 +7,7 @@
   import Cajon from '#lib/ui/Cajon.svelte';
   import { goto } from '$app/navigation';
   import { importacion } from '#lib/core/importacion.svelte.ts';
-  import { anadirMusica, type Cifras, inicio } from '#lib/core/ipc/index.ts';
+  import { anadirMusica, type Cifras, cancelarImportacion, inicio } from '#lib/core/ipc/index.ts';
   import { textos } from '#lib/i18n/index.ts';
   import Icon from '#lib/ui/Icon.svelte';
   import { onMount } from 'svelte';
@@ -112,6 +112,9 @@
           <span class="archivo-actual" title={p.actual}>{p.actual}</span>
         {/if}
       </div>
+      <button type="button" class="cancelar" onclick={() => void cancelarImportacion()}>
+        {t.cancelar}
+      </button>
     </div>
   {/if}
 
@@ -290,6 +293,18 @@
     letter-spacing: 0.05em;
     font-weight: 700;
     color: var(--m3c-primary);
+  }
+
+  .cancelar {
+    align-self: flex-start;
+    padding: var(--ns-espacio-1) var(--ns-espacio-3);
+    border: 1px solid var(--m3c-outline);
+    border-radius: var(--ns-radio-pleno);
+    background: transparent;
+    color: var(--m3c-on-surface);
+    font: inherit;
+    font-size: var(--ns-texto-xs);
+    cursor: pointer;
   }
 
   .progreso-caja {

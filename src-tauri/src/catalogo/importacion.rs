@@ -6,6 +6,7 @@
 //! iba (`core/import_recovery_service.py` de la V1, sin manifiestos).
 
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex, PoisonError};
 
@@ -45,6 +46,9 @@ pub struct Importador {
     tx: Sender<Mensaje>,
     progreso: Arc<Mutex<ProgresoImportacion>>,
     recursos: Arc<Recursos>,
+    /// "Cancelar" de la V1 (`cancelar_importacion`): el archivo en curso termina,
+    /// los demás se olvidan.
+    cancelada: Arc<AtomicBool>,
 }
 
 /// Todo lo que el hilo necesita para montar un [`Entorno`].
@@ -160,6 +164,22 @@ fn pendientes(db: &BaseDeDatos) -> NsResult<Vec<(PathBuf, i64)>> {
     Ok(filas)
 }
 
+/// Olvida lo pendiente y da por canceladas las importaciones que lo tenían.
+fn cancelar_pendientes(db: &BaseDeDatos) -> NsResult<()> {
+    let mut conn = db.conexion()?;
+    let tx = db::transaccion_de_escritura(&mut conn)?;
+    tx.execute(
+        "UPDATE importaciones SET estado = 'cancelada',
+             terminada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+         WHERE id IN (SELECT importacion_id FROM pendientes_importacion)",
+        [],
+    )
+    .map_err(|_| NsError::StorageFailure)?;
+    tx.execute("DELETE FROM pendientes_importacion", [])
+        .map_err(|_| NsError::StorageFailure)?;
+    tx.commit().map_err(|_| NsError::StorageFailure)
+}
+
 fn terminar_archivo(
     db: &BaseDeDatos,
     ruta: &Path,
@@ -204,9 +224,11 @@ impl Importador {
         let p = Arc::clone(&progreso);
         let recursos = Arc::new(r);
         let hilo = Arc::clone(&recursos);
+        let cancelada = Arc::new(AtomicBool::new(false));
+        let c = Arc::clone(&cancelada);
         let lanzado = std::thread::Builder::new()
             .name("importador".into())
-            .spawn(move || bucle(&hilo, &rx, &p, &avisar));
+            .spawn(move || bucle(&hilo, &rx, &p, &c, &avisar));
         if lanzado.is_err() {
             tracing::error!("no se pudo lanzar el importador");
         }
@@ -214,6 +236,7 @@ impl Importador {
             tx,
             progreso,
             recursos,
+            cancelada,
         }
     }
 
@@ -247,6 +270,14 @@ impl Importador {
         let _ = self.tx.send(Mensaje::Rutas(rutas));
     }
 
+    /// Para la importación en curso después del archivo que se está procesando.
+    /// Lo ya importado se queda; lo pendiente se olvida, también al reabrir.
+    pub fn cancelar(&self) {
+        if self.progreso().activa {
+            self.cancelada.store(true, Ordering::Relaxed);
+        }
+    }
+
     pub fn progreso(&self) -> ProgresoImportacion {
         self.progreso
             .lock()
@@ -259,6 +290,7 @@ fn bucle(
     r: &Recursos,
     rx: &Receiver<Mensaje>,
     p: &Arc<Mutex<ProgresoImportacion>>,
+    cancelada: &AtomicBool,
     avisar: &dyn Fn(&ProgresoImportacion),
 ) {
     let publicar = |cambio: &dyn Fn(&mut ProgresoImportacion)| {
@@ -320,7 +352,14 @@ fn bucle(
             clave(Servicio::AcoustId, "api.acoustid.org"),
             clave(Servicio::TheAudioDb, "www.theaudiodb.com"),
         );
+        cancelada.store(false, Ordering::Relaxed);
         for (ruta, importacion) in cola {
+            if cancelada.swap(false, Ordering::Relaxed) {
+                if let Err(error) = cancelar_pendientes(&r.db) {
+                    tracing::error!(codigo = error.code(), "no se pudo cancelar la importación");
+                }
+                break;
+            }
             let nombre = ruta.file_name().map(|n| n.to_string_lossy().into_owned());
             publicar(&|g| g.actual.clone_from(&nombre));
             let e = Entorno {
@@ -362,6 +401,12 @@ fn bucle(
                 }
             });
         }
+        // Como la V1 tras cada cambio de la biblioteca: el eje observable de la
+        // importación solo mira lo de esta tanda contra lo que había, y el barrido
+        // junta también lo que entró por separado (la carpeta vigilada, otra tanda).
+        if let Err(error) = super::duplicados::barrer_observables(&r.db) {
+            tracing::warn!(codigo = error.code(), "no se pudo buscar duplicados");
+        }
         publicar(&|g| {
             g.activa = false;
             g.actual = None;
@@ -395,6 +440,29 @@ mod tests {
             })
             .collect();
         assert_eq!(rel, ["a.mp3", "b/1.wav", "b/2.FLAC", "b/c/3.m4a"]);
+    }
+
+    #[test]
+    fn cancelar_olvida_lo_pendiente_y_lo_apunta_como_cancelado() {
+        let db = BaseDeDatos::en_memoria().unwrap();
+        let id = nueva_importacion(
+            &db,
+            "manual",
+            &[PathBuf::from("/x/a.mp3"), PathBuf::from("/x/b.mp3")],
+        )
+        .unwrap();
+        cancelar_pendientes(&db).unwrap();
+        assert!(pendientes(&db).unwrap().is_empty());
+        let estado: String = db
+            .conexion()
+            .unwrap()
+            .query_row(
+                "SELECT estado FROM importaciones WHERE id = ?1",
+                [id],
+                |f| f.get(0),
+            )
+            .unwrap();
+        assert_eq!(estado, "cancelada");
     }
 
     #[test]

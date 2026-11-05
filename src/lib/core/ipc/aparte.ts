@@ -248,6 +248,11 @@ export function duplicadosResumen(): Promise<ResumenDuplicados> {
   return call<ResumenDuplicados>('duplicados_resumen');
 }
 
+/** El barrido de la V1 sobre la biblioteca: aparta las copias y dice cuántas. */
+export function buscarDuplicados(): Promise<number> {
+  return call<number>('buscar_duplicados');
+}
+
 export function purgarDuplicados(borrarArchivos: boolean): Promise<number> {
   return call<number>('purgar_duplicados', { borrarArchivos });
 }

@@ -9,6 +9,7 @@
   import { onMount } from 'svelte';
 
   import {
+    buscarDuplicados,
     duplicadosResumen,
     purgarDuplicados,
     type ResumenDuplicados
@@ -23,6 +24,7 @@
   let resumen = $state<ResumenDuplicados | null>(null);
   let cargando = $state(true);
   let limpiando = $state(false);
+  let buscando = $state(false);
   let conArchivos = $state(true);
   let dialogo: HTMLDialogElement | undefined = $state();
 
@@ -35,6 +37,18 @@
   }
 
   onMount(() => void cargar());
+
+  async function buscar() {
+    buscando = true;
+    try {
+      notificar.informacion(t.apartadas(await buscarDuplicados()));
+      await cargar();
+    } catch {
+      notificar.error(t.error);
+    } finally {
+      buscando = false;
+    }
+  }
 
   async function limpiar() {
     dialogo?.close();
@@ -60,10 +74,13 @@
   </div>
 
   <div class="estado" role="status">
-    {#if cargando}
-      <span class="tenue">{textos.biblioteca.cargando}</span>
+    {#if cargando || buscando}
+      <span class="tenue">{buscando ? t.buscando : textos.biblioteca.cargando}</span>
     {:else if !resumen || resumen.total === 0}
       <span class="tenue"><Icon nombre="comprobado" tamano={18} />{t.sinDuplicados}</span>
+      <button type="button" class="boton" onclick={buscar}>
+        <Icon nombre="buscar" tamano={16} />{t.buscar}
+      </button>
     {:else}
       <span class="alerta"
         ><Icon nombre="advertencia" tamano={18} />{t.encontrados(resumen.total, megas)}</span

@@ -391,13 +391,21 @@ export const esAparte = {
   duplicados: {
     titulo: 'Canciones duplicadas',
     descripcion:
-      'Copias que NB Sound apartó al importar porque ya tenías la canción. No se ven ni van al móvil.',
+      'Copias que NB Sound apartó porque ya tenías la canción. No se ven ni van al móvil, y su archivo sigue en su sitio.',
     sinDuplicados: 'No hay copias apartadas.',
     encontrados: (n: number, megas: number) =>
       n === 1
         ? `1 copia apartada (${megas.toLocaleString('es')} MB)`
         : `${n.toLocaleString('es')} copias apartadas (${megas.toLocaleString('es')} MB)`,
     limpiar: 'Limpiar duplicados',
+    buscar: 'Buscar duplicados',
+    buscando: 'Buscando copias…',
+    apartadas: (n: number) =>
+      n === 0
+        ? 'No hay copias nuevas en tu biblioteca.'
+        : n === 1
+          ? '1 copia apartada: ya no se ve en tu biblioteca.'
+          : `${n.toLocaleString('es')} copias apartadas: ya no se ven en tu biblioteca.`,
     confirmarTitulo: '¿Limpiar canciones duplicadas?',
     confirmarPregunta: (n: number) =>
       `Se quitarán ${n.toLocaleString('es')} copias de la biblioteca. La canción original no se toca.`,
