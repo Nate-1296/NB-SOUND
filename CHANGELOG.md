@@ -3,6 +3,18 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.8] — 2026-11-05
+
+Lo que encontró la prueba de la 2.0.7 ya instalada.
+
+### Correcciones
+
+- El karaoke y el análisis podían quedarse sin modelos toda la sesión si al arrancar había canciones pendientes de
+  preparar: todas fallaban en un segundo. Ahora esperan a que ONNX Runtime esté listo y un fallo de carga no se
+  queda guardado.
+- La aplicación instalada no volvía a la pantalla en la que se cerró, e Inicio no se marcaba en la barra lateral
+  al abrir.
+
 ## [2.0.7] — 2026-11-05
 
 La revisión de Nathan con la aplicación en marcha: nada se reinicia, todo se recuerda, la interfaz se rehace donde
