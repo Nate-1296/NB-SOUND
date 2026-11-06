@@ -69,7 +69,9 @@
   async function guardar(e: SubmitEvent) {
     e.preventDefault();
     const [n, a] = [entero(numero), entero(anio)];
-    if (n === undefined || a === undefined) {
+    // El número de pista va de 1 a 999: uno negativo ni siquiera cruzaba el
+    // puente y se decía "No se pudo guardar", como si fallara el disco.
+    if (n === undefined || a === undefined || (n !== null && (n < 1 || n > 999))) {
       error = t.invalido;
       return;
     }

@@ -235,7 +235,7 @@ export const esAparte = {
     guardar: 'Guardar',
     cancelar: 'Cancelar',
     invalido:
-      'Revisa los datos: el título y el artista no pueden quedar vacíos y el año va de 1000 a 9999.',
+      'Revisa los datos: el título y el artista no pueden quedar vacíos, el número de pista va de 1 a 999 y el año de 1000 a 9999.',
     sinArchivo: 'No se encuentra el archivo de esta canción.',
     fallo: 'No se pudo guardar. Vuelve a intentarlo.'
   },
