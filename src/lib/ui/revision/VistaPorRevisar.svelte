@@ -124,12 +124,31 @@
     }
   }
 
+  /**
+   * Un lote va de una en una, y con ochenta canciones son un par de minutos: cada
+   * una sale de la lista al entrar y la cabecera cuenta por dónde va. Antes la
+   * vista se quedaba igual hasta el final, con las filas apagadas fuera de la
+   * vista.
+   */
+  let enCurso = $state<{ hechas: number; total: number } | null>(null);
+
+  async function unaPorUna(ps: Pendiente[], cada: (p: Pendiente) => Promise<unknown>) {
+    if (ps.length > 1) enCurso = { hechas: 0, total: ps.length };
+    try {
+      for (const p of ps) {
+        await cada(p);
+        lista = lista.filter((x) => x.id !== p.id);
+        if (enCurso) enCurso = { hechas: enCurso.hechas + 1, total: enCurso.total };
+      }
+    } finally {
+      enCurso = null;
+    }
+  }
+
   const importar = (ps: Pendiente[]) =>
     hacer(
       ps,
-      async () => {
-        for (const p of ps) await porRevisarImportar(p.id, null);
-      },
+      () => unaPorUna(ps, (p) => porRevisarImportar(p.id, null)),
       ps.length === 1 ? t.importada : t.importadas(ps.length)
     );
 
@@ -137,13 +156,7 @@
     hacer(ps, () => porRevisarDescartar(ps.map((p) => p.id)), t.descartadas(ps.length));
 
   const reintentar = (ps: Pendiente[]) =>
-    hacer(
-      ps,
-      async () => {
-        for (const p of ps) await porRevisarReintentar(p.id);
-      },
-      t.reintentando
-    );
+    hacer(ps, () => unaPorUna(ps, (p) => porRevisarReintentar(p.id)), t.reintentando);
 
   const elegir = (p: Pendiente, i: number) =>
     hacer([p], () => porRevisarImportar(p.id, i), t.elegida);
@@ -259,9 +272,13 @@
   <header class="cabecera">
     <div>
       <h1>{t.titulo}</h1>
-      {#if lista.length > 0}<p class="cuenta">{t.cuenta(lista.length)}</p>{/if}
+      {#if enCurso}
+        <p class="cuenta" role="status">{t.enCurso(enCurso.hechas, enCurso.total)}</p>
+      {:else if lista.length > 0}
+        <p class="cuenta">{t.cuenta(lista.length)}</p>
+      {/if}
     </div>
-    {#if lista.length > 1}
+    {#if lista.length > 1 && !enCurso}
       <MenuAcciones
         etiqueta={t.masAcciones}
         acciones={[

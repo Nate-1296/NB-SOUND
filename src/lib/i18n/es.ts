@@ -588,6 +588,8 @@ export const es = {
     vacio: 'Todo lo que importaste está en tu biblioteca.',
     cuenta: (n: number) =>
       n === 1 ? '1 canción espera tu decisión' : `${n} canciones esperan tu decisión`,
+    enCurso: (hechas: number, total: number) =>
+      `Trabajando… ${hechas.toLocaleString('es')} de ${total.toLocaleString('es')}`,
     /** Cada grupo dice su motivo una vez; las filas ya no lo repiten. */
     grupos: {
       elegir: {
