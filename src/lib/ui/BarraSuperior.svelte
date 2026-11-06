@@ -116,6 +116,7 @@
           }
         }}
         type="search"
+        maxlength="200"
         placeholder={t.marcador}
         title={t.ayudaAtajo}
         autocomplete="off"

@@ -165,7 +165,11 @@
 
   <details class="grupo">
     <summary>
-      <span class="titulo-grupo"><Icon nombre="exportar" tamano={20} />{tc.titulo}</span>
+      <span class="titulo-grupo"
+        ><Icon nombre="exportar" tamano={20} />{tc.titulo}<span class="flecha" aria-hidden="true"
+          ><Icon nombre="abajo" tamano={18} /></span
+        ></span
+      >
       <small>{tc.ayuda}</small>
     </summary>
     <div class="cuerpo-copia">
@@ -299,6 +303,18 @@
 
   summary::-webkit-details-marker {
     display: none;
+  }
+
+  /* Sin la marca del navegador nada decía que el bloque se abre: la flecha lo dice. */
+  .flecha {
+    display: grid;
+    margin-left: auto;
+    color: var(--m3c-on-surface-variant);
+    transition: rotate var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  details[open] .flecha {
+    rotate: 180deg;
   }
 
   summary small {

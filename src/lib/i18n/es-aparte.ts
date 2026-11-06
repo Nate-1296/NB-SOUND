@@ -313,10 +313,14 @@ export const esAparte = {
     nueva: 'Nueva inteligente',
     editar: 'Editar regla',
     crearParaMi: 'Crear para mí',
+    // Cuenta las que se crearon o cambiaron: con cero decía "0 listas hechas",
+    // que parecía un fallo cuando solo significaba que ya estaban al día.
     creadasParaTi: (n: number) =>
-      n === 1
-        ? '1 lista hecha con tu música'
-        : `${n.toLocaleString('es')} listas hechas con tu música`,
+      n === 0
+        ? 'Tus listas ya estaban al día con tu música'
+        : n === 1
+          ? '1 lista nueva o puesta al día con tu música'
+          : `${n.toLocaleString('es')} listas nuevas o puestas al día con tu música`,
     creandoParaMi: 'Preparando listas',
     ayuda:
       'Se actualiza sola cada vez que importas música, marcas favoritas o escuchas canciones que cumplen estas condiciones.',

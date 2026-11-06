@@ -67,17 +67,28 @@
       bibliotecaAlbumes({ texto, artistaId: null, orden: 'tituloAsc' }, 0, 12),
       bibliotecaPistas(c, 0, 50),
       playlistsListar({ texto, categoria: null, orden: 'nombreAsc' })
-    ]).then(([ar, al, pi, pl]) => {
-      if (v !== version) return;
-      artistas = ar.artistas;
-      totalArtistas = ar.total;
-      albumes = al.albumes;
-      totalAlbumes = al.total;
-      pistas = pi.pistas;
-      totalPistas = pi.total;
-      playlists = pl.slice(0, 8);
-      listo = true;
-    });
+    ])
+      .then(([ar, al, pi, pl]) => {
+        if (v !== version) return;
+        artistas = ar.artistas;
+        totalArtistas = ar.total;
+        albumes = al.albumes;
+        totalAlbumes = al.total;
+        pistas = pi.pistas;
+        totalPistas = pi.total;
+        playlists = pl.slice(0, 8);
+        listo = true;
+      })
+      .catch(() => {
+        // Sin respuesta se dice "sin resultados" en vez de quedarse en blanco.
+        if (v !== version) return;
+        artistas = [];
+        albumes = [];
+        pistas = [];
+        playlists = [];
+        totalArtistas = totalAlbumes = totalPistas = 0;
+        listo = true;
+      });
   });
 
   const nada = $derived(

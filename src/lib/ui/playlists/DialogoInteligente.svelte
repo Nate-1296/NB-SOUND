@@ -131,8 +131,14 @@
     }
   });
 
-  function numOpcional(valor: string): number | null {
-    const limpio = valor.trim();
+  /**
+   * Un campo numérico opcional. Llega como número: `bind:value` de un
+   * `<input type="number">` da números (o nada), no texto, y tratarlo como texto
+   * hacía fallar cualquier inteligente con un rango con "Revisa los rangos".
+   */
+  function numOpcional(valor: string | number | null | undefined): number | null {
+    if (valor === null || valor === undefined) return null;
+    const limpio = String(valor).trim();
     if (!limpio) return null;
     const n = Number(limpio);
     return Number.isFinite(n) ? n : null;

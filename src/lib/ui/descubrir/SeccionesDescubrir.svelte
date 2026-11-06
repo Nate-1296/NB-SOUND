@@ -27,11 +27,17 @@
     const v = ++version;
     d = null;
     if (!texto) return;
-    void descubrir(texto, 25).then((r) => {
-      if (v !== version) return;
-      d = r;
-      onresultado?.(r.entendida && r.secciones.length > 0);
-    });
+    // El runtime no lee pedidos de más de 200 caracteres: un texto pegado más
+    // largo se entiende por su principio en vez de fallar sin decir nada.
+    descubrir(texto.slice(0, 200), 25)
+      .then((r) => {
+        if (v !== version) return;
+        d = r;
+        onresultado?.(r.entendida && r.secciones.length > 0);
+      })
+      .catch(() => {
+        if (v === version) onresultado?.(false);
+      });
   });
 </script>
 

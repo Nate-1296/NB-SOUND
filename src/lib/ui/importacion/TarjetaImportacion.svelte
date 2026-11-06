@@ -2,9 +2,12 @@
   @component
   El progreso discreto de la importación y su resumen (F4.2.3, ADR-007):
   "Catalogando 150 canciones" mientras dura y "142 añadidas. 8 por revisar" al
-  terminar, con un enlace a Por revisar si hay algo pendiente.
+  terminar, con un enlace a Por revisar si hay algo pendiente. Si todo entró, se
+  va sola a los pocos segundos; si hay algo por revisar, se queda hasta cerrarla o
+  hasta abrir Por revisar.
 -->
 <script lang="ts">
+  import { page } from '$app/state';
   import { importacion } from '#lib/core/importacion.svelte.ts';
   import { cancelarImportacion } from '#lib/core/ipc/index.ts';
   import { textos } from '#lib/i18n/index.ts';
@@ -13,6 +16,19 @@
   const t = textos.importacion;
   const p = $derived(importacion.progreso);
   const r = $derived(importacion.resumen);
+
+  // El resumen se quedaba encima del contenido en todas las vistas hasta cerrarlo.
+  // En Por revisar ya se ve lo que dice, y si todo entró basta con leerlo un momento.
+  $effect(() => {
+    if (!r) return;
+    if (page.url.pathname === '/por-revisar') {
+      importacion.cerrarResumen();
+      return;
+    }
+    if (r.porRevisar > 0) return;
+    const espera = setTimeout(() => importacion.cerrarResumen(), 8000);
+    return () => clearTimeout(espera);
+  });
 </script>
 
 {#if p.activa}

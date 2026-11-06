@@ -42,6 +42,19 @@
     }
   }
 
+  /**
+   * Si el pedido nombra la ficha para querer eso. "Sin reguetón" la nombra para
+   * no quererlo, y la ficha se encendía igual, como si se hubiera pedido.
+   */
+  function enElPedido(chip: string): boolean {
+    const t = texto.toLowerCase();
+    const c = chip.toLowerCase();
+    for (let i = t.indexOf(c); i >= 0; i = t.indexOf(c, i + 1)) {
+      if (!/(^|[\s,])(sin|no|nada de|menos)\s+$/.test(t.slice(0, i))) return true;
+    }
+    return false;
+  }
+
   async function pedir() {
     const peticion = texto.trim();
     if (!peticion) {
@@ -108,7 +121,7 @@
         <span class="rotulo-categoria">{cat.nombre}:</span>
         <div class="chips">
           {#each cat.chips as chip (chip)}
-            {@const activa = texto.toLowerCase().includes(chip.toLowerCase())}
+            {@const activa = enElPedido(chip)}
             <button
               type="button"
               class="ficha chip"
