@@ -395,3 +395,18 @@ fn dos_pistas_que_empiezan_en_el_mismo_bloque_se_cuentan_las_dos() {
     assert_eq!(inicios, [1, 2]);
     let _ = std::fs::remove_dir_all(dir);
 }
+
+/// Un MP3 real (`NS_MP3`): buscar más allá del final, como al soltar la barra en
+/// su extremo, termina la pista en vez de dar el archivo por dañado.
+#[test]
+#[ignore = "necesita un MP3 local"]
+fn buscar_al_final_de_un_mp3_lo_termina() {
+    let Ok(ruta) = std::env::var("NS_MP3") else {
+        return;
+    };
+    let mut d = super::decodificador::Decodificador::abrir(Path::new(&ruta), 0.0).unwrap();
+    let r = d.buscar(100_000.0);
+    assert!(r.is_ok(), "{r:?}");
+    let mut v = Vec::new();
+    assert_eq!(d.leer(&mut v, 4_096).unwrap(), 0);
+}

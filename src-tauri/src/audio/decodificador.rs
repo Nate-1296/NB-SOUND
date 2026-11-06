@@ -45,6 +45,15 @@ fn error_de(error: &Error) -> NsError {
     }
 }
 
+/// Si una búsqueda falló por pedir un instante después del final del archivo.
+fn fuera_del_final(error: &Error) -> bool {
+    match error {
+        Error::SeekError(symphonia::core::errors::SeekErrorKind::OutOfRange) => true,
+        Error::IoError(e) => e.kind() == std::io::ErrorKind::UnexpectedEof,
+        _ => false,
+    }
+}
+
 impl Decodificador {
     /// Abre un archivo. `ganancia_db` es la normalización de volumen de la pista
     /// (F2.1.4), que se aplica aquí, al decodificar, y no en la mezcla.
@@ -104,16 +113,26 @@ impl Decodificador {
     /// [`NsError::AudioCorrupted`] si el archivo no admite la búsqueda.
     pub fn buscar(&mut self, segundos: f64) -> NsResult<u64> {
         let tiempo = Time::try_from_secs_f64(segundos.max(0.0)).ok_or(NsError::Internal)?;
-        let buscado = self
-            .lector
-            .seek(
-                SeekMode::Accurate,
-                SeekTo::Time {
-                    time: tiempo,
-                    track_id: Some(self.pista_id),
-                },
-            )
-            .map_err(|e| error_de(&e))?;
+        let buscado = match self.lector.seek(
+            SeekMode::Accurate,
+            SeekTo::Time {
+                time: tiempo,
+                track_id: Some(self.pista_id),
+            },
+        ) {
+            Ok(b) => b,
+            // Pedir el final o más allá (soltar la barra en su extremo) no es un
+            // archivo dañado: es el final. Antes se daba la pista por ilegible y la
+            // barra se quedaba en "0:00" sin pasar a la siguiente.
+            Err(e) if fuera_del_final(&e) => {
+                self.sobrante.clear();
+                self.agotado = true;
+                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                let frame = (segundos.max(0.0) * f64::from(self.tasa)) as u64;
+                return Ok(frame);
+            }
+            Err(e) => return Err(error_de(&e)),
+        };
         self.decodificador.reset();
         self.sobrante.clear();
         self.agotado = false;

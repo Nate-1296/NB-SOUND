@@ -215,6 +215,30 @@ fn buscar_fuera_de_rango_se_acota_a_la_duracion() {
 }
 
 #[test]
+fn llevar_la_barra_al_final_pasa_a_la_siguiente_sin_quedarse_colgada() {
+    // Al soltar la barra en el extremo, la búsqueda caía justo en el final del
+    // archivo, el decodificador la rechazaba y la pista se daba por ilegible: la
+    // barra se quedaba en "0:00" sonando nada y sin pasar a la siguiente.
+    let e = escenario("buscar-final", &[(1, 44_100 * 2), (2, 44_100 * 2)]);
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    s.atender(Orden::ReproducirPistas {
+        ids: vec![1, 2],
+        desde: 0,
+    });
+    correr(&mut s, |s| s.instantanea().posicion_seg > 0.0);
+    s.atender(Orden::Buscar(1_000.0));
+    correr(&mut s, |s| s.instantanea().pista_id == Some(2));
+    let i = s.instantanea();
+    assert_eq!(i.pista_id, Some(2));
+    assert!(i.duracion_seg > 0.0);
+    assert!(
+        apuntes.avisos.lock().unwrap().is_empty(),
+        "no era un archivo dañado"
+    );
+}
+
+#[test]
 fn el_ecualizador_elegido_se_guarda_en_las_preferencias() {
     let e = escenario("eq", &[(1, 1_000)]);
     let apuntes = Apuntes::default();
