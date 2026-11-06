@@ -181,3 +181,15 @@ estados de pasar por encima solo se vieron en el código.
       un poco) y las filas de la sesión del DJ.
 - [ ] Una instalación nueva abre en la bienvenida; "Elegir la carpeta" importa lo que hay en ella y lo sigue vigilando.
 
+
+## Revisión QA-R3
+
+Lo que la pasada de la 2.0.12 no pudo comprobar en el entorno de pruebas: el selector nativo de carpetas no se
+maneja desde el inspector y el puntero no se mueve.
+
+- [ ] Por revisar con el ratón: el ··· de cada fila se abre junto al botón; "Otras 3 versiones" despliega y repliega;
+      las filas se apagan mientras se importan y vuelven si algo falla.
+- [ ] "¿Dónde está tu música?" → "Buscar mi música" → elegir la carpeta buena: dice que están todas y, al usarla, la
+      biblioteca suena sin reiniciar. Con una carpeta vacía dice que no hay ninguna y ofrece elegir otra.
+- [ ] La barra de reproducción a 720 px con el ratón: la fila de controles del menú ··· responde y el menú se cierra
+      al elegir letras o pantalla completa.

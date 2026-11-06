@@ -1,12 +1,13 @@
-//! Copia de seguridad y restauración (F4.2.6): `servicios/backup.py`.
+//! Copia de seguridad y restauración (F4.2.6).
 //!
 //! El formato es un ZIP `.nbsound-backup` con la base
 //! (`db.sqlite3`, sacada con `VACUUM INTO`, que da una copia coherente sin
 //! bloquear ni arrastrar el WAL), las portadas (`assets/`), la foto de perfil
 //! (`perfil/`) y un `manifest.json` con la suma sha256 de cada entrada. Ni el
 //! audio, que es del usuario y no de la aplicación, ni las claves, que viven en el
-//! llavero (ADR-009), ni la identidad del servidor móvil. El manifiesto lleva `esquema`, la versión de la base: una
-//! copia que no lo lleva se reconoce y se rechaza con su motivo.
+//! llavero (ADR-009), ni la identidad del servidor móvil. El manifiesto lleva
+//! `esquema`, la versión de la base: una copia que no lo lleva se reconoce y se
+//! rechaza con su motivo.
 //!
 //! **Restaurar no reemplaza la base en caliente.** Con el pool de conexiones, el
 //! reproductor y el servidor móvil leyendo, cambiar el archivo por debajo es
