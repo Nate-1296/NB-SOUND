@@ -3,6 +3,27 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.13] — 2026-11-06
+
+Lo que encontró la prueba de punta a punta de la 2.0.12.
+
+### Correcciones
+
+- Al soltar la barra de progreso en su extremo, la canción se quedaba en "0:00" sin sonar y sin pasar a la
+  siguiente. Ahora pasa a la siguiente.
+- Con la música en pausa, mover la barra (o las flechas) no movía la posición hasta reanudar.
+- En una instalación nueva, Biblioteca acababa en "500 Internal Error".
+- Las listas inteligentes con un rango (año, BPM, energía, reproducciones) no se podían crear.
+- La copia de seguridad no llevaba la foto de perfil: al restaurarla en otro equipo, se perdía.
+- Por revisar cuenta por dónde va un lote ("Trabajando… 12 de 88") y quita cada canción al entrar.
+- Buscar se quedaba en blanco con un texto de más de 200 caracteres.
+- En el DJ, "sin reguetón" encendía la ficha de Reguetón.
+- "Crear para mí" decía "0 listas hechas" cuando solo estaban al día.
+- El resumen de una importación se queda solo si hay algo por revisar; si no, se va.
+- "Copiar a una tarjeta o un USB" lleva su flecha: no se veía que se despliega.
+- Editar una canción con un número de pista negativo decía "No se pudo guardar".
+- "Dónde vive tu música" sin carpeta ofrece "Elegir", y con la biblioteca vacía la usa directamente.
+
 ## [2.0.12] — 2026-11-06
 
 Por revisar nueva, tu música que se encuentra sola y barras que caben en cualquier ventana.
