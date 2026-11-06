@@ -3,6 +3,16 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.9] — 2026-11-05
+
+El trabajo de fondo deja de competir con la interfaz.
+
+### Rendimiento
+
+- Preparar el karaoke ocupaba la mitad de los núcleos a prioridad normal. Ahora el karaoke usa un cuarto de los
+  núcleos y el análisis un octavo, sus hilos no giran en vacío mientras esperan, y en Linux y macOS corren a la
+  prioridad más baja: solo usan lo que el equipo no está usando.
+
 ## [2.0.8] — 2026-11-05
 
 Lo que encontró la prueba de la 2.0.7 ya instalada.
