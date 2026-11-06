@@ -9,7 +9,6 @@
   import type { UbicacionMusica } from '#lib/core/ipc/index.ts';
   import { elegirCarpetaMusica, type RevisionCarpeta } from '#lib/core/ipc/aparte.ts';
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
-  import { textos } from '#lib/i18n/index.ts';
   import { textosAparte } from '#lib/i18n/aparte.ts';
   import Icon from '#lib/ui/Icon.svelte';
   import DialogoCarpeta from './DialogoCarpeta.svelte';
@@ -72,10 +71,7 @@
 <DialogoCarpeta
   bind:revision
   puedeMover={false}
-  onhecho={() => {
-    preguntando = false;
-    notificar.exito(textos.ajustes.biblioteca, td.todas(ubicacion.total));
-  }}
+  onhecho={() => (preguntando = false)}
   onotra={buscar}
 />
 

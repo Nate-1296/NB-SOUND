@@ -226,4 +226,9 @@ de lo que no usa NB Sound y las barras sin pisarse a ningún tamaño. Después, 
 | `ae149b4` | QA-R3 | Soltar la barra de progreso en su extremo dejaba la pista "ilegible" y el reproductor en "0:00" sin pasar a la siguiente (Symphonia rechaza buscar en el final de un MP3) | Barra al final (`reproductor/pruebas.rs`) y MP3 real con `NS_MP3` (`audio/pruebas.rs`) |
 | `1c8e68d` | QA-R3 | Inteligentes con rangos que no se podían crear, "0 listas hechas", la ficha encendida con "sin reguetón", Buscar en blanco con un texto largo, el bloque de copiar a USB sin flecha y el resumen de importación que no se iba | — |
 | `ff4f278` | QA-R3 | La foto de perfil viaja en la copia de seguridad | Foto que vuelve al restaurar (`copia_seguridad.rs`) |
+| `e8faf94` | QA-R3 | En una instalación nueva Biblioteca acababa en "500": el efecto de la rejilla se disparaba a sí mismo con la lista vacía. "Dónde vive tu música" sin carpeta ofrece "Elegir" | — (comprobado con datos vacíos en la aplicación) |
+| `2ddf260` | QA-R3 | Mover la barra en pausa no movía la posición hasta reanudar | La posición en pausa (`reproductor/pruebas.rs`) |
+| `342884c` | QA-R3 | Un número de pista negativo decía "No se pudo guardar" | — |
+| `2fd7742` | QA-R3 | Un lote de Por revisar cuenta por dónde va y quita cada canción al entrar (88 tardaron dos minutos sin que la vista cambiara) | — |
+| `688ff6b` | QA-R3 | La 2.0.13 | CI y publicación |
 
