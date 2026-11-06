@@ -3,6 +3,13 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.10] — 2026-11-06
+
+### Correcciones
+
+- Karaoke, Dispositivos y Añadir música aparecían un momento en mitad de la ventana antes de colocarse a la derecha
+  (en equipos con aceleración por GPU). Ahora entran deslizándose desde el borde.
+
 ## [2.0.9] — 2026-11-05
 
 El trabajo de fondo deja de competir con la interfaz.
