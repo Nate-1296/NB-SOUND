@@ -2,10 +2,10 @@
 //!
 //! El formato es un ZIP `.nbsound-backup` con la base
 //! (`db.sqlite3`, sacada con `VACUUM INTO`, que da una copia coherente sin
-//! bloquear ni arrastrar el WAL), las portadas (`assets/`) y un `manifest.json`
-//! con la suma sha256 de cada entrada. Ni el audio, que es del usuario y no de la
-//! aplicación, ni las claves, que viven en el llavero (ADR-009), ni la identidad
-//! del servidor móvil. El manifiesto lleva `esquema`, la versión de la base: una
+//! bloquear ni arrastrar el WAL), las portadas (`assets/`), la foto de perfil
+//! (`perfil/`) y un `manifest.json` con la suma sha256 de cada entrada. Ni el
+//! audio, que es del usuario y no de la aplicación, ni las claves, que viven en el
+//! llavero (ADR-009), ni la identidad del servidor móvil. El manifiesto lleva `esquema`, la versión de la base: una
 //! copia que no lo lleva se reconoce y se rechaza con su motivo.
 //!
 //! **Restaurar no reemplaza la base en caliente.** Con el pool de conexiones, el
@@ -36,6 +36,9 @@ pub const EXTENSION: &str = "nbsound-backup";
 const DB_EN_ZIP: &str = "db.sqlite3";
 const MANIFIESTO: &str = "manifest.json";
 const PREFIJO_PORTADAS: &str = "assets/";
+/// La foto de perfil. Sin ella, una copia restaurada en otro equipo apuntaba a
+/// una foto que no existía.
+const PREFIJO_PERFIL: &str = "perfil/";
 
 /// Tope de lo que se descomprime de una entrada: una copia manipulada no puede
 /// llenar el disco con una bomba de compresión.
@@ -175,6 +178,29 @@ fn con_extension(destino: &Path) -> PathBuf {
     }
 }
 
+/// Los archivos de una carpeta y sus subcarpetas, en orden estable.
+fn archivos_de(dir: &Path) -> NsResult<Vec<PathBuf>> {
+    let mut salida = Vec::new();
+    if dir.is_dir() {
+        let mut pila = vec![dir.to_path_buf()];
+        while let Some(d) = pila.pop() {
+            for e in std::fs::read_dir(&d)
+                .map_err(|_| NsError::StorageFailure)?
+                .flatten()
+            {
+                let p = e.path();
+                if p.is_dir() {
+                    pila.push(p);
+                } else if p.is_file() {
+                    salida.push(p);
+                }
+            }
+        }
+    }
+    salida.sort();
+    Ok(salida)
+}
+
 fn escribir_zip(db: &BaseDeDatos, rutas: &Rutas, base: &Path, zip_tmp: &Path) -> NsResult<u32> {
     let f = File::create(zip_tmp).map_err(|_| NsError::StorageFailure)?;
     let mut z = ZipWriter::new(f);
@@ -200,24 +226,7 @@ fn escribir_zip(db: &BaseDeDatos, rutas: &Rutas, base: &Path, zip_tmp: &Path) ->
     };
     anadir(&mut z, DB_EN_ZIP, base)?;
     let dir = rutas.portadas();
-    let mut portadas = Vec::new();
-    if dir.is_dir() {
-        let mut pila = vec![dir.clone()];
-        while let Some(d) = pila.pop() {
-            for e in std::fs::read_dir(&d)
-                .map_err(|_| NsError::StorageFailure)?
-                .flatten()
-            {
-                let p = e.path();
-                if p.is_dir() {
-                    pila.push(p);
-                } else if p.is_file() {
-                    portadas.push(p);
-                }
-            }
-        }
-    }
-    portadas.sort();
+    let portadas = archivos_de(&dir)?;
     for p in &portadas {
         let relativa = p
             .strip_prefix(&dir)
@@ -225,6 +234,15 @@ fn escribir_zip(db: &BaseDeDatos, rutas: &Rutas, base: &Path, zip_tmp: &Path) ->
             .to_string_lossy()
             .replace('\\', "/");
         anadir(&mut z, &format!("{PREFIJO_PORTADAS}{relativa}"), p)?;
+    }
+    let dir_perfil = rutas.datos.join("perfil");
+    for p in &archivos_de(&dir_perfil)? {
+        let relativa = p
+            .strip_prefix(&dir_perfil)
+            .map_err(|_| NsError::Internal)?
+            .to_string_lossy()
+            .replace('\\', "/");
+        anadir(&mut z, &format!("{PREFIJO_PERFIL}{relativa}"), p)?;
     }
     let total = u32::try_from(portadas.len()).unwrap_or(u32::MAX);
     let mut contenido = vec!["db"];
@@ -350,10 +368,11 @@ fn base_integra(ruta: &Path) -> bool {
 
 /// Dónde se deja preparada la restauración: junto a la base, para que el
 /// cambio final sea un `rename` en el mismo disco.
-fn preparada(rutas: &Rutas) -> (PathBuf, PathBuf) {
+fn preparada(rutas: &Rutas) -> (PathBuf, PathBuf, PathBuf) {
     (
         rutas.datos.join("restaurar.sqlite"),
         rutas.datos.join("restaurar-portadas"),
+        rutas.datos.join("restaurar-perfil"),
     )
 }
 
@@ -366,9 +385,10 @@ fn preparada(rutas: &Rutas) -> (PathBuf, PathBuf) {
 /// - [`NsError::SchemaMismatch`] si es de una versión más nueva.
 /// - [`NsError::IntegrityMismatch`] si está dañada.
 pub fn preparar_restauracion(rutas: &Rutas, copia: &Path) -> NsResult<()> {
-    let (base, portadas) = preparada(rutas);
+    let (base, portadas, perfil) = preparada(rutas);
     let _ = std::fs::remove_file(&base);
     let _ = std::fs::remove_dir_all(&portadas);
+    let _ = std::fs::remove_dir_all(&perfil);
     let resultado = (|| -> Result<(), CopiaInvalida> {
         let f = File::open(copia).map_err(|_| CopiaInvalida::Formato)?;
         let mut z = ZipArchive::new(f).map_err(|_| CopiaInvalida::Formato)?;
@@ -383,30 +403,35 @@ pub fn preparar_restauracion(rutas: &Rutas, copia: &Path) -> NsResult<()> {
             return Err(CopiaInvalida::Danada);
         }
         for (nombre, suma) in sumas {
-            if !nombre.starts_with(PREFIJO_PORTADAS) {
+            let (prefijo, destino) = if nombre.starts_with(PREFIJO_PORTADAS) {
+                (PREFIJO_PORTADAS, &portadas)
+            } else if nombre.starts_with(PREFIJO_PERFIL) {
+                (PREFIJO_PERFIL, &perfil)
+            } else {
                 continue;
-            }
+            };
             // Se extrae a la ruta saneada, nunca al nombre tal cual: una entrada
-            // con `..` o absoluta no sale de la carpeta de portadas.
+            // con `..` o absoluta no sale de su carpeta.
             let relativa = z
                 .by_name(nombre)
                 .ok()
                 .and_then(|e| e.enclosed_name())
                 .and_then(|p| {
-                    p.strip_prefix(PREFIJO_PORTADAS.trim_end_matches('/'))
+                    p.strip_prefix(prefijo.trim_end_matches('/'))
                         .ok()
                         .map(Path::to_path_buf)
                 })
                 .filter(|p| !p.as_os_str().is_empty())
                 .ok_or(CopiaInvalida::Danada)?;
             let suma = suma.as_str().ok_or(CopiaInvalida::Danada)?;
-            extraer(&mut z, nombre, suma, &portadas.join(relativa))?;
+            extraer(&mut z, nombre, suma, &destino.join(relativa))?;
         }
         Ok(())
     })();
     if let Err(c) = resultado {
         let _ = std::fs::remove_file(&base);
         let _ = std::fs::remove_dir_all(&portadas);
+        let _ = std::fs::remove_dir_all(&perfil);
         tracing::warn!(?c, "se rechazó una copia de seguridad");
         return Err(c.into());
     }
@@ -424,7 +449,7 @@ pub fn restauracion_pendiente(rutas: &Rutas) -> bool {
 /// `.antes`, sustituyendo las de una restauración anterior: una sola vuelta
 /// atrás posible, sin acumular copias.
 pub fn aplicar_restauracion_pendiente(rutas: &Rutas) {
-    let (base, portadas) = preparada(rutas);
+    let (base, portadas, perfil) = preparada(rutas);
     if !base.is_file() {
         return;
     }
@@ -452,6 +477,16 @@ pub fn aplicar_restauracion_pendiente(rutas: &Rutas) {
         let _ = std::fs::rename(&dir, &apartadas);
         if std::fs::rename(&portadas, &dir).is_err() {
             tracing::error!("no se pudieron poner las portadas restauradas");
+        }
+    }
+    // Una copia sin foto (de antes de llevarla) deja la que hubiera.
+    if perfil.is_dir() {
+        let dir = rutas.datos.join("perfil");
+        let apartado = rutas.datos.join("perfil.antes");
+        let _ = std::fs::remove_dir_all(&apartado);
+        let _ = std::fs::rename(&dir, &apartado);
+        if std::fs::rename(&perfil, &dir).is_err() {
+            tracing::error!("no se pudo poner la foto de perfil restaurada");
         }
     }
     tracing::info!("copia de seguridad restaurada");
@@ -771,6 +806,22 @@ mod tests {
         );
         assert!(!rutas.datos.join("fuera.txt").exists());
         assert!(!dir.join("fuera.txt").exists());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn la_foto_de_perfil_viaja_en_la_copia_y_vuelve_al_restaurar() {
+        let (dir, rutas, db) = montaje("perfil");
+        let foto = rutas.datos.join("perfil/99/foto.png");
+        std::fs::create_dir_all(foto.parent().unwrap()).unwrap();
+        std::fs::write(&foto, b"png").unwrap();
+        crear(&db, &rutas, &dir.join("con-foto")).unwrap();
+        drop(db);
+        // Otro equipo: sin la foto.
+        std::fs::remove_dir_all(rutas.datos.join("perfil")).unwrap();
+        preparar_restauracion(&rutas, &dir.join("con-foto.nbsound-backup")).unwrap();
+        aplicar_restauracion_pendiente(&rutas);
+        assert_eq!(std::fs::read(&foto).unwrap(), b"png");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

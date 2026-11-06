@@ -189,7 +189,7 @@ export const esAparte = {
   copia: {
     titulo: 'Copia de seguridad',
     ayuda:
-      'Guarda tu biblioteca, playlists, historial y portadas en un solo archivo. No incluye la música ni tus claves.',
+      'Guarda tu biblioteca, playlists, historial, portadas y tu foto en un solo archivo. No incluye la música ni tus claves.',
     crear: 'Crear una copia ahora',
     creando: 'Creando la copia',
     creada: (megas: string, portadas: number) =>
