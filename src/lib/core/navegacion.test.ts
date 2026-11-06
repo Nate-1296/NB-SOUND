@@ -24,6 +24,8 @@ describe('destinos de la barra lateral', () => {
     const [inicio, biblioteca] = DESTINOS;
     if (!inicio || !biblioteca) throw new Error('faltan destinos');
     expect(estaActivo(inicio, '/')).toBe(true);
+    // La aplicación instalada abre en `tauri://localhost`: la ruta llega vacía.
+    expect(estaActivo(inicio, '')).toBe(true);
     expect(estaActivo(inicio, '/biblioteca')).toBe(false);
     expect(estaActivo(biblioteca, '/biblioteca/album/3')).toBe(true);
     expect(estaActivo(biblioteca, '/bibliotecas')).toBe(false);

@@ -49,8 +49,13 @@
     }
   })();
 
+  // En la aplicación instalada la primera URL es `tauri://localhost`, sin barra:
+  // su `pathname` llega vacío y no "/". Se trataba como otra ruta: no se volvía a
+  // la pantalla guardada y se guardaba una vacía.
+  const enInicio = (ruta: string) => ruta === '' || ruta === '/';
+
   $effect(() => {
-    const ruta = page.url.pathname + page.url.search;
+    const ruta = (page.url.pathname || '/') + page.url.search;
     try {
       localStorage.setItem(ULTIMA_RUTA, ruta);
     } catch {
@@ -59,7 +64,7 @@
   });
 
   onMount(() => {
-    if (rutaGuardada && rutaGuardada !== '/' && page.url.pathname === '/') {
+    if (rutaGuardada && !enInicio(rutaGuardada) && enInicio(page.url.pathname)) {
       void goto(rutaGuardada, { replaceState: true });
     }
     void reproductor.arrancar();

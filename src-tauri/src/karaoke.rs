@@ -473,9 +473,26 @@ pub const MAX_INTENTOS: u32 = 3;
 /// Si un fallo puede ser pasajero. Un archivo que no está o no se puede leer no
 /// mejora por insistir; lo demás (el modelo, la memoria, el disco) sí puede.
 fn pasajero(error: &NsError) -> bool {
+    // Sin el componente (ONNX Runtime o el modelo) fallarían todas una detrás de
+    // otra en un instante: la cola se para, y `rehabilitar_sin_componente` las
+    // devuelve en cuanto vuelve a estar.
     !matches!(
         error,
-        NsError::FileNotFound | NsError::AudioCorrupted | NsError::FormatUnsupported
+        NsError::FileNotFound
+            | NsError::AudioCorrupted
+            | NsError::FormatUnsupported
+            | NsError::ComponentUnavailable
+    )
+}
+
+/// Lo que falló por no tener el componente vuelve a la cola: se llama cada vez
+/// que la cola despierta con el modelo instalado.
+fn rehabilitar_sin_componente(db: &BaseDeDatos) -> NsResult<()> {
+    marcar(
+        db,
+        "UPDATE stems SET estado = 'pendiente', error = NULL
+         WHERE estado = 'fallida' AND error = 'COMPONENT_UNAVAILABLE'",
+        [],
     )
 }
 
@@ -563,8 +580,24 @@ impl Karaoke {
             .name("karaoke".into())
             .spawn(move || {
                 let _ = retomar(&db);
+                // Cada vez que la cola despierta (al arrancar, al pedir algo, al
+                // instalar el agregado o cada cinco minutos), lo que falló por no
+                // tener el componente vuelve a intentarse; entre medias no, para no
+                // girar en vacío si sigue sin estar.
+                let mut despierta = true;
                 loop {
-                    if let Some(modelo) = modelo_instalado(&rutas) {
+                    // Hasta que el arranque fije dónde está ONNX Runtime no se toca
+                    // la cola: antes, todo lo pendiente fallaba en ese instante.
+                    if !crate::onnx::ruta_fijada() {
+                        std::thread::sleep(Duration::from_millis(250));
+                        continue;
+                    }
+                    let modelo = modelo_instalado(&rutas);
+                    if despierta && modelo.is_some() {
+                        let _ = rehabilitar_sin_componente(&db);
+                    }
+                    despierta = false;
+                    if let Some(modelo) = modelo {
                         match una(&db, &rutas, &modelo, &e, &avisar) {
                             Ok(true) => continue,
                             Ok(false) => {}
@@ -574,7 +607,7 @@ impl Karaoke {
                         }
                     }
                     match rx.recv_timeout(Duration::from_secs(300)) {
-                        Ok(()) | Err(RecvTimeoutError::Timeout) => {}
+                        Ok(()) | Err(RecvTimeoutError::Timeout) => despierta = true,
                         Err(RecvTimeoutError::Disconnected) => return,
                     }
                 }
@@ -598,6 +631,36 @@ impl Karaoke {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn sin_componente_la_cola_se_para_y_vuelve_al_despertar() {
+        use crate::db::BaseDeDatos;
+        use crate::error::NsError;
+        // Sin ONNX Runtime todas fallarían en un instante: no se reintenta en el
+        // momento (la cola se para), pero vuelve al despertar.
+        assert!(!super::pasajero(&NsError::ComponentUnavailable));
+        assert!(super::pasajero(&NsError::Internal));
+        let db = BaseDeDatos::en_memoria().unwrap();
+        db.conexion()
+            .unwrap()
+            .execute_batch(
+                "INSERT INTO pistas (id, titulo, ruta) VALUES (1, 'uno', 'a.mp3'), (2, 'dos', 'b.mp3');
+                 INSERT INTO stems (pista_id, estado, error) VALUES
+                     (1, 'fallida', 'COMPONENT_UNAVAILABLE'), (2, 'fallida', 'FILE_NOT_FOUND');",
+            )
+            .unwrap();
+        super::rehabilitar_sin_componente(&db).unwrap();
+        let estados: Vec<String> = db
+            .conexion()
+            .unwrap()
+            .prepare("SELECT estado FROM stems ORDER BY pista_id")
+            .unwrap()
+            .query_map([], |f| f.get(0))
+            .unwrap()
+            .collect::<rusqlite::Result<_>>()
+            .unwrap();
+        assert_eq!(estados, ["pendiente", "fallida"]);
+    }
+
     #[test]
     fn el_remuestreo_acepta_audio_de_trozos_justos_y_con_resto() {
         // "Cooler Than Me" (48 kHz) mide 2.670 trozos de 4.096 justos y fallaba

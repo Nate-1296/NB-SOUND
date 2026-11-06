@@ -86,6 +86,7 @@ export function destinosVisibles(pendientes: number): readonly Destino[] {
 
 /** Si una ruta pertenece a un destino (la raíz solo a sí misma). */
 export function estaActivo(destino: Destino, ruta: string): boolean {
-  if (destino.ruta === '/') return ruta === '/';
+  // La aplicación instalada abre en `tauri://localhost`, con la ruta vacía.
+  if (destino.ruta === '/') return ruta === '/' || ruta === '';
   return ruta === destino.ruta || ruta.startsWith(`${destino.ruta}/`);
 }
