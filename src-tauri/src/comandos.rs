@@ -700,6 +700,15 @@ pub async fn carpeta_musica(estado: tauri::State<'_, Estado>) -> NsResult<Option
     .await
 }
 
+/// Dónde vive tu música: la carpeta, cuántas canciones están en ella y si se
+/// perdió o se encontró sola en otro sitio al arrancar.
+#[tauri::command]
+pub async fn ubicacion_musica(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::catalogo::ubicacion::UbicacionMusica> {
+    en_segundo_plano(&estado, crate::catalogo::ubicacion::comprobar).await
+}
+
 /// "Cambiar" la carpeta de tu música: el selector nativo y lo que hay en la
 /// elegida (cuántas canciones de la biblioteca ya están). No cambia nada todavía:
 /// la elegida espera en el proceso a [`carpeta_musica_aplicar`]. `None` si se

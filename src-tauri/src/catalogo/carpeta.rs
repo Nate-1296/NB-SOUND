@@ -20,6 +20,7 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 use ts_rs::TS;
 
+use super::ubicacion::rutas_de_la_biblioteca;
 use crate::db::{self, BaseDeDatos};
 use crate::error::{NsError, NsResult};
 
@@ -35,19 +36,6 @@ pub struct RevisionCarpeta {
     pub total: u32,
     /// Es la misma que la actual: no hay nada que hacer.
     pub misma: bool,
-}
-
-fn rutas_de_la_biblioteca(db: &BaseDeDatos) -> NsResult<Vec<String>> {
-    let conn = db.conexion()?;
-    let mut s = conn
-        .prepare("SELECT ruta FROM pistas")
-        .map_err(|_| NsError::StorageFailure)?;
-    let filas = s
-        .query_map([], |f| f.get::<_, String>(0))
-        .map_err(|_| NsError::StorageFailure)?
-        .collect::<rusqlite::Result<Vec<_>>>()
-        .map_err(|_| NsError::StorageFailure);
-    filas
 }
 
 /// Cuántas canciones de la biblioteca están ya en `nueva`.
@@ -121,9 +109,9 @@ fn llevar(origen: &Path, destino: &Path) -> std::io::Result<Hecho> {
     Ok(Hecho::Copiado(origen.to_path_buf(), destino.to_path_buf()))
 }
 
-/// Quita las carpetas que se quedaron vacías al mover, de dentro hacia fuera y
-/// sin salir de `raiz`.
-fn podar(raiz: &Path, archivo: &Path) {
+/// Quita las carpetas que se quedaron vacías al mover o borrar, de dentro hacia
+/// fuera y sin salir de `raiz`.
+pub(crate) fn podar(raiz: &Path, archivo: &Path) {
     let mut d = archivo.parent();
     while let Some(dir) = d {
         if dir == raiz || !dir.starts_with(raiz) || std::fs::remove_dir(dir).is_err() {
@@ -298,5 +286,29 @@ mod tests {
         assert_eq!((r.encontradas, r.total, r.misma), (3, 3, true));
         let otra = revisar(&db, Some(&vieja), t.path()).unwrap();
         assert_eq!((otra.encontradas, otra.misma), (0, false));
+    }
+
+    #[test]
+    fn al_quitar_un_archivo_no_quedan_carpetas_vacias_y_la_raiz_se_queda() {
+        let t = Temporal::nueva("podar");
+        let raiz = t.path().join("musica");
+        let solo = raiz.join("artista/album/uno.mp3");
+        let acompanado = raiz.join("otro/album/dos.mp3");
+        for f in [&solo, &acompanado] {
+            std::fs::create_dir_all(f.parent().unwrap()).unwrap();
+            std::fs::write(f, "x").unwrap();
+        }
+        std::fs::write(raiz.join("otro/portada.jpg"), "x").unwrap();
+        for f in [&solo, &acompanado] {
+            std::fs::remove_file(f).unwrap();
+            podar(&raiz, f);
+        }
+        assert!(!raiz.join("artista").exists());
+        assert!(!raiz.join("otro/album").exists());
+        assert!(
+            raiz.join("otro/portada.jpg").is_file(),
+            "lo que queda no se toca"
+        );
+        assert!(raiz.is_dir(), "la carpeta de la música nunca se quita");
     }
 }

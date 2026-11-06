@@ -145,6 +145,18 @@ pub fn run() {
     // la base abierta (F4.2.6).
     copia_seguridad::aplicar_restauracion_pendiente(&rutas);
     let db = BaseDeDatos::abrir(&rutas.base_de_datos()).expect("no se pudo abrir la base de datos");
+    // Si la música ya no está donde estaba (otro equipo, otro usuario, una copia
+    // restaurada), se busca antes de vigilar e importar nada (`ubicacion.rs`).
+    if let Err(error) = catalogo::ubicacion::recuperar_si_hace_falta(
+        &db,
+        catalogo::ubicacion::casa().as_deref(),
+        paths::musica_por_defecto().as_deref(),
+    ) {
+        tracing::warn!(
+            codigo = error.code(),
+            "no se pudo comprobar la carpeta de la música"
+        );
+    }
     let red = Arc::new(Red::new(politica_guardada(&db)));
     let puente = movil::Puente::default();
     // El servidor avisa a Ajustes de lo que cambia; la ventana aún no existe.
@@ -369,7 +381,11 @@ pub fn run() {
             let (d, r) = (db.clone(), rutas.clone());
             let _ = std::thread::Builder::new()
                 .name("copia-automatica".into())
-                .spawn(move || copia_seguridad::automatica_si_toca(&d, &r));
+                .spawn(move || loop {
+                    // Quien deja NB Sound abierto días también tiene sus copias.
+                    copia_seguridad::automatica_si_toca(&d, &r);
+                    std::thread::sleep(std::time::Duration::from_secs(6 * 3600));
+                });
             let (d, s) = (db.clone(), Arc::clone(&servidor_movil));
             let _ = std::thread::Builder::new()
                 .name("encender-movil".into())
@@ -478,6 +494,7 @@ pub fn run() {
             comandos::ecualizador,
             comandos::preselecciones_ecualizador,
             comandos::carpeta_musica,
+            comandos::ubicacion_musica,
             comandos::carpeta_musica_elegir,
             comandos::carpeta_musica_aplicar,
             comandos::politica_red,

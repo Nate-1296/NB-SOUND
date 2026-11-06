@@ -182,8 +182,16 @@ fn escribir_zip(db: &BaseDeDatos, rutas: &Rutas, base: &Path, zip_tmp: &Path) ->
         .compression_method(CompressionMethod::Deflated)
         .large_file(true);
     let mut sumas = serde_json::Map::new();
+    // Las portadas ya van comprimidas (JPEG, PNG): pasarlas por deflate costaba
+    // minutos de procesador para ganar casi nada. Solo se comprime la base.
+    let guardadas = opciones.compression_method(CompressionMethod::Stored);
     let mut anadir = |z: &mut ZipWriter<File>, nombre: &str, origen: &Path| -> NsResult<()> {
-        z.start_file(nombre, opciones)
+        let o = if nombre == DB_EN_ZIP {
+            opciones
+        } else {
+            guardadas
+        };
+        z.start_file(nombre, o)
             .map_err(|_| NsError::StorageFailure)?;
         let mut f = File::open(origen).map_err(|_| NsError::StorageFailure)?;
         std::io::copy(&mut f, z).map_err(|_| NsError::StorageFailure)?;
@@ -473,13 +481,29 @@ fn segundos_desde(db: &BaseDeDatos, iso: &str) -> Option<i64> {
         .flatten()
 }
 
+/// La frecuencia guardada. Puede llegar como `1.0`: una base que la guardó como
+/// número decimal se quedaba sin copias automáticas sin que nada lo dijera.
+fn dias(v: &Value) -> Option<u32> {
+    v.as_u64()
+        .or_else(|| {
+            v.as_f64()
+                .filter(|d| d.fract() == 0.0 && (0.0..=f64::from(u32::MAX)).contains(d))
+                .map(|d| {
+                    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                    let n = d as u64;
+                    n
+                })
+        })
+        .and_then(|d| u32::try_from(d).ok())
+}
+
 /// # Errors
 ///
 /// [`NsError::StorageFailure`] si la consulta falla.
 pub fn estado(db: &BaseDeDatos, rutas: &Rutas) -> NsResult<EstadoCopia> {
     let cada_dias = preferencia(db, "copia_cada_dias")?
-        .and_then(|v| v.as_u64())
-        .and_then(|d| u32::try_from(d).ok())
+        .as_ref()
+        .and_then(dias)
         .unwrap_or(0);
     let carpeta = preferencia(db, "copia_carpeta")?
         .and_then(|v| v.as_str().map(PathBuf::from))
@@ -542,11 +566,57 @@ pub fn automatica_si_toca(db: &BaseDeDatos, rutas: &Rutas) {
                 .ok()
         })
         .unwrap_or_else(|| "copia".to_owned());
-    if let Err(error) = crear(db, rutas, &carpeta.join(format!("nb-sound-{fecha}"))) {
-        tracing::error!(
+    match crear(db, rutas, &carpeta.join(format!("nb-sound-{fecha}"))) {
+        Ok(_) => podar_automaticas(&carpeta, GUARDADAS),
+        Err(error) => tracing::error!(
             codigo = error.code(),
             "falló la copia de seguridad automática"
-        );
+        ),
+    }
+}
+
+/// Copias automáticas que se guardan. Cada una lleva todas las portadas (en una
+/// biblioteca real, más de 3 GB): a diario y sin límite llenaban el disco en un
+/// mes. Las que hace el usuario a mano no se tocan nunca.
+const GUARDADAS: usize = 3;
+
+/// Si un nombre es el de una copia automática: `nb-sound-AAAA-MM-DD`.
+fn es_automatica(nombre: &str) -> bool {
+    nombre
+        .strip_prefix("nb-sound-")
+        .and_then(|r| r.strip_suffix(&format!(".{EXTENSION}")))
+        .is_some_and(|fecha| {
+            fecha.len() == 10
+                && fecha.char_indices().all(|(i, c)| {
+                    if i == 4 || i == 7 {
+                        c == '-'
+                    } else {
+                        c.is_ascii_digit()
+                    }
+                })
+        })
+}
+
+/// Deja las `guardar` copias automáticas más nuevas de `carpeta`.
+fn podar_automaticas(carpeta: &Path, guardar: usize) {
+    let Ok(entradas) = std::fs::read_dir(carpeta) else {
+        return;
+    };
+    let mut copias: Vec<PathBuf> = entradas
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| {
+            p.is_file()
+                && p.file_name()
+                    .and_then(|n| n.to_str())
+                    .is_some_and(es_automatica)
+        })
+        .collect();
+    // La fecha va en el nombre con ceros: el orden del nombre es el del tiempo.
+    copias.sort();
+    let sobran = copias.len().saturating_sub(guardar);
+    for vieja in copias.into_iter().take(sobran) {
+        let _ = std::fs::remove_file(vieja);
     }
 }
 
@@ -702,6 +772,50 @@ mod tests {
         assert!(!rutas.datos.join("fuera.txt").exists());
         assert!(!dir.join("fuera.txt").exists());
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn solo_se_guardan_las_ultimas_copias_automaticas_y_nunca_las_manuales() {
+        let dir = std::env::temp_dir().join(format!("ns-copia-podar-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let nombres = [
+            "nb-sound-2026-11-01.nbsound-backup",
+            "nb-sound-2026-11-02.nbsound-backup",
+            "nb-sound-2026-11-03.nbsound-backup",
+            "nb-sound-2026-11-04.nbsound-backup",
+            "antes de formatear.nbsound-backup",
+            "nb-sound-mia.nbsound-backup",
+        ];
+        for n in nombres {
+            std::fs::write(dir.join(n), "x").unwrap();
+        }
+        podar_automaticas(&dir, 3);
+        let mut quedan: Vec<String> = std::fs::read_dir(&dir)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
+        quedan.sort();
+        assert_eq!(
+            quedan,
+            [
+                "antes de formatear.nbsound-backup",
+                "nb-sound-2026-11-02.nbsound-backup",
+                "nb-sound-2026-11-03.nbsound-backup",
+                "nb-sound-2026-11-04.nbsound-backup",
+                "nb-sound-mia.nbsound-backup",
+            ]
+        );
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn una_frecuencia_guardada_con_decimales_sigue_haciendo_copias() {
+        assert_eq!(dias(&json!(1.0)), Some(1));
+        assert_eq!(dias(&json!(7)), Some(7));
+        assert_eq!(dias(&json!(1.5)), None);
+        assert_eq!(dias(&json!(-1.0)), None);
+        assert_eq!(dias(&json!("1")), None);
     }
 
     #[test]

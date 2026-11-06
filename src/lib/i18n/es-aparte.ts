@@ -27,6 +27,30 @@ export const esAparte = {
     buscando: 'Buscando canciones en tu carpeta. Puedes seguir usando NB Sound mientras tanto.',
     restaurada: 'Copia restaurada. NB Sound se reinicia para aplicarla.'
   },
+  dondeVive: {
+    titulo: 'Dónde vive tu música',
+    ayuda:
+      'Si mueves la carpeta, formateas o vienes de otro equipo, NB Sound la busca sola al abrir. Si no la encuentra, te pregunta dónde está.',
+    sinCarpeta: 'Aún no tienes carpeta de música: se elige al importar.',
+    todas: (n: number) =>
+      n === 1 ? 'Tu canción está aquí.' : `Tus ${n.toLocaleString('es')} canciones están aquí.`,
+    faltan: (faltan: number, total: number) =>
+      faltan === 1
+        ? `Falta 1 de tus ${total.toLocaleString('es')} canciones.`
+        : `Faltan ${faltan.toLocaleString('es')} de tus ${total.toLocaleString('es')} canciones.`,
+    perdida: 'Tu música no está en esta carpeta. Elige dónde está ahora.',
+    vacia: 'Tu biblioteca aún no tiene canciones.',
+    comprobar: 'Comprobar',
+    comprobado: 'Comprobado: todo está en su sitio.',
+    // El aviso del arranque
+    preguntaTitulo: '¿Dónde está tu música?',
+    pregunta: (total: number) =>
+      `Tus ${total.toLocaleString('es')} canciones estaban en esta carpeta, pero ya no están ahí. Si la moviste, formateaste o vienes de otro equipo, dime dónde está ahora y todo seguirá como lo dejaste.`,
+    buscar: 'Buscar mi música',
+    ahoraNo: 'Ahora no',
+    recuperada: 'Tu música cambió de sitio y NB Sound la encontró sola.',
+    ninguna: 'Ahí no está ninguna de tus canciones. Prueba con otra carpeta.'
+  },
   carpetaMusica: {
     cambiar: 'Cambiar',
     titulo: 'Cambiar la carpeta de tu música',
@@ -41,6 +65,9 @@ export const esAparte = {
         : `Ahí están ${encontradas.toLocaleString('es')} de tus ${total.toLocaleString('es')} canciones. NB Sound puede llevar las demás: cada una a su misma subcarpeta.`,
     mover: 'Llevar mi música',
     usar: 'Usar esta carpeta',
+    otra: 'Elegir otra',
+    parcial: (encontradas: number, total: number) =>
+      `Ahí están ${encontradas.toLocaleString('es')} de tus ${total.toLocaleString('es')} canciones. Las demás no se podrán reproducir hasta que estén en esa carpeta.`,
     usarSinMover: 'Usar sin mover',
     usarSinMoverAviso:
       'Si no mueves la música, las canciones que no estén en la carpeta nueva no se podrán reproducir hasta que las lleves tú.',

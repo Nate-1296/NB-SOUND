@@ -85,7 +85,13 @@ fn a_la_papelera(carpeta: &Path, relativa: &str) -> NsResult<()> {
     trash::delete(&archivo).map_err(|error| {
         tracing::error!(error = %error, "la papelera no aceptó un archivo");
         NsError::StorageFailure
-    })
+    })?;
+    // Sin esto la carpeta de la música se llenaba de carpetas de álbumes vacías.
+    let raiz = carpeta
+        .canonicalize()
+        .unwrap_or_else(|_| carpeta.to_path_buf());
+    super::carpeta::podar(&raiz, &archivo);
+    Ok(())
 }
 
 /// El instrumental es un derivado: no tiene sentido sin la pista y se puede

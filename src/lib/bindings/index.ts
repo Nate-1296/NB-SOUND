@@ -99,5 +99,6 @@ export type { Servicio } from './Servicio';
 export type { SugerenciaFiesta } from './SugerenciaFiesta';
 export type { Tecnica } from './Tecnica';
 export type { Telefono } from './Telefono';
+export type { UbicacionMusica } from './UbicacionMusica';
 export type { VistaSesionDj } from './VistaSesionDj';
 export * from './errorCodes';

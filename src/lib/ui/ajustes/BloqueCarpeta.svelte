@@ -1,48 +1,40 @@
 <!--
   @component
-  Ajustes > Biblioteca: la carpeta de tu música y "Cambiar". Antes solo se veía
-  la ruta.
+  Ajustes > Biblioteca: dónde vive tu música. La carpeta, si las canciones están
+  en ella, "Comprobar" y "Cambiar".
 
-  Elegir otra no cambia nada todavía: primero se dice cuántas canciones de la
-  biblioteca hay en ella. Si están todas (la moviste tú, a otro disco por
-  ejemplo), basta con apuntar a ella; si no, NB Sound puede llevarlas, con su
-  progreso, y si algo falla todo vuelve a su sitio (`catalogo/carpeta.rs`).
+  Quien formatea, cambia el nombre de su usuario o restaura una copia en otro
+  equipo no tiene que hacer nada: al abrir, NB Sound busca la carpeta sola
+  (`catalogo/ubicacion.rs`). Esto es para cuando no la encuentra, o para mudarla a
+  propósito; elegir otra pasa por `DialogoCarpeta`, que dice antes cuántas
+  canciones hay en ella.
 -->
 <script lang="ts">
-  import { onDestroy } from 'svelte';
-  import { carpetaMusica, NsError } from '#lib/core/ipc/index.ts';
-  import {
-    alMoverLaMusica,
-    aplicarCarpetaMusica,
-    elegirCarpetaMusica,
-    type RevisionCarpeta
-  } from '#lib/core/ipc/aparte.ts';
+  import { ubicacionMusica, type UbicacionMusica } from '#lib/core/ipc/index.ts';
+  import { elegirCarpetaMusica, type RevisionCarpeta } from '#lib/core/ipc/aparte.ts';
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
-  import { textos } from '#lib/i18n/index.ts';
   import { textosAparte } from '#lib/i18n/aparte.ts';
   import Icon from '#lib/ui/Icon.svelte';
+  import DialogoCarpeta from './DialogoCarpeta.svelte';
 
-  const t = textos.ajustes;
   const tc = textosAparte.carpetaMusica;
+  const td = textosAparte.dondeVive;
 
-  let actual = $state<string | null | undefined>(undefined);
+  let u = $state<UbicacionMusica | null>(null);
   let revision = $state<RevisionCarpeta | null>(null);
-  let avance = $state<[number, number] | null>(null);
-  let dialogo = $state<HTMLDialogElement>();
-  let soltar: (() => void) | null = null;
+  let comprobando = $state(false);
 
   async function leer() {
-    actual = await carpetaMusica().catch(() => null);
+    u = await ubicacionMusica().catch(() => null);
   }
   void leer();
 
-  onDestroy(() => soltar?.());
-
-  $effect(() => {
-    if (!dialogo) return;
-    if (revision && !dialogo.open) dialogo.showModal();
-    else if (!revision && dialogo.open) dialogo.close();
-  });
+  async function comprobar() {
+    comprobando = true;
+    await leer();
+    comprobando = false;
+    if (u && !u.perdida && u.presentes >= u.total) notificar.exito(td.comprobado);
+  }
 
   async function cambiar() {
     const r = await elegirCarpetaMusica().catch(() => {
@@ -57,105 +49,100 @@
     revision = r;
   }
 
-  async function aplicar(mover: boolean) {
-    if (mover) {
-      avance = [0, revision?.total ?? 0];
-      soltar = await alMoverLaMusica((a) => (avance = a));
-    }
-    try {
-      const n = await aplicarCarpetaMusica(mover);
-      notificar.exito(mover && n > 0 ? tc.movidas(n) : tc.hecho);
-      revision = null;
-      await leer();
-    } catch (e) {
-      notificar.error(e instanceof NsError && e.code === 'INVALID_INPUT' ? tc.dentro : tc.fallo);
-      revision = null;
-    } finally {
-      soltar?.();
-      soltar = null;
-      avance = null;
-    }
-  }
+  const faltan = $derived(u ? u.total - u.presentes : 0);
+  const clase = $derived(!u?.carpeta || u.total === 0 ? 'neutra' : faltan > 0 ? 'aviso' : 'bien');
 </script>
 
-<div class="ajuste">
-  <span class="rotulo">{t.carpeta}</span>
-  <span class="valor">
-    {#if actual !== undefined}<code>{actual ?? t.sinCarpeta}</code>{/if}
-    <button type="button" class="boton" onclick={cambiar} disabled={avance !== null}>
+<div class="donde">
+  <div class="cabeza">
+    <span class="icono {clase}" aria-hidden="true">
+      <Icon
+        nombre={clase === 'aviso' ? 'advertencia' : clase === 'bien' ? 'correcto' : 'carpeta'}
+        tamano={20}
+      />
+    </span>
+    <div class="texto">
+      <span class="rotulo">{td.titulo}</span>
+      {#if u}
+        {#if u.carpeta}<code title={u.carpeta}>{u.carpeta}</code>{/if}
+        <span class="estado" role="status">
+          {#if !u.carpeta}
+            {td.sinCarpeta}
+          {:else if u.total === 0}
+            {td.vacia}
+          {:else if u.perdida}
+            {td.perdida}
+          {:else if faltan > 0}
+            {td.faltan(faltan, u.total)}
+          {:else}
+            {td.todas(u.total)}
+          {/if}
+        </span>
+      {/if}
+    </div>
+  </div>
+  <p class="ayuda">{td.ayuda}</p>
+  <div class="botones">
+    <button type="button" class="boton" onclick={comprobar} disabled={comprobando}>
+      <Icon nombre="reintentar" tamano={16} />{td.comprobar}
+    </button>
+    <button type="button" class="boton" class:relleno={u?.perdida} onclick={cambiar}>
       <Icon nombre="carpeta" tamano={16} />{tc.cambiar}
     </button>
-  </span>
+  </div>
 </div>
 
-<dialog
-  bind:this={dialogo}
-  aria-labelledby="t-carpeta"
-  oncancel={(e) => {
-    e.preventDefault();
-    if (!avance) revision = null;
-  }}
->
-  {#if revision}
-    <h2 id="t-carpeta">{tc.titulo}</h2>
-    <code class="ruta">{revision.carpeta}</code>
-    {#if avance}
-      <p>{tc.moviendo(avance[0], avance[1])}</p>
-      <div
-        class="barra"
-        role="progressbar"
-        aria-valuenow={avance[0]}
-        aria-valuemin={0}
-        aria-valuemax={avance[1]}
-      >
-        <span style:width={`${avance[1] ? (avance[0] / avance[1]) * 100 : 0}%`}></span>
-      </div>
-    {:else if revision.encontradas >= revision.total}
-      <p>{tc.yaEsta(revision.total)}</p>
-      <div class="botones">
-        <button type="button" class="boton" onclick={() => (revision = null)}>
-          {textos.biblioteca.cancelar}
-        </button>
-        <button type="button" class="boton relleno" onclick={() => aplicar(false)}>
-          {tc.usar}
-        </button>
-      </div>
-    {:else}
-      <p>{tc.faltan(revision.encontradas, revision.total)}</p>
-      <p class="aviso">{tc.usarSinMoverAviso}</p>
-      <div class="botones">
-        <button type="button" class="boton" onclick={() => (revision = null)}>
-          {textos.biblioteca.cancelar}
-        </button>
-        <button type="button" class="boton" onclick={() => aplicar(false)}>
-          {tc.usarSinMover}
-        </button>
-        <button type="button" class="boton relleno" onclick={() => aplicar(true)}>
-          {tc.mover}
-        </button>
-      </div>
-    {/if}
-  {/if}
-</dialog>
+<DialogoCarpeta bind:revision puedeMover={!u?.perdida} onhecho={leer} onotra={cambiar} />
 
 <style>
-  .ajuste {
+  .donde {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--ns-espacio-4);
+    flex-direction: column;
+    gap: var(--ns-espacio-3);
+    padding: var(--ns-espacio-4);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-lg);
+    background: var(--m3c-surface-container-low);
+  }
+
+  .cabeza {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ns-espacio-3);
+    min-width: 0;
+  }
+
+  .icono {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface-variant);
+  }
+
+  .icono.bien {
+    background: var(--m3c-primary-container);
+    color: var(--m3c-on-primary-container);
+  }
+
+  .icono.aviso {
+    background: var(--m3c-error-container);
+    color: var(--m3c-on-error-container);
+  }
+
+  .texto {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ns-espacio-1);
+    min-width: 0;
   }
 
   .rotulo {
-    font-size: var(--ns-texto-sm);
+    font-size: var(--ns-texto-md);
     font-weight: 600;
-  }
-
-  .valor {
-    display: flex;
-    align-items: center;
-    gap: var(--ns-espacio-3);
-    min-width: 0;
   }
 
   code {
@@ -165,6 +152,23 @@
     font-size: var(--ns-texto-sm);
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .estado {
+    font-size: var(--ns-texto-sm);
+  }
+
+  .ayuda {
+    margin: 0;
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-xs);
+    line-height: 1.5;
+  }
+
+  .botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ns-espacio-2);
   }
 
   .boton {
@@ -197,71 +201,5 @@
     border-color: var(--m3c-primary);
     background: var(--m3c-primary);
     color: var(--m3c-on-primary);
-  }
-
-  dialog {
-    width: min(34rem, 90vw);
-    padding: var(--ns-espacio-5);
-    border: 1px solid var(--m3c-outline-variant);
-    border-radius: var(--ns-radio-lg);
-    background: var(--m3c-surface-container-high);
-    color: var(--m3c-on-surface);
-  }
-
-  dialog::backdrop {
-    background: var(--m3c-scrim);
-    opacity: 0.5;
-  }
-
-  dialog[open] {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ns-espacio-3);
-  }
-
-  h2 {
-    margin: 0;
-    font-size: var(--ns-texto-lg);
-  }
-
-  .ruta {
-    display: block;
-    padding: var(--ns-espacio-2) var(--ns-espacio-3);
-    border-radius: var(--ns-radio-sm);
-    background: var(--m3c-surface-container-highest);
-    color: var(--m3c-on-surface);
-  }
-
-  p {
-    margin: 0;
-    font-size: var(--ns-texto-sm);
-    line-height: 1.5;
-  }
-
-  .aviso {
-    color: var(--m3c-on-surface-variant);
-    font-size: var(--ns-texto-xs);
-  }
-
-  .botones {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: var(--ns-espacio-2);
-    margin-top: var(--ns-espacio-2);
-  }
-
-  .barra {
-    height: 0.5rem;
-    overflow: hidden;
-    border-radius: var(--ns-radio-pleno);
-    background: var(--m3c-surface-container-highest);
-  }
-
-  .barra span {
-    display: block;
-    height: 100%;
-    background: var(--m3c-primary);
-    transition: width var(--ns-duracion-corta) linear;
   }
 </style>

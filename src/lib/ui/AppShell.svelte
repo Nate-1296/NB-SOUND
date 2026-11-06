@@ -14,7 +14,12 @@
 
   import { accionDeTecla, esCampoDeTexto } from '#lib/core/atajos.ts';
   import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
-  import { abrirMinirreproductor, sorprendeme } from '#lib/core/ipc/index.ts';
+  import {
+    abrirMinirreproductor,
+    sorprendeme,
+    ubicacionMusica,
+    type UbicacionMusica
+  } from '#lib/core/ipc/index.ts';
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { importacion } from '#lib/core/importacion.svelte.ts';
   import { pantalla } from '#lib/core/pantalla.svelte.ts';
@@ -35,6 +40,8 @@
   let { children }: Props = $props();
 
   let ancho = $state(0);
+  /** Solo si la música cambió de sitio: entonces se pregunta o se avisa. */
+  let ubicacion = $state<UbicacionMusica | null>(null);
   const clase = $derived(clasificarAncho(ancho));
   const enReproduciendo = $derived(page.url.pathname === '/reproduciendo');
   const vistaFijada = $derived(page.url.pathname === '/playlists');
@@ -80,6 +87,11 @@
       }
     });
     void importacion.arrancar();
+    void ubicacionMusica()
+      .then((u) => {
+        if (u.perdida || u.recuperadaDe) ubicacion = u;
+      })
+      .catch(() => {});
   });
 
   function alPulsar(e: KeyboardEvent) {
@@ -201,6 +213,11 @@
 {#await import('./Avisos.svelte') then m}
   <m.default />
 {/await}
+{#if ubicacion}
+  {#await import('./ajustes/AvisoMusicaPerdida.svelte') then m}
+    <m.default {ubicacion} />
+  {/await}
+{/if}
 
 <style>
   .carcasa {

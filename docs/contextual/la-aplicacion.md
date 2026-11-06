@@ -294,9 +294,10 @@ descartar (a la papelera) y mostrar en su carpeta; y en lote, importar todas o d
 
 ## Ajustes
 
-* **Biblioteca**: la carpeta de tu música y **Cambiar** (dice cuántas canciones hay en la elegida; si están, solo
-  apunta, y si no, las lleva con su avance y deshace todo si algo falla), tu nombre, tu foto y la copia de seguridad
-  (crear, restaurar y cada cuánto).
+* **Biblioteca**: **Dónde vive tu música**, con la carpeta, si tus canciones están en ella (o cuántas faltan),
+  **Comprobar** y **Cambiar** (dice cuántas canciones hay en la elegida; si están, solo apunta, y si no, las lleva con
+  su avance y deshace todo si algo falla); tu nombre, tu foto y la copia de seguridad (crear, restaurar y cada
+  cuánto; de las automáticas se guardan las tres últimas).
 * **Reproducción**: igualar el volumen entre canciones (EBU R128) y el ecualizador de diez bandas con sus
   preselecciones.
 * **Apariencia**: 63 temas (oscuros, claros y de alto contraste), cinco tipografías, el **tamaño de la interfaz en
@@ -318,6 +319,12 @@ descartar (a la papelera) y mostrar en su carpeta; y en lote, importar todas o d
   carpeta de la música (Artista / tipo / Álbum) y se le buscan letra e imagen del artista. Lo dudoso va a Por
   revisar; nada se pierde ni se pisa.
 * **La carpeta vigilada.** Lo que copies en la carpeta de la música entra solo cuando termina de copiarse.
+* **La música que cambia de sitio.** Las canciones se guardan relativas a la carpeta de la música, así que mover la
+  carpeta entera no rompe nada. Si al abrir la carpeta ya no tiene tu música (formateaste, cambiaste el nombre de tu
+  usuario, restauraste una copia en otro equipo), NB Sound la busca sola: la misma ruta bajo tu carpeta personal de
+  ahora y la carpeta de música del sistema. La adopta solo si ahí está la gran mayoría de tus canciones, y lo dice una
+  vez. Si no la encuentra, pregunta "¿Dónde está tu música?" y basta con elegir la carpeta. La carpeta de las copias
+  automáticas se repara igual.
 * **El sonido.** Un motor de audio propio, sin cortes entre canciones, con la sonoridad medida de cada una para
   igualarlas y su forma de onda.
 * **El análisis.** Con el agregado, cada canción recibe su ánimo, su energía, su bailabilidad y su tempo: de ahí salen

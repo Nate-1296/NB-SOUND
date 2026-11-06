@@ -42,7 +42,8 @@ import type {
   PlaylistResumen,
   PreseleccionEcualizador,
   ProgresoImportacion,
-  Telefono
+  Telefono,
+  UbicacionMusica
 } from '#lib/bindings/index.ts';
 import { COMANDOS_QUE_CAMBIAN, cambios } from '../cambios.svelte.ts';
 
@@ -101,7 +102,8 @@ export type {
   Qr,
   ResumenCopia,
   Servicio,
-  Telefono
+  Telefono,
+  UbicacionMusica
 } from '#lib/bindings/index.ts';
 
 /** Error del runtime con su código canónico (ver `src-tauri/src/error.rs`). */
@@ -423,6 +425,14 @@ export function preseleccionesEcualizador(): Promise<PreseleccionEcualizador[]> 
 
 export function carpetaMusica(): Promise<string | null> {
   return call<string | null>('carpeta_musica');
+}
+
+/**
+ * Dónde vive tu música: la carpeta, cuántas canciones están en ella, si se perdió
+ * y si al arrancar se encontró sola en otro sitio.
+ */
+export function ubicacionMusica(): Promise<UbicacionMusica> {
+  return call<UbicacionMusica>('ubicacion_musica');
 }
 
 /**
