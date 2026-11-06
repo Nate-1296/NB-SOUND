@@ -110,7 +110,7 @@ impl OrdenReproductor {
             Self::Volumen { valor } if valor.is_finite() => Orden::Volumen(valor),
             Self::Aleatorio { activo } => Orden::Aleatorio(activo),
             Self::Repeticion { modo } => {
-                Orden::Repeticion(Repeticion::desde_v1(&modo).ok_or(NsError::PathNotAllowed)?)
+                Orden::Repeticion(Repeticion::desde_texto(&modo).ok_or(NsError::PathNotAllowed)?)
             }
             Self::Agregar { ids, justo_despues } => Orden::Agregar { ids, justo_despues },
             Self::Quitar { indice } => Orden::Quitar(indice as usize),
@@ -288,7 +288,7 @@ pub async fn mostrar_en_explorador(
     .await
 }
 
-/// "Sorpréndeme" (tecla D, como en la V1): reproduce una canción elegida al azar
+/// "Sorpréndeme": reproduce una canción elegida al azar
 /// entre las que conviene redescubrir y devuelve cuál, para anunciarla. `None` si
 /// no hay otra que la que suena.
 #[tauri::command]
@@ -323,7 +323,7 @@ pub async fn duplicados_resumen(
     en_segundo_plano(&estado, crate::catalogo::borrado::duplicados).await
 }
 
-/// Busca copias en la biblioteca ya catalogada (el barrido observable de la V1)
+/// Busca copias en la biblioteca ya catalogada
 /// y las aparta; devuelve cuántas. No borra nada.
 #[tauri::command]
 pub async fn buscar_duplicados(estado: tauri::State<'_, Estado>) -> NsResult<u32> {
@@ -931,8 +931,28 @@ pub async fn movil_estado(estado: tauri::State<'_, Estado>) -> NsResult<crate::m
     con_movil(&estado, |m| m.estado()).await
 }
 
+/// Si el cortafuegos del sistema deja pasar al teléfono y a la fiesta. No pide nada.
+#[tauri::command]
+pub async fn red_permisos() -> NsResult<crate::cortafuegos::PermisosRed> {
+    tauri::async_runtime::spawn_blocking(crate::cortafuegos::comprobar)
+        .await
+        .map_err(|_| NsError::Internal)
+}
+
+/// Pide al sistema, con su ventana de administrador, que deje pasar al teléfono y a
+/// la fiesta, y devuelve cómo queda.
+#[tauri::command]
+pub async fn red_permitir() -> NsResult<crate::cortafuegos::PermisosRed> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let _ = crate::cortafuegos::pedir();
+        crate::cortafuegos::comprobar()
+    })
+    .await
+    .map_err(|_| NsError::Internal)
+}
+
 /// Permite o deja de permitir que los teléfonos se conecten, y lo recuerda para el
-/// próximo arranque, como el interruptor de la V1.
+/// próximo arranque, como el interruptor.
 #[tauri::command]
 pub async fn movil_permitir(
     estado: tauri::State<'_, Estado>,
@@ -1662,7 +1682,7 @@ pub struct VistaSesionDj {
     pub minutos: u32,
     /// Cómo se entendió el pedido: los conceptos pedidos y los evitados, por su
     /// nombre en la ontología, y la curva de energía. La vista pone las palabras;
-    /// las frases de la V1 ("Voy a priorizar: club party") se quedan en la base.
+    /// las frases internas ("Voy a priorizar: club party") se quedan en la base.
     pub pide: Vec<String>,
     pub evita: Vec<String>,
     pub curva: String,
@@ -1875,7 +1895,7 @@ pub async fn dj_guardar(
 }
 
 /// El historial, filtrado por texto (sin tildes) y estado. Cota: las 60 sesiones
-/// más recientes, como la V1.
+/// más recientes.
 #[tauri::command]
 pub async fn dj_historial(
     estado: tauri::State<'_, Estado>,
@@ -2031,7 +2051,7 @@ pub async fn aciegas_jugar(
     Ok(r)
 }
 
-/// Escribe el título: acierta con los umbrales de la V1 o suma un fallo.
+/// Escribe el título: acierta si pasa los umbrales de parecido o suma un fallo.
 #[tauri::command]
 pub async fn aciegas_intentar(
     app: AppHandle,

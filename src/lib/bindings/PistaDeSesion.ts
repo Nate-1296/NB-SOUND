@@ -5,6 +5,6 @@
  */
 export type PistaDeSesion = { posicion: number, pistaId: number, titulo: string, artista: string, duracionSeg: number, puntuacion: number, puntuacionTransicion: number, razones: Array<string>, 
 /**
- * La transición que la trae, con las claves de la V1; `{}` en la primera.
+ * La transición que la trae, con las claves; `{}` en la primera.
  */
 transicion: Record<string, unknown>, estado: string, bloqueada: boolean, };

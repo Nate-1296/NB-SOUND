@@ -1,10 +1,9 @@
 /**
  * Los textos de la interfaz, en español.
  *
- * Ningún texto visible se escribe en el marcado: sale de aquí. La interfaz de la
- * V1 solo existía en español, y la V2 también empieza así, pero con los textos
- * fuera del código otro idioma es un archivo más y no una búsqueda por todo el
- * proyecto (es la regla de NB Books, F1.7.1).
+ * Ningún texto visible se escribe en el marcado: sale de aquí. NB Sound empieza en
+ * español, pero con los textos fuera del código otro idioma es un archivo más y no
+ * una búsqueda por todo el proyecto (es la regla de NB Books, F1.7.1).
  */
 export const es = {
   app: {
@@ -198,7 +197,7 @@ export const es = {
     sinCoincidencias: 'Nada coincide con lo que buscas.',
     sinCoincidenciasTexto: 'Prueba con menos palabras o quita algún filtro.',
     cargando: 'Cargando',
-    // `albumes.tipo` guarda lo que trajo MusicBrainz o la V1, en inglés.
+    // `albumes.tipo` guarda lo que trajo MusicBrainz, en inglés.
     tipos: { Album: 'Álbum', Single: 'Sencillo', EP: 'EP', Compilation: 'Recopilatorio' },
     album: {
       volver: 'Volver a la biblioteca',
@@ -223,7 +222,7 @@ export const es = {
     }
   },
   inicio: {
-    // Los saludos de la V1 (`legado/utils/diccionarios.py`), uno al azar por visita.
+    // Los saludos, uno al azar por visita.
     saludosMadrugada: [
       (nombre: string) => `Buenas noches, ${nombre}. La música acompaña la calma de estas horas.`,
       (nombre: string) =>
@@ -622,6 +621,35 @@ export const es = {
     cancelar: 'Cancelar',
     papelera: 'Los archivos descartados van a la papelera del sistema.',
     error: 'No se pudo completar. Vuelve a intentarlo.'
+  },
+  permisos: {
+    titulo: 'Permisos',
+    ayuda:
+      'Lo que NB Sound necesita del sistema. Se comprueba solo, y si algo falta se pide desde aquí con la ventana de tu sistema.',
+    servicios: { telefono: 'Tu teléfono', fiesta: 'El Modo fiesta' },
+    para: {
+      telefono: 'Que NB Sound Mobile encuentre este equipo y se conecte en tu red.',
+      fiesta: 'Que tus invitados abran la página de la fiesta desde su móvil.'
+    },
+    estados: {
+      abierto: 'Permitido',
+      bloqueado: 'Bloqueado por el cortafuegos',
+      sinCortafuegos: 'Permitido',
+      desconocido: 'No se puede comprobar'
+    },
+    comprobando: 'Comprobando',
+    permitir: 'Permitir',
+    pidiendo: 'Esperando al sistema',
+    cortafuegos: (nombre: string) =>
+      `Cortafuegos del sistema: ${({ ufw: 'ufw', firewalld: 'firewalld', windows: 'Firewall de Windows', macos: 'cortafuegos de macOS' } as Record<string, string>)[nombre] ?? nombre}.`,
+    nadaMas:
+      'NB Sound no usa el micrófono, la cámara ni tu ubicación, y solo lee la carpeta de música que eliges.',
+    bloqueadoTitulo: 'El cortafuegos lo está bloqueando',
+    avisoAlAbrir: 'Tu teléfono no puede conectarse. Permítelo en Ajustes > Permisos.',
+    bloqueadoTelefono:
+      'Tu teléfono no puede llegar a este equipo. Permítelo y el sistema te pedirá confirmarlo.',
+    bloqueadoFiesta:
+      'Los móviles de tus invitados no pueden abrir la página. Permítelo y el sistema te pedirá confirmarlo.'
   },
   karaokeConsola: {
     titulo: 'Karaoke',

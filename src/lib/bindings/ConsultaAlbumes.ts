@@ -3,7 +3,7 @@ import type { OrdenAlbumes } from "./OrdenAlbumes";
 
 export type ConsultaAlbumes = { texto: string | null, artistaId: number | null, orden: OrdenAlbumes, 
 /**
- * Los grupos de la V1 ("Álbumes" y "Singles/EP"): `false`, solo los de tipo
+ * Los grupos ("Álbumes" y "Singles/EP"): `false`, solo los de tipo
  * `Album`; `true`, los demás; sin decir, todos. Opcional para que las
  * consultas que no lo dicen sigan valiendo.
  */

@@ -5,11 +5,11 @@
  */
 export type Apariencia = { 
 /**
- * El id de un tema de la V1.
+ * El id de un tema.
  */
 tema: string, tipografia: string, 
 /**
- * En porcentaje, como la V1 (`ui_scale`).
+ * En porcentaje (`ui_scale`).
  */
 escala: number, 
 /**

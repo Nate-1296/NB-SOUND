@@ -2,7 +2,7 @@
   @component
   Ajustes > Dispositivos (F3.3.1, ADR-007): el interruptor que deja conectarse a
   los teléfonos, el botón para conectar uno nuevo y la lista de los conectados,
-  con quitar. Sustituye a la vista Sincronización de la V1.
+  con quitar.
 -->
 <script lang="ts">
   import { type PlaylistResumen, playlistsListar } from '#lib/core/ipc/index.ts';
@@ -12,10 +12,13 @@
     type OrigenCopia
   } from '#lib/core/ipc/aparte.ts';
   import { telefonos } from '#lib/core/movil.svelte.ts';
+  import { permisos } from '#lib/core/permisos.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
   import { textosAparte } from '#lib/i18n/aparte.ts';
   import Icon from '#lib/ui/Icon.svelte';
   import MenuSelector from '#lib/ui/MenuSelector.svelte';
+
+  import AvisoCortafuegos from '#lib/ui/permisos/AvisoCortafuegos.svelte';
 
   import BloqueFiesta from './BloqueFiesta.svelte';
   import DialogoConectar from './DialogoConectar.svelte';
@@ -37,6 +40,7 @@
 
   $effect(() => {
     void telefonos.refrescar();
+    void permisos.comprobar();
     void playlistsListar({ texto: null, categoria: null, orden: 'recientes' }).then((lista) => {
       playlists = lista;
       if (playlistId === null && lista[0]) {
@@ -77,7 +81,7 @@
     else if (!quitando && confirmar.open) confirmar.close();
   });
 
-  /** La V1 guardaba algunas fechas sin zona (`2026-05-24 05:45:57`), en UTC. */
+  /** Algunas fechas se guardan sin zona (`2026-05-24 05:45:57`), en UTC. */
   function fecha(iso: string): string {
     const normal = /[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso.replace(' ', 'T')}Z`;
     const d = new Date(normal);
@@ -111,9 +115,14 @@
         type="checkbox"
         role="switch"
         checked={telefonos.estado.activo}
-        onchange={(e) => telefonos.permitir(e.currentTarget.checked)}
+        onchange={async (e) => {
+          const activo = e.currentTarget.checked;
+          await telefonos.permitir(activo);
+          if (activo) await permisos.alEncender('telefono');
+        }}
       />
     </label>
+    {#if telefonos.estado.activo}<AvisoCortafuegos servicio="telefono" />{/if}
 
     {#if telefonos.lista.length === 0}
       <p>{t.sinTelefonos}</p>

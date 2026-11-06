@@ -2,6 +2,6 @@
 
 export type AlbumResumen = { id: number, titulo: string, artista: string, artistaId: number, anio: number | null, 
 /**
- * `Album` o `Single`, como los guardaba la V1.
+ * `Album` o `Single`.
  */
 tipo: string, numPistas: number, duracionSeg: number, tienePortada: boolean, };

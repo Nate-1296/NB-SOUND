@@ -9,7 +9,7 @@ export type VistaSesionDj = { sesionId: number, peticion: string, estado: string
 /**
  * Cómo se entendió el pedido: los conceptos pedidos y los evitados, por su
  * nombre en la ontología, y la curva de energía. La vista pone las palabras;
- * las frases de la V1 ("Voy a priorizar: club party") se quedan en la base.
+ * las frases internas ("Voy a priorizar: club party") se quedan en la base.
  */
 pide: Array<string>, evita: Array<string>, curva: string, pistas: Array<PistaDeSesion>, duracionSeg: number, artistasDistintos: number, transicionesBuenas: number, transicionesTotal: number, 
 /**

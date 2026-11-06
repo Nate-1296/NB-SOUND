@@ -37,6 +37,7 @@ import type {
   PaginaPistas,
   Pendiente,
   Perfil,
+  PermisosRed,
   PistaResumen,
   PlaylistResumen,
   PreseleccionEcualizador,
@@ -71,6 +72,7 @@ export type {
   EstadoCopia,
   EstadoKaraoke,
   EstadoMovil,
+  EstadoRed,
   Gpu,
   IdAgregado,
   InformeDeSalud,
@@ -88,6 +90,7 @@ export type {
   PaginaPistas,
   Pendiente,
   Perfil,
+  PermisosRed,
   PistaEscuchada,
   PistaResumen,
   PlaylistResumen,
@@ -220,7 +223,7 @@ export type ClaseDePortada = 'pista' | 'album' | 'artista';
  * La URL de una portada. El runtime la sirve por su esquema propio: en Windows,
  * WebView2 lo expone como `http://portada.localhost`.
  */
-/** La foto de perfil que trajo la V1, si hay. */
+/** La foto de perfil, si hay. */
 export function urlFotoPerfil(version?: number): string {
   const windows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');
   const base = windows ? 'http://portada.localhost/perfil' : 'portada://localhost/perfil';
@@ -389,7 +392,7 @@ export function dejarMinirreproductor(volver: boolean): Promise<void> {
   return call<void>('dejar_minirreproductor', { volver });
 }
 
-/** Pone o quita la ventana en pantalla completa (F11), como la V1 en las fiestas. */
+/** Pone o quita la ventana en pantalla completa (F11) en las fiestas. */
 export function fijarPantallaCompleta(activa: boolean): Promise<void> {
   return getCurrentWindow().setFullscreen(activa);
 }
@@ -470,6 +473,16 @@ export function alCambiarElKaraoke(cada: () => void): Promise<UnlistenFn> {
 
 export function movilEstado(): Promise<EstadoMovil> {
   return call<EstadoMovil>('movil_estado');
+}
+
+/** Si el cortafuegos del sistema deja pasar al teléfono y a la fiesta. No pide nada. */
+export function redPermisos(): Promise<PermisosRed> {
+  return call<PermisosRed>('red_permisos');
+}
+
+/** Pide al sistema que los deje pasar, con su ventana de administrador. */
+export function redPermitir(): Promise<PermisosRed> {
+  return call<PermisosRed>('red_permitir');
 }
 
 /** Deja que los teléfonos se conecten (o no), también en los próximos arranques. */

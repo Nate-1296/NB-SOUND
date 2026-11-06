@@ -18,6 +18,7 @@
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { importacion } from '#lib/core/importacion.svelte.ts';
   import { pantalla } from '#lib/core/pantalla.svelte.ts';
+  import { permisos } from '#lib/core/permisos.svelte.ts';
   import { telefonos } from '#lib/core/movil.svelte.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
@@ -69,7 +70,15 @@
     }
     void reproductor.arrancar();
     void pantalla.sincronizar();
-    void telefonos.arrancar();
+    // Si el teléfono arranca solo y el cortafuegos lo bloquea, se dice al abrir:
+    // quien nunca entra en Dispositivos no lo vería, y parecería roto.
+    void telefonos.arrancar().then(async () => {
+      if (!telefonos.estado.activo) return;
+      const red = await permisos.comprobar();
+      if (red?.telefono === 'bloqueado') {
+        notificar.error(textos.permisos.bloqueadoTitulo, textos.permisos.avisoAlAbrir);
+      }
+    });
     void importacion.arrancar();
   });
 

@@ -13,13 +13,21 @@
   const t = textos.ajustes;
 
   type SeccionAjustes =
-    'biblioteca' | 'reproduccion' | 'apariencia' | 'agregados' | 'privacidad' | 'ia' | 'acerca';
+    | 'biblioteca'
+    | 'reproduccion'
+    | 'apariencia'
+    | 'agregados'
+    | 'permisos'
+    | 'privacidad'
+    | 'ia'
+    | 'acerca';
 
   const SECCIONES: { id: SeccionAjustes; etiqueta: string; icono: NombreDeIcono }[] = [
     { id: 'biblioteca', etiqueta: t.biblioteca, icono: 'biblioteca' },
     { id: 'reproduccion', etiqueta: t.reproduccion, icono: 'ecualizador' },
     { id: 'apariencia', etiqueta: t.apariencia, icono: 'apariencia' },
     { id: 'agregados', etiqueta: t.agregados, icono: 'descargar' },
+    { id: 'permisos', etiqueta: textos.permisos.titulo, icono: 'red' },
     { id: 'privacidad', etiqueta: t.privacidad, icono: 'privacidad' },
     { id: 'ia', etiqueta: t.ia, icono: 'dj' },
     { id: 'acerca', etiqueta: t.acercaDe, icono: 'informacion' }
@@ -113,6 +121,10 @@
       {/await}
     {:else if seccionActiva === 'agregados'}
       {#await import('#lib/ui/agregados/SeccionAgregados.svelte') then m}
+        <m.default />
+      {/await}
+    {:else if seccionActiva === 'permisos'}
+      {#await import('#lib/ui/permisos/SeccionPermisos.svelte') then m}
         <m.default />
       {/await}
     {:else if seccionActiva === 'privacidad'}

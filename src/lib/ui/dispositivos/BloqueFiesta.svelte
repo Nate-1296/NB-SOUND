@@ -6,6 +6,8 @@
   descartar o bloquear las sugerencias de los invitados.
 -->
 <script lang="ts">
+  import { permisos } from '#lib/core/permisos.svelte.ts';
+  import AvisoCortafuegos from '#lib/ui/permisos/AvisoCortafuegos.svelte';
   import {
     alCambiarFiesta,
     type EstadoFiesta,
@@ -59,6 +61,7 @@
     } finally {
       cargando = false;
     }
+    if (activo && estado.activo) await permisos.alEncender('fiesta');
   }
 
   async function rotarQr() {
@@ -105,6 +108,8 @@
       onchange={(e) => alternarActivo(e.currentTarget.checked)}
     />
   </label>
+
+  {#if estado.activo}<AvisoCortafuegos servicio="fiesta" />{/if}
 
   {#if estado.activo && estado.qr && estado.url}
     <div class="panel-qr">

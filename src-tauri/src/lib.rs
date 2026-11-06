@@ -18,6 +18,7 @@ pub mod comandos;
 pub mod controles_sistema;
 pub mod copia_dispositivo;
 pub mod copia_seguridad;
+pub mod cortafuegos;
 pub mod db;
 pub mod descubrir;
 pub mod dj;
@@ -26,7 +27,6 @@ pub mod explorador;
 pub mod fiesta;
 pub mod gpu;
 pub mod identidad_movil;
-pub mod importador_v1;
 pub mod inicio;
 pub mod karaoke;
 pub mod letras;
@@ -52,7 +52,7 @@ use std::sync::Arc;
 
 use crate::db::BaseDeDatos;
 use crate::net::{PoliticaDeRed, Red};
-use crate::paths::{Rutas, RutasV1};
+use crate::paths::Rutas;
 
 /// Estado compartido del runtime.
 pub struct Estado {
@@ -71,7 +71,7 @@ pub struct Estado {
     /// La carpeta de música que se eligió en Ajustes y aún no se aplicó: la ruta
     /// se queda en el proceso y no cruza el puente (ADR-001).
     pub carpeta_propuesta: std::sync::Mutex<Option<std::path::PathBuf>>,
-    /// La ronda de A ciegas: vive en memoria, como en la V1.
+    /// La ronda de A ciegas: vive en memoria.
     pub a_ciegas: Arc<std::sync::Mutex<a_ciegas::Juego>>,
 }
 
@@ -89,53 +89,6 @@ fn politica_guardada(db: &BaseDeDatos) -> PoliticaDeRed {
     leida
         .and_then(|json| serde_json::from_str(&json).ok())
         .unwrap_or_default()
-}
-
-/// La primera vez que la V2 encuentra la V1, la importa en segundo plano: copiar
-/// varios GB de portadas no puede retrasar la ventana. Las siguientes veces no
-/// hace nada, porque el importador deja su marca (ADR-004).
-fn importar_v1_en_segundo_plano(
-    db: BaseDeDatos,
-    rutas: Rutas,
-    red: Arc<Red>,
-    reproductor: Option<reproductor::Buzon>,
-    servidor_movil: Arc<movil::ServidorMovil>,
-) {
-    let Some(v1) = RutasV1::estandar().filter(|v1| v1.base_de_datos().is_file()) else {
-        return;
-    };
-    let lanzado = std::thread::Builder::new()
-        .name("importador-v1".into())
-        .spawn(move || {
-            let env = v1.config.join(".env");
-            let llavero = importador_v1::claves::LlaveroDelSistema;
-            let importada =
-                importador_v1::importar(&v1.base_de_datos(), Some(&env), &db, &rutas, &llavero);
-            if let Err(error) =
-                identidad_movil::copiar_de_la_v1(&v1.identidad_movil(), &rutas.identidad_movil())
-            {
-                tracing::error!(
-                    codigo = error.code(),
-                    "no se pudo copiar la identidad móvil de la V1"
-                );
-            }
-            match importada {
-                Ok(Some(_)) => {
-                    red.cambiar_politica(politica_guardada(&db));
-                    if let Some(r) = &reproductor {
-                        r.enviar(reproductor::Orden::Recargar);
-                    }
-                    // La V1 traía su interruptor de encender el servidor al abrir; la
-                    // identidad ya está copiada, así que los teléfonos la reconocen.
-                    encender_movil_si_toca(&db, &servidor_movil);
-                }
-                Ok(None) => {}
-                Err(error) => tracing::error!(codigo = error.code(), "no se pudo importar la V1"),
-            }
-        });
-    if lanzado.is_err() {
-        tracing::error!("no se pudo lanzar el importador de la V1");
-    }
 }
 
 /// Enciende el servidor móvil si el usuario lo dejó así. Fuera del hilo de la
@@ -201,10 +154,7 @@ pub fn run() {
         db.clone(),
         rutas.clone(),
         puente.clone(),
-        movil::Opciones {
-            identidad_v1: RutasV1::estandar().map(|v1| v1.identidad_movil()),
-            ..movil::Opciones::default()
-        },
+        movil::Opciones::default(),
         move || {
             use tauri::Emitter;
             if let Some(app) = aviso.get() {
@@ -376,7 +326,7 @@ pub fn run() {
             // Sin salida de audio la aplicación sigue abriendo: la biblioteca se ve,
             // y Ajustes dice qué pasa con el sonido.
             let controles = Arc::new(std::sync::OnceLock::new());
-            let buzon = match reproductor::Reproductor::arrancar(
+            match reproductor::Reproductor::arrancar(
                 db.clone(),
                 rutas.stems(),
                 Box::new(OyenteTauri {
@@ -403,20 +353,11 @@ pub fn run() {
                     bandeja::poner(app.handle(), b.clone());
                     let ordenes = b.clone();
                     puente.conectar(move |o| ordenes.enviar(o));
-                    Some(b)
                 }
                 Err(error) => {
                     tracing::error!(codigo = error.code(), "el reproductor no arrancó");
-                    None
                 }
-            };
-            importar_v1_en_segundo_plano(
-                db.clone(),
-                rutas.clone(),
-                Arc::clone(&red),
-                buzon,
-                Arc::clone(&servidor_movil),
-            );
+            }
             medicion::arrancar(db.clone());
             catalogo::auditoria::arrancar(db.clone(), rutas.clone());
             // El análisis con modelos, en su hilo y con pausas (F5.3.2).
@@ -529,6 +470,8 @@ pub fn run() {
             comandos::ambiente_de_pista,
             comandos::forma_de_onda,
             comandos::abrir_minirreproductor,
+            comandos::red_permisos,
+            comandos::red_permitir,
             comandos::dejar_minirreproductor,
             comandos::apariencia,
             comandos::guardar_preferencia,
