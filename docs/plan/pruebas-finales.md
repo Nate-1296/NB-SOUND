@@ -193,3 +193,7 @@ maneja desde el inspector y el puntero no se mueve.
       biblioteca suena sin reiniciar. Con una carpeta vacía dice que no hay ninguna y ofrece elegir otra.
 - [ ] La barra de reproducción a 720 px con el ratón: la fila de controles del menú ··· responde y el menú se cierra
       al elegir letras o pantalla completa.
+- [ ] "Restaurar una copia" desde la bienvenida con el selector nativo: el entorno de pruebas no puede escribir en
+      él, así que la restauración del 2026-11-06 se preparó con un guion que hace las mismas comprobaciones (sumas,
+      `integrity_check`) y la aplicó NB Sound al arrancar.
+

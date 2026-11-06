@@ -231,4 +231,6 @@ de lo que no usa NB Sound y las barras sin pisarse a ningún tamaño. Después, 
 | `342884c` | QA-R3 | Un número de pista negativo decía "No se pudo guardar" | — |
 | `2fd7742` | QA-R3 | Un lote de Por revisar cuenta por dónde va y quita cada canción al entrar (88 tardaron dos minutos sin que la vista cambiara) | — |
 | `688ff6b` | QA-R3 | La 2.0.13 | CI y publicación |
+| `e1e976d` | QA-R3 | Un solo aviso al encontrar la música desde la pregunta del arranque | — |
+| — | QA-R3 | La 2.0.13 publicada e instalada. Prueba con los datos reales de Nathan: copia automática hecha por la 2.0.13 (3,4 GB, 23 s, con la foto), desinstalación, datos apartados como en un equipo nuevo, reinstalación (abre en la bienvenida), restauración de la copia y arranque: 2.243 canciones, 1.426 álbumes, 438 artistas, 56 playlists con las mismas canciones cada una y 35 favoritas, idénticos a antes; tema, nombre, foto, sesión y carpeta de la música en su sitio, y suena. El agregado de análisis se instala con un clic. Después se devolvieron los instrumentales del karaoke, los agregados y la identidad del teléfono, que la copia no lleva | Recuentos de la base y lista de archivos de la biblioteca comparados antes y después |
 
