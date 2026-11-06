@@ -65,6 +65,17 @@ pub fn entorno() -> NsResult<&'static Environment> {
     }
 }
 
+/// Hilos para un trabajo de fondo con modelos: una fracción `1/divisor` de los
+/// núcleos, al menos uno. El karaoke y el análisis nunca deben competir con la
+/// interfaz ni con el audio.
+#[must_use]
+pub fn hilos_de_fondo(divisor: usize) -> usize {
+    std::thread::available_parallelism()
+        .map(|n| n.get() / divisor.max(1))
+        .unwrap_or(1)
+        .max(1)
+}
+
 /// Si el arranque ya dijo dónde está la biblioteca. Hasta entonces, quien usa
 /// modelos espera en vez de dar su trabajo por fallido.
 #[must_use]
@@ -75,6 +86,14 @@ pub fn ruta_fijada() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn el_trabajo_de_fondo_deja_libre_la_mayor_parte_del_equipo() {
+        let n = std::thread::available_parallelism().map_or(1, |n| n.get());
+        assert!(hilos_de_fondo(4) >= 1);
+        assert!(hilos_de_fondo(4) <= n.div_ceil(4).max(1));
+        assert_eq!(hilos_de_fondo(10_000), 1, "al menos uno");
+    }
 
     /// La biblioteca de `binarios/` la deja `scripts/fetch-binarios.mjs`; sin ella
     /// la prueba se salta sola.

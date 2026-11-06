@@ -236,9 +236,11 @@ pub fn modelo_instalado(rutas: &Rutas) -> Option<PathBuf> {
 
 fn sesion(modelo: &Path) -> NsResult<ort::session::Session> {
     let entorno = crate::onnx::entorno()?;
-    let hilos = std::thread::available_parallelism()
-        .map(|n| (n.get() / 2).max(1))
-        .unwrap_or(1);
+    // Un cuarto de los núcleos, y sin que esperen dando vueltas: con la mitad y
+    // el giro de ONNX Runtime activo, preparar una canción tenía cuatro núcleos
+    // al 97 % en un equipo de ocho, y todo lo demás (la interfaz incluida) iba
+    // más lento mientras tanto. Tarda algo más; no se nota al usar el equipo.
+    let hilos = crate::onnx::hilos_de_fondo(4);
     let fallo = |_| {
         tracing::error!("no se pudo preparar el modelo de karaoke");
         NsError::ComponentUnavailable
@@ -250,6 +252,10 @@ fn sesion(modelo: &Path) -> NsResult<ort::session::Session> {
         .with_memory_pattern(false)
         .map_err(fallo)?
         .with_intra_threads(hilos)
+        .map_err(fallo)?
+        .with_intra_op_spinning(false)
+        .map_err(fallo)?
+        .with_inter_op_spinning(false)
         .map_err(fallo)?
         .with_optimization_level(ort::session::builder::GraphOptimizationLevel::All)
         .map_err(fallo)?

@@ -381,13 +381,15 @@ impl EnOnnx {
     fn abrir(dir: &Path) -> NsResult<Self> {
         let entorno = crate::onnx::entorno()?;
         // Pocos hilos: el análisis va en segundo plano y no puede notarse.
-        let hilos = std::thread::available_parallelism()
-            .map(|n| (n.get() / 4).max(1))
-            .unwrap_or(1);
+        let hilos = crate::onnx::hilos_de_fondo(8);
         let abrir = |nombre: &str| -> NsResult<ort::session::Session> {
             ort::session::Session::builder(entorno)
                 .map_err(|_| NsError::ComponentUnavailable)?
                 .with_intra_threads(hilos)
+                .map_err(|_| NsError::ComponentUnavailable)?
+                .with_intra_op_spinning(false)
+                .map_err(|_| NsError::ComponentUnavailable)?
+                .with_inter_op_spinning(false)
                 .map_err(|_| NsError::ComponentUnavailable)?
                 .commit_from_file(dir.join(format!("{nombre}.onnx")))
                 .map_err(|_| NsError::ComponentUnavailable)
