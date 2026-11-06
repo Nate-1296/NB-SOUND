@@ -3,6 +3,32 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.12] — 2026-11-06
+
+Por revisar nueva, tu música que se encuentra sola y barras que caben en cualquier ventana.
+
+### Novedades
+
+- Por revisar, rediseñada: las canciones se agrupan por lo que hay que decidir y el motivo se dice una vez. Cada
+  fila es la canción con su portada, su título y su artista, y una sola acción a la vista ("Es esta", "Importar",
+  "Descartar" o "Reintentar"); lo demás está en su ···. Las versiones posibles se ordenan por parecido con tu
+  archivo, y cada grupo importa o descarta todo de una vez.
+- Si tu música cambia de sitio (formateas, cambias el nombre de tu usuario o restauras una copia en otro equipo),
+  NB Sound la busca sola al abrir; si no la encuentra, te pregunta dónde está. Ajustes > Biblioteca enseña
+  "Dónde vive tu música", si están todas tus canciones, y deja comprobarlo y cambiarla.
+
+### Correcciones
+
+- A 720 px la barra de reproducción se pisaba consigo misma y la búsqueda tocaba los botones de arriba. Ahora cada
+  barra mide su propio ancho y lo que no cabe pasa al menú ···, sin perderse.
+- Las copias de seguridad automáticas no se hacían si su frecuencia estaba guardada con decimales. Además se
+  guardaban para siempre (más de 3 GB cada una): ahora quedan las tres últimas, se hacen más rápido y también si
+  NB Sound sigue abierto días.
+- Lo descartado de Por revisar llega a la papelera con su nombre, no con un código.
+- Una segunda copia de algo que ya esperaba en Por revisar le borraba sus versiones posibles y se catalogaba otra
+  vez en cada arranque.
+- Borrar una canción dejaba vacía la carpeta de su álbum.
+
 ## [2.0.11] — 2026-11-06
 
 El teléfono, el Modo fiesta y los permisos de red.
