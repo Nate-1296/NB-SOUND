@@ -286,6 +286,24 @@ impl Importador {
     }
 }
 
+/// El nombre que se enseña del archivo en curso. Lo que vuelve de Por revisar está
+/// guardado por su huella ("fa28ed56….mp3"): se dice con el nombre con que llegó.
+fn nombre_visible(db: &BaseDeDatos, ruta: &Path) -> Option<String> {
+    use rusqlite::OptionalExtension;
+    let original = db.conexion().ok().and_then(|c| {
+        c.query_row(
+            "SELECT json_extract(metadatos, '$.nombre_original') FROM por_revisar WHERE ruta = ?1",
+            [ruta.to_string_lossy()],
+            |f| f.get::<_, Option<String>>(0),
+        )
+        .optional()
+        .ok()
+        .flatten()
+        .flatten()
+    });
+    original.or_else(|| ruta.file_name().map(|n| n.to_string_lossy().into_owned()))
+}
+
 /// Intentos por archivo antes de contarlo como error.
 const INTENTOS: u64 = 3;
 
@@ -387,7 +405,7 @@ fn bucle(
                 }
                 break;
             }
-            let nombre = ruta.file_name().map(|n| n.to_string_lossy().into_owned());
+            let nombre = nombre_visible(&r.db, &ruta);
             publicar(&|g| g.actual.clone_from(&nombre));
             let e = Entorno {
                 db: &r.db,

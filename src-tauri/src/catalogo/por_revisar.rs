@@ -55,6 +55,9 @@ pub struct Pendiente {
     /// `album`, `anio`.
     pub faltaria: Vec<String>,
     pub registrado_en: String,
+    /// Si es una copia de algo que ya está en la biblioteca: su título y su
+    /// artista, para decidir sin ir a buscarla.
+    pub duplicado_de: Option<String>,
 }
 
 fn bd<T>(r: rusqlite::Result<T>) -> NsResult<T> {
@@ -130,6 +133,24 @@ pub fn listar(db: &BaseDeDatos) -> NsResult<Vec<Pendiente>> {
         if anio.is_none() {
             faltaria.push("anio".to_owned());
         }
+        let duplicado_de = d
+            .pointer("/duplicado/pista_id")
+            .and_then(Value::as_i64)
+            .and_then(|pista| {
+                conn.query_row(
+                    "SELECT titulo, artista_nombre FROM pistas WHERE id = ?1",
+                    [pista],
+                    |f| Ok((f.get::<_, String>(0)?, f.get::<_, String>(1)?)),
+                )
+                .ok()
+            })
+            .map(|(t, a)| {
+                if a.is_empty() {
+                    t
+                } else {
+                    format!("{t} · {a}")
+                }
+            });
         salida.push(Pendiente {
             id,
             nombre: texto(&d, "nombre_original").unwrap_or_else(|| {
@@ -146,6 +167,7 @@ pub fn listar(db: &BaseDeDatos) -> NsResult<Vec<Pendiente>> {
             candidatos,
             faltaria,
             registrado_en,
+            duplicado_de,
         });
     }
     Ok(salida)
@@ -244,18 +266,35 @@ pub fn importar(e: &Entorno<'_>, id: i64, candidato: Option<usize>) -> NsResult<
     Ok(pista)
 }
 
+/// La ruta con el nombre con que llegó el archivo, en su misma carpeta. Solo el
+/// nombre: lo que traiga de carpetas se ignora.
+fn con_su_nombre(ruta: &Path, datos: &Value) -> Option<PathBuf> {
+    let nombre = texto(datos, "nombre_original")?;
+    let nombre = Path::new(&nombre).file_name()?;
+    Some(ruta.parent()?.join(nombre))
+}
+
 /// A la papelera del sistema, y fuera de la lista.
 ///
 /// # Errors
 ///
 /// [`NsError::StorageFailure`] si la papelera no lo acepta.
 pub fn descartar(db: &BaseDeDatos, id: i64) -> NsResult<()> {
-    let (ruta, _) = fila(db, id)?;
+    let (ruta, datos) = fila(db, id)?;
     if ruta.exists() {
-        trash::delete(&ruta).map_err(|error| {
+        // Dentro se guarda por su huella ("a0666ccf….mp3"): en la papelera nadie la
+        // reconocería. Va con el nombre con que llegó, si no pisa nada.
+        let con_nombre = con_su_nombre(&ruta, &datos)
+            .filter(|c| !c.exists() && std::fs::rename(&ruta, c).is_ok());
+        let a_tirar = con_nombre.as_deref().unwrap_or(&ruta);
+        if let Err(error) = trash::delete(a_tirar) {
+            // Sigue pendiente: vuelve a la ruta que conoce la base.
+            if let Some(c) = &con_nombre {
+                let _ = std::fs::rename(c, &ruta);
+            }
             tracing::error!(error = %error, "la papelera no aceptó un archivo");
-            NsError::StorageFailure
-        })?;
+            return Err(NsError::StorageFailure);
+        }
     }
     resolver(db, id)
 }
@@ -284,6 +323,27 @@ pub fn para_reintentar(db: &BaseDeDatos, id: i64) -> NsResult<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn lo_descartado_va_a_la_papelera_con_el_nombre_con_que_llego() {
+        let dentro = Path::new("/datos/por-revisar/a0666ccf.mp3");
+        assert_eq!(
+            con_su_nombre(
+                dentro,
+                &serde_json::json!({"nombre_original": "Fever_spotdown.org.mp3"})
+            ),
+            Some(PathBuf::from("/datos/por-revisar/Fever_spotdown.org.mp3"))
+        );
+        assert_eq!(
+            con_su_nombre(
+                dentro,
+                &serde_json::json!({"nombre_original": "../../fuera.mp3"})
+            ),
+            Some(PathBuf::from("/datos/por-revisar/fuera.mp3")),
+            "nunca sale de su carpeta"
+        );
+        assert_eq!(con_su_nombre(dentro, &serde_json::json!({})), None);
+    }
     use crate::audio::pruebas::wav;
     use crate::catalogo::duplicados::Gestor;
     use crate::catalogo::etiquetas::Escritura;

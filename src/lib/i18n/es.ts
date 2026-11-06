@@ -584,42 +584,73 @@ export const es = {
   },
   porRevisar: {
     titulo: 'Por revisar',
-    vacio: 'No hay nada pendiente. Todo lo que importaste está en tu biblioteca.',
-    cuenta: (n: number) => (n === 1 ? '1 archivo no importado' : `${n} archivos no importados`),
-    causas: {
-      candidatos_ambiguos: 'Encontramos varias versiones posibles de esta canción',
-      puntaje_intermedio: 'No estamos seguros de que sea esta canción',
-      duracion_marginal: 'No estamos seguros de que sea esta canción',
-      release_type_dudoso: 'No sabemos si es de un álbum o de un sencillo',
-      sin_candidatos: 'No encontramos esta canción en ninguna fuente',
-      metadata_insuficiente: 'No encontramos esta canción en ninguna fuente',
-      puntaje_bajo: 'No encontramos esta canción en ninguna fuente',
-      escritura_fallida: 'No pudimos guardar los datos en el archivo',
-      validacion_post_escritura: 'No pudimos guardar los datos en el archivo',
-      duplicado: 'Ya tienes esta canción',
-      duracion_invalida: 'El archivo parece dañado o incompleto',
-      audio_ilegible: 'El archivo parece dañado o incompleto'
-    } as Record<string, string>,
+    vacioTitulo: 'Nada por revisar',
+    vacio: 'Todo lo que importaste está en tu biblioteca.',
+    cuenta: (n: number) =>
+      n === 1 ? '1 canción espera tu decisión' : `${n} canciones esperan tu decisión`,
+    /** Cada grupo dice su motivo una vez; las filas ya no lo repiten. */
+    grupos: {
+      elegir: {
+        titulo: '¿Es la versión correcta?',
+        ayuda: 'Encontramos cómo se llaman, pero no estamos seguros. Confirma la que es.'
+      },
+      sinConfirmar: {
+        titulo: 'Sin confirmar',
+        ayuda: 'Traen sus datos, pero ninguna fuente los confirma.'
+      },
+      noEncontradas: {
+        titulo: 'No las encontramos',
+        ayuda: 'Ninguna fuente las conoce. Puedes importarlas con lo que traen.'
+      },
+      repetidas: {
+        titulo: 'Ya las tienes',
+        ayuda: 'Son copias de canciones que ya están en tu biblioteca.'
+      },
+      fallidas: {
+        titulo: 'No se pudieron guardar',
+        ayuda: 'Algo falló al escribir sus datos en el archivo.'
+      },
+      danadas: {
+        titulo: 'Archivos dañados',
+        ayuda: 'Están incompletos o no se pueden leer.'
+      }
+    },
+    esEsta: 'Es esta',
+    verMas: (n: number) => (n === 1 ? 'Otra versión' : `Otras ${n} versiones`),
+    verMenos: 'Menos versiones',
+    importar: 'Importar',
     importarTalCual: 'Importar tal como está',
+    importarGrupo: (n: number) => (n === 1 ? 'Importar' : `Importar las ${n}`),
     importarTodas: 'Importar todas tal como están',
-    elegir: 'Elegir esta',
-    buscarDeNuevo: 'Buscar de nuevo',
     descartar: 'Descartar',
-    descartarSeleccionadas: 'Descartar las seleccionadas',
-    seleccionar: (nombre: string) => `Seleccionar ${nombre}`,
-    candidatos: 'Posibles coincidencias',
-    tuArchivo: 'Tu archivo',
-    sinEtiquetas: 'El archivo no trae etiquetas: ni título, ni artista, ni álbum.',
-    campos: { titulo: 'Título', artista: 'Artista', album: 'Álbum' },
-    faltara: 'Entrará sin verificar. Le faltará:',
+    descartarGrupo: (n: number) => (n === 1 ? 'Descartar' : `Descartar las ${n}`),
+    descartarTodas: 'Descartar todas',
+    reintentar: 'Reintentar',
+    reintentarGrupo: (n: number) => (n === 1 ? 'Reintentar' : `Reintentar las ${n}`),
+    buscarDeNuevo: 'Buscar de nuevo',
+    masAcciones: 'Más acciones',
+    sinEtiquetas: 'Sin etiquetas',
+    yaEsta: (cual: string) => `Ya está como ${cual}`,
+    importada: 'Importada sin verificar.',
+    importadas: (n: number) => (n === 1 ? '1 canción importada.' : `${n} canciones importadas.`),
+    elegida: 'Importada con sus datos.',
+    descartadas: (n: number) =>
+      n === 1 ? 'Enviada a la papelera.' : `${n} archivos enviados a la papelera.`,
+    reintentando: 'Se vuelve a buscar.',
+    confirmarImportar: (n: number) =>
+      n === 1 ? '¿Importar 1 canción sin verificar?' : `¿Importar ${n} canciones sin verificar?`,
+    faltara: 'Entrarán con los datos que traen. Les faltará:',
     falta: { portada: 'portada', letra: 'letra', album: 'álbum', anio: 'año' } as Record<
       string,
       string
     >,
-    nadaFalta: 'Entrará sin verificar, con los datos que trae el archivo.',
+    nadaFalta: 'Entrarán con los datos que traen.',
+    confirmarDescartar: (n: number) =>
+      n === 1 ? '¿Descartar 1 archivo?' : `¿Descartar ${n} archivos?`,
+    papelera: 'Irán a la papelera del sistema: puedes recuperarlos desde allí.',
     confirmar: 'Importar',
+    confirmarDescarte: 'Descartar',
     cancelar: 'Cancelar',
-    papelera: 'Los archivos descartados van a la papelera del sistema.',
     error: 'No se pudo completar. Vuelve a intentarlo.'
   },
   permisos: {

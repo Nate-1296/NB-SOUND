@@ -201,6 +201,31 @@ fn a_por_revisar(
         format!("{huella}.{ext}")
     };
     let destino = e.rutas.por_revisar().join(nombre);
+    // Otra copia de algo que ya espera en Por revisar (el mismo contenido): la
+    // que espera se queda como está, con su motivo y sus candidatas, y la copia no
+    // vuelve a la carpeta vigilada. Antes la copia sustituía el motivo de la que
+    // esperaba por "duplicado" y, como nunca salía de la carpeta, se catalogaba
+    // otra vez en cada arranque.
+    if destino.is_file() && ruta != destino {
+        let esperando: Option<i64> =
+            e.db.conexion()?
+                .query_row(
+                    "SELECT id FROM por_revisar WHERE ruta = ?1 AND resuelto_en IS NULL",
+                    [destino.to_string_lossy()],
+                    |f| f.get(0),
+                )
+                .optional()
+                .map_err(|_| NsError::StorageFailure)?;
+        if let Some(id) = esperando {
+            if ruta.starts_with(&e.musica) {
+                let _ = std::fs::remove_file(ruta);
+            }
+            return Ok(Resultado::PorRevisar {
+                id,
+                causa: "duplicado",
+            });
+        }
+    }
     if !destino.is_file() {
         colocar(ruta, &destino, ruta.starts_with(&e.musica))?;
     }
@@ -1225,6 +1250,54 @@ mod tests {
         assert!(
             !nombres.iter().any(|n| n.starts_with("a0666ccf")),
             "{nombres:?}"
+        );
+    }
+
+    #[test]
+    fn otra_copia_de_algo_que_ya_espera_no_le_quita_su_motivo_ni_se_queda_en_la_carpeta() {
+        let m = montar("copia-de-pendiente");
+        let e = m.entorno();
+        std::fs::create_dir_all(&e.musica).unwrap();
+        let primera = e.musica.join("Fever.mp3");
+        std::fs::write(&primera, b"el mismo audio").unwrap();
+        let Resultado::PorRevisar { id, .. } = a_por_revisar(
+            &e,
+            &primera,
+            "puntaje_intermedio",
+            json!({"nombre_original": "Fever.mp3"}),
+        )
+        .unwrap() else {
+            panic!("tenía que quedar por revisar");
+        };
+        let copia = e.musica.join("Fever (2).mp3");
+        std::fs::write(&copia, b"el mismo audio").unwrap();
+        let Resultado::PorRevisar { id: otra, .. } = a_por_revisar(
+            &e,
+            &copia,
+            "duplicado",
+            json!({"nombre_original": "Fever (2).mp3"}),
+        )
+        .unwrap() else {
+            panic!("tenía que quedar por revisar");
+        };
+        assert_eq!(otra, id, "es la misma que ya esperaba");
+        assert!(
+            !copia.exists(),
+            "la copia no se cataloga otra vez al arrancar"
+        );
+        let (causa, nombre): (String, String) = m
+            .db
+            .conexion()
+            .unwrap()
+            .query_row(
+                "SELECT causa, json_extract(metadatos, '$.nombre_original') FROM por_revisar WHERE id = ?1",
+                [id],
+                |f| Ok((f.get(0)?, f.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(
+            (causa.as_str(), nombre.as_str()),
+            ("puntaje_intermedio", "Fever.mp3")
         );
     }
 }

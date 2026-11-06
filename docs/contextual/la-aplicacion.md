@@ -287,10 +287,19 @@ perder lo ya añadido. Al terminar: "142 añadidas. 8 por revisar".
 
 ## Por revisar
 
-Lo que no entró solo, cada archivo con su motivo en lenguaje llano y un icono que lo distingue: varias versiones
-posibles (con el comparador lado a lado y "Elegir esta"), no estamos seguros, no la encontramos, no se pudo guardar,
-ya la tienes, parece dañado. Para cada uno: importar tal como está (avisando de lo que le faltará), buscar de nuevo,
-descartar (a la papelera) y mostrar en su carpeta; y en lote, importar todas o descartar las seleccionadas.
+Lo que no entró solo, agrupado por lo que hay que decidir. El motivo se dice una vez, en la cabecera del grupo:
+**¿Es la versión correcta?**, **Sin confirmar**, **No las encontramos**, **Ya las tienes**, **No se pudieron guardar**
+y **Archivos dañados**.
+
+Cada fila es la canción como se reconoce: la portada que trae el archivo, su título y su artista (no el nombre del
+archivo), y una sola acción a la vista, la que casi siempre se quiere: **Es esta** junto a cada candidata,
+**Importar**, **Descartar** (en "Ya las tienes" dice con qué canción de tu biblioteca coincide) o **Reintentar**. El
+menú ··· de la fila tiene lo demás: importar tal como está, buscar de nuevo, mostrar en su carpeta y descartar.
+
+En lote: cada grupo tiene su acción para todas ("Importar las 9", "Descartar las 2") y el ··· de la cabecera
+importa o descarta todo. Lo que es en lote se confirma antes (diciendo qué les faltará o que irán a la papelera); lo
+de una fila se hace sin preguntar y se dice después. Lo descartado va a la papelera del sistema con el nombre con
+que llegó.
 
 ## Ajustes
 

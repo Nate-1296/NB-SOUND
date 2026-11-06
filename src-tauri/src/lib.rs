@@ -399,8 +399,13 @@ pub fn run() {
             let ruta = peticion.uri().path().to_owned();
             // Reducir una portada es trabajo de CPU: fuera del hilo de la ventana.
             tauri::async_runtime::spawn_blocking(move || {
+                let pendiente = ruta
+                    .strip_prefix("/pendiente/")
+                    .and_then(|id| id.parse::<i64>().ok());
                 let servida = if ruta == "/perfil" {
                     portadas::servir_perfil(&db, &rutas)
+                } else if let Some(id) = pendiente {
+                    portadas::servir_pendiente(&db, id)
                 } else {
                     portadas::interpretar(&ruta)
                         .ok_or(error::NsError::PathNotAllowed)

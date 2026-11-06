@@ -232,6 +232,14 @@ export function urlFotoPerfil(version?: number): string {
   return version ? `${base}?v=${version}` : base;
 }
 
+/** La portada que trae dentro un archivo de Por revisar. */
+export function urlPortadaPendiente(id: number): string {
+  const windows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');
+  return windows
+    ? `http://portada.localhost/pendiente/${id}`
+    : `portada://localhost/pendiente/${id}`;
+}
+
 export function urlPortada(clase: ClaseDePortada, id: number, tamano: number): string {
   const ruta = `${clase}/${id}/${tamano}`;
   const windows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');

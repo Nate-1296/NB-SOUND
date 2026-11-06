@@ -221,6 +221,43 @@ pub fn servir_perfil(db: &BaseDeDatos, rutas: &Rutas) -> NsResult<(Vec<u8>, &'st
     Ok((bytes, mime))
 }
 
+/// La portada que trae dentro un archivo de Por revisar, reducida a una
+/// miniatura: con ella la lista se reconoce de un vistazo, sin leer nombres de
+/// archivo. No se guarda en caché: son pocos y se van al resolverse.
+///
+/// # Errors
+///
+/// [`NsError::FileNotFound`] si el pendiente no existe, ya se resolvió o su
+/// archivo no trae portada.
+pub fn servir_pendiente(db: &BaseDeDatos, id: i64) -> NsResult<(Vec<u8>, &'static str)> {
+    let ruta: String = db
+        .conexion()?
+        .query_row(
+            "SELECT ruta FROM por_revisar WHERE id = ?1 AND resuelto_en IS NULL",
+            [id],
+            |f| f.get(0),
+        )
+        .optional()
+        .map_err(|_| NsError::StorageFailure)?
+        .ok_or(NsError::FileNotFound)?;
+    let imagen = crate::catalogo::portadas_red::de_etiquetas(Path::new(&ruta))
+        .ok_or(NsError::FileNotFound)?;
+    let decodificada =
+        image::load_from_memory(&imagen.bytes).map_err(|_| NsError::FormatUnsupported)?;
+    let lado = TAMANOS[1];
+    let reducida = if decodificada.width().max(decodificada.height()) > lado {
+        decodificada.resize(lado, lado, FilterType::Triangle)
+    } else {
+        decodificada
+    };
+    let mut bytes = Vec::new();
+    reducida
+        .to_rgb8()
+        .write_to(&mut Cursor::new(&mut bytes), ImageFormat::Jpeg)
+        .map_err(|_| NsError::Internal)?;
+    Ok((bytes, "image/jpeg"))
+}
+
 /// Dónde está en la caché la miniatura de una petición, si ya se generó. Lo usan
 /// los controles del sistema, que necesitan un archivo y no unos bytes.
 pub fn ruta_en_cache(db: &BaseDeDatos, rutas: &Rutas, p: Peticion) -> Option<PathBuf> {

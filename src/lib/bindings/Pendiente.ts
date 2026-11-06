@@ -17,4 +17,9 @@ causa: string, titulo: string | null, artista: string | null, album: string | nu
  * Lo que le faltaría si se importa tal como está: `portada`, `letra`,
  * `album`, `anio`.
  */
-faltaria: Array<string>, registradoEn: string, };
+faltaria: Array<string>, registradoEn: string, 
+/**
+ * Si es una copia de algo que ya está en la biblioteca: su título y su
+ * artista, para decidir sin ir a buscarla.
+ */
+duplicadoDe: string | null, };
