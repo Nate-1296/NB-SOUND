@@ -1,4 +1,4 @@
-//! El desempate por IA (F4.1.7): `external/ia_client.py` de la V1.
+//! El desempate por IA (F4.1.7): `external/ia_client.py`.
 //!
 //! Entra solo cuando el emparejador no puede decidir entre los dos mejores
 //! candidatos ([`super::emparejador::DISTANCIA_PARA_IA`]). El modelo no crea
@@ -6,7 +6,7 @@
 //! respuesta que nombra un lanzamiento que no estaba en la lista se descarta
 //! entera. Se le mandan los metadatos de los candidatos y del archivo, nunca el
 //! audio (ADR-009). Sin consentimiento o sin clave no se construye el cliente y
-//! la ambigüedad queda en revisión, como en la V1 sin IA.
+//! la ambigüedad queda en revisión sin IA.
 
 use serde_json::{json, Value};
 
@@ -16,13 +16,13 @@ use crate::error::{NsError, NsResult};
 use crate::net::{Red, Servicio};
 use crate::privacidad::{self, ProveedorIa};
 
-/// `IA_MAX_TOKENS` de la V1: la respuesta es un JSON corto.
+/// `IA_MAX_TOKENS`: la respuesta es un JSON corto.
 const MAX_TOKENS: u32 = 512;
 
 /// La versión de la API de mensajes de Anthropic que se habla.
 const VERSION_ANTHROPIC: &str = "2023-06-01";
 
-/// `_SYSTEM_PROMPT` de la V1, con sus siete reglas.
+/// `_SYSTEM_PROMPT`, con sus siete reglas.
 const SISTEMA: &str = "Eres un sistema de clasificacion musical de alta precision.
 Tu unica funcion es elegir el release correcto de MusicBrainz para una cancion dada,
 o indicar que ninguno es adecuado.
@@ -73,7 +73,7 @@ pub fn configurada(db: &BaseDeDatos, red: &Red) -> Option<ConfigIa> {
 }
 
 /// Redondea como `round(x, n)` de Python para que el prompt diga lo mismo que
-/// el de la V1.
+/// el.
 fn redondear(x: f64, decimales: i32) -> f64 {
     let f = 10f64.powi(decimales);
     (x * f).round() / f

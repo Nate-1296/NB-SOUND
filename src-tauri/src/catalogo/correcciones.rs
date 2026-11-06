@@ -1,12 +1,9 @@
 //! Las correcciones del catálogo: lo que el usuario dejó dicho sobre una canción
-//! y que, al importarla otra vez, gana a lo que digan las fuentes
-//! (`core/overrides.py` de la V1, F4.2.5).
+//! y que, al importarla otra vez, gana a lo que digan las fuentes.
 //!
-//! La V1 las guardaba sin interfaz para crearlas; la V2 las crea al editar los
-//! datos de una pista, y el importador ya trajo las de la V1 a
-//! `correcciones_catalogo` con sus mismos tipos y su mismo JSON. Por eso se leen
-//! las claves de la V1 (`titulo_oficial`, `artista_principal`…) además de las
-//! que escribe la V2.
+//! NB Sound las crea al editar los datos de una pista, en `correcciones_catalogo`.
+//! Se leen también las claves largas (`titulo_oficial`, `artista_principal`…)
+//! además de las cortas que escribe NB Sound.
 
 use rusqlite::{params, OptionalExtension};
 use serde_json::{json, Value};
@@ -16,14 +13,14 @@ use super::texto::para_comparacion;
 use crate::db::BaseDeDatos;
 use crate::error::{NsError, NsResult};
 
-/// La clave de "artista y título" de la V1: los dos normalizados para comparar.
+/// La clave de "artista y título": los dos normalizados para comparar.
 #[must_use]
 pub fn clave_artista_titulo(artista: &str, titulo: &str) -> Option<String> {
     let (a, t) = (para_comparacion(artista), para_comparacion(titulo));
     (!a.is_empty() && !t.is_empty()).then(|| format!("{a}::{t}"))
 }
 
-/// Busca una corrección activa en el orden de la V1: por huella, por ISRC y por
+/// Busca una corrección activa en el orden: por huella, por ISRC y por
 /// artista y título. La primera que vale gana.
 ///
 /// # Errors
@@ -110,7 +107,7 @@ fn alta_de(v: &Value) -> Option<Alta> {
     })
 }
 
-/// Lo que se guarda: las claves de la V1, para que una sola forma sirva a las
+/// Lo que se guarda: las claves, para que una sola forma sirva a las
 /// dos.
 fn cambios_de(a: &Alta) -> Value {
     json!({
@@ -128,7 +125,7 @@ fn cambios_de(a: &Alta) -> Value {
 }
 
 /// Recuerda lo que el usuario dejó en una pista, por su huella y por su ISRC.
-/// La tabla no tiene unicidad por tipo y valor (la V1 sí), así que se actualiza
+/// La tabla no tiene unicidad por tipo y valor, así que se actualiza
 /// la que hubiera y si no se crea.
 ///
 /// # Errors
@@ -168,7 +165,7 @@ mod tests {
     use crate::db;
 
     #[test]
-    fn una_correccion_de_la_v1_se_lee_con_sus_claves() {
+    fn una_correccion_guardada_se_lee_con_sus_claves() {
         let db = BaseDeDatos::en_memoria().unwrap();
         db.conexion()
             .unwrap()

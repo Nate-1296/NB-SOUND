@@ -1,10 +1,10 @@
 //! El fragmento a ciegas (F6.2.2): unos segundos de una canción sin decir cuál es.
 //!
 //! A ciegas toca un trozo de la canción del reto por el reproductor de siempre. La
-//! V1 tapaba los datos de la barra con "???"; aquí la instantánea no lleva la pista
-//! mientras suena el fragmento (`ciego`), así que nada en la barra, en los controles
-//! del sistema ni en el móvil la delata. La cola del usuario espera en pausa, como
-//! con el DJ, y vuelve al acabar el fragmento o al pedir cualquier otra cosa.
+//! instantánea no lleva la pista mientras suena el fragmento (`ciego`), así que
+//! nada en la barra, en los controles del sistema ni en el móvil la delata. La cola
+//! del usuario espera en pausa, como con el DJ, y vuelve al acabar el fragmento o
+//! al pedir cualquier otra cosa.
 
 use std::time::{Duration, Instant};
 

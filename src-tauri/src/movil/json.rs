@@ -1,11 +1,11 @@
-//! JSON con el formato exacto de la V1.
+//! JSON con el formato exacto.
 //!
-//! La V1 respondía con `json.dumps` de Python (lo que hace `aiohttp.json_response`):
-//! `", "` y `": "` como separadores, todo lo que no es ASCII imprimible escapado
-//! como `\uXXXX` y los reales como los escribe `repr`. El teléfono parsea el JSON y
-//! no notaría la diferencia, pero las respuestas doradas guardan también el
-//! `content-length`, y ADR-005 pide el contrato byte a byte: con `serde_json` tal
-//! cual, cada respuesta mediría distinto.
+//! Las respuestas son las de `json.dumps` de Python (lo que hace
+//! `aiohttp.json_response`): `", "` y `": "` como separadores, todo lo que no es
+//! ASCII imprimible escapado como `\uXXXX` y los reales como los escribe `repr`. El
+//! teléfono parsea el JSON y no notaría la diferencia, pero las respuestas doradas
+//! guardan también el `content-length`, y ADR-005 pide el contrato byte a byte: con
+//! `serde_json` tal cual, cada respuesta mediría distinto.
 
 use std::io::{self, Write};
 
@@ -101,7 +101,7 @@ fn real(x: f64) -> String {
     format!("{mantisa}e{signo}{cifras:0>2}")
 }
 
-/// Serializa como la V1. Un tipo que no se pueda serializar es un defecto del
+/// Serializa. Un tipo que no se pueda serializar es un defecto del
 /// propio servidor, no de la petición: queda en el registro y se responde vacío.
 pub fn a_bytes<T: Serialize + ?Sized>(valor: &T) -> Vec<u8> {
     let mut salida = Vec::with_capacity(256);

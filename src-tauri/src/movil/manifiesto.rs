@@ -1,11 +1,11 @@
 //! El manifiesto delta (F3.1.4): lo que cambió desde una `sync_version`, filtrado
 //! por la selección del teléfono y, si lo pide, paginado.
 //!
-//! Es `construir_manifest` de la V1 (`sync_repositorio.py`) campo a campo y en el
+//! Es `construir_manifest` (`sync_repositorio.py`) campo a campo y en el
 //! mismo orden. Las versiones las ponen los disparadores de V5; aquí solo se leen.
-//! La V1 enviaba todas las pistas, también las que su deduplicación apartó, y la
-//! V2 hace lo mismo: el teléfono ya las tiene y quitarlas sería un cambio que no
-//! le llegaría como tumba.
+//! Se envían todas las pistas, también las que la deduplicación apartó: el
+//! teléfono ya las tiene y quitarlas sería un cambio que no le llegaría como
+//! tumba.
 
 use std::collections::HashSet;
 
@@ -49,7 +49,7 @@ pub struct Pista {
     pub audio_url: String,
     pub cover_url: Option<String>,
     pub lyrics_url: String,
-    /// Añadido por la V2: `false` si se importó tal como estaba desde Por revisar
+    /// Añadido por NB Sound: `false` si se importó tal como estaba desde Por revisar
     /// (enmienda de ADR-007). Ver `docs/engineering/contrato-movil.md`.
     pub verificada: bool,
 }
@@ -108,8 +108,8 @@ pub struct Estadisticas {
 #[derive(Debug, Clone, Serialize)]
 pub struct Perfil {
     pub nombre: String,
-    /// La V1 enviaba aquí la ruta de la foto en el PC, que el teléfono no puede
-    /// abrir y no usa (`profile_providers.dart`). La V2 no envía rutas del equipo.
+    /// La ruta de la foto en el PC no se envía: el teléfono no puede abrirla y no
+    /// la usa (`profile_providers.dart`). NB Sound no envía rutas del equipo.
     pub foto: String,
     pub estadisticas: Estadisticas,
 }
@@ -219,8 +219,7 @@ fn texto_categoria(c: Categoria) -> &'static str {
     }
 }
 
-/// Si una playlist tiene con qué hacer su mosaico. En la V1 todas las visibles de
-/// la instalación real tenían una portada generada; la V2 la compone al pedirla.
+/// Si una playlist tiene con qué hacer su mosaico: NB Sound lo compone al pedirlo.
 const CON_PORTADA: &str = "EXISTS (SELECT 1 FROM playlist_pistas pp JOIN pistas p ON p.id = pp.pista_id
                  LEFT JOIN albumes a ON a.id = p.album_id
                  WHERE pp.playlist_id = pl.id AND coalesce(p.portada_id, a.portada_id) IS NOT NULL)";
@@ -256,7 +255,7 @@ fn listas(conn: &Connection, since: i64) -> NsResult<Vec<Playlist>> {
         let pista_ids =
             bd(contenido.query_map([id], |f| f.get(0)))?.collect::<rusqlite::Result<Vec<i64>>>();
         let pista_ids = bd(pista_ids)?;
-        // Los valores efectivos de la V1 (`_subtipo_playlist`, `_origen_playlist`).
+        // Los valores efectivos (`_subtipo_playlist`, `_origen_playlist`).
         let tipo = if tipo.trim().is_empty() {
             "manual".to_owned()
         } else {
@@ -354,7 +353,7 @@ fn ids(v: Option<&Value>) -> HashSet<i64> {
         .collect()
 }
 
-/// `_aplicar_seleccion` de la V1. Las tumbas y la versión viajan siempre.
+/// `_aplicar_seleccion`. Las tumbas y la versión viajan siempre.
 fn aplicar_seleccion(
     conn: &Connection,
     m: &mut Manifiesto,
@@ -400,7 +399,7 @@ fn aplicar_seleccion(
     Ok(())
 }
 
-/// El modo de una selección como lo lee la V1: `str(modo or "todo").lower()`.
+/// El modo de una selección como lo lee el contrato: `str(modo or "todo").lower()`.
 pub fn modo(sel: &Value) -> String {
     match sel.get("modo") {
         None | Some(Value::Null) => "todo".to_owned(),
@@ -412,7 +411,7 @@ pub fn modo(sel: &Value) -> String {
 }
 
 /// `_paginar_manifest`: el contador es global y único por entidad, así que se
-/// ordena todo junto por versión (de forma estable, en el orden de tipos de la V1)
+/// ordena todo junto por versión
 /// y se corta.
 fn paginar(m: &mut Manifiesto, limite: usize) {
     let mut todo: Vec<(i64, usize, usize)> = Vec::new();

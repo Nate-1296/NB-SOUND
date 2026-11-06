@@ -36,8 +36,8 @@ export default defineConfig({
     host: host || false,
     hmr: host ? { protocol: 'ws', host, port: 1431 } : undefined,
     watch: {
-      // El árbol de Rust lo vigila Cargo, y la V1 congelada no es código de la V2.
-      ignored: ['**/src-tauri/**', '**/build/**', '**/legado/**']
+      // El árbol de Rust lo vigila Cargo.
+      ignored: ['**/src-tauri/**', '**/build/**']
     }
   },
   test: {

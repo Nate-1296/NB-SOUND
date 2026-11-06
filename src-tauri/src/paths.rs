@@ -4,11 +4,6 @@
 //! Todo lo demás vive en los directorios estándar del sistema operativo, y los
 //! datos y la caché regenerable van separados: vaciar la caché nunca pierde nada.
 //!
-//! Los nombres de carpeta de la V2 (`nb-sound`, `NB Sound`) son distintos de los
-//! de la V1 (`nb_sound`, `NBSound`) a propósito: las dos versiones conviven en la
-//! misma máquina durante la transición, y la V2 nunca escribe en lo de la V1
-//! (Constitución, regla 3). Dónde está lo de la V1 lo dice [`RutasV1`].
-//!
 //! `NB_SOUND_TEST_DIR` desvía **todas** las rutas a un directorio temporal, para
 //! que las pruebas no toquen la instalación de quien las ejecuta.
 
@@ -134,37 +129,11 @@ pub fn musica_por_defecto() -> Option<PathBuf> {
     Some(casa.join("Music"))
 }
 
-/// Dónde guardaba sus cosas la V1, para el importador (ADR-004). Solo se leen.
-#[derive(Debug, Clone)]
-pub struct RutasV1 {
-    pub datos: PathBuf,
-    pub config: PathBuf,
-}
-
-impl RutasV1 {
-    /// Las rutas estándar de la V1 en esta plataforma (`legado/infra/bootstrap.py`).
-    pub fn estandar() -> Option<Self> {
-        plataforma::v1()
-    }
-
-    /// La base de la V1 cuando la carpeta de biblioteca no se cambió en su `.env`.
-    pub fn base_de_datos(&self) -> PathBuf {
-        self.datos.join("biblioteca").join("nb_sound.sqlite3")
-    }
-
-    /// El certificado y la clave del servidor móvil de la V1.
-    pub fn identidad_movil(&self) -> PathBuf {
-        self.config.join("sync")
-    }
-}
-
 // Resolución sin dependencias externas: son pocas llamadas por plataforma, como
 // en NB Books (`paths.rs`).
 #[cfg(target_os = "linux")]
 mod plataforma {
     use std::path::PathBuf;
-
-    use super::RutasV1;
 
     fn xdg(var: &str, respaldo: &str) -> Option<PathBuf> {
         match std::env::var_os(var) {
@@ -180,20 +149,11 @@ mod plataforma {
     pub fn cache() -> Option<PathBuf> {
         Some(xdg("XDG_CACHE_HOME", ".cache")?.join("nb-sound"))
     }
-
-    pub fn v1() -> Option<RutasV1> {
-        Some(RutasV1 {
-            datos: xdg("XDG_DATA_HOME", ".local/share")?.join("nb_sound"),
-            config: xdg("XDG_CONFIG_HOME", ".config")?.join("nb_sound"),
-        })
-    }
 }
 
 #[cfg(target_os = "windows")]
 mod plataforma {
     use std::path::PathBuf;
-
-    use super::RutasV1;
 
     fn var(nombre: &str) -> Option<PathBuf> {
         std::env::var_os(nombre).map(PathBuf::from)
@@ -206,20 +166,11 @@ mod plataforma {
     pub fn cache() -> Option<PathBuf> {
         Some(var("LOCALAPPDATA")?.join("NB Sound").join("Cache"))
     }
-
-    pub fn v1() -> Option<RutasV1> {
-        Some(RutasV1 {
-            datos: var("LOCALAPPDATA")?.join("NBSound"),
-            config: var("APPDATA")?.join("NBSound"),
-        })
-    }
 }
 
 #[cfg(target_os = "macos")]
 mod plataforma {
     use std::path::PathBuf;
-
-    use super::RutasV1;
 
     fn home() -> Option<PathBuf> {
         std::env::var_os("HOME").map(PathBuf::from)
@@ -231,13 +182,6 @@ mod plataforma {
 
     pub fn cache() -> Option<PathBuf> {
         Some(home()?.join("Library/Caches/NB Sound"))
-    }
-
-    pub fn v1() -> Option<RutasV1> {
-        Some(RutasV1 {
-            datos: home()?.join("Library/Application Support/NBSound"),
-            config: home()?.join("Library/Preferences/NBSound"),
-        })
     }
 }
 
@@ -265,17 +209,5 @@ mod tests {
             );
         }
         let _ = std::fs::remove_dir_all(base);
-    }
-
-    /// La V2 y la V1 conviven: si compartieran carpeta, la V2 escribiría donde la
-    /// V1 guarda su base, que es justo lo que la Constitución prohíbe.
-    #[test]
-    fn la_v2_no_comparte_carpetas_con_la_v1() {
-        let (Some(datos), Some(v1)) = (plataforma::datos(), RutasV1::estandar()) else {
-            return;
-        };
-        assert_ne!(datos, v1.datos);
-        assert!(!datos.starts_with(&v1.datos));
-        assert!(!v1.base_de_datos().starts_with(&datos));
     }
 }

@@ -1,7 +1,6 @@
 //! Dónde va cada pista dentro de la carpeta de música (parte de F4.1.4 y F4.1.9).
 //!
-//! La regla de la V1 (`core/writer.py`, `construir_ruta_destino`, y
-//! `core/discography.py`), que es la que tiene hoy la biblioteca real:
+//! La regla de la biblioteca (`construir_ruta_destino`):
 //!
 //! ```text
 //! <artista>/albumes/<álbum>/<nn>_<título>.<ext>
@@ -9,8 +8,8 @@
 //! <artista>/otros[/<álbum>]/<nn>_<título>.<ext>
 //! ```
 //!
-//! con los nombres pasados por [`construir_slug`] y `00` si no hay número. La
-//! única diferencia: la V1 convertía todo a MP3 y la V2 conserva la extensión.
+//! con los nombres pasados por [`construir_slug`] y `00` si no hay número. Cada
+//! archivo conserva su extensión.
 
 use std::path::{Path, PathBuf};
 
@@ -131,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn la_ruta_es_la_de_la_biblioteca_de_la_v1() {
+    fn la_ruta_sigue_artista_tipo_y_album() {
         let r = |x: Destino<'_>| ruta_relativa(&x).to_string_lossy().replace('\\', "/");
         assert_eq!(
             r(d("Single", "Bad Decisions", "Bad Decisions", None)),
@@ -176,20 +175,19 @@ mod tests {
         assert_eq!(sin_conflicto(&a), dir.join("01_x_3.mp3"));
     }
 
-    /// La biblioteca real de la V1 (`NS_RUTAS_CORPUS`: ruta, título, artista,
+    /// Una biblioteca real de referencia (`NS_RUTAS_CORPUS`: ruta, título, artista,
     /// álbum, tipo y número de cada pista). Solo cuenta coincidencias. La carpeta
-    /// de tipo no se compara: la decidió el tipo de MusicBrainz al importar, y el
-    /// `tipo` que guardó la base de la V1 es casi siempre `Album`.
+    /// de tipo no se compara: la decide el tipo de MusicBrainz al importar.
     #[test]
     #[ignore = "necesita un corpus local"]
     fn la_biblioteca_local_tiene_las_rutas_de_esta_regla() {
         let Ok(ruta) = std::env::var("NS_RUTAS_CORPUS") else {
             return;
         };
-        let v1: Vec<serde_json::Value> =
+        let referencia: Vec<serde_json::Value> =
             serde_json::from_str(&std::fs::read_to_string(ruta).unwrap()).unwrap();
         let mut iguales = 0;
-        for f in &v1 {
+        for f in &referencia {
             let real = f["ruta"].as_str().unwrap();
             let t = |k: &str| f[k].as_str().unwrap_or_default().to_owned();
             let (titulo, artista, album, tipo) = (t("titulo"), t("artista"), t("album"), t("tipo"));
@@ -239,11 +237,11 @@ mod tests {
                 eprintln!("{real}  <>  {}", nuestra.display());
             }
         }
-        let parte = iguales as f64 / v1.len() as f64;
+        let parte = iguales as f64 / referencia.len() as f64;
         assert!(
             parte > 0.98,
             "{iguales} de {} rutas iguales ({:.1} %)",
-            v1.len(),
+            referencia.len(),
             parte * 100.0
         );
     }

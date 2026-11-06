@@ -1,7 +1,6 @@
 //! Letras para la vista de reproducción (F2.2.6) y el color de su fondo.
 //!
-//! Las reglas son las de la V1 (`ui/modelos_qml.py`, `_normalizar_lyrics_para_ui`),
-//! y sus pruebas están traducidas abajo con su nombre:
+//! Las reglas (`_normalizar_lyrics_para_ui`), con sus pruebas abajo:
 //!
 //! * La sincronizada manda: si existe y es válida, la plana no se muestra; si
 //!   existe y está rota (una línea sin marca de tiempo, segundos de 60 o más),
@@ -166,7 +165,7 @@ fn parece_documento(lineas: &[String]) -> bool {
         || (densidad > 0.12 && promedio > 70.0)
 }
 
-/// Normaliza lo guardado como lo mostraba la V1.
+/// Normaliza lo guardado para enseñarlo.
 pub fn normalizar(planas: Option<&str>, sincronizadas: Option<&str>) -> Letra {
     if let Some(s) = sincronizadas.map(str::trim).filter(|s| !s.is_empty()) {
         return Letra {
@@ -210,7 +209,7 @@ pub struct Ambiente {
 }
 
 /// El tono medio de la portada, con la saturación y la luz acotadas para que el
-/// texto claro se lea encima (`_mood_desde_portada` de la V1). `None` si la
+/// texto claro se lea encima. `None` si la
 /// imagen es casi gris o casi negra o blanca.
 pub fn ambiente_de_imagen(imagen: &image::DynamicImage) -> Option<Ambiente> {
     let pequena = imagen.thumbnail(48, 48).to_rgba8();
@@ -241,8 +240,7 @@ pub fn ambiente_de_imagen(imagen: &image::DynamicImage) -> Option<Ambiente> {
     })
 }
 
-/// Un color estable por pista cuando no hay portada (`_mood_fallback` de la V1:
-/// FNV-1a sobre una semilla).
+/// Un color estable por pista cuando no hay portada.
 pub fn ambiente_de_semilla(semilla: &str) -> Ambiente {
     let mut h: u32 = 2_166_136_261;
     for c in semilla.chars() {

@@ -46,7 +46,7 @@ Ordenado por lo que aporta a quien la usa a diario. Cada fila dice qué app lo t
 | A4 | **Selección múltiple** en las listas (Mayús y Ctrl): añadir a una playlist, a la cola, favoritas o quitar varias a la vez | Todos | Hoy todo se hace canción por canción. Es la carencia que más se nota al ordenar una biblioteca grande |
 | A5 | **Temporizador de apagado** (al acabar esta canción, en 15, 30, 60 min) | Spotify (móvil), Apple Music, Plexamp | Pequeño: una orden al reproductor y una entrada en el menú ··· |
 | A6 | **Firma de código** en Windows y macOS | Cualquier aplicación distribuida | Sin firma, Windows enseña "SmartScreen" y macOS dice que la aplicación "está dañada". Hace falta un certificado (Windows) y una cuenta de desarrollador de Apple: es una decisión de Nathan con coste |
-| A7 | **La puerta de máquina limpia** y las 85 pruebas finales a mano | — | La [Constitución](./constitution/README.md) (regla 1) y el [plan](../plan/README.md) lo exigen antes de dar la 2.0 por publicada. Hoy está publicada sin pasarla |
+| A7 | **La puerta de máquina limpia** y las 71 pruebas finales a mano | — | La [Constitución](./constitution/README.md) (regla 1) y el [plan](../plan/README.md) lo exigen antes de dar la 2.0 por publicada. Hoy está publicada sin pasarla |
 | A8 | **La memoria del karaoke** (P8: llegó a 9 GB) | — | Sin bajarla, el karaoke no cabe en un equipo de 8 GB; con la prioridad baja ya no molesta, pero puede quedarse sin memoria |
 
 ### Prioridad media
@@ -80,7 +80,7 @@ Ordenado por lo que aporta a quien la usa a diario. Cada fila dice qué app lo t
 
 ## Lo que queda por decidir o por cerrar
 
-* **Pruebas finales:** 85 comprobaciones a mano siguen abiertas (eran 89) en [pruebas finales](../plan/pruebas-finales.md);
+* **Pruebas finales:** 71 comprobaciones a mano siguen abiertas en [pruebas finales](../plan/pruebas-finales.md);
   esta sesión cerró por guion las que se pudieron sin ratón (lo dice cada una).
 * **Preguntas abiertas** nuevas: la firma de código (P15), la prioridad en Windows (P16) y el minirreproductor encima
   de todo en Wayland (P17, decidido dejarlo como está).

@@ -9,14 +9,13 @@ staged=$(git diff --cached --name-only --diff-filter=ACM)
 fail() { printf '\n  %s\n\n' "$1" >&2; exit 1; }
 
 # --- Interfaz -------------------------------------------------------------
-v2=$(echo "$staged" | grep -v '^legado/' || true)
-if echo "$v2" | grep -qE '\.(ts|js|mjs|json|svelte)$'; then
-  echo "$v2" | grep -E '\.(ts|js|mjs|json|svelte)$' | xargs pnpm exec biome check --no-errors-on-unmatched \
+if echo "$staged" | grep -qE '\.(ts|js|mjs|json|svelte)$'; then
+  echo "$staged" | grep -E '\.(ts|js|mjs|json|svelte)$' | xargs pnpm exec biome check --no-errors-on-unmatched \
     || fail "Biome encontró problemas. Ejecuta: pnpm lint:fix"
 fi
 
-if echo "$v2" | grep -qE '\.(svelte|css)$'; then
-  echo "$v2" | grep -E '\.(svelte|css)$' | grep -v '^src/paletas.css$' | xargs -r pnpm exec prettier --check \
+if echo "$staged" | grep -qE '\.(svelte|css)$'; then
+  echo "$staged" | grep -E '\.(svelte|css)$' | grep -v '^src/paletas.css$' | xargs -r pnpm exec prettier --check \
     || fail "Prettier encontró problemas de formato. Ejecuta: pnpm format"
   node scripts/check-ui.mjs || fail "El sistema de diseño rechaza un componente (ADR-008)."
   node scripts/check-i18n.mjs || fail "Hay texto de la interfaz fuera de src/lib/i18n."
@@ -49,7 +48,7 @@ if echo "$staged" | grep -qE '^(src-tauri/src/lib\.rs|src/lib/core/ipc/.*|src/ro
 fi
 
 # --- Higiene ----------------------------------------------------------------
-node scripts/check-sin-python.mjs || fail "La V2 no ejecuta Python (ADR-002)."
+node scripts/check-sin-python.mjs || fail "NB Sound no ejecuta Python (ADR-002)."
 
 if echo "$staged" | grep -qE '\.(so|dylib|dll|a|lib|onnx|pb|exe)$'; then
   fail "No se versionan binarios nativos ni pesos de modelos (ADR-006)."

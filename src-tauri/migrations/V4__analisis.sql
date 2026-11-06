@@ -1,16 +1,15 @@
 -- V4: el análisis de audio, resumido (F1.1.4).
 --
--- La regla de ADR-004: lo derivado nunca pesa más que lo que describe. La V1
--- guardaba 1,1 MB por pista de salidas crudas en JSON; aquí el presupuesto es de
--- menos de 16 KB por pista, y lo vigila una prueba (`pruebas_esquema.rs`). Las
--- restricciones de tamaño de abajo son la otra mitad: hacen imposible que una
--- columna crezca sin que alguien cambie esta migración.
+-- La regla de ADR-004: lo derivado nunca pesa más que lo que describe. El
+-- presupuesto es de menos de 16 KB por pista, y lo vigila una prueba
+-- (`pruebas_esquema.rs`). Las restricciones de tamaño de abajo son la otra mitad:
+-- hacen imposible que una columna crezca sin que alguien cambie esta migración.
 --
 -- Todo es recalculable desde el audio. Por eso cada tabla guarda la `version` del
 -- analizador y el `sha256` del archivo analizado: si cambia cualquiera de los dos,
 -- la fila está caducada.
 
--- Rasgos de señal (el analizador ligero, que la V1 aplicaba a toda la biblioteca).
+-- Rasgos de señal.
 CREATE TABLE rasgos (
     pista_id          INTEGER PRIMARY KEY REFERENCES pistas (id) ON DELETE CASCADE,
     version           TEXT    NOT NULL,
@@ -18,7 +17,7 @@ CREATE TABLE rasgos (
     bpm               REAL    CHECK (bpm > 0),
     pulsos            INTEGER CHECK (pulsos >= 0),
     ataques_por_seg   REAL    CHECK (ataques_por_seg >= 0),
-    -- Tonalidad y modo como los escribe la V1 (`G#`, `minor`).
+    -- Tonalidad y modo como texto (`G#`, `minor`).
     tonalidad         TEXT    CHECK (tonalidad IN
                           ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')),
     modo              TEXT    CHECK (modo IN ('major', 'minor')),
@@ -61,8 +60,7 @@ CREATE TABLE analisis_profundo (
     activacion        REAL,
     valencia          REAL,
     -- El embedding de MusiCNN promediado sobre la pista, en `f32` little-endian:
-    -- 200 dimensiones son 800 bytes. La V1 lo guardaba como texto JSON fotograma a
-    -- fotograma. Lo usan el DJ y "parecidas a esta".
+    -- 200 dimensiones son 800 bytes. Lo usan el DJ y "parecidas a esta".
     embedding         BLOB    CHECK (embedding IS NULL OR length(embedding) = 4 * dimensiones),
     dimensiones       INTEGER CHECK (dimensiones BETWEEN 1 AND 2048),
     -- JSON con las etiquetas de estilo más probables y su puntuación

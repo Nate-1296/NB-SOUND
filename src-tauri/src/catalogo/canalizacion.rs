@@ -1,4 +1,4 @@
-//! La canalización de un archivo (F4.1.9): `core/pipeline.py` de la V1, pieza a
+//! La canalización de un archivo (F4.1.9): `core/pipeline.py`, pieza a
 //! pieza, sobre los módulos de `catalogo`.
 //!
 //! Validar, buscar duplicados exactos, identificar (Shazam, AcoustID), normalizar,
@@ -7,7 +7,7 @@
 //! no entra va a Por revisar con su causa (enmienda de ADR-007), con el archivo
 //! guardado en la carpeta interna de la aplicación.
 //!
-//! Dos decisiones propias de la V2, las dos de la fase:
+//! Dos decisiones propias de NB Sound, las dos de la fase:
 //!
 //! - **Sin red** (el usuario no dio permiso a MusicBrainz), un archivo con título
 //!   y artista en sus etiquetas entra tal como está, sin verificar, en lugar de ir
@@ -40,12 +40,12 @@ use crate::error::{NsError, NsResult};
 use crate::net::{Red, Servicio};
 use crate::paths::Rutas;
 
-/// Los límites técnicos de la V1 (`config/settings.py`).
+/// Los límites técnicos de un archivo aceptable.
 const TAMANO_MINIMO: u64 = 10_240;
 const DURACION_MINIMA_SEG: f64 = 15.0;
 const BITRATE_MINIMO: u32 = 64;
 
-/// Los formatos que importa la V2: los que decodifica Symphonia (ADR-003).
+/// Los formatos que importa NB Sound: los que decodifica Symphonia (ADR-003).
 pub const EXTENSIONES: [&str; 8] = ["mp3", "flac", "m4a", "mp4", "ogg", "opus", "wav", "aac"];
 
 /// Todo lo que necesita la canalización.
@@ -75,7 +75,7 @@ pub enum Resultado {
         id: i64,
         causa: &'static str,
     },
-    /// No es audio que la V2 importe (otra extensión).
+    /// No es audio que NB Sound importe (otra extensión).
     Omitido,
 }
 
@@ -770,8 +770,7 @@ pub fn procesar(e: &Entorno<'_>, g: &mut Gestor, ruta: &Path) -> NsResult<Result
             json!({"nombre_original": nombre, "duplicado": referencia(&d)}),
         );
     }
-    // Lo que el usuario dejó corregido gana a las fuentes y no necesita red
-    // (`overrides` de la V1).
+    // Lo que el usuario dejó corregido gana a las fuentes y no necesita red.
     let corregida = correcciones::buscar(
         e.db,
         &huella,

@@ -227,7 +227,6 @@ Lógica traducida a Rust desde otros proyectos, con su licencia original, compat
 | \`songrec\` 0.8 (Marin M.) | GPL-3.0-or-later | La firma acústica de Shazam y su formato binario | \`src-tauri/src/catalogo/shazam.rs\` |
 | \`librosa\` 0.11 | ISC | El seguidor de pulsos y los rasgos espectrales | \`src-tauri/src/rasgos.rs\` |
 | \`difflib\` de CPython | PSF-2.0 | \`SequenceMatcher.ratio\` | \`src-tauri/src/catalogo/texto.rs\` |
-| NB Sound 1.1.16 | GPL-3.0-or-later | La lógica de catalogación, reproducción, DJ y sincronización de la V1 | todo \`src-tauri/src/\` |
 
 ## Modelos de los agregados
 

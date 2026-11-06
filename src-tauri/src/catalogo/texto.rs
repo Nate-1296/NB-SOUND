@@ -1,8 +1,7 @@
-//! Normalización de texto para catalogar (F4.1.2): la de la V1
+//! Normalización de texto para catalogar (F4.1.2): la
 //! (`utils/text.py` y las listas de `config/settings.py`), función a función.
 //!
-//! Todo es puro. Los nombres siguen a los de la V1 para poder comparar las dos
-//! implementaciones a la vista, y las pruebas son sus ejemplos y las de
+//! Todo es puro, y las pruebas son sus ejemplos y las de
 //! `tests/test_text_slug_unicode.py`.
 
 use std::collections::HashSet;
@@ -12,7 +11,7 @@ use regex::Regex;
 use unicode_normalization::char::is_combining_mark;
 use unicode_normalization::UnicodeNormalization;
 
-/// `SLUG_MAX_LENGTH` de la V1.
+/// `SLUG_MAX_LENGTH`.
 pub const LARGO_MAXIMO_SLUG: usize = 80;
 
 /// `PROMO_SUFFIXES`: lo que se corta del título antes de comparar, en este orden.
@@ -131,7 +130,7 @@ pub const PALABRAS_DE_VERSION: &[&str] = &[
 ];
 
 fn re(patron: &str) -> Regex {
-    Regex::new(patron).expect("las expresiones de la V1 compilan")
+    Regex::new(patron).expect("las expresiones compilan")
 }
 
 static ESPACIOS: LazyLock<Regex> = LazyLock::new(|| re(r"\s+"));
@@ -171,7 +170,7 @@ static SOLO_DIGITOS: LazyLock<Regex> = LazyLock::new(|| re(r"^\d+$"));
 static ANIO: LazyLock<Regex> = LazyLock::new(|| re(r"\b(19[0-9]{2}|20[0-2][0-9])\b"));
 static ISRC: LazyLock<Regex> = LazyLock::new(|| re(r"^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$"));
 
-/// Los patrones de variante, en el orden en que la V1 los prueba.
+/// Los patrones de variante, en el orden en que se prueban.
 static VARIANTES: LazyLock<Vec<(&'static str, Regex)>> = LazyLock::new(|| {
     vec![
         (
@@ -235,7 +234,7 @@ pub fn limpiar_basura_descarga(texto: &str) -> String {
 }
 
 /// Un nombre apto para carpetas y archivos, que conserva cualquier alfabeto: la
-/// regla de las claves de artista y álbum de la V1 (`construir_slug`).
+/// regla de las claves de artista y álbum (`construir_slug`).
 pub fn construir_slug(texto: &str) -> String {
     construir_slug_con(texto, LARGO_MAXIMO_SLUG)
 }
@@ -324,7 +323,7 @@ pub fn normalizar_titulo(titulo: &str) -> String {
     let mut minus = t.to_lowercase();
     for sufijo in SUFIJOS_PROMOCIONALES {
         if let Some(i) = minus.find(sufijo) {
-            // La V1 corta por la posición en minúsculas: con texto ASCII antes del
+            // Se corta por la posición en minúsculas: con texto ASCII antes del
             // sufijo (lo normal) coincide con la del original.
             let i = t
                 .char_indices()
@@ -775,7 +774,7 @@ mod tests {
     fn la_similitud_combinada_pondera_las_tres_medidas() {
         assert_eq!(similitud_combinada("Hello", "hello"), 1.0);
         assert_eq!(similitud_combinada("", "x"), 0.0);
-        // La V1 da 0.7596 para este par.
+        // El valor de referencia para este par es 0.7596.
         assert_eq!(
             similitud_combinada("Hotel California", "California Hotel"),
             0.7596
@@ -822,8 +821,8 @@ mod tests {
         );
     }
 
-    /// Compara cada función con lo que respondió la V1 a cada frase.
-    fn diferencias_con_la_v1(frases: &[serde_json::Value]) -> Vec<String> {
+    /// Compara cada función con lo que dicen las doradas para cada frase.
+    fn diferencias_con(frases: &[serde_json::Value]) -> Vec<String> {
         let mut fallos = Vec::new();
         for f in frases {
             let e = f["entrada"].as_str().unwrap();
@@ -867,25 +866,28 @@ mod tests {
             ];
             for (campo, valor) in nuestro {
                 if f[campo] != valor {
-                    fallos.push(format!("{campo}({e:?}): V1 {} V2 {valor}", f[campo]));
+                    fallos.push(format!(
+                        "{campo}({e:?}): esperado {} obtenido {valor}",
+                        f[campo]
+                    ));
                 }
             }
         }
         fallos
     }
 
-    /// Lo que respondió la V1 a las frases de `scripts/prototipos/texto/grabar.py`.
+    /// Lo que dicen las doradas (`tests/fixtures/texto_doradas.json`) para cada frase.
     #[test]
-    fn cada_funcion_responde_lo_mismo_que_en_la_v1() {
-        let v1: serde_json::Value =
-            serde_json::from_str(include_str!("../../tests/fixtures/texto_v1.json")).unwrap();
-        let mut fallos = diferencias_con_la_v1(v1["frases"].as_array().unwrap());
-        for p in v1["pares"].as_array().unwrap() {
+    fn cada_funcion_responde_lo_que_dicen_las_doradas() {
+        let doradas: serde_json::Value =
+            serde_json::from_str(include_str!("../../tests/fixtures/texto_doradas.json")).unwrap();
+        let mut fallos = diferencias_con(doradas["frases"].as_array().unwrap());
+        for p in doradas["pares"].as_array().unwrap() {
             let (a, b) = (p["a"].as_str().unwrap(), p["b"].as_str().unwrap());
             let c = similitud_combinada(a, b);
             if Some(c) != p["combinada"].as_f64() {
                 fallos.push(format!(
-                    "combinada({a:?}, {b:?}): V1 {} V2 {c}",
+                    "combinada({a:?}, {b:?}): esperada {} obtenida {c}",
                     p["combinada"]
                 ));
             }
@@ -897,13 +899,13 @@ mod tests {
     /// `grabar.py` con un archivo de frases, en `NS_TEXTO_CORPUS`. Solo cuenta.
     #[test]
     #[ignore = "necesita un corpus local"]
-    fn el_corpus_local_responde_lo_mismo_que_en_la_v1() {
+    fn el_corpus_local_responde_lo_que_dicen_las_doradas() {
         let Ok(ruta) = std::env::var("NS_TEXTO_CORPUS") else {
             return;
         };
-        let v1: Vec<serde_json::Value> =
+        let doradas: Vec<serde_json::Value> =
             serde_json::from_str(&std::fs::read_to_string(ruta).unwrap()).unwrap();
-        let fallos = diferencias_con_la_v1(&v1);
+        let fallos = diferencias_con(&doradas);
         let mut por_funcion = std::collections::BTreeMap::<String, usize>::new();
         for f in &fallos {
             *por_funcion
@@ -913,7 +915,7 @@ mod tests {
         assert!(
             fallos.is_empty(),
             "{} frases, diferencias por función: {por_funcion:?}",
-            v1.len()
+            doradas.len()
         );
     }
 }

@@ -1,13 +1,12 @@
 //! El servidor de NB Sound Mobile (Fase 3, ADR-005).
 //!
-//! HTTPS y WebSocket con el protocolo `1` de la V1, compatible byte a byte: los
-//! teléfonos emparejados con la V1 se reconectan sin volver a escanear el QR,
-//! porque la identidad TLS y los `device_token` vinieron con el importador.
+//! HTTPS y WebSocket con el protocolo `1`, compatible byte a byte con NB Sound
+//! Mobile: un teléfono emparejado se reconecta sin volver a escanear el QR, porque
+//! la identidad TLS y los `device_token` se conservan.
 //!
 //! Corre en su propio hilo con su propio runtime de tokio: un teléfono que
 //! descarga la biblioteca no compite con la ventana ni con el audio. Se enciende
-//! al abrir la aplicación si el usuario lo dejó así (la V1 lo llamaba
-//! `sync_auto_encender`), y siempre que se pide conectar un teléfono.
+//! al abrir la aplicación si el usuario lo dejó así, y siempre que se pide conectar un teléfono.
 
 mod control;
 mod emparejamiento;
@@ -30,8 +29,8 @@ use ts_rs::TS;
 
 pub use control::Puente;
 pub use emparejamiento::{huella_token, qr, Qr};
-/// El JSON como lo escribía la V1; lo usa el arnés de respuestas doradas.
-pub use json::a_bytes as json_como_v1;
+/// El JSON como lo espera el teléfono; lo usa el arnés de respuestas doradas.
+pub use json::a_bytes as json_del_telefono;
 pub use repositorio::{aplicar_historial, Telefono, MAX_DISPOSITIVOS};
 
 use crate::db::BaseDeDatos;
@@ -41,7 +40,7 @@ use crate::paths::Rutas;
 /// El nombre que anuncia el servidor: va en `ping`, en el QR y en mDNS.
 const NOMBRE: &str = "NB Sound";
 const TIPO_MDNS: &str = "_nbsound._tcp.local.";
-/// Los puertos de la V1: el primero libre. El teléfono lo aprende del QR o de mDNS.
+/// Los puertos: el primero libre. El teléfono lo aprende del QR o de mDNS.
 pub const PUERTOS: RangeInclusive<u16> = 8731..=8799;
 
 /// Lo compartido por todas las peticiones.
@@ -89,10 +88,6 @@ pub struct Opciones {
     pub host: Option<IpAddr>,
     pub mdns: bool,
     pub puertos: RangeInclusive<u16>,
-    /// La identidad de la V1. Si el servidor se enciende antes de que el
-    /// importador la copie (al pedir un QR durante la primera importación), la
-    /// copia él: crear una nueva rompería todos los teléfonos emparejados.
-    pub identidad_v1: Option<std::path::PathBuf>,
 }
 
 impl Default for Opciones {
@@ -101,7 +96,6 @@ impl Default for Opciones {
             host: None,
             mdns: true,
             puertos: PUERTOS,
-            identidad_v1: None,
         }
     }
 }
@@ -123,7 +117,7 @@ pub struct ServidorMovil {
 
 /// La IP por la que sale el tráfico a la LAN, que es la que alcanza el teléfono.
 /// Conectar un socket UDP no envía nada: solo hace que el sistema elija la
-/// interfaz (`ip_lan_probable` de la V1).
+/// interfaz.
 fn ip_lan() -> IpAddr {
     let probada = UdpSocket::bind((Ipv4Addr::UNSPECIFIED, 0)).and_then(|s| {
         s.connect((Ipv4Addr::new(10, 255, 255, 255), 1))?;
@@ -194,9 +188,6 @@ impl ServidorMovil {
             return Ok(());
         }
         let dir = self.ctx.rutas.identidad_movil();
-        if let Some(v1) = &self.opciones.identidad_v1 {
-            crate::identidad_movil::copiar_de_la_v1(v1, &dir)?;
-        }
         let (config, huella) = tls::cargar(&dir)?;
         let host = self.opciones.host.unwrap_or_else(ip_lan);
         let tcp = self
@@ -413,7 +404,7 @@ impl Drop for ServidorMovil {
     }
 }
 
-/// La preferencia de encender el servidor al abrir (la de la V1, importada).
+/// La preferencia de encender el servidor al abrir.
 ///
 /// # Errors
 ///

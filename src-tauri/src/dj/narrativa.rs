@@ -18,8 +18,8 @@ pub struct Objetivos {
     pub calma: f64,
 }
 
-/// Una fase, con su tramo de la sesión de 0 a 1. Se serializa con las claves de la
-/// V1 (`perfil_a_dict`), que es lo que guarda `dj_sesiones.resumen`.
+/// Una fase, con su tramo de la sesión de 0 a 1. Se serializa con sus claves
+/// (`perfil_a_dict`), que es lo que guarda `dj_sesiones.resumen`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Fase {
     pub nombre: &'static str,
@@ -81,7 +81,7 @@ fn base(fase: &str) -> Objetivos {
 type Campo = fn(&mut Objetivos) -> &mut f64;
 
 /// `_ajustar_por_intent`: cada eje del pedido mueve su objetivo hasta un 15 %, en
-/// el orden de la V1 (el recorte a 0..1 tras cada paso hace que el orden cuente), y
+/// un orden fijo (el recorte a 0..1 tras cada paso hace que el orden cuente), y
 /// un pedido muy calmado templa el pico.
 fn ajustar(mut o: Objetivos, intencion: &Intencion, fase: &str) -> Objetivos {
     let eje = |nombre: &str| super::ontologia::valor(&intencion.axes, nombre).unwrap_or(0.0);
@@ -221,7 +221,7 @@ mod pruebas {
     use crate::dj::intencion;
 
     #[test]
-    fn el_perfil_de_cada_pedido_es_el_de_la_v1() {
+    fn el_perfil_de_cada_pedido_es_el_esperado() {
         let d: serde_json::Value =
             serde_json::from_str(include_str!("doradas_sesion.json")).expect("doradas");
         for s in d["sesiones"].as_array().expect("sesiones") {

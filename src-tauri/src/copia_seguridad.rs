@@ -1,13 +1,12 @@
-//! Copia de seguridad y restauración (F4.2.6): `servicios/backup.py` de la V1.
+//! Copia de seguridad y restauración (F4.2.6): `servicios/backup.py`.
 //!
-//! El formato es el de la V1: un ZIP `.nbsound-backup` con la base
+//! El formato es un ZIP `.nbsound-backup` con la base
 //! (`db.sqlite3`, sacada con `VACUUM INTO`, que da una copia coherente sin
 //! bloquear ni arrastrar el WAL), las portadas (`assets/`) y un `manifest.json`
 //! con la suma sha256 de cada entrada. Ni el audio, que es del usuario y no de la
 //! aplicación, ni las claves, que viven en el llavero (ADR-009), ni la identidad
-//! del servidor móvil. El manifiesto añade `esquema`, la versión de la base de la
-//! V2: así una copia de la V1, que no lo lleva, se reconoce y se rechaza con su
-//! motivo (P12 sigue abierta).
+//! del servidor móvil. El manifiesto lleva `esquema`, la versión de la base: una
+//! copia que no lo lleva se reconoce y se rechaza con su motivo.
 //!
 //! **Restaurar no reemplaza la base en caliente.** Con el pool de conexiones, el
 //! reproductor y el servidor móvil leyendo, cambiar el archivo por debajo es
@@ -253,8 +252,8 @@ fn escribir_zip(db: &BaseDeDatos, rutas: &Rutas, base: &Path, zip_tmp: &Path) ->
 pub enum CopiaInvalida {
     /// No es un ZIP o le falta la base o el manifiesto.
     Formato,
-    /// Es una copia de la V1 (P12).
-    DeLaV1,
+    /// Una copia sin versión de esquema: no es de este formato.
+    SinVersion,
     /// De una versión de NB Sound más nueva que esta.
     MasNueva,
     /// Alguna suma no coincide o la base no pasa `integrity_check`.
@@ -264,7 +263,7 @@ pub enum CopiaInvalida {
 impl From<CopiaInvalida> for NsError {
     fn from(c: CopiaInvalida) -> Self {
         match c {
-            CopiaInvalida::Formato | CopiaInvalida::DeLaV1 => NsError::FormatUnsupported,
+            CopiaInvalida::Formato | CopiaInvalida::SinVersion => NsError::FormatUnsupported,
             CopiaInvalida::MasNueva => NsError::SchemaMismatch,
             CopiaInvalida::Danada => NsError::IntegrityMismatch,
         }
@@ -283,7 +282,7 @@ fn manifiesto(z: &mut ZipArchive<File>) -> Result<Value, CopiaInvalida> {
         return Err(CopiaInvalida::Formato);
     }
     match m["esquema"].as_u64() {
-        None => Err(CopiaInvalida::DeLaV1),
+        None => Err(CopiaInvalida::SinVersion),
         Some(e) if e > u64::from(migraciones::version_esperada()) => Err(CopiaInvalida::MasNueva),
         Some(_) => Ok(m),
     }
@@ -355,7 +354,7 @@ fn preparada(rutas: &Rutas) -> (PathBuf, PathBuf) {
 ///
 /// # Errors
 ///
-/// - [`NsError::FormatUnsupported`] si no es una copia de la V2.
+/// - [`NsError::FormatUnsupported`] si no es una copia de NB Sound.
 /// - [`NsError::SchemaMismatch`] si es de una versión más nueva.
 /// - [`NsError::IntegrityMismatch`] si está dañada.
 pub fn preparar_restauracion(rutas: &Rutas, copia: &Path) -> NsResult<()> {
@@ -494,7 +493,7 @@ pub fn estado(db: &BaseDeDatos, rutas: &Rutas) -> NsResult<EstadoCopia> {
     })
 }
 
-/// Las frecuencias que ofrece Ajustes, como la V1: nunca, a diario, cada semana
+/// Las frecuencias que ofrece Ajustes: nunca, a diario, cada semana
 /// y cada mes.
 pub const FRECUENCIAS: [u32; 4] = [0, 1, 7, 30];
 
@@ -632,7 +631,7 @@ mod tests {
     }
 
     #[test]
-    fn una_copia_de_la_v1_mas_nueva_o_danada_se_rechaza_sin_preparar_nada() {
+    fn una_copia_sin_version_mas_nueva_o_danada_se_rechaza_sin_preparar_nada() {
         let (dir, rutas, db) = montaje("rechazos");
         crear(&db, &rutas, &dir.join("buena")).unwrap();
         let buena = dir.join("buena.nbsound-backup");
@@ -706,7 +705,7 @@ mod tests {
     }
 
     #[test]
-    fn la_copia_automatica_toca_como_en_la_v1() {
+    fn la_copia_automatica_toca() {
         assert!(!vencida(0, None));
         assert!(vencida(7, None));
         assert!(!vencida(7, Some(6 * 86_400)));

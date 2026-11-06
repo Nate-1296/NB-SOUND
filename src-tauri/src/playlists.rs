@@ -1,10 +1,10 @@
 //! Playlists (F2.2.4): las manuales, que el usuario crea y ordena, y las que ya
-//! vienen hechas (las automáticas de la V1 y "Me gusta").
+//! vienen hechas.
 //!
-//! La clasificación es la de la V1 (`servicios/biblioteca.py`,
-//! `clasificacion_sync_playlist`), porque el contrato móvil la envía y el teléfono
-//! agrupa con ella. "Me gusta" es una playlist de verdad con sus filas, como en la
-//! V1: el móvil la recibe así. Se mantiene sola al marcar o desmarcar favoritas.
+//! La clasificación (`clasificacion_sync_playlist`) es la que envía el contrato
+//! móvil, y el teléfono agrupa con ella. "Me gusta" es una playlist de verdad con
+//! sus filas: el móvil la recibe así. Se mantiene sola al marcar o desmarcar
+//! favoritas.
 
 use rusqlite::{Connection, OptionalExtension, Transaction};
 use serde::{Deserialize, Serialize};
@@ -21,9 +21,9 @@ pub use inteligentes::{
     ReglaInteligente,
 };
 
-/// La `clave_auto` de "Me gusta" en la V1 (`PLAYLIST_FAVORITOS_AUTO_KEY`).
+/// La `clave_auto` de "Me gusta" (`PLAYLIST_FAVORITOS_AUTO_KEY`).
 pub const CLAVE_ME_GUSTA: &str = "system:favoritos";
-/// Tope del nombre, el de la V1.
+/// Tope del nombre, el.
 const MAX_NOMBRE: usize = 120;
 /// Cuántas portadas lleva el mosaico de una playlist.
 const PORTADAS_DEL_MOSAICO: i64 = 4;
@@ -35,7 +35,7 @@ fn bd<T>(r: rusqlite::Result<T>) -> NsResult<T> {
     })
 }
 
-/// Cómo agrupa la V1 (y el móvil) una playlist.
+/// Cómo se agrupa una playlist (también en el móvil).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../../src/lib/bindings/")]
 #[serde(rename_all = "camelCase")]
@@ -47,7 +47,7 @@ pub enum Categoria {
     Sistema,
 }
 
-/// La categoría y la etiqueta de la V1.
+/// La categoría y la etiqueta.
 pub fn clasificar(tipo: &str, subtipo: Option<&str>, origen: &str) -> (Categoria, &'static str) {
     let subtipo = subtipo.filter(|s| !s.is_empty()).unwrap_or(match tipo {
         "manual" => "usuario",
@@ -178,7 +178,7 @@ const COLUMNAS: &str =
      WHERE pp.playlist_id = pl.id AND p.estado = 'biblioteca'),
     pl.creada_en, pl.regla";
 
-/// Las playlists visibles, con las ancladas delante como en la V1.
+/// Las playlists visibles, con las ancladas delante.
 ///
 /// # Errors
 ///
@@ -286,7 +286,7 @@ pub fn ids(db: &BaseDeDatos, id: i64) -> NsResult<Vec<i64>> {
 }
 
 fn validar_nombre(tx: &Transaction<'_>, nombre: &str, excluir: Option<i64>) -> NsResult<String> {
-    // Los espacios repetidos cuentan como uno, como en la V1.
+    // Los espacios repetidos cuentan como uno.
     let limpio = nombre.split_whitespace().collect::<Vec<_>>().join(" ");
     if limpio.is_empty() || limpio.chars().count() > MAX_NOMBRE {
         return Err(NsError::InvalidInput);
@@ -392,8 +392,7 @@ pub fn borrar(db: &BaseDeDatos, id: i64) -> NsResult<()> {
     bd(tx.commit())
 }
 
-/// Las playlists manuales que ya tienen la canción (`playlists_para_pista` de la
-/// V1), para que "Añadir a playlist" las marque y deje quitarla.
+/// Las playlists manuales que ya tienen la canción, para que "Añadir a playlist" las marque y deje quitarla.
 ///
 /// # Errors
 ///
@@ -409,7 +408,7 @@ pub fn con_pista(db: &BaseDeDatos, pista: i64) -> NsResult<Vec<i64>> {
 }
 
 /// Duplica cualquier playlist como una manual del usuario, con las mismas
-/// canciones en el mismo orden (`duplicar_playlist` de la V1). Se llama como la
+/// canciones en el mismo orden. Se llama como la
 /// original con "(copia)", y "(copia 2)", "(copia 3)"… si ese ya existe. Una
 /// automática o inteligente se copia tal como está ahora: la copia ya no cambia
 /// sola, que es para lo que se duplica. Devuelve el `id` de la copia.
@@ -457,7 +456,7 @@ pub fn duplicar(db: &BaseDeDatos, id: i64) -> NsResult<i64> {
     Ok(copia)
 }
 
-/// Quita todas las canciones de una playlist manual (`vaciar_playlist` de la V1).
+/// Quita todas las canciones de una playlist manual.
 ///
 /// # Errors
 ///
@@ -565,8 +564,8 @@ pub fn anclar(db: &BaseDeDatos, id: i64, anclada: bool) -> NsResult<()> {
 }
 
 /// Mantiene "Me gusta" al marcar o desmarcar una favorita, dentro de la misma
-/// transacción. La crea si no existe, con los valores de la V1. La recién marcada
-/// va primera, como la ordenaba la V1 (lo último escuchado o marcado, arriba).
+/// transacción. La crea si no existe, con los valores. La recién marcada
+/// va primera (lo último escuchado o marcado, arriba).
 ///
 /// # Errors
 ///

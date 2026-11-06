@@ -6,10 +6,9 @@
 //! de palabras, amplificadores ("muy", "un poco") y la prioridad de la ontología
 //! para lo contradictorio.
 //!
-//! Se guarda en `dj_sesiones.intencion` con las claves y el formato JSON de la V1
-//! (`IntentMusical.to_dict`), para que las sesiones que trajo la V1 se sigan
-//! leyendo y las nuevas se guarden igual. Las notas y el resumen son las frases de
-//! la V1, tal cual, porque forman parte de ese registro.
+//! Se guarda en `dj_sesiones.intencion` con sus claves y formato JSON
+//! (`IntentMusical.to_dict`), para que toda sesión guardada se siga leyendo. Las
+//! notas y el resumen son frases fijas, porque forman parte de ese registro.
 
 use serde::{Deserialize, Serialize};
 
@@ -34,7 +33,7 @@ const RUPTORES: [&str; 8] = ["pero", "but", "aunque", "y", "and", "con", "with",
 const FACTOR_FUERTE: f64 = 1.6;
 const FACTOR_DEBIL: f64 = 0.55;
 
-/// `IntentMusical`, con sus claves de la V1.
+/// `IntentMusical`, con sus claves.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Intencion {
@@ -241,7 +240,7 @@ fn separar(texto: &[char], coincidencias: Vec<Coincidencia>) -> Separadas {
 
 /// Cómo se entendió un pedido, para enseñarlo: los conceptos pedidos y los
 /// evitados, por su nombre en la ontología, y la curva. La vista los traduce;
-/// el `resumen` de [`Intencion`] es el de la V1, sin tildes y con los nombres
+/// el `resumen` de [`Intencion`] es el, sin tildes y con los nombres
 /// internos ("club party"), y se guarda tal cual porque es parte del registro.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Lectura {
@@ -386,8 +385,7 @@ pub fn interpretar(prompt: &str, duracion_minutos: u32) -> Intencion {
 mod tests {
     use super::*;
 
-    /// Las salidas de `parsear_intent` de la V1 para estas frases, generadas con su
-    /// módulo (`to_dict`).
+    /// Las salidas esperadas de `parsear_intent` para estas frases (`to_dict`).
     const DORADAS: &str = include_str!("doradas_intencion.json");
 
     /// Las fichas y las ideas que la vista del DJ ofrece. Una ficha que el motor no
@@ -459,7 +457,7 @@ mod tests {
     }
 
     #[test]
-    fn cada_frase_da_la_misma_intencion_que_la_v1() {
+    fn cada_frase_da_la_intencion_esperada() {
         let doradas: serde_json::Value = serde_json::from_str(DORADAS).unwrap();
         let casos = doradas["intenciones"].as_object().unwrap();
         assert!(casos.len() >= 14);
@@ -510,7 +508,7 @@ mod tests {
     }
 
     #[test]
-    fn el_json_es_el_de_la_v1_y_se_lee_de_vuelta() {
+    fn el_json_tiene_su_forma_y_se_lee_de_vuelta() {
         let i = interpretar("muy energético para entrenar", 45);
         let json = serde_json::to_value(&i).unwrap();
         for clave in [
@@ -534,7 +532,7 @@ mod tests {
         // Desde el texto, que conserva el orden de los mapas; `Value` los ordena.
         let vuelta: Intencion = serde_json::from_str(&serde_json::to_string(&i).unwrap()).unwrap();
         assert_eq!(vuelta, i);
-        // Una de la V1 con claves que falten se lee con sus valores de fábrica.
+        // Una guardada con claves que falten se lee con sus valores de fábrica.
         let vieja: Intencion = serde_json::from_str(r#"{"prompt": "x", "vacio": true}"#).unwrap();
         assert_eq!(
             (vieja.curva_energia.as_str(), vieja.duracion_minutos),

@@ -1,7 +1,7 @@
 //! El azar del DJ: `random.Random` de Python, bit a bit.
 //!
-//! La V1 desempata con `random.Random(semilla).uniform(-0.001, 0.001)`, y una sesión
-//! con semilla tiene que salir igual en la V2 (criterio de la Fase 6). Por eso se
+//! El desempate es `random.Random(semilla).uniform(-0.001, 0.001)`, y una sesión
+//! con semilla tiene que salir siempre igual (criterio de la Fase 6). Por eso se
 //! escribe aquí el Mersenne Twister de CPython (MT19937 sembrado con
 //! `init_by_array` sobre las palabras de 32 bits del valor absoluto de la semilla)
 //! en vez de usar un generador de una dependencia, que daría otra secuencia.

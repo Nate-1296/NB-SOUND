@@ -1,12 +1,10 @@
 //! Leer y escribir etiquetas (F4.1.1), con `lofty`, en todos los formatos que
-//! importa la V2: ID3v2 (MP3, WAV, AIFF), Vorbis (FLAC, Ogg, Opus) y MP4 (M4A).
+//! importa NB Sound: ID3v2 (MP3, WAV, AIFF), Vorbis (FLAC, Ogg, Opus) y MP4 (M4A).
 //!
-//! La V1 solo leía MP3 con `mutagen` (`core/validator.py`) y convertía lo demás con
-//! `ffmpeg`; la V2 no convierte nada (enmienda de ADR-006), así que lee y escribe
+//! NB Sound no convierte nada (enmienda de ADR-006), así que lee y escribe
 //! cada formato en el suyo. Se usan las claves estándar (las de Picard), que
-//! `lofty` traduce a cada formato. Las `TXXX` propias de la V1 (`mb_recording_id`,
-//! `tagger_status`…) no se leen: la V1 solo las escribía en archivos que ya están
-//! en la biblioteca importada, con sus datos en la base.
+//! `lofty` traduce a cada formato. Las `TXXX` propias (`mb_recording_id`,
+//! `tagger_status`…) no se leen: sus datos ya están en la base.
 
 use std::path::Path;
 
@@ -33,7 +31,7 @@ pub struct Cruda {
     pub artista: Option<String>,
     pub album: Option<String>,
     pub artista_album: Option<String>,
-    /// Como lo guarda la V1: `3` o `3/12`.
+    /// `3` o `3/12`.
     pub numero: Option<String>,
     pub anio: Option<String>,
     pub genero: Option<String>,
@@ -124,7 +122,7 @@ pub fn leer(ruta: &Path) -> NsResult<(Tecnico, Cruda)> {
 }
 
 /// Lo que la catalogación escribe en el archivo (`writer._escribir_tags`). Lo
-/// demás que hubiera se conserva, como en la V1.
+/// demás que hubiera se conserva.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Escritura {
     pub titulo: Option<String>,
@@ -169,7 +167,7 @@ pub fn escribir(ruta: &Path, e: &Escritura) -> NsResult<()> {
         };
         poner(ItemKey::TrackTitle, &e.titulo);
         poner(ItemKey::TrackArtist, &e.artista);
-        // La V1 escribía el mismo artista como artista del álbum (TPE2).
+        // El mismo artista, como artista del álbum (TPE2).
         poner(ItemKey::AlbumArtist, &e.artista);
         poner(ItemKey::AlbumTitle, &e.album);
         poner(ItemKey::Isrc, &e.isrc);
@@ -287,19 +285,19 @@ mod tests {
         );
     }
 
-    /// Lo que leía `mutagen` en la V1 sobre un corpus local (`NS_ETIQUETAS_CORPUS`,
-    /// la salida de un volcado de `_extraer_metadata_cruda`). Solo lee; solo cuenta.
+    /// Lo que dice un volcado de referencia sobre un corpus local
+    /// (`NS_ETIQUETAS_CORPUS`). Solo lee; solo cuenta.
     #[test]
     #[ignore = "necesita un corpus local"]
-    fn el_corpus_local_se_lee_como_en_la_v1() {
+    fn el_corpus_local_se_lee_como_dicen_las_doradas() {
         let Ok(ruta) = std::env::var("NS_ETIQUETAS_CORPUS") else {
             return;
         };
-        let v1: Vec<serde_json::Value> =
+        let referencia: Vec<serde_json::Value> =
             serde_json::from_str(&std::fs::read_to_string(ruta).unwrap()).unwrap();
         let mut distintos = std::collections::BTreeMap::<&str, usize>::new();
         let mut duracion_max = 0.0f64;
-        for f in &v1 {
+        for f in &referencia {
             let (t, c) = leer(Path::new(f["ruta"].as_str().unwrap())).unwrap();
             for (campo, nuestro) in [
                 ("titulo", &c.titulo),
@@ -320,7 +318,7 @@ mod tests {
         assert!(
             distintos.is_empty() && duracion_max < 0.1,
             "{} archivos; distintos: {distintos:?}; duración, diferencia máxima {duracion_max:.3} s",
-            v1.len()
+            referencia.len()
         );
     }
 }

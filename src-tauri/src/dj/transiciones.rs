@@ -193,7 +193,7 @@ impl Transicion {
 }
 
 impl Transicion {
-    /// Lee lo que guardó [`Self::a_json`] (o la V1). Sin datos, una transición
+    /// Lee lo que guardó [`Self::a_json`]. Sin datos, una transición
     /// neutra de 4 s, como `TransicionPlan` por defecto.
     #[must_use]
     pub fn desde_json(v: &serde_json::Value) -> Self {

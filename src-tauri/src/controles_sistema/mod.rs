@@ -3,9 +3,8 @@
 //!
 //! El escritorio muestra lo que suena (título, artista, álbum, portada, duración y
 //! posición) y sus botones y las teclas multimedia mandan órdenes al reproductor.
-//! En Linux, aleatorio y repetición van en los dos sentidos. La V1 escribía MPRIS a
-//! mano sobre Qt D-Bus y necesitó cinco correcciones de firmas; aquí lo hace
-//! `mpris-server`.
+//! En Linux, aleatorio y repetición van en los dos sentidos. MPRIS lo hace
+//! `mpris-server`, en vez de escribirlo a mano sobre D-Bus.
 //!
 //! Recibe las instantáneas del reproductor y resuelve los datos de la pista en su
 //! propio hilo: nada de esto pasa por el hilo de audio ni por el de la ventana.

@@ -68,8 +68,8 @@ pub enum Orden {
     /// El karaoke terminó de preparar esta pista (F5.2.2): si es la que suena, el
     /// micrófono se puede usar sin esperar a la siguiente.
     InstrumentalListo(i64),
-    /// Vuelve a leer la sesión y las preferencias: la primera vez que se abre la
-    /// V2, el importador de la V1 termina con el reproductor ya en marcha.
+    /// Vuelve a leer la sesión y las preferencias: lo usa quien cambia la base con
+    /// el reproductor ya en marcha (restaurar una copia).
     Recargar,
     /// Una sesión del DJ Privado (F6.1.6).
     Dj(OrdenDj),

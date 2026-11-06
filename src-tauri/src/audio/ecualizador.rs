@@ -1,7 +1,6 @@
-//! El ecualizador de 10 bandas con las 18 preselecciones de la V1 (F2.1.3).
+//! El ecualizador de 10 bandas con sus 18 preselecciones (F2.1.3).
 //!
-//! La tabla es la que la V1 extrajo de su propia libVLC
-//! (`legado/servicios/reproductor.py`, `EQ_PRESETS`). Dos cosas cambian respecto
+//! La tabla es la de las preselecciones de libVLC. Dos cosas cambian respecto
 //! a aplicarla tal cual:
 //!
 //! 1. **Ganancias corregidas.** Diez campanas de una octava se solapan: con la
@@ -10,9 +9,9 @@
 //!    estado variable de Simper, `kira::effect::eq_filter`) y se corrigen las
 //!    ganancias por iteración hasta que cada centro da el valor de la tabla.
 //! 2. **Margen.** Los presets traen preamplificación alta (+12 dB en Plano) y
-//!    bandas de hasta +16,8 dB. Como hacía la V1 (`_preamp_con_headroom`), la
-//!    preamplificación aplicada se baja para que preamp más la mayor banda no pase
-//!    de 0 dB: el ecualizador no recorta a ningún volumen.
+//!    bandas de hasta +16,8 dB. La preamplificación aplicada se baja para que
+//!    preamp más la mayor banda no pase de 0 dB: el ecualizador no recorta a
+//!    ningún volumen.
 
 use std::f64::consts::PI;
 
@@ -40,7 +39,7 @@ const fn p(nombre: &'static str, preamp_db: f32, bandas_db: [f32; 10]) -> Presel
     }
 }
 
-/// En el orden de libVLC, que es el índice que guardaba la V1 (`eq_preset`).
+/// En el orden de libVLC, que es el índice que se guarda (`eq_preset`).
 pub const PRESELECCIONES: [Preseleccion; 18] = [
     p("Plano", 12.0, [0.0; 10]),
     p(
@@ -249,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn hay_dieciocho_preselecciones_con_los_nombres_de_la_v1() {
+    fn hay_dieciocho_preselecciones_con_los_nombres() {
         assert_eq!(PRESELECCIONES.len(), 18);
         assert_eq!(PRESELECCIONES[0].nombre, "Plano");
         assert_eq!(PRESELECCIONES[17].nombre, "Techno");

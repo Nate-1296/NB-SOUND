@@ -1,5 +1,5 @@
 /**
- * Los atajos de teclado de la V1 (`Principal.qml`), dentro de la ventana.
+ * Los atajos de teclado, dentro de la ventana.
  *
  * Las teclas multimedia no van aquí: llegan a todo el sistema por MPRIS y SMTC
  * (F2.1.5). Ningún atajo de una sola tecla actúa mientras se escribe en un campo.
@@ -48,7 +48,7 @@ const SIMPLES: Readonly<Record<string, AccionDeAtajo>> = {
   '+': 'subirVolumen',
   '=': 'subirVolumen',
   '-': 'bajarVolumen',
-  // La V1 salía con Escape de la reproducción ampliada (`StandardKey.Cancel`).
+  // Escape sale de la reproducción ampliada (`StandardKey.Cancel`).
   Escape: 'salir'
 };
 

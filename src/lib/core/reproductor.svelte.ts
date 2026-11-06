@@ -139,7 +139,7 @@ class EstadoDelReproductor {
   };
   alternarAleatorio = () => this.orden({ tipo: 'aleatorio', activo: !this.instantanea.aleatorio });
 
-  /** Ninguno, todo y una, en ese orden, como en la V1. */
+  /** Ninguno, todo y una, en ese orden. */
   rotarRepeticion = () => {
     const siguiente: Record<string, string> = { ninguno: 'todo', todo: 'uno', uno: 'ninguno' };
     return this.orden({
@@ -156,7 +156,7 @@ class EstadoDelReproductor {
 
 export const reproductor = new EstadoDelReproductor();
 
-/** `m:ss`, o `h:mm:ss` a partir de una hora, como la V1. */
+/** `m:ss`, o `h:mm:ss` a partir de una hora. */
 export function formatoTiempo(segundos: number): string {
   if (!Number.isFinite(segundos) || segundos < 0) return '0:00';
   const total = Math.floor(segundos);

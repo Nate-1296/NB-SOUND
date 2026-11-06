@@ -3,9 +3,8 @@
 //! # Por qué no es la base de datos
 //!
 //! Una clave de servicio no es un ajuste: la base se respalda, se copia a otra
-//! máquina y se lee en claro con cualquier visor de SQLite. La V1 guardaba sus
-//! cuatro claves en `config_ui`, en texto plano; la V2 no tiene dónde guardarlas
-//! en la base, y una prueba del importador comprueba que no aparecen en ella.
+//! máquina y se lee en claro con cualquier visor de SQLite. NB Sound no tiene dónde
+//! guardarlas en la base: van al llavero del sistema.
 //!
 //! Keychain en macOS, Credential Locker en Windows y Secret Service en el resto:
 //! la librería elige según la plataforma. Portado de NB Books (`secrets.rs`).

@@ -1,29 +1,28 @@
 -- V2: el catálogo (F1.1.2).
 --
--- Destino de cada columna de la V1: docs/engineering/migracion-v1.md. Los `id` de
--- artistas, álbumes y pistas se conservan tal cual al importar, porque NB Sound
+-- Los `id` de artistas, álbumes y pistas no cambian nunca, porque NB Sound
 -- Mobile los tiene guardados (ADR-005); por eso ninguna tabla usa AUTOINCREMENT
--- con huecos propios: el siguiente `id` es el mayor más uno, como en la V1.
+-- con huecos propios: el siguiente `id` es el mayor más uno.
 --
--- Las marcas de tiempo son TEXT. Las de la V1 se copian tal cual, aunque mezclan
+-- Las marcas de tiempo son TEXT y se conservan tal cual, aunque mezclan
 -- `2026-05-24 05:45:57` e ISO 8601 con `Z`, porque el móvil recibe algunas
 -- (`favorita_actualizada_en`) y compara cadenas. Las nuevas son ISO 8601 en UTC.
 --
 -- Cada índice dice qué consulta lo pide. Un índice sin consulta es escritura que
 -- se paga en cada importación sin que nada lo lea.
 
--- Portadas e imágenes de artista. Un archivo por contenido (`sha256`): la V1 tenía
--- la misma portada repetida en cada variante y en cada pista del álbum.
+-- Portadas e imágenes de artista. Un archivo por contenido (`sha256`): la misma
+-- portada no se repite en cada variante ni en cada pista del álbum.
 CREATE TABLE portadas (
     id       INTEGER PRIMARY KEY,
     sha256   TEXT    NOT NULL UNIQUE CHECK (length(sha256) = 64),
-    -- Relativa a la carpeta de portadas de la V2 (`paths.rs`), nunca absoluta.
+    -- Relativa a la carpeta de portadas de NB Sound (`paths.rs`), nunca absoluta.
     ruta     TEXT    NOT NULL,
     ancho    INTEGER NOT NULL CHECK (ancho > 0),
     alto     INTEGER NOT NULL CHECK (alto > 0),
     bytes    INTEGER NOT NULL CHECK (bytes > 0),
     mime     TEXT    NOT NULL CHECK (mime IN ('image/jpeg', 'image/png', 'image/webp')),
-    -- De dónde salió: la etiqueta del archivo, un servicio con su nombre o la V1.
+    -- De dónde salió: la etiqueta del archivo o un servicio, con su nombre.
     origen   TEXT    NOT NULL,
     creada_en TEXT   NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 ) STRICT;
@@ -31,9 +30,8 @@ CREATE TABLE portadas (
 CREATE TABLE artistas (
     id             INTEGER PRIMARY KEY,
     nombre         TEXT    NOT NULL CHECK (nombre <> ''),
-    -- La clave de unicidad: el nombre normalizado. Las de la V1 se copian tal cual
-    -- (`nombre_slug`) y las nuevas siguen la misma regla, para que importar dos
-    -- veces el mismo artista no dé dos filas.
+    -- La clave de unicidad: el nombre normalizado (`nombre_slug`), para que
+    -- importar dos veces el mismo artista no dé dos filas.
     clave          TEXT    NOT NULL UNIQUE CHECK (clave <> ''),
     mbid           TEXT,
     imagen_id      INTEGER REFERENCES portadas (id) ON DELETE SET NULL,
@@ -47,7 +45,7 @@ CREATE INDEX artistas_por_sync_version ON artistas (sync_version);
 CREATE TABLE albumes (
     id             INTEGER PRIMARY KEY,
     -- Sin cascada: borrar un artista no puede llevarse sus álbumes en silencio,
-    -- que es lo que hacía el `ON DELETE CASCADE` de la V1.
+    -- que es lo que hacía el `ON DELETE CASCADE`.
     artista_id     INTEGER NOT NULL REFERENCES artistas (id),
     titulo         TEXT    NOT NULL CHECK (titulo <> ''),
     clave          TEXT    NOT NULL CHECK (clave <> ''),
@@ -80,8 +78,8 @@ CREATE TABLE pistas (
     album_titulo        TEXT    NOT NULL DEFAULT '',
     numero              INTEGER CHECK (numero > 0),
     disco               INTEGER CHECK (disco > 0),
-    -- En segundos con decimales, no en milisegundos: el móvil recibe el valor de la
-    -- V1 con toda su precisión (`285.91020408163263`) y redondearlo lo cambiaría.
+    -- En segundos con decimales, no en milisegundos: el móvil recibe el valor con
+    -- toda su precisión (`285.91020408163263`) y redondearlo lo cambiaría.
     duracion_seg        REAL    CHECK (duracion_seg >= 0),
     anio                INTEGER CHECK (anio BETWEEN 1000 AND 9999),
     genero              TEXT,
@@ -99,7 +97,7 @@ CREATE TABLE pistas (
     sha256              TEXT    CHECK (sha256 IS NULL OR length(sha256) = 64),
     bitrate_kbps        INTEGER CHECK (bitrate_kbps > 0),
     portada_id          INTEGER REFERENCES portadas (id) ON DELETE SET NULL,
-    -- `duplicado`: la deduplicación de la V1 la apartó; no se ve ni va al móvil.
+    -- `duplicado`: la deduplicación la apartó; no se ve ni va al móvil.
     estado              TEXT    NOT NULL DEFAULT 'biblioteca'
                                 CHECK (estado IN ('biblioteca', 'duplicado')),
     -- 0 si se importó tal como estaba desde Por revisar (enmienda de ADR-007).
@@ -132,8 +130,8 @@ CREATE INDEX pistas_favoritas ON pistas (favorita_actualizada_en) WHERE favorita
 -- El filtro "Sin verificar" de Biblioteca.
 CREATE INDEX pistas_sin_verificar ON pistas (id) WHERE verificada = 0;
 
--- Letras. En la V1 vivían fuera de la base, en un manifiesto JSONL indexado por la
--- ruta del archivo; mover un archivo las perdía.
+-- Letras. Viven en la base y no junto al archivo: mover un archivo no las
+-- pierde.
 CREATE TABLE letras (
     pista_id       INTEGER PRIMARY KEY REFERENCES pistas (id) ON DELETE CASCADE,
     planas         TEXT,
@@ -159,9 +157,8 @@ CREATE TABLE importaciones (
     errores        INTEGER NOT NULL DEFAULT 0 CHECK (errores >= 0)
 ) STRICT;
 
--- Por revisar: archivos que no entraron solos (ADR-007, enmienda). La V1 los
--- repartía entre "revisión" y "cuarentena"; la V2 tiene una sola lista y la causa
--- dice la gravedad.
+-- Por revisar: archivos que no entraron solos (ADR-007, enmienda). Una sola
+-- lista, y la causa dice la gravedad.
 CREATE TABLE por_revisar (
     id             INTEGER PRIMARY KEY,
     -- Absoluta: el archivo todavía no está en la carpeta de la música.
@@ -172,7 +169,7 @@ CREATE TABLE por_revisar (
                        'puntaje_bajo', 'escritura_fallida', 'validacion_post_escritura',
                        'duplicado', 'duracion_invalida', 'audio_ilegible')),
     -- JSON: lo que hace falta para "importar tal como está" y para comparar
-    -- candidatos, no el manifiesto entero de la V1.
+    -- candidatos, no el manifiesto entero.
     metadatos      TEXT,
     importacion_id INTEGER REFERENCES importaciones (id) ON DELETE SET NULL,
     registrado_en  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
@@ -182,7 +179,7 @@ CREATE TABLE por_revisar (
 -- La vista Por revisar solo lista lo pendiente.
 CREATE INDEX por_revisar_pendientes ON por_revisar (registrado_en) WHERE resuelto_en IS NULL;
 
--- Correcciones manuales del catálogo (los `overrides_catalogacion` de la V1): una
+-- Correcciones manuales del catálogo: una
 -- regla que, al importar, gana a lo que digan las fuentes.
 CREATE TABLE correcciones_catalogo (
     id             INTEGER PRIMARY KEY,

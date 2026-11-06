@@ -1,6 +1,5 @@
 <!--
-  El detalle de un álbum (`VistaDetalleAlbum.qml` de la V1): la portada grande,
-  título, artista, año y duración, Reproducir, Aleatorio y Editar datos (F4.2.5),
+  El detalle de un álbum: la portada grande, título, artista, año y duración, Reproducir, Aleatorio y Editar datos (F4.2.5),
   y sus canciones en orden.
 -->
 <script lang="ts">

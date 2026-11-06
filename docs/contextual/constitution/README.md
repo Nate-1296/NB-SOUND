@@ -4,15 +4,15 @@
 
 La filosofía marca una dirección; **la Constitución dicta leyes**. Ningún cambio se integra en `main` si rompe una
 de estas reglas. Cada regla dice qué la hace cumplir: una regla sin mecanismo es una intención, y las intenciones
-fueron exactamente lo que dejó a la V1 como está.
+no protegen a nadie.
 
 ---
 
 ## 1. Si hay que salir de la aplicación para instalar algo, la aplicación está mal hecha
 
-La V1 se diseñó para **usar el entorno al que llegaba**: VLC del sistema, el Python del sistema, `pip` para torch y
-Essentia, una vista entera para diagnosticar qué faltaba. NB Books lo resume en su plan como el modo de fallo que
-hundió a la aplicación anterior del mismo autor. No se repite.
+Una aplicación diseñada para **usar el entorno al que llega** (el reproductor del sistema, el Python del sistema,
+`pip` para los modelos, una vista entera para diagnosticar qué falta) es el modo de fallo que NB Books describe en
+su plan. NB Sound no lo repite.
 
 * Todo lo que la aplicación necesita para reproducir, catalogar, sincronizar y editar **viaja dentro del
   instalador**: motor de audio, decodificadores, `ffmpeg`, la huella acústica y el runtime de inferencia.
@@ -36,17 +36,17 @@ destino nuevo exige un ADR que lo enmiende.
 ## 3. Lo del usuario es intocable
 
 * La biblioteca, las playlists, el historial, los favoritos, los dispositivos emparejados y los stems ya
-  separados **sobreviven a la migración desde la V1** sin pérdida.
-* La V2 **nunca escribe** en la base de datos de la V1 ni en la carpeta de música salvo por una acción explícita
-  del usuario (organizar, reetiquetar).
+  separados **sobreviven a cualquier actualización** sin pérdida.
+* NB Sound **nunca escribe** en la carpeta de música salvo por una acción explícita del usuario (organizar,
+  reetiquetar).
 * Desinstalar no se lleva la biblioteca.
 
-**Mecanismo:** el importador abre la base V1 en solo lectura y tiene prueba de conservación fila a fila
-([ADR-004](../../adr/decisions/ADR-004-datos.md)).
+**Mecanismo:** las migraciones de la base tienen sus pruebas de esquema, y la copia de seguridad guarda todo menos
+el audio ([ADR-004](../../adr/decisions/ADR-004-datos.md)).
 
 ## 4. NB Sound Mobile no se toca
 
-NB Sound Mobile está terminado. La V2 de escritorio es **compatible byte a byte** con su contrato
+NB Sound Mobile está terminado. NB Sound de escritorio es **compatible byte a byte** con su contrato
 (`NB_Sound_Mobile/docs/pc-contract.md`, protocolo `1`): mismas rutas, mismos campos, mismo certificado y la misma
 huella, los mismos `device_token`, los mismos identificadores de pista. Solo se admiten cambios **aditivos**, que el
 cliente ya ignora por diseño.
@@ -54,7 +54,7 @@ cliente ya ignora por diseño.
 Modificar la app móvil solo se justifica si mantener el contrato dejara al escritorio peor de lo que podría ser, y
 entonces exige un ADR que lo demuestre.
 
-**Mecanismo:** las respuestas doradas grabadas a la V1 se reproducen contra el servidor de la V2 en cada
+**Mecanismo:** las respuestas doradas del contrato se reproducen contra el servidor de NB Sound en cada
 verificación ([ADR-005](../../adr/decisions/ADR-005-contrato-movil.md)).
 
 ## 5. Nada sale del dispositivo sin consentimiento

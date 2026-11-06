@@ -1,18 +1,17 @@
-//! Los rasgos básicos de una pista (F4.1.12): `core/audio_features.py` de la V1
+//! Los rasgos básicos de una pista (F4.1.12): `core/audio_features.py`
 //! en modo `light`, sin librosa (ADR-002).
 //!
 //! Los primeros 90 s en mono a 22.050 Hz, y de ahí lo que guarda la tabla
-//! `rasgos`: tempo y pulsos (el seguidor de `librosa.beat.beat_track` 0.11, que
-//! usaba la V1), RMS, centroide, ancho de banda y caída espectral, cruces por
-//! cero, ritmo de ataques, tonalidad y las aproximaciones por regla (energía,
-//! valencia…) con las fórmulas de la V1. El tempo, el RMS, el centroide y los
-//! cruces por cero son los del prototipo F0.4.4, comparados con la V1 en las
-//! 2.397 pistas reales (informe `docs/audit/2026-10-29-prototipo-rasgos.md`).
+//! `rasgos`: tempo y pulsos (el seguidor de `librosa.beat.beat_track` 0.11), RMS,
+//! centroide, ancho de banda y caída espectral, cruces por cero, ritmo de ataques,
+//! tonalidad y las aproximaciones por regla (energía, valencia…) con sus fórmulas.
+//! El tempo, el RMS, el centroide y los cruces por cero son los del prototipo
+//! F0.4.4, medidos en 2.397 pistas reales.
 //!
-//! **La tonalidad es nueva a propósito.** La V1 tomaba el máximo del croma y
-//! decidía el modo por si la nota llevaba sostenido; aquí se correlaciona el
-//! croma medio con los perfiles de Krumhansl y Kessler de las 24 tonalidades.
-//! El croma sale de la STFT y no de la CQT de la V1: con el perfil entero, la
+//! **La tonalidad.** Se correlaciona el croma medio con los perfiles de
+//! Krumhansl y Kessler de las 24 tonalidades, en vez de tomar el máximo del croma
+//! y decidir el modo por si la nota lleva sostenido.
+//! El croma sale de la STFT y no de la CQT: con el perfil entero, la
 //! resolución de la CQT en graves no cambia la decisión y costaría otro
 //! análisis de la señal.
 
@@ -32,14 +31,14 @@ use crate::error::{NsError, NsResult};
 use crate::reproductor::persistencia;
 
 /// La versión del analizador, que va en cada fila: si cambia, la fila caduca
-/// (V4). Las filas que trajo la V1 llevan la suya (`audio_basic_v3`).
+/// (V4).
 pub const VERSION: &str = "v2-basico-1";
 
 const SR: f64 = 22_050.0;
 const N_FFT: usize = 2048;
 const HOP: usize = 512;
 const N_MELS: usize = 128;
-/// `AUDIO_FEATURES_SEGMENT_SECONDS` de la V1.
+/// `AUDIO_FEATURES_SEGMENT_SECONDS`.
 const SEGUNDOS: f64 = 90.0;
 /// `tightness` de `beat_track`.
 const RIGIDEZ: f64 = 100.0;
@@ -199,7 +198,7 @@ fn banco_mel() -> Vec<Vec<f64>> {
 }
 
 /// Las dos envolventes de ataques de `onset_strength`: con la mediana entre
-/// bandas, la que usa `beat_track`, y con la media, la de `onset_rate` de la V1.
+/// bandas, la que usa `beat_track`, y con la media, la de `onset_rate`.
 fn envolventes(potencia: &[Vec<f64>], mel: &[Vec<f64>]) -> (Vec<f64>, Vec<f64>) {
     let mut db: Vec<Vec<f64>> = potencia
         .iter()
@@ -335,7 +334,7 @@ fn mediana(mut v: Vec<f64>) -> f64 {
 ///
 /// El recorte de 0.11 compara la envolvente cruda con un umbral sacado de la
 /// suavizada, cuya ventana suma 2: con golpes casi iguales, recorta de más por los
-/// extremos. Se replica tal cual porque es lo que contaba la V1.
+/// extremos. Se replica tal cual.
 fn pulsos(env: &[f64], bpm: f64) -> Vec<usize> {
     let n = env.len();
     if n < 2 || bpm <= 0.0 || !env.iter().any(|v| *v != 0.0) {
@@ -597,7 +596,7 @@ pub fn de_senal(y: &[f32]) -> NsResult<Rasgos> {
     let (centroide, ancho_banda, caida_espectral) = (cent / nm, ancho / nm, caida / nm);
     let (tonalidad, modo) = tonalidad(&pot);
 
-    // Las aproximaciones de la V1, con sus mismas fórmulas.
+    // Las aproximaciones, con sus mismas fórmulas.
     let t = bpm.unwrap_or(0.0);
     let brillo = recortar(centroide / 4000.0);
     let energia = recortar(rms_media * 3.0);
@@ -654,8 +653,8 @@ pub fn analizar(ruta: &Path) -> NsResult<Rasgos> {
 
 // --- En segundo plano ----------------------------------------------------------------
 
-/// Las preferencias de la V1 que lo gobiernan: el análisis encendido y "analizar
-/// al importar", las dos de fábrica en sí.
+/// Las preferencias que lo gobiernan: el análisis encendido y "analizar al
+/// importar", las dos de fábrica en sí.
 fn activado(db: &BaseDeDatos) -> bool {
     let Ok(conn) = db.conexion() else {
         return false;
@@ -679,7 +678,7 @@ struct Pendiente {
     sha256: Option<String>,
 }
 
-/// Las pistas sin rasgos: lo que llega en las importaciones. Las filas de la V1
+/// Las pistas sin rasgos: lo que llega en las importaciones. Las filas
 /// se respetan, aunque su versión sea otra: las midió con paridad comprobada.
 fn pendientes(db: &BaseDeDatos, saltar: &[i64]) -> NsResult<Vec<Pendiente>> {
     let conn = db.conexion()?;
@@ -743,7 +742,7 @@ fn guardar(db: &BaseDeDatos, p: &Pendiente, r: Option<&Rasgos>) -> NsResult<()> 
             r.map(|r| r.modo.to_owned()).into(),
             r.and_then(|r| finito(r.rms_media)).into(),
             r.and_then(|r| finito(r.rms_desviacion)).into(),
-            // `loudness_proxy` de la V1 era la media del RMS.
+            // `loudness_proxy` es la media del RMS.
             r.and_then(|r| finito(r.rms_media)).into(),
             r.and_then(|r| finito(r.centroide)).into(),
             r.and_then(|r| finito(r.ancho_banda)).into(),
@@ -789,7 +788,7 @@ fn guardar(db: &BaseDeDatos, p: &Pendiente, r: Option<&Rasgos>) -> NsResult<()> 
     tx.commit().map_err(|_| NsError::StorageFailure)
 }
 
-/// `derive_vibe_tags` y `derive_deep_vibe_tags` de la V1: cada aproximación que
+/// `derive_vibe_tags` y `derive_deep_vibe_tags`: cada aproximación que
 /// llega a 0,35 da su etiqueta de ambiente, con la puntuación como confianza.
 /// Sustituye las de esa fuente: un nuevo análisis no deja etiquetas viejas. Las
 /// usan las listas por ánimo y el DJ, que penaliza la pista cuyo ambiente nombra
@@ -866,7 +865,7 @@ mod tests {
     use super::*;
 
     /// Un tempo de la rejilla de librosa (`60 · sr / (hop · lag)`): el estimador
-    /// solo puede dar esos valores, igual que en la V1. 120 BPM cae entre 117,45
+    /// solo puede dar esos valores. 120 BPM cae entre 117,45
     /// y 123,05.
     fn en_la_rejilla(lag: usize) -> f64 {
         60.0 * SR / (HOP * lag) as f64
@@ -953,7 +952,7 @@ mod tests {
     }
 
     #[test]
-    fn las_aproximaciones_siguen_las_formulas_de_la_v1_y_quedan_entre_cero_y_uno() {
+    fn las_aproximaciones_siguen_sus_formulas_y_quedan_entre_cero_y_uno() {
         let r = de_senal(&golpes(128.0, 20.0)).unwrap();
         for v in [
             r.brillo,
@@ -993,7 +992,7 @@ mod tests {
     }
 
     #[test]
-    fn lo_importado_se_analiza_una_vez_y_lo_de_la_v1_se_respeta() {
+    fn lo_importado_se_analiza_una_vez_y_lo_anterior_se_respeta() {
         use crate::audio::pruebas::wav;
         let d = std::env::temp_dir().join(format!("ns-rasgos-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
@@ -1004,7 +1003,7 @@ mod tests {
         let db = BaseDeDatos::en_memoria().unwrap();
         let conn = db.conexion().unwrap();
         conn.execute(
-            "INSERT INTO pistas (id, titulo, ruta) VALUES (1, 'nueva', ?1), (2, 'de la v1', 'x.mp3')",
+            "INSERT INTO pistas (id, titulo, ruta) VALUES (1, 'nueva', ?1), (2, 'anterior', 'x.mp3')",
             [ruta.to_string_lossy()],
         )
         .unwrap();
@@ -1027,14 +1026,14 @@ mod tests {
             .unwrap();
         assert_eq!(version, VERSION);
         assert!((bpm / en_la_rejilla(22) - 1.0).abs() < 1e-9, "{bpm}");
-        let v1: f64 = db
+        let guardado: f64 = db
             .conexion()
             .unwrap()
             .query_row("SELECT bpm FROM rasgos WHERE pista_id = 2", [], |f| {
                 f.get(0)
             })
             .unwrap();
-        assert_eq!(v1, 99.0);
+        assert_eq!(guardado, 99.0);
         let _ = std::fs::remove_dir_all(&d);
     }
 

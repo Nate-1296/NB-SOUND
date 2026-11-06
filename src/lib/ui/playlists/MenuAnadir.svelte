@@ -1,7 +1,7 @@
 <!--
   @component
-  "Añadir a playlist" desde cualquier canción (`MenuAgregarPlaylist.qml` de la V1):
-  las playlists manuales y, arriba, crear una nueva con la canción dentro.
+  "Añadir a playlist" desde cualquier canción: las playlists manuales y, arriba,
+  crear una nueva con la canción dentro.
 -->
 <script lang="ts">
   import { notificar } from '#lib/core/notificaciones.svelte.ts';

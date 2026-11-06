@@ -1,6 +1,6 @@
 //! Las sesiones del DJ en la base: el CRUD de `servicios/dj_privado/persistencia.py`
 //! sobre `dj_sesiones`, `dj_sesion_pistas`, `dj_eventos`, `dj_preferencias` y
-//! `dj_en_curso` (V6). Los estados, los tipos de evento y los JSON son los de la V1,
+//! `dj_en_curso` (V6). Los estados, los tipos de evento y los JSON son los,
 //! para que las sesiones importadas se lean igual que las nuevas.
 
 use rusqlite::{params, OptionalExtension};
@@ -189,7 +189,7 @@ pub struct PistaDeSesion {
     pub puntuacion: f64,
     pub puntuacion_transicion: f64,
     pub razones: Vec<String>,
-    /// La transición que la trae, con las claves de la V1; `{}` en la primera.
+    /// La transición que la trae, con las claves; `{}` en la primera.
     #[ts(type = "Record<string, unknown>")]
     pub transicion: serde_json::Value,
     pub estado: String,
@@ -230,7 +230,7 @@ pub fn pistas(db: &BaseDeDatos, id: i64) -> NsResult<Vec<PistaDeSesion>> {
     bd(filas.collect())
 }
 
-/// Lo que se hizo con una pista durante la sesión, con los tipos de la V1.
+/// Lo que se hizo con una pista durante la sesión, con los tipos.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Evento {
     Reproducida,
@@ -361,8 +361,8 @@ pub fn guardar_preferencia(
 
 /// Dónde iba la sesión que sonaba al cerrar (`dj_en_curso`). La pista se guarda por
 /// su posición en la sesión, que no cambia, y no por su índice en el reproductor,
-/// que cambia si se salta una pista ilegible: la V1 guardaba también el id de la
-/// pista para no perderse por eso.
+/// que cambia si se salta una pista ilegible; se guarda también su id para no
+/// perderse por eso.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct EnCurso {
     pub sesion: i64,

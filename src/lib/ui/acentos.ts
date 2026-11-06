@@ -1,11 +1,10 @@
 /**
  * Los acentos de NB Sound.
  *
- * Son los 63 temas de la V1 (`legado/ui/modelos_qml.py`, `_TEMAS`) reducidos a lo
- * que Material 3 necesita de ellos: una semilla. En la V2 el tema es claro, oscuro
- * o el del sistema, y el color sale de la portada que suena o de uno de estos
- * acentos (ADR-008). Se conservan id y nombre para que el importador traduzca la
- * preferencia de la V1 sin perderla.
+ * Son los 63 temas reducidos a lo que Material 3 necesita de ellos: una semilla.
+ * En NB Sound el tema es claro, oscuro o el del sistema, y el color sale de la
+ * portada que suena o de uno de estos acentos (ADR-008). Cada uno conserva su id y
+ * su nombre.
  */
 
 export interface Acento {
@@ -80,5 +79,5 @@ export const ACENTOS: readonly Acento[] = [
   { id: 'grafito_radioactivo', nombre: 'Grafito Radioactivo', semilla: '#90e040' }
 ];
 
-/** El acento de fábrica: el tema por defecto de la V1, `negro_puro`. */
+/** El acento de fábrica: el tema por defecto, `negro_puro`. */
 export const ACENTO_POR_DEFECTO: Acento = ACENTOS[0] as Acento;

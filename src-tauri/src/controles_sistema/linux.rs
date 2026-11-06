@@ -61,7 +61,7 @@ pub struct Controles {
 }
 
 fn repeticion(texto: &str) -> LoopStatus {
-    match Repeticion::desde_v1(texto) {
+    match Repeticion::desde_texto(texto) {
         Some(Repeticion::Todo) => LoopStatus::Playlist,
         Some(Repeticion::Uno) => LoopStatus::Track,
         _ => LoopStatus::None,

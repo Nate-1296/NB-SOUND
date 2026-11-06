@@ -8,7 +8,6 @@
 **Producto:** NB Sound (Desktop App - WebKitGTK / Tauri 2 / Svelte 5)  
 **Versión evaluada:** 2.0.2 (Entorno real de ejecución en Linux Wayland / KDE Plasma 6 / CachyOS)  
 **Documento:** `docs/plan/observaciones-2-antes-pruebas-finales.md`  
-**Referencia previa:** `docs/plan/observaciones-antes-pruebas-finales.md`  
 **Rol:** QA Tester Senior & Analista de Pruebas Senior  
 **Fecha:** Noviembre 2026 (Pruebas Dinámicas en Vivo: Navegación, Ergonomía, Responsividad e Interacción)  
 
@@ -18,7 +17,7 @@
 
 Como QA Tester Senior y Analista de Pruebas Senior, he procedido a levantar e interactuar exhaustivamente sobre la instancia viva de **NB Sound** instalada directamente en el portátil bajo el entorno de producción (`/usr/bin/nb-sound` en Wayland, resolución física 1920x1080 con escalado fraccional 1.25x en KDE Plasma 6.8). 
 
-Se contrastó el comportamiento en tiempo real contra los contratos arquitectónicos del repositorio (`CLAUDE.md`, ADR-007, ADR-008, `contrato-reproductor.md`, `pruebas-finales.md`) y contra los estándares consolidados de usabilidad multimedia (Spotify Desktop, Apple Music, Tidal y el referente interno `NB_Books`).
+Se contrastó el comportamiento en tiempo real contra los contratos arquitectónicos del repositorio (`CLAUDE.md`, ADR-007, ADR-008, `pruebas-finales.md`) y contra los estándares consolidados de usabilidad multimedia (Spotify Desktop, Apple Music, Tidal y el referente interno `NB_Books`).
 
 ### Diagnóstico de la Sesión de Pruebas en Vivo
 
@@ -28,7 +27,7 @@ Si bien las correcciones previas de la primera ronda mitigaron los bloqueos de s
 2. **Saludos desfasados respecto a la hora real:** A las 00:30 de la noche / madrugada, la cabecera de Inicio da la bienvenida con *"Buenos días, Nate. Elige el primer tono del día"* o *"Nate, abre la mañana con algo tuyo"*, debido a una condición temporal binaria defectuosa en el cálculo de horas.
 3. **Controles y barras estáticas insensatas:** La presencia de 24 barras verticales fijas en la cabecera de Inicio (`EcualizadorBarras.svelte`), que no reaccionan al audio en reposo y flotan solitarias al maximizar o caen en bloque al encoger la ventana, genera una sensación inmediata de diseño inacabado o depuración residual.
 4. **Selectores que parecen páginas web y no una aplicación de escritorio:** Los controles de ordenación en Biblioteca, selección de copia en Ajustes y preselección del ecualizador son etiquetas HTML `<select>` nativas sin estilar como popover de escritorio, rompiendo la inmersión del producto.
-5. **Imposibilidad de cambiar la foto de perfil y ambigüedad de identidad:** No existe interfaz para actualizar la foto de perfil del usuario (migrada de la V1), mientras que el logotipo circular con la silueta en la barra lateral se percibe visualmente como el avatar propio, provocando frustración.
+5. **Imposibilidad de cambiar la foto de perfil y ambigüedad de identidad:** No existe interfaz para actualizar la foto de perfil del usuario, mientras que el logotipo circular con la silueta en la barra lateral se percibe visualmente como el avatar propio, provocando frustración.
 6. **Desiertos de espacio y falta de dinamismo transversal:** Pantallas como el detalle de un álbum o el juego "A ciegas" dejan entre un 70% y un 80% del área de trabajo como un abismo negro sin textura, sin gradientes, sin carruseles complementarios ni información contextual.
 7. **Rupturas al redimensionar la ventana:** En resoluciones compactas (~850px o modo mosaico/tiling), la navegación de Ajustes trunca y oculta secciones vitales (`Privacidad`, `IA`, `Acerca de`) fuera del borde derecho de la pantalla sin scroll ni indicador, mientras que el control deslizante de volumen de la barra inferior se volatiliza.
 8. **Omisiones en navegación de catálogo:** La vista de artista carece por completo de la sección de álbumes / discografía, mostrando únicamente una lista plana de canciones desordenadas.
@@ -247,7 +246,7 @@ Si bien las correcciones previas de la primera ronda mitigaron los bloqueos de s
 ### [EXP] EXP-01 (QA-15): Imposibilidad de cambiar o configurar la foto de perfil del usuario
 - **Ubicación:** `src/lib/ui/perfil/VistaTuMusica.svelte` y `src/routes/ajustes/+page.svelte`.
 - **Comportamiento observado:**  
-  El usuario ve su nombre "Nate" y su foto importada de la V1 en la cabecera de `Tu música`. Sin embargo, no existe ninguna forma de cambiar la imagen: ni haciendo clic en el círculo, ni mediante arrastrar y soltar, ni en los Ajustes generales.
+  El usuario ve su nombre "Nate" y su foto importada en la cabecera de `Tu música`. Sin embargo, no existe ninguna forma de cambiar la imagen: ni haciendo clic en el círculo, ni mediante arrastrar y soltar, ni en los Ajustes generales.
 - **Confusión adicional:**  
   El logotipo grande de la marca en la parte superior de la barra lateral (la silueta de mujer con auriculares dentro de un círculo teñido) parece a simple vista un avatar de perfil. El usuario intenta hacer clic sobre él esperando editar su perfil o acceder a sus datos personales.
 - **Expectativa QA:**  
@@ -261,7 +260,7 @@ Si bien las correcciones previas de la primera ronda mitigaron los bloqueos de s
 - **Comportamiento observado:**  
   Al entrar al detalle de un artista (por ejemplo, Adele, que indica *"9 álbumes · 35 pistas"*), la pantalla muestra el nombre del artista, los botones de Reproducir/Aleatorio, y a continuación únicamente un encabezado *"Canciones"* con las 35 canciones en una lista plana. **Los 9 álbumes no aparecen por ninguna parte**.
 - **Qué espera el usuario:**  
-  En Spotify, Apple Music, YouTube Music y en la propia V1 de NB Sound, la página de un artista se organiza con:
+  En Spotify, Apple Music y YouTube Music, la página de un artista se organiza con:
   1. Canciones populares / Más escuchadas.
   2. **Discografía / Álbumes:** Cuadrícula o carrusel horizontal con las portadas de sus álbumes para poder entrar a escuchar un álbum específico.
   3. Sencillos y EPs.

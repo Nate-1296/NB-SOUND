@@ -1,4 +1,4 @@
-//! Portadas e imágenes de artista (F4.1.10): `core/assets_pipeline.py` de la V1.
+//! Portadas e imágenes de artista (F4.1.10): `core/assets_pipeline.py`.
 //!
 //! - **Pista**: la que trae el archivo en sus etiquetas.
 //! - **Álbum**: Cover Art Archive (el lanzamiento y, si no, su grupo) y, si no
@@ -6,9 +6,9 @@
 //! - **Artista**: TheAudioDB (si hay clave), Deezer, iTunes y Wikipedia, cada uno
 //!   con su puntuación; gana la mayor.
 //!
-//! La V1 guardaba dos copias de cada imagen, la normal y la HD; la V2 guarda una
-//! sola por contenido, la HD si existe (P11), y las miniaturas salen de ella
-//! (`portadas.rs`). Solo JPEG y PNG, los dos formatos que decodifica la V2.
+//! Una sola imagen por contenido, la de más resolución si la hay (P11), y las
+//! miniaturas salen de ella (`portadas.rs`). Solo JPEG y PNG, los dos formatos que
+//! decodifica NB Sound.
 
 use std::path::Path;
 
@@ -18,9 +18,9 @@ use sha2::{Digest, Sha256};
 
 use crate::db::{self, BaseDeDatos};
 use crate::error::{NsError, NsResult};
-use crate::importador_v1::archivos::dimensiones_de;
 use crate::net::Servicio;
 use crate::paths::Rutas;
+use crate::portadas::dimensiones_de;
 
 /// `ASSETS_HD_MAX_IMAGE_BYTES` y `ASSETS_MIN_RESOLUTION`.
 const MAX_BYTES: usize = 25_000_000;
@@ -588,7 +588,7 @@ mod tests {
     }
 
     #[test]
-    fn la_imagen_de_artista_sigue_la_puntuacion_de_la_v1() {
+    fn la_imagen_de_artista_sigue_la_puntuacion() {
         let f = Guardada {
             json: HashMap::from([
                 (

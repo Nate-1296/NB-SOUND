@@ -4,7 +4,6 @@ build
 src-tauri/target
 src-tauri/gen
 pnpm-lock.yaml
-legado
 LICENSE
 
 # Generado por scripts/generar-paletas.mjs: su formato lo decide el generador.

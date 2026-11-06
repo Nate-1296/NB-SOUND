@@ -232,8 +232,8 @@ fn el_ecualizador_elegido_se_guarda_en_las_preferencias() {
 }
 
 #[test]
-fn las_preferencias_de_la_v1_se_leen_tal_como_las_dejo_el_importador() {
-    let e = escenario("eq-v1", &[]);
+fn las_preferencias_guardadas_se_leen_tal_cual() {
+    let e = escenario("eq-guardado", &[]);
     e.db.conexion()
         .unwrap()
         .execute_batch(

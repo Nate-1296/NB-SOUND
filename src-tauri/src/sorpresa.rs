@@ -1,14 +1,14 @@
 //! "Sorpréndeme" (tecla D): una canción elegida al azar entre las que conviene
-//! redescubrir. Es `sorprenderme` de la V1 (`ui/modelos_qml.py`).
+//! redescubrir (`sorprenderme`).
 //!
-//! No es un sorteo plano. La V1 aparta lo que acaba de sonar y lo que ya sugirió
+//! No es un sorteo plano. Aparta lo que acaba de sonar y lo que ya sugirió
 //! hace poco, evita repetir el artista y el álbum que suenan, puntúa lo demás
 //! (favoritas y algo escuchadas suben; lo escuchado hace poco y lo muy corto o
 //! muy largo bajan) y elige con peso entre las mejores. Elegir siempre la mejor
-//! era determinista y repetía la misma secuencia; el peso conserva el gusto sin
+//! sería determinista y repetiría la misma secuencia; el peso conserva el gusto sin
 //! que cada pulsación empiece en el mismo sitio.
 //!
-//! La memoria de lo sugerido vive en el proceso, como en la V1: al reiniciar la
+//! La memoria de lo sugerido vive en el proceso: al reiniciar la
 //! aplicación se olvida, y no hace falta más.
 
 use std::collections::VecDeque;
@@ -18,7 +18,7 @@ use crate::db::BaseDeDatos;
 use crate::dj::azar::Azar;
 use crate::error::{NsError, NsResult};
 
-/// Lo que la V1 recuerda de sus sugerencias: hasta 32 artistas y 48 álbumes.
+/// Lo que se recuerda de las sugerencias: hasta 32 artistas y 48 álbumes.
 const ARTISTAS_RECIENTES: usize = 32;
 const ALBUMES_RECIENTES: usize = 48;
 
@@ -150,7 +150,7 @@ pub fn elegir(
     Some(elegida.id)
 }
 
-/// Las candidatas: toda la biblioteca, como la V1 (que pedía hasta 3.000).
+/// Las candidatas: toda la biblioteca (que pedía hasta 3.000).
 ///
 /// # Errors
 ///

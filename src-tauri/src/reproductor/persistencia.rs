@@ -141,7 +141,7 @@ pub fn leer_sesion(conn: &Connection) -> NsResult<Sesion> {
         posicion_seg,
         volumen: volumen as f32,
         aleatorio,
-        repeticion: Repeticion::desde_v1(&repeticion).unwrap_or(Repeticion::Ninguno),
+        repeticion: Repeticion::desde_texto(&repeticion).unwrap_or(Repeticion::Ninguno),
         normalizar,
     })
 }
@@ -227,7 +227,7 @@ pub fn registrar_escucha(
     bd(tx.commit())
 }
 
-/// Las preferencias del ecualizador, como las dejó el usuario (o la V1).
+/// Las preferencias del ecualizador, como las dejó el usuario.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, ts_rs::TS)]
 #[ts(export, export_to = "../../src/lib/bindings/")]
 #[serde(rename_all = "camelCase")]
@@ -268,7 +268,7 @@ pub fn leer_ecualizador(conn: &Connection) -> NsResult<AjustesEcualizador> {
     if let Some(v) = preferencia(conn, "ecualizador_activo")?.and_then(|v| v.as_bool()) {
         a.activo = v;
     }
-    // La V1 guardaba el índice como texto, o "custom" para el personalizado.
+    // El índice se guarda como texto, o "custom" para el personalizado.
     a.preseleccion = match preferencia(conn, "ecualizador_preajuste")? {
         Some(serde_json::Value::String(s)) => s.parse().ok(),
         Some(serde_json::Value::Number(n)) => n.as_u64().map(|n| n as u32),

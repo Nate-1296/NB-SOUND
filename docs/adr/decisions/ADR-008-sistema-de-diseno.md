@@ -2,13 +2,13 @@
 
 **Fecha:** 2026-10-29
 **Estado:** Aceptado
-**Enmendado:** 2026-10-29, por Nathan: la V2 se parece a la V1, no a NB Books. Ver [la enmienda](#enmienda-del-2026-10-29-la-v2-se-parece-a-la-v1)
+**Enmendado:** 2026-10-29, por Nathan: NB Sound tiene su propia apariencia. Ver [la enmienda](#enmienda-del-2026-10-29-la-apariencia-de-nb-sound)
 
 ## Contexto
 
-La V1 tiene su propio sistema de temas: unas 60 paletas con nombre (`acero_azul`, `aurora_boreal`, `lava`…) y **un
-PNG del logo por cada paleta** en `ui/qml/assets/logo/`. NB Books adoptó Material 3 con `m3-svelte` (su ADR-014),
-tokens `--m3c-*` generados por `scripts/generar-paletas.mjs` y Material Color Utilities.
+NB Sound tiene su propio sistema de temas: 63 paletas con nombre (`acero_azul`, `aurora_boreal`, `lava`…) y **un
+logo por cada una**. NB Books adoptó Material 3 con `m3-svelte` (su ADR-014), tokens `--m3c-*` generados por
+`scripts/generar-paletas.mjs` y Material Color Utilities.
 
 ## Decisión
 
@@ -19,9 +19,7 @@ tokens `--m3c-*` generados por `scripts/generar-paletas.mjs` y Material Color Ut
   (port en Rust de Material Color Utilities, MIT/Apache-2.0), genera el esquema claro y oscuro, y lo guarda en la
   base por álbum. Se calcula una vez por portada, nunca en el webview. La interfaz cambia de esquema con una sola
   transición corta; en reposo no se anima nada. El sistema tonal de Material 3 garantiza el contraste.
-* Se puede desactivar ("color por portada") y elegir un acento fijo. Las 60 paletas de la V1 pasan a ser
-  **colores semilla** para el acento fijo. Cada tema conserva su logo de la V1 (ver la enmienda del 2026-11-01
-  más abajo).
+* Se puede desactivar ("color por portada") y elegir un acento fijo.
 * La barra de progreso interpola la posición con `requestAnimationFrame` a partir de los eventos de estado del
   motor (reproducir, pausar, seek, duración), solo mientras suena y la ventana es visible. El puente no lleva
   eventos de posición a 30 o 60 Hz.
@@ -30,34 +28,26 @@ tokens `--m3c-*` generados por `scripts/generar-paletas.mjs` y Material Color Ut
 
 ## Consecuencias
 
-- **Positivas:** las dos aplicaciones se ven y se comportan como una familia; NB Sound gana los guardianes de
-  interfaz de NB Books desde el primer día.
-- **Negativas:** se pierden las paletas de la V1 como temas completos; quedan como acentos.
+- **Positivas:** las dos aplicaciones comparten técnica y guardianes; NB Sound gana los guardianes de interfaz de
+  NB Books desde el primer día.
+- **Negativas:** traducir cada tema a los tokens de Material obliga a completar los que el tema no define.
 - **Riesgos:** una portada con colores apagados da un esquema gris. `material-colors` puntúa los colores por croma,
   y si ninguno supera el umbral se usa el acento elegido.
 
-## Enmienda del 2026-10-29: la V2 se parece a la V1
+## Enmienda del 2026-10-29: la apariencia de NB Sound
 
-**Decidido por Nathan:** "No estamos copiando NB Books. Estamos reescribiendo NB Sound y por ello se debe parecer a
-lo que teníamos antes; esto aplica para cualquier vista". NB Books aporta método, estructura, guardianes y la
-técnica de Material 3; **la apariencia y el comportamiento de cada pantalla salen de la V1** (capturas en
-`legado/assets/screens/`, QML en `legado/ui/qml/vistas/`). Las únicas excepciones son los rediseños pedidos
-explícitamente en ADR-007 (Importar, Preparar Karaoke, Ajustes, Estado del Sistema y el modo Pro/Simple).
+**Decidido por Nathan:** "No estamos copiando NB Books". NB Books aporta método, estructura, guardianes y la
+técnica de Material 3; **la apariencia y el comportamiento de cada pantalla son los de NB Sound**.
 
 En consecuencia, lo de arriba cambia en cuatro puntos:
 
-* **Los 63 temas de la V1 vuelven a ser temas completos**, no solo acentos: cada uno traduce sus colores (`fondo`,
-  `superficie`, `texto`, `acento`…) a los tokens `--m3c-*`, de modo que la V2 se ve con el mismo tema que el
-  usuario tenía. El importador trae el tema elegido (en la instalación real, `sangre_dragon`). El color por portada
-  sigue siendo una opción, no la norma.
-* **La tipografía la elige el usuario, como en la V1** (`ui_font_family`; en la instalación real, Fira Sans; de
-  fábrica, Inter). Para no depender de las fuentes del sistema, las familias que se ofrecen viajan dentro de la
-  aplicación con su licencia.
-* **Las listas son continuas, como en la V1**, no páginas como en NB Books. F0.4.7 midió una ventana virtual de alto
+* **Los 63 temas son temas completos**, no solo acentos: cada uno traduce sus colores (`fondo`, `superficie`,
+  `texto`, `acento`…) a los tokens `--m3c-*`. El color por portada es una opción, no la norma.
+* **La tipografía la elige el usuario** (`ui_font_family`; de fábrica, Inter). Para no depender de las fuentes del
+  sistema, las cinco que se ofrecen viajan dentro de la aplicación con su licencia.
+* **Las listas son continuas**, no páginas como en NB Books. F0.4.7 midió una ventana virtual de alto
   fijo con bloques alineados sin un solo fotograma largo con 100.000 filas (P9, cerrada).
-* **Enmienda del 2026-11-01 (Nathan, DIS-02): vuelve un logo por tema.** Descartarlos dejaba la marca naranja en
-  los 62 temas que no lo son. Los 63 PNG de la V1 viven en `static/logos/logo_<tema>.png`, reducidos a 208 px (el
-  doble de lo que se pintan: de 36 MB a 2,6 MB en el instalador); la barra lateral elige el del tema y, si falta,
-  usa `static/logo.png`.
-* La carcasa de la Fase 0 (clara, con acento cian) es provisional: F2.2.1 la ajusta a la disposición de la V1.
+* **Enmienda del 2026-11-01 (Nathan, DIS-02): un logo por tema.** Sin ellos, la marca naranja quedaba en los 62
+  temas que no lo son. Los 63 viven en `static/logos/logo_<tema>.png`, a 208 px (el doble de lo que se pintan); la
+  barra lateral elige el del tema y, si falta, usa `static/logo.png`.
 

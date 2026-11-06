@@ -11,43 +11,35 @@
 
 ## Estado de la fase
 
-**Cerrada el 2026-10-30.** Ver el [informe de cierre](../audit/2026-10-30-cierre-fase-0.md).
+**Cerrada el 2026-10-30.**
 
 | Iteración | Estado | Nota |
 |---|---|---|
 | F0.1.1 Constitución, ADR y plan | Hecha | 2026-10-29 |
 | F0.1.2 Contrato de trabajo (`CLAUDE.md`) | Hecha | 2026-10-29 |
-| F0.1.3 Mover la V1 a `legado/` | Hecha | 2026-10-29. Desde `legado/`, archivo por archivo: 1.207 pruebas pasan y 5 fallan, las cinco por desajustes previos de la V1 (versión de `pyproject.toml` distinta de `infra/version.py`, una prueba de MPRIS desfasada, dos de Ajustes que dependen del `.env` local y una de karaoke). El modo con `pytest-forked` no funciona en este entorno: cada prueba sale con estado 3 |
-| F0.1.4 Documentación de la V1 archivada en `docs/v1/` | Hecha | 2026-10-29 |
 | F0.1.5 Repositorio público de distribución para agregados | Hecha | 2026-10-29: Nathan hizo público `Nate-1296/NB-SOUND` tras revisar que la historia no contiene claves; los agregados irán en sus Releases |
 | F0.2.1 Esqueleto Tauri 2 + SvelteKit 2 + Svelte 5 + m3-svelte | Hecha | Carcasa con los siete destinos, Por revisar condicional y reproductor inerte |
 | F0.2.2 Herramientas idénticas a NB Books | Hecha | `cargo deny check` en verde (avisos, prohibiciones, licencias y orígenes) |
 | F0.2.3 Contrato de errores, tipos generados y frontera del puente | Hecha | 14 códigos canónicos |
 | F0.2.4 Registro con redacción | Hecha | |
 | F0.2.5 Puerta de red con consentimiento | Hecha | De fábrica no sale nada; cada servicio con sus anfitriones |
-| F0.2.6 Rutas estándar por plataforma | Hecha | Carpetas distintas de las de la V1, con prueba |
-| F0.2.7 Tokens de Material 3 compartidos | Hecha | Los 63 temas de la V1 como acentos |
+| F0.2.6 Rutas estándar por plataforma | Hecha | Con prueba de que todo queda bajo la base de pruebas |
+| F0.2.7 Tokens de Material 3 compartidos | Hecha | Los 63 temas como acentos |
 | F0.3.1 `pnpm verify` con los guardianes portados | Hecha | Dieciséis guardianes activos, incluidos los avisos de terceros y el presupuesto del paquete de arranque (hoy 95 KB de 250). `check-transacciones` y `check-listas` se anuncian como pendientes hasta que exista la capa de datos |
-| F0.3.2 Integración continua en tres plataformas | Hecha | Con el repositorio público, el CI corre: convenciones, `pnpm verify`, licencias y el runtime en Linux, Windows y macOS. Primera vez que la V2 se compila y se prueba en Windows y macOS; destapó un enlace a NB Books y una prueba que suponía Linux, ya corregidos |
+| F0.3.2 Integración continua en tres plataformas | Hecha | Con el repositorio público, el CI corre: convenciones, `pnpm verify`, licencias y el runtime en Linux, Windows y macOS. Primera vez que NB Sound se compila y se prueba en Windows y macOS; destapó un enlace a NB Books y una prueba que suponía Linux, ya corregidos |
 | F0.3.3 Binarios empaquetados con hash fijado | Hecha | Linux, Windows y macOS fijados (`fpcalc` 1.6.2, ONNX Runtime 1.31.1). macOS solo en Apple Silicon: ONNX Runtime 1.31 no publica binario para Intel. `ffmpeg` sale del instalador (enmienda de ADR-006) |
 | F0.3.4 Primera puerta de empaquetado | Hecha | Compilado dentro de Ubuntu 22.04 con `scripts/empaquetar-linux.sh` (compilado en Arch exigía glibc 2.44 y no arrancaba en Ubuntu 24.04). La AppImage (90 MB) arranca en Ubuntu 24.04, Ubuntu 22.04 y Debian 12 limpios, con solo la base de escritorio; el `.deb` se instala, arranca y al desinstalarlo los datos del usuario siguen ahí. Pendiente para F7.2.1: `fpcalc` se instala en `/usr/bin` y puede chocar con el paquete `chromaprint`. Windows y macOS: instaladores sin probar todavía |
-| F0.4.1 Prototipo del motor de audio | Hecha | ADR-003 confirmado con tres ajustes; ver el [informe](../audit/2026-10-29-prototipo-motor-audio.md) |
-| F0.4.2 Prototipo de karaoke en ONNX | Hecha | Mismo instrumental que PyTorch (74–95 dB por debajo) a la misma velocidad; se elige fp16. Riesgo nuevo: 9 GB de memoria pico (P8). [Informe](../audit/2026-10-29-prototipo-karaoke.md) |
-| F0.4.3 Prototipo de análisis en ONNX | Hecha | 407 de 407 pistas dentro de 0,01 (peor 0,0041). VGGish y EffNet se retiran: nada los usaba; el agregado queda en ~4 MB. [Informe](../audit/2026-10-29-prototipo-analisis.md) |
-| F0.4.4 Prototipo de rasgos básicos en Rust | Hecha | Tempo igual que la V1 en el 99,7 % de 2.397 pistas; RMS, centroide y ZCR con correlación ≥ 0,9995. La tonalidad nueva se valida a oído en F4.1.12. [Informe](../audit/2026-10-29-prototipo-rasgos.md) |
-| F0.4.5 Respuestas doradas del servidor móvil | Hecha | 36 respuestas (11 endpoints, errores, `Range`, selección y WebSocket) sobre un escenario inventado; grabar dos veces da lo mismo byte a byte. Revelaron campos que el contrato no documenta (las playlists traen `descripcion`, `categoria`, `etiqueta`, `num_pistas`, `cover_url`…), que la V2 también debe dar |
+| F0.4.1 Prototipo del motor de audio | Hecha | ADR-003 confirmado con tres ajustes |
+| F0.4.2 Prototipo de karaoke en ONNX | Hecha | Mismo instrumental que PyTorch (74–95 dB por debajo) a la misma velocidad; se elige fp16. Riesgo nuevo: 9 GB de memoria pico (P8). |
+| F0.4.3 Prototipo de análisis en ONNX | Hecha | 407 de 407 pistas dentro de 0,01 (peor 0,0041). VGGish y EffNet se retiran: nada los usaba; el agregado queda en ~4 MB. |
+| F0.4.4 Prototipo de rasgos básicos en Rust | Hecha | Tempo en el 99,7 % de 2.397 pistas; RMS, centroide y ZCR con correlación ≥ 0,9995. La tonalidad nueva se valida a oído en F4.1.12. |
+| F0.4.5 Respuestas doradas del servidor móvil | Hecha | 36 respuestas (11 endpoints, errores, `Range`, selección y WebSocket) sobre un escenario inventado; grabar dos veces da lo mismo byte a byte. Revelaron campos que el contrato no documenta (las playlists traen `descripcion`, `categoria`, `etiqueta`, `num_pistas`, `cover_url`…), que NB Sound también debe dar |
 | F0.4.6 Huella acústica: `fpcalc` o `rusty-chromaprint` | Hecha | En 66 pistas del corpus, `rusty-chromaprint` 0.3 da la misma longitud pero **ninguna huella idéntica** (entre 96,8 % y 99,7 % de bits iguales; la diferencia está en el remuestreo). Se queda `fpcalc` 1.6.2, que son 5 MB |
 | F0.4.7 Listas virtualizadas en WebKitGTK | Hecha | 0 fotogramas largos con 100.000 filas hasta 30.000 px/s, 268 nodos siempre, sin pedir portadas durante el desplazamiento rápido. Propone enmendar ADR-008 (ventana virtual en lugar de las páginas de NB Books). [Informe](../audit/2026-10-29-prototipo-lista.md) |
 
 ---
 
 ## Subfase 0.1: Gobierno
-
-**F0.1.3 Mover la V1 a `legado/`.**
-Objetivo: dejar la raíz libre para la V2 sin perder la V1 ([ADR-011](../adr/decisions/ADR-011-transicion-del-repositorio.md)).
-Criterio: un solo commit con `git mv` de todo el código, pruebas, empaquetado y requisitos de la V1 a `legado/`;
-`cd legado && pytest` pasa igual que antes; los flujos de `.github/workflows/` de la V1 se retiran; en la raíz solo
-quedan `docs/`, `LICENSE`, los archivos de comunidad y un `README.md` nuevo de la V2.
 
 **F0.1.5 Repositorio público de distribución.**
 Objetivo: un sitio público y estable desde el que descargar agregados e instaladores, porque `NB-SOUND` es privado.
@@ -85,8 +77,8 @@ ruta del usuario es la carpeta de música. Toda ruta que llega de fuera se canon
 (`security::resolve_within`). Criterio: `check:rutas` y `check:plataforma` pasan; pruebas por plataforma de las
 rutas resultantes.
 
-**F0.2.7 Tokens.** `scripts/generar-paletas.mjs` y `src/paletas.css` como en NB Books, con las semillas de la V1
-como acentos ([ADR-008](../adr/decisions/ADR-008-sistema-de-diseno.md)). Criterio: `check:paletas` pasa y
+**F0.2.7 Tokens.** `scripts/generar-paletas.mjs` y `src/paletas.css` como en NB Books, con las semillas de los 63
+temas como acentos ([ADR-008](../adr/decisions/ADR-008-sistema-de-diseno.md)). Criterio: `check:paletas` pasa y
 `check:ui` rechaza un color literal.
 
 ## Subfase 0.3: Verificación y empaquetado
@@ -96,7 +88,7 @@ como acentos ([ADR-008](../adr/decisions/ADR-008-sistema-de-diseno.md)). Criteri
 (`BEGIN IMMEDIATE`), `check-listas` (colecciones con `limit`), `check-network`, `check-registro`, `check-rutas`,
 `check-plataforma`, `check-puente`, `check-paquete` (arranque ≤ 250 KB), `check-paletas`, `check-i18n` y
 `generate-notices --check`. Más un guardián propio, `check-sin-python`, que falla si aparece un intérprete o un
-`.py` fuera de `legado/` y `scripts/prototipos/`. Criterio: `pnpm verify` pasa en limpio y cada guardián tiene una
+`.py`. Criterio: `pnpm verify` pasa en limpio y cada guardián tiene una
 prueba que demuestra que falla cuando debe.
 
 **F0.3.2 Integración continua.** Flujo de verificación y de empaquetado para Linux, Windows y macOS. Criterio: el
@@ -120,26 +112,24 @@ los seis puntos de la tabla de [ADR-003](../adr/decisions/ADR-003-motor-de-audio
 seek < 10 ms, karaoke con 0 muestras de deriva en 5 min, ecualizador dentro de ±0,5 dB, cero vacíos con la CPU al
 100 %, menos del 2 % de un núcleo). Si Kira no pasa, se prueba el motor propio sobre `cpal` antes de cerrar.
 
-**F0.4.2 Karaoke en ONNX.** `htdemucs` en ONNX (fp16 y fp32) con `ort`, en 20 pistas del corpus con stems ya
-generados por la V1. Criterio: diferencia de SDR del instrumental < 0,1 dB respecto a la V1; tiempo por pista y
-memoria pico medidos y no peores que los de la V1 en esta máquina; se elige fp16 o fp32 con esos datos.
+**F0.4.2 Karaoke en ONNX.** `htdemucs` en ONNX (fp16 y fp32) con `ort`, en 20 pistas del corpus con stems de
+referencia. Criterio: diferencia de SDR del instrumental < 0,1 dB respecto al de referencia; tiempo por pista y
+memoria pico medidos; se elige fp16 o fp32 con esos datos.
 
 **F0.4.3 Análisis en ONNX.** Conversión de los 12 modelos `.pb` con `tf2onnx` (script reproducible en
 `scripts/prototipos/`), preprocesado mel de MusiCNN, VGGish y EffNet en Rust, inferencia con `ort`. Criterio: en
-las 407 pistas con análisis en la base de la V1, cada salida difiere menos de 0,01 por clase.
+las 407 pistas con análisis en la base, cada salida difiere menos de 0,01 por clase.
 
 **F0.4.4 Rasgos básicos.** Tempo, energía, centroide, ancho de banda, rolloff, ZCR, onset y croma en Rust; la
-tonalidad con modo mayor o menor (perfiles de Krumhansl) en lugar del `argmax` de la V1. Criterio: tempo dentro de
-±2 % (o 2× / 0,5×) del de la V1 en ≥ 95 % de las 2.397 pistas; el resto de rasgos con una correlación ≥ 0,95; la
-tonalidad nueva se valida a oído en 30 pistas.
+tonalidad con modo mayor o menor (perfiles de Krumhansl) en lugar del `argmax`. Criterio: tempo dentro de
+±2 % (o 2× / 0,5×) del de referencia en ≥ 95 % de las 2.397 pistas; el resto de rasgos con una correlación ≥ 0,95;
+la tonalidad nueva se valida a oído en 30 pistas.
 
-**F0.4.5 Respuestas doradas.** Con el servidor real de la V1 sobre un escenario inventado
-(`src-tauri/tests/contrato_movil/escenario.json`, sin datos del usuario), se graban las respuestas de los 11
-endpoints y del WebSocket, incluidos errores (token inválido, pista sin stems, `Range` parcial), en
-`respuestas.json`, con lo volátil sustituido por marcadores. El grabador está en
-`scripts/prototipos/contrato-movil/grabar.py`; con `--comprobar` vuelve a grabar y exige lo mismo. El arnés de la V2
-(F3) siembra el mismo escenario en su base y compara con estas respuestas, admitiendo solo campos añadidos.
-Criterio: el arnés pasa contra la V1, que es la referencia.
+**F0.4.5 Respuestas doradas.** Sobre un escenario inventado
+(`src-tauri/tests/contrato_movil/escenario.json`, sin datos del usuario), las respuestas de los 11 endpoints y del
+WebSocket, incluidos errores (token inválido, pista sin stems, `Range` parcial), en `respuestas.json`, con lo volátil
+sustituido por marcadores. El arnés de NB Sound (F3) siembra el escenario en su base y compara con estas
+respuestas, admitiendo solo campos añadidos.
 
 **F0.4.6 Huella acústica.** `rusty-chromaprint` 0.3 frente a `fpcalc` en 100 pistas. Criterio: si la huella
 comprimida coincide exactamente y AcoustID devuelve los mismos resultados, se usa el crate y `fpcalc` deja de

@@ -1,7 +1,7 @@
 //! El icono de la bandeja del sistema (F2.1.6): reproducir o pausar, anterior,
 //! siguiente, volver a la ventana y salir, sin tener que buscarla.
 //!
-//! Cerrar la ventana sigue cerrando la aplicación, como en la V1: la bandeja es un
+//! Cerrar la ventana sigue cerrando la aplicación: la bandeja es un
 //! atajo, no un sitio donde la música se queda sonando sin ventana.
 
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};

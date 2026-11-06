@@ -76,16 +76,16 @@ tokio = { version = "1.54.1", features = ["rt-multi-thread", "net", "time", "syn
 tokio-rustls = { version = "0.26.6", default-features = false, features = ["ring", "tls12", "logging"] }
 futures-util = { version = "0.3.34", default-features = false, features = ["std"] }
 mdns-sd = "0.21.6"
-# El certificado autofirmado, cuando no hay identidad de la V1 que conservar.
+# El certificado autofirmado del servidor móvil, la primera vez.
 rcgen = { version = "0.14.10", default-features = false, features = ["crypto", "pem", "ring"] }
 # El QR del emparejamiento: solo la matriz de módulos; la interfaz la dibuja.
 qrcode = { version = "0.14.1", default-features = false }
-# La catalogación (Fase 4): la normalización de texto de la V1 (`utils/text.py`)
-# compara con NFKC/NFD y quita diacríticos, y sus reglas son expresiones
-# regulares. `regex` ya estaba en el árbol por tracing-subscriber.
+# La catalogación (Fase 4): la normalización de texto compara con NFKC/NFD y quita
+# diacríticos, y sus reglas son expresiones regulares. `regex` ya estaba en el
+# árbol por tracing-subscriber.
 unicode-normalization = "0.1.26"
 regex = "1.13.1"
-# Las etiquetas de todos los formatos que importa la V2 (ADR-002).
+# Las etiquetas de todos los formatos que importa NB Sound (ADR-002).
 lofty = "0.25.5"
 # La firma de Shazam (portada de songrec, GPL-3.0+) y los rasgos de F0.4.4: FFT y
 # remuestreo, las mismas versiones que validó el prototipo de rasgos.
@@ -114,7 +114,7 @@ libc = "0.2.191"
 souvlaki = "0.9.3"
 
 [dev-dependencies]
-# Solo en las pruebas: las doradas de la V1 se comparan bit a bit, y el lector por
+# Solo en las pruebas: las doradas se comparan bit a bit, y el lector por
 # defecto puede errar en la última cifra de un `f64`.
 serde_json = { version = "1", features = ["float_roundtrip"] }
 tauri = { version = "2", features = ["test"] }

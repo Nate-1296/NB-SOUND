@@ -6,15 +6,14 @@
 //! curvas dicen, para cada instante del solapamiento, el volumen y las diez bandas
 //! de cada plato; el ejecutor (`audio::mezcla`) las aplica al motor.
 //!
-//! No se porta el cálculo de los puntos de mezcla por RMS: la V1 lo dejaba detrás de
-//! `permitir_rms=False` en el único sitio que lo llamaba.
+//! Los puntos de mezcla no se calculan por RMS (`permitir_rms=False`).
 
 use serde::{Deserialize, Serialize};
 
 pub use super::equipo::{tecnicas, Perfil};
 use super::transiciones::Transicion;
 
-/// `TecnicaMezcla`. Se guarda con los nombres de la V1; el texto que ve el usuario
+/// `TecnicaMezcla`. Se guarda con los nombres; el texto que ve el usuario
 /// sale del diccionario de la interfaz.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ts_rs::TS)]
 #[ts(export, export_to = "../../src/lib/bindings/")]
@@ -43,7 +42,7 @@ pub struct Puntos {
     pub entrada_seg: f64,
     pub salida_seg: f64,
     pub duracion_seg: f64,
-    /// `bpm` o `default`, como la V1.
+    /// `bpm` o `default`.
     pub fuente: &'static str,
 }
 
@@ -96,7 +95,7 @@ pub fn puntos(duracion: f64, bpm: Option<f64>) -> Puntos {
     puntos_por_bpm(duracion, bpm).unwrap_or_else(|| puntos_fijos(duracion))
 }
 
-/// `seleccionar_tecnica`, en el orden de prioridad de la V1, con las razones que
+/// `seleccionar_tecnica`, en el orden de prioridad, con las razones que
 /// explican la decisión.
 #[must_use]
 pub fn seleccionar(
@@ -156,10 +155,10 @@ pub fn solapamiento(tecnica: Tecnica, base: f64) -> f64 {
 /// `curva_volumen`: el volumen lineal de la que sale y de la que entra en el punto
 /// `p` del solapamiento.
 ///
-/// Difiere de la V1 en las capas: allí la que entraba aparecía de golpe al 40 % y la
-/// que salía se cortaba al 40 % al terminar, dos saltos de volumen que el criterio
-/// de la fase no admite. Aquí la que entra sube del 0 al 40 % en el primer 5 % y la
-/// que sale baja a 0 en el último cuarto; entre medias, la curva es la de la V1.
+/// En las capas, la que entra sube del 0 al 40 % en el primer 5 % y la que sale
+/// baja a 0 en el último cuarto: aparecer o cortarse de golpe al 40 % son dos
+/// saltos de volumen que el criterio de la fase no admite. Entre medias, la curva
+/// es la de siempre.
 #[must_use]
 pub fn volumenes(tecnica: Tecnica, p: f64) -> (f64, f64) {
     let p = p.clamp(0.0, 1.0);
@@ -204,9 +203,9 @@ pub fn bandas(tecnica: Tecnica, p: f64) -> ([f32; 10], [f32; 10]) {
             b[1] = 3.0 * p as f32;
         }
         Tecnica::Barrido => {
-            // La V1 movía el corte de banda en banda (`int(round(p * 5))`), con
-            // saltos de 4 dB que se oyen; aquí el corte avanza de forma continua y
-            // coincide con la V1 cuando cae en una banda exacta.
+            // El corte avanza de forma continua: de banda en banda
+            // (`int(round(p * 5))`) da saltos de 4 dB que se oyen. Coincide con el
+            // de bandas cuando cae en una exacta.
             let corte_a = p * 5.0;
             for (i, g) in a.iter_mut().enumerate() {
                 let d = corte_a - i as f64;
@@ -282,7 +281,7 @@ pub fn preparar(
 
 #[cfg(test)]
 mod pruebas {
-    //! Las propiedades de `tests/test_dj_mix_engine.py` de la V1.
+    //! Las propiedades de `tests/test_dj_mix_engine.py`.
 
     use super::*;
 
@@ -466,7 +465,7 @@ mod pruebas {
     fn el_barrido_converge_y_las_demas_no_tocan_las_bandas() {
         let (a, b) = bandas(Tecnica::Barrido, 0.5);
         assert!(a[0] < 0.0 && b[9] < 0.0);
-        // En los extremos, lo mismo que la V1.
+        // En los extremos.
         assert_eq!(bandas(Tecnica::Barrido, 0.0).0, [0.0; 10]);
         let (a, b) = bandas(Tecnica::Barrido, 1.0);
         assert_eq!(
@@ -519,7 +518,7 @@ mod pruebas {
     }
 
     #[test]
-    fn la_tecnica_se_guarda_con_el_nombre_de_la_v1() {
+    fn la_tecnica_se_guarda_con_el_nombre() {
         assert_eq!(
             serde_json::to_string(&Tecnica::SinGraves).unwrap(),
             "\"eq_kill_bass\""

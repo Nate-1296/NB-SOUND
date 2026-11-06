@@ -1,7 +1,7 @@
-//! La auditoría de la biblioteca, rediseñada (inventario de la V1, `core/audit.py`).
+//! La auditoría de la biblioteca, rediseñada.
 //!
-//! La V1 tenía un "doctor" que el usuario lanzaba y que listaba avisos técnicos
-//! (portadas huérfanas, referencias rotas, manifiestos que faltan). La V2 lo hace
+//! Un "doctor" que el usuario tuviera que lanzar, con avisos técnicos (portadas
+//! huérfanas, referencias rotas), no le sirve a nadie. NB Sound lo hace
 //! sola, una vez por arranque y en segundo plano, y solo arregla lo que es suyo:
 //!
 //! - **Portadas huérfanas**: archivos de la carpeta de portadas que ninguna fila
@@ -74,8 +74,8 @@ pub fn auditar(db: &BaseDeDatos, rutas: &Rutas, musica: Option<&Path>) -> NsResu
     };
     let usadas: HashSet<std::path::PathBuf> = filas.iter().map(|(_, r)| dir.join(r)).collect();
     for f in archivos(&dir) {
-        // Lo reciente puede ser de una importación en curso (la de la V1 copia las
-        // portadas antes de dar de alta sus filas): solo cuenta lo de hace una hora.
+        // Lo reciente puede ser de una importación en curso (copia las portadas
+        // antes de dar de alta sus filas): solo cuenta lo de hace una hora.
         let reciente = std::fs::metadata(&f)
             .and_then(|m| m.modified())
             .ok()
@@ -143,9 +143,8 @@ const TANDA_HUELLAS: usize = 200;
 
 /// Corrige, una sola vez, las huellas de contenido que no son las del archivo.
 ///
-/// La V1 calculaba la huella antes de escribir las etiquetas en el archivo, y la
-/// guardaba así: en la biblioteca real solo coincidían 2 de cada 300. Con la
-/// huella vieja, la importación no reconoce un archivo que ya está (lo manda a
+/// Una huella calculada antes de escribir las etiquetas en el archivo no es la del
+/// archivo: con ella, la importación no reconoce un archivo que ya está (lo manda a
 /// Por revisar) y el teléfono marca cada descarga como "sin verificar", porque
 /// comprueba la `x-nb-sound-hash` con la misma regla.
 ///

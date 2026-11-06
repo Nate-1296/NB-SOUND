@@ -1,8 +1,8 @@
 -- V1: metadatos de la propia instalación.
 --
--- Deliberadamente mínima: el esquema del dominio llega en F1.1.2 a F1.1.6, una vez
--- hecho el inventario columna a columna de la V1 (F1.2.1). Esta migración existe
--- para que el motor de migraciones tenga algo real que aplicar.
+-- Deliberadamente mínima: el esquema del dominio llega en las migraciones
+-- siguientes. Esta existe para que el motor de migraciones tenga algo real que
+-- aplicar.
 --
 -- Contrato: docs/adr/decisions/ADR-004-datos.md
 

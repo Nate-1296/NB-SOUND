@@ -1,4 +1,4 @@
-//! El DJ Privado (Fase 6): `servicios/dj_privado/` de la V1.
+//! El DJ Privado (Fase 6): `servicios/dj_privado/`.
 
 pub mod azar;
 pub mod constructor;
@@ -18,7 +18,7 @@ pub mod transiciones;
 
 /// `sum()` de Python 3.12 en adelante, que suma flotantes con la compensación de
 /// Neumaier: un `fold` simple difiere en la última cifra, y esas cifras deciden
-/// desempates y lo que se guarda frente a la V1.
+/// desempates y lo que se guarda.
 pub(crate) fn suma(valores: impl IntoIterator<Item = f64>) -> f64 {
     let (mut total, mut c) = (0.0f64, 0.0f64);
     for x in valores {

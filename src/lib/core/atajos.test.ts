@@ -11,7 +11,7 @@ const t = (key: string, extra: Partial<Tecla> = {}): Tecla => ({
   ...extra
 });
 
-describe('los atajos de la V1', () => {
+describe('los atajos de teclado', () => {
   it('traducen cada tecla a su acción', () => {
     expect(accionDeTecla(t(' '))).toBe('pausarReanudar');
     expect(accionDeTecla(t('ArrowUp'))).toBe('anterior');

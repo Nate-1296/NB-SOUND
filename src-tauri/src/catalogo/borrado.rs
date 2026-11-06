@@ -1,9 +1,9 @@
-//! Quitar canciones de la biblioteca: una a una (`eliminar_pista` de la V1,
+//! Quitar canciones de la biblioteca: una a una (`eliminar_pista`,
 //! `servicios/biblioteca.py`) o las que la deduplicación ya apartó.
 //!
 //! **El archivo va a la papelera del sistema, nunca se borra del todo**, igual que
-//! descartar desde Por revisar (enmienda de ADR-007; ADR-002). La V1 lo borraba sin
-//! vuelta atrás; aquí un clic equivocado se deshace desde el gestor de archivos.
+//! descartar desde Por revisar (enmienda de ADR-007; ADR-002): un clic equivocado se
+//! deshace desde el gestor de archivos.
 //!
 //! **Lo demás lo hace la base.** Las claves foráneas borran en cascada letras,
 //! rasgos, sonoridad, stems, posiciones en playlists y en sesiones del DJ, y la
@@ -197,8 +197,7 @@ pub fn limpiar_duplicados(
 }
 
 /// Dónde está el archivo de una pista, para enseñarlo en el gestor de archivos.
-/// Dentro de la carpeta de la música, o donde diga la base si es absoluta (lo que
-/// trajo la V1 de fuera de ella).
+/// Dentro de la carpeta de la música, o donde diga la base si es absoluta.
 ///
 /// # Errors
 ///

@@ -57,7 +57,7 @@ hacía falta y la aplicación se repara sola.
 - Barra de reproducción de forma fija; la favorita, añadir a una playlist, el minirreproductor y dónde suena pasan
   al menú ···, con Sorpréndeme.
 - Inicio sin cifras, con el saludo junto a Sorpréndeme y un podio nuevo para el top 10.
-- Biblioteca › Pistas, Buscar y las canciones de un artista vuelven a la lista de la V1, sin cabecera ni números.
+- Biblioteca › Pistas, Buscar y las canciones de un artista son una lista sin cabecera ni números.
 - Playlists: las ancladas llevan su distintivo; la barra lateral pierde las ancladas.
 - Buscar: el mejor resultado por parecido y las canciones cuyo título empieza así, primero.
 - Pantalla completa sin franja vacía; la letra que avanza ya no cuenta como movimiento del ratón.
@@ -202,9 +202,7 @@ Resolución de hallazgos de auditoría de interfaz: pulido estético (DIS-01 a D
 
 ## [2.0.0] — 2026-10-31
 
-La reescritura completa de NB Sound: de Python y Qt a Tauri 2, Rust y Svelte. Lee la biblioteca de la V1 (1.1.16)
-la primera vez que se abre y conserva escuchas, favoritas, playlists, letras, karaoke y sesiones del DJ. Sigue
-hablando con NB Sound Mobile con el mismo contrato.
+NB Sound sobre Tauri 2, Rust y Svelte. Habla con NB Sound Mobile por su contrato.
 
 ### Nuevo o rediseñado
 
@@ -214,11 +212,11 @@ hablando con NB Sound Mobile con el mismo contrato.
 - **Siete destinos** en vez de dieciocho vistas: Inicio, Biblioteca, Playlists, DJ Privado, A ciegas, Tu música y
   Ajustes. Sin Modo Pro. Lo que no se pudo importar aparece en **Por revisar**, con su motivo.
 - **Importar es arrastrar**, o "Añadir música"; la carpeta de música se vigila sola.
-- **Reproducción sin cortes** entre pistas, ecualizador de diez bandas con las preselecciones de la V1,
+- **Reproducción sin cortes** entre pistas, ecualizador de diez bandas con dieciocho preselecciones,
   normalización de volumen y karaoke con el micrófono de la barra, que prepara el instrumental mientras suena el
   original.
 - **El DJ Privado** mezcla en el mismo reproductor con cinco técnicas, sin clics ni saltos de volumen. Con la misma
-  semilla construye la misma sesión que la V1.
+  semilla construye siempre la misma sesión.
 - **A ciegas**: el fragmento suena sin que la barra ni el móvil digan qué canción es.
 - **Actualizaciones desde la aplicación**, firmadas y solo si se piden.
 - **Privacidad**: nada sale a la red sin consentimiento, servicio a servicio; los secretos van al llavero del

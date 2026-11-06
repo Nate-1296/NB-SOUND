@@ -1,8 +1,7 @@
 <!--
   @component
   Por revisar (F4.2.4, enmienda de ADR-007): lo que no entró solo, cada archivo
-  como "No importado" con su motivo en lenguaje llano y sus acciones. Sustituye a
-  Cuarentena y Revisión de la V1.
+  como "No importado" con su motivo en lenguaje llano y sus acciones.
 
   Importar tal como está avisa antes de lo que le faltará; descartar lo manda a
   la papelera del sistema.

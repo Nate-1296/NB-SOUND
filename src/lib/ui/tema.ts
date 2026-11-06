@@ -11,7 +11,7 @@
  */
 
 import { ACENTO_POR_DEFECTO } from './acentos';
-import type { TemaV1 } from './temas-v1';
+import type { TemaDelCatalogo } from './temas';
 
 /** Lo que elige el usuario. `sistema` sigue al sistema operativo. */
 export type Tema = 'sistema' | 'claro' | 'oscuro';
@@ -111,12 +111,12 @@ function textoSobre(hex: string, claro: string, oscuro: string): string {
 }
 
 /**
- * Las variables de Material de un tema de la V1. Se parte de la paleta que Material
+ * Las variables de Material de un tema. Se parte de la paleta que Material
  * genera desde su acento, para que no falte ningún token, y encima se ponen los
- * colores de la V1 donde cada uno corresponde: así el tema se ve como en la V1 y
- * los componentes que usan tokens que la V1 no tenía siguen siendo coherentes.
+ * colores del tema donde cada uno corresponde: así el tema se ve y los componentes
+ * que usan tokens que el tema no define siguen siendo coherentes.
  */
-export async function variablesDeTemaV1(tema: TemaV1): Promise<Record<string, string>> {
+export async function variablesDeTema(tema: TemaDelCatalogo): Promise<Record<string, string>> {
   const c = tema.colores;
   const oscuro = luminancia(c.fondo) < 0.4;
   const { generarVariablesM3 } = await import('./generadorM3');
@@ -150,21 +150,21 @@ export async function variablesDeTemaV1(tema: TemaV1): Promise<Record<string, st
   };
 }
 
-/** El tema de fábrica, como en la V1 (`negro_puro` era su valor por defecto). */
-export const TEMA_V1_DE_FABRICA = 'negro_puro';
+/** El tema de fábrica (`negro_puro` era su valor por defecto). */
+export const TEMA_DE_FABRICA = 'negro_puro';
 
 /**
- * Aplica un tema de la V1 al elemento raíz. Devuelve las variables aplicadas, que
- * la carcasa guarda para pintar el siguiente arranque sin esperar al runtime.
+ * Aplica un tema del catálogo al elemento raíz. Devuelve las variables aplicadas,
+ * que la carcasa guarda para pintar el siguiente arranque sin esperar al runtime.
  */
-export async function aplicarTemaV1(
+export async function aplicarTema(
   raiz: HTMLElement,
   id: string
 ): Promise<Record<string, string> | null> {
-  const { TEMAS_V1 } = await import('./temas-v1');
-  const tema = TEMAS_V1.find((t) => t.id === id);
+  const { TEMAS } = await import('./temas');
+  const tema = TEMAS.find((t) => t.id === id);
   if (!tema) return null;
-  const variables = await variablesDeTemaV1(tema);
+  const variables = await variablesDeTema(tema);
   aplicarVariables(raiz, variables, luminancia(tema.colores.fondo) < 0.4);
   return variables;
 }

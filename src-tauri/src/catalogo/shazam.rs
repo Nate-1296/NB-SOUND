@@ -1,7 +1,6 @@
 //! Shazam (F4.1.5): la firma acústica, la consulta y su respuesta.
 //!
-//! La V1 usaba `shazamio`, cuyo núcleo (`shazamio-core`) es la firma de
-//! `songrec`. Aquí está portada de `songrec` 0.8 (GPL-3.0+, como NB Sound):
+//! La firma está portada de `songrec` 0.8 (GPL-3.0+, como NB Sound):
 //! `core/fingerprinting/algorithm.rs` y `signature_format.rs`. Es una API no
 //! oficial (ADR-009): si cambia, Shazam deja de identificar y la catalogación
 //! sigue con las demás fuentes.
@@ -25,12 +24,12 @@ use crate::error::{NsError, NsResult};
 use crate::net::{Red, Servicio};
 
 const TASA: u32 = 16_000;
-/// La ventana que mandan los clientes de Shazam y la que usaba la V1
-/// (`shazamio`, `WINDOW_SECONDS`): 10 s del centro. `songrec` usa 12.
+/// La ventana que mandan los clientes de Shazam (`WINDOW_SECONDS`): 10 s del
+/// centro. `songrec` usa 12.
 const VENTANA_SEG: f64 = 10.0;
 #[cfg(test)]
 const MUESTRAS: usize = 12 * TASA as usize;
-/// `SHAZAM_MIN_DURACION_SEG` de la V1: no se manda nada más corto.
+/// `SHAZAM_MIN_DURACION_SEG`: no se manda nada más corto.
 pub const DURACION_MINIMA_SEG: f64 = 20.0;
 
 /// Un pico: en qué pasada de FFT, con qué magnitud y en qué frecuencia (en
@@ -315,7 +314,7 @@ fn uuid_v4() -> NsResult<String> {
     ))
 }
 
-/// Lo que contesta Shazam, como lo leía la V1 (`_identificar_async`).
+/// Lo que contesta Shazam (`_identificar_async`).
 pub fn interpretar(r: &Value) -> DeShazam {
     let Some(t) = r.get("track") else {
         return DeShazam::default();
@@ -475,7 +474,7 @@ mod tests {
     }
 
     #[test]
-    fn la_respuesta_se_lee_como_en_la_v1() {
+    fn la_respuesta_se_lee() {
         let r = serde_json::json!({"track": {"title": " Despacito ", "subtitle": "Luis Fonsi",
             "isrc": "USUM71700626",
             "sections": [{"type": "SONG", "metadata": [
@@ -500,13 +499,13 @@ mod tests {
         assert_eq!(&u[14..15], "4");
     }
 
-    /// Contra `shazamio_core` de la V1 sobre un archivo local (`NS_SHAZAM_ARCHIVO` y
-    /// `NS_SHAZAM_PICOS`, los bytes de cada banda que dio la V1, separados por
-    /// comas). El remuestreo no es el mismo, así que se pide parecido, no igual.
+    /// Contra una firma de referencia de un archivo local (`NS_SHAZAM_ARCHIVO` y
+    /// `NS_SHAZAM_PICOS`, los bytes de cada banda, separados por comas). El
+    /// remuestreo no es el mismo, así que se pide parecido, no igual.
     #[test]
     #[ignore = "necesita un archivo local"]
-    fn la_firma_de_un_archivo_se_parece_a_la_de_la_v1() {
-        let (Ok(ruta), Ok(v1)) = (
+    fn la_firma_de_un_archivo_se_parece_a_la_de_referencia() {
+        let (Ok(ruta), Ok(picos)) = (
             std::env::var("NS_SHAZAM_ARCHIVO"),
             std::env::var("NS_SHAZAM_PICOS"),
         ) else {
@@ -515,9 +514,9 @@ mod tests {
         let (t, _) = crate::catalogo::etiquetas::leer(Path::new(&ruta)).unwrap();
         let f = firma(Path::new(&ruta), t.duracion_seg).unwrap();
         let nuestros: Vec<usize> = f.bandas.iter().map(|b| b.len() * 5).collect();
-        let suyos: Vec<usize> = v1.split(',').map(|x| x.parse().unwrap()).collect();
+        let suyos: Vec<usize> = picos.split(',').map(|x| x.parse().unwrap()).collect();
         eprintln!(
-            "bytes por banda: V2 {nuestros:?}, V1 {suyos:?}, muestras {}",
+            "bytes por banda: obtenidos {nuestros:?}, de referencia {suyos:?}, muestras {}",
             f.muestras
         );
         for (a, b) in nuestros.iter().zip(&suyos) {

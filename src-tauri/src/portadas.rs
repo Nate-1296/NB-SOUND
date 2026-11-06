@@ -190,8 +190,8 @@ pub fn servir(db: &BaseDeDatos, rutas: &Rutas, p: Peticion) -> NsResult<(Vec<u8>
     Ok((bytes, "image/jpeg"))
 }
 
-/// La foto de perfil (`portada://localhost/perfil`), que el importador copió de la
-/// V1 a `datos/perfil`. Es una sola y pequeña: se sirve tal cual.
+/// La foto de perfil (`portada://localhost/perfil`), en `datos/perfil`. Es una
+/// sola y pequeña: se sirve tal cual.
 ///
 /// # Errors
 ///
@@ -233,8 +233,85 @@ pub fn ruta_en_cache(db: &BaseDeDatos, rutas: &Rutas, p: Peticion) -> Option<Pat
     ruta.is_file().then_some(ruta)
 }
 
+/// Ancho, alto y tipo MIME de una imagen JPEG o PNG, leyendo solo su cabecera:
+/// decodificarla entera para saber su tamaño costaría mucho más.
+pub fn dimensiones_de(b: &[u8]) -> Option<(u32, u32, &'static str)> {
+    const PNG: &[u8] = b"\x89PNG\r\n\x1a\n";
+    if b.starts_with(PNG) && b.get(12..16) == Some(b"IHDR") {
+        let ancho = u32::from_be_bytes(b.get(16..20)?.try_into().ok()?);
+        let alto = u32::from_be_bytes(b.get(20..24)?.try_into().ok()?);
+        return (ancho > 0 && alto > 0).then_some((ancho, alto, "image/png"));
+    }
+    if !b.starts_with(&[0xFF, 0xD8]) {
+        return None;
+    }
+    let mut i = 2;
+    while i + 4 <= b.len() {
+        if b[i] != 0xFF {
+            return None;
+        }
+        let marcador = b[i + 1];
+        // Relleno entre marcadores.
+        if marcador == 0xFF {
+            i += 1;
+            continue;
+        }
+        // Marcadores sin longitud.
+        if marcador == 0xD8 || (0xD0..=0xD7).contains(&marcador) || marcador == 0x01 {
+            i += 2;
+            continue;
+        }
+        let longitud = usize::from(u16::from_be_bytes([b[i + 2], b[i + 3]]));
+        // SOF0 a SOF15, salvo DHT (C4), JPG (C8) y DAC (CC), que comparten rango.
+        let es_sof = (0xC0..=0xCF).contains(&marcador) && !matches!(marcador, 0xC4 | 0xC8 | 0xCC);
+        if es_sof {
+            let alto = u32::from(u16::from_be_bytes([*b.get(i + 5)?, *b.get(i + 6)?]));
+            let ancho = u32::from(u16::from_be_bytes([*b.get(i + 7)?, *b.get(i + 8)?]));
+            return (ancho > 0 && alto > 0).then_some((ancho, alto, "image/jpeg"));
+        }
+        if marcador == 0xDA || longitud < 2 {
+            // Empieza la imagen sin haber visto el tamaño: no es un JPEG válido.
+            return None;
+        }
+        i += 2 + longitud;
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
+    /// Un PNG mínimo de 3 × 2 píxeles: firma y la parte de IHDR que se lee.
+    fn png(ancho: u32, alto: u32) -> Vec<u8> {
+        let mut b = b"\x89PNG\r\n\x1a\n\0\0\0\x0dIHDR".to_vec();
+        b.extend(ancho.to_be_bytes());
+        b.extend(alto.to_be_bytes());
+        b.extend([8, 2, 0, 0, 0]);
+        b
+    }
+
+    /// Un JPEG con un segmento APP1 delante del SOF0, como los que llevan EXIF.
+    fn jpeg(ancho: u16, alto: u16) -> Vec<u8> {
+        let mut b = vec![0xFF, 0xD8, 0xFF, 0xE1, 0x00, 0x08];
+        b.extend(b"Exif\0\0");
+        b.extend([0xFF, 0xC0, 0x00, 0x11, 0x08]);
+        b.extend(alto.to_be_bytes());
+        b.extend(ancho.to_be_bytes());
+        b.extend([0x03; 10]);
+        b.extend([0xFF, 0xDA]);
+        b
+    }
+
+    #[test]
+    fn las_dimensiones_salen_de_la_cabecera_de_png_y_jpeg() {
+        assert_eq!(dimensiones_de(&png(3, 2)), Some((3, 2, "image/png")));
+        assert_eq!(
+            dimensiones_de(&jpeg(1200, 1199)),
+            Some((1200, 1199, "image/jpeg"))
+        );
+        assert_eq!(dimensiones_de(b"GIF89a"), None);
+        assert_eq!(dimensiones_de(&[0xFF, 0xD8, 0xFF, 0xDA, 0, 2]), None);
+    }
+
     use super::*;
     use image::{Rgb, RgbImage};
 

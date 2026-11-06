@@ -2,12 +2,12 @@
 //! de onda que sale de la misma pasada (F8.1), y en el mismo hilo los rasgos
 //! básicos de lo importado (F4.1.12).
 //!
-//! La V1 nunca midió la sonoridad, así que al llegar de ella ninguna pista la
-//! tiene, y la normalización no haría nada. Medirla entera en la importación
+//! Una pista recién llegada no tiene su sonoridad medida, y sin ella la
+//! normalización no hace nada. Medirla entera en la importación
 //! retrasaría la biblioteca varios minutos; medirla al empezar cada pista retrasaría
 //! el sonido. Se mide aquí, una pista cada vez y con una pausa entre una y otra,
 //! para que el equipo no lo note: la pista que aún no tiene medida suena sin
-//! normalizar, como en la V1.
+//! normalizar.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};

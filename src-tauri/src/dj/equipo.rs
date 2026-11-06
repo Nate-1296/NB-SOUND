@@ -7,8 +7,8 @@
 //! más, o sin el agregado, uno bajo. Mientras no hay medida, el perfil es el bajo:
 //! el DJ funciona entero con las otras cuatro técnicas.
 //!
-//! La V1 guardaba la medida en `config_ui`; la migración la descarta
-//! (docs/engineering/migracion-v1.md) porque cambia con el equipo y con el modelo.
+//! La medida no se guarda entre instalaciones: cambia con el equipo y con el
+//! modelo.
 
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use super::mezcla::Tecnica;
 use crate::error::NsResult;
 
-/// `PerfilHardware`, con los nombres de la V1.
+/// `PerfilHardware`, con los nombres.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Perfil {
     #[serde(rename = "low")]
@@ -64,7 +64,7 @@ pub struct Medida {
     pub perfil: Perfil,
     pub seg_para_10s: f64,
     pub factor_tiempo_real: f64,
-    /// Lo que la V1 llamaba `demucs_disponible`: si hay modelo de separación.
+    /// Si hay modelo de separación (`demucs_disponible`).
     pub separador: bool,
     pub error: Option<&'static str>,
 }
@@ -187,7 +187,7 @@ impl Equipo {
 
 #[cfg(test)]
 mod pruebas {
-    //! Las propiedades de `tests/test_dj_hardware_profile.py` de la V1.
+    //! Las propiedades de `tests/test_dj_hardware_profile.py`.
 
     use std::sync::mpsc;
     use std::time::Instant;

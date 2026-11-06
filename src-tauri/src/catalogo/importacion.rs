@@ -3,7 +3,7 @@
 //!
 //! Cada archivo se apunta en `pendientes_importacion` antes de empezar y se borra
 //! al terminarlo. Si la aplicación se cierra a medias, al volver se sigue por donde
-//! iba (`core/import_recovery_service.py` de la V1, sin manifiestos).
+//! iba.
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -46,8 +46,8 @@ pub struct Importador {
     tx: Sender<Mensaje>,
     progreso: Arc<Mutex<ProgresoImportacion>>,
     recursos: Arc<Recursos>,
-    /// "Cancelar" de la V1 (`cancelar_importacion`): el archivo en curso termina,
-    /// los demás se olvidan.
+    /// "Cancelar" (`cancelar_importacion`): el archivo en curso termina, los demás
+    /// se olvidan.
     cancelada: Arc<AtomicBool>,
 }
 
@@ -428,7 +428,7 @@ fn bucle(
                 }
             });
         }
-        // Como la V1 tras cada cambio de la biblioteca: el eje observable de la
+        // Tras cada cambio de la biblioteca: el eje observable de la
         // importación solo mira lo de esta tanda contra lo que había, y el barrido
         // junta también lo que entró por separado (la carpeta vigilada, otra tanda).
         if let Err(error) = super::duplicados::barrer_observables(&r.db) {

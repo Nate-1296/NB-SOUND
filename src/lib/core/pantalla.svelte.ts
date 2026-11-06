@@ -1,6 +1,6 @@
 /**
  * La pantalla completa de la ventana (F11) y los controles que se esconden en
- * ella mientras el ratón no se mueve, como la reproducción ampliada de la V1.
+ * ella mientras el ratón no se mueve, como la reproducción ampliada.
  *
  * Una sola fuente: la ventana. Se puede entrar y salir también desde el gestor
  * de ventanas, así que el estado se vuelve a leer cada vez que cambia el tamaño

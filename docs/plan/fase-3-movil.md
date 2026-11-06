@@ -12,9 +12,9 @@
 
 | Iteración | Estado |
 |---|---|
-| F3.1.1 Servidor HTTPS con la identidad migrada (`axum` + `rustls`) | Hecha: `movil/`, en su hilo y su runtime; usa la identidad de la V1 y, si no la hay, crea una que no vence. Teléfono real: en las pruebas finales |
-| F3.1.2 Anuncio mDNS `_nbsound._tcp.local.` (`mdns-sd`) | Hecha: mismo nombre, host y TXT que la V1 |
-| F3.1.3 Emparejamiento: QR, token efímero, `device_token` | Hecha: token y código corto de un solo uso con 300 s; el `device_token` mide lo de la V1 y se guarda como hash |
+| F3.1.1 Servidor HTTPS con su identidad (`axum` + `rustls`) | Hecha: `movil/`, en su hilo y su runtime; crea una identidad que no vence y la conserva. Teléfono real: en las pruebas finales |
+| F3.1.2 Anuncio mDNS `_nbsound._tcp.local.` (`mdns-sd`) | Hecha: mismo nombre, host y TXT que espera el teléfono |
+| F3.1.3 Emparejamiento: QR, token efímero, `device_token` | Hecha: token y código corto de un solo uso con 300 s; el `device_token` mide lo y se guarda como hash |
 | F3.1.4 `manifest` delta paginado, tumbas y `sync_version` | Hecha: respuestas doradas con `content-length` exacto |
 | F3.1.5 `seleccion`, `history`, `lyrics`, `asset` | Hecha; el mosaico de las playlists se compone al pedirlo |
 | F3.1.6 `audio` y `stems` con `Range` y registro de transferencias | Hecha: a trozos, sin cargar el archivo |
@@ -24,11 +24,11 @@
 
 ## Criterios
 
-* **Todas:** el arnés de respuestas doradas de F0.4.5 pasa contra la V2, sin más diferencias que campos añadidos.
-* **F3.1.1:** el teléfono real ya emparejado con la V1 se conecta a la V2 sin volver a escanear el QR.
-* **F3.1.4:** con la base migrada, el manifiesto que recibe el teléfono es el mismo que le daba la V1.
+* **Todas:** el arnés de respuestas doradas de F0.4.5 pasa contra NB Sound, sin más diferencias que campos añadidos.
+* **F3.1.1:** un teléfono emparejado se reconecta sin volver a escanear el QR.
+* **F3.1.4:** el manifiesto que recibe el teléfono es el de las respuestas doradas.
 * **F3.2.1:** desde el teléfono real se reproduce, pausa, salta, cambia volumen, aleatorio, repetición y karaoke, y
   la cola persiste al cambiar de destino, como describe `NB_Sound_Mobile/docs/remote-control.md`.
 * **F3.3.1:** emparejar un teléfono nuevo desde Ajustes, sin más pantallas que la del QR.
 
-**Al cerrar la fase** la V2 sustituye a la V1 para escuchar y sincronizar. **Puerta de empaquetado.**
+**Al cerrar la fase** NB Sound se usa para escuchar y sincronizar. **Puerta de empaquetado.**

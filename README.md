@@ -3,14 +3,13 @@
 Aplicación de escritorio para tu música local: reproduce, cataloga, identifica, completa portadas y letras,
 prepara karaoke y mezcla sesiones de DJ. Sin conexión por defecto, con todo dentro del instalador.
 
-> **Estado:** en reconstrucción. La **V2** (Tauri 2 + Svelte 5 + Rust) se construye en la raíz siguiendo el
-> [plan de ejecución](docs/plan/README.md). La **V1** está congelada en la etiqueta `v1.1.16` y su código vive en
-> [`legado/`](https://github.com/Nate-1296/NB-SOUND/blob/v1.1.16/README.md) solo como referencia.
+Hecha con Tauri 2, Svelte 5 y Rust. Lo que hace, pantalla por pantalla, está en
+[NB Sound, de punta a punta](docs/contextual/la-aplicacion.md).
 
 ## Documentación
 
 Todo lo que gobierna el proyecto está en [`docs/`](docs/README.md): la Constitución, las decisiones de
-arquitectura, el plan y el inventario de lo que hacía la V1. El contrato de trabajo está en [CLAUDE.md](CLAUDE.md).
+arquitectura y el plan. El contrato de trabajo está en [CLAUDE.md](CLAUDE.md).
 
 ## Desarrollo
 

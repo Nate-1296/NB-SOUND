@@ -1,11 +1,9 @@
 <!--
-  Inicio, con la disposición de la V1 (`VistaInicio.qml`): el saludo, las cifras
-  de la biblioteca, Retomar reproducción y el álbum destacado del día; después
-  "Vuelve a tu música", el top 10 y las filas de playlists, álbumes, artistas y
-  últimos añadidos. Sin biblioteca, invita a importar.
+  Inicio: el saludo con Sorpréndeme, Retomar reproducción y el álbum destacado del
+  día; después "Vuelve a tu música", el top 10 y las filas de playlists, álbumes,
+  artistas y últimos añadidos. Sin biblioteca, invita a importar.
 
-  La V1 animaba unas barras en la cabecera aunque no sonara nada; aquí no hay
-  animación en reposo (ADR-008).
+  No hay animación en reposo (ADR-008).
 -->
 <script lang="ts">
   import { cambios } from '#lib/core/cambios.svelte.ts';
@@ -38,7 +36,7 @@
     return lista[Math.floor(Math.random() * lista.length)] as T;
   }
 
-  /** Un saludo de la V1, al azar, según la hora y si hay nombre. */
+  /** Un saludo, al azar, según la hora y si hay nombre. */
   const saludo = $derived.by(() => {
     const nombre = aparienciaActual.actual.nombreUsuario;
     if (!nombre) return al(t.saludosSinNombre);
@@ -519,7 +517,7 @@
 
   /*
    * "Vuelve a tu música": la última, grande, ocupa dos columnas y dos filas, como
-   * la tarjeta de la V1; las demás llenan la rejilla de tres sin dejar huecos.
+   * la tarjeta; las demás llenan la rejilla de tres sin dejar huecos.
    */
   .vuelve {
     display: grid;

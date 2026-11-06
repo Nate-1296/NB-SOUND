@@ -2,8 +2,8 @@
 //!
 //! Unifica en el mismo mecanismo las listas inteligentes definidas por el usuario
 //! (evaluadas en SQLite sobre `pistas`, `rasgos`, `analisis_profundo`,
-//! `etiquetas_ambiente`, `stems` e `historial`) y las playlists automáticas que la
-//! V1 generaba en `servicios/biblioteca.py` ("Crear para mí").
+//! `etiquetas_ambiente`, `stems` e `historial`) y las playlists automáticas de
+//! "Crear para mí".
 
 use std::collections::{HashMap, HashSet};
 
@@ -18,7 +18,7 @@ use crate::error::{NsError, NsResult};
 
 /// Límite máximo de pistas en una regla inteligente del usuario.
 pub const MAX_LIMITE_INTELIGENTE: u32 = 200;
-/// Tope general de las playlists automáticas de la V1 (`PLAYLIST_AUTO_MAX_PISTAS`).
+/// Tope general de las playlists automáticas (`PLAYLIST_AUTO_MAX_PISTAS`).
 const AUTO_MAX_PISTAS: usize = 50;
 /// Mínimo de pistas para las automáticas fuertes (`PLAYLIST_AUTO_STRONG_MIN_PISTAS`).
 const AUTO_STRONG_MIN_PISTAS: usize = 30;
@@ -527,7 +527,7 @@ pub fn editar_inteligente(
     bd(tx.commit())
 }
 
-// --- Playlists automáticas de la V1 ("Crear para mí") ---------------------------------
+// --- Playlists automáticas ("Crear para mí") ---------------------------------------------
 
 struct SpecAutomatica {
     clave_auto: String,
@@ -1042,7 +1042,7 @@ fn construir_specs(db: &BaseDeDatos, conn: &Connection) -> NsResult<Vec<SpecAuto
         });
     }
 
-    // Las siete listas por ánimo de la V1 apoyadas en `descubrir` (confianza >= 0,45).
+    // Las siete listas por ánimo apoyadas en `descubrir` (confianza >= 0,45).
     for (clave_auto, nombre, consulta) in [
         ("auto:mood:workout", "Para entrenar", "para entrenar"),
         ("auto:mood:party", "Para fiesta", "para fiesta"),
@@ -1073,7 +1073,7 @@ fn construir_specs(db: &BaseDeDatos, conn: &Connection) -> NsResult<Vec<SpecAuto
     Ok(specs)
 }
 
-/// Regenera las playlists automáticas de la V1 ("Crear para mí") y refresca las
+/// Regenera las playlists automáticas ("Crear para mí") y refresca las
 /// listas inteligentes vivas del usuario. Devuelve cuántas playlists se crearon
 /// o actualizaron.
 ///

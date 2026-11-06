@@ -6,7 +6,7 @@
 //! una siguiendo el arco narrativo: en cada hueco gana la que mejor combina su
 //! puntuación (65 %) con lo que pide ese punto de la sesión (35 %). Un desempate de
 //! una milésima sale del azar con semilla, que es el de Python (`azar.rs`) para que
-//! la misma semilla dé la misma sesión que la V1.
+//! la misma semilla dé siempre la misma sesión.
 //!
 //! Sin el agregado de análisis, los ejes salen de los rasgos básicos y los que no se
 //! pueden saber quedan neutros (0,5): ni favorecen ni hunden a la pista.
@@ -23,8 +23,7 @@ use crate::error::{NsError, NsResult};
 
 const NEUTRO: f64 = 0.5;
 
-/// `PistaCandidata`, con las columnas de la V2. Los comentarios dan el nombre de la
-/// V1 cuando no es evidente.
+/// `PistaCandidata`, con las columnas de NB Sound.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Candidata {
     pub id: i64,
@@ -73,8 +72,8 @@ pub struct Candidata {
 }
 
 impl Candidata {
-    /// `to_features_dict`, para el embedding: los rasgos con el nombre de la V1 y
-    /// las etiquetas de ambiente, cada una con peso 1.
+    /// `to_features_dict`, para el embedding: los rasgos con sus nombres y las
+    /// etiquetas de ambiente, cada una con peso 1.
     #[must_use]
     pub fn rasgos(&self) -> RasgosPista {
         let numericos = [
@@ -579,7 +578,7 @@ mod pruebas {
         assert_eq!(analizadas.len(), 1);
     }
 
-    // Las propiedades de `tests/test_dj_privado_scheduler.py` de la V1.
+    // Las propiedades de `tests/test_dj_privado_scheduler.py`.
 
     fn pista(id: i64, artista: i64, energia: f64) -> Candidata {
         Candidata {

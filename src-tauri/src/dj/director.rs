@@ -3,8 +3,7 @@
 //! Los comandos del puente le mandan trabajo y esperan la respuesta fuera del hilo
 //! de la ventana. Entre petición y petición, si la sesión activa no está completa,
 //! construye su siguiente bloque, lo guarda y avisa: al reproductor, para que la
-//! sesión que suena vea sus pistas nuevas, y a la vista. Es lo que la V1 hacía con
-//! un worker de Qt tras entregar el primer bloque.
+//! sesión que suena vea sus pistas nuevas, y a la vista.
 
 use std::sync::mpsc::{self, RecvTimeoutError, Sender};
 use std::sync::Arc;

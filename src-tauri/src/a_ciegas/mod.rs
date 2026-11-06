@@ -1,10 +1,10 @@
 //! A ciegas (F6.2): el juego de redescubrir la propia música,
-//! `servicios/explorador_ciego/` de la V1.
+//! `servicios/explorador_ciego/`.
 //!
 //! Una ronda son unos cuantos retos: una canción que hay que reconocer por su
 //! portada o por un fragmento, o que se redescubre. Se puede ir revelando el
 //! artista y el álbum, pedir indicios sobre el título, escribirlo o rendirse. Nada
-//! de esto cambia la biblioteca, y la ronda vive solo en memoria, como en la V1.
+//! de esto cambia la biblioteca, y la ronda vive solo en memoria.
 //!
 //! Lo que sale hacia la interfaz es siempre [`RetoVisible`]: un dato que aún no se
 //! ha revelado no viaja por el puente, ni siquiera para que la vista lo esconda.
@@ -25,7 +25,7 @@ use crate::error::NsResult;
 pub const RETOS_POR_DEFECTO: u32 = 5;
 pub const RETOS_MAXIMO: u32 = 25;
 
-/// `ModoExplorador`, con sus nombres de la V1.
+/// `ModoExplorador`, con sus nombres.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../../src/lib/bindings/")]
 #[serde(rename_all = "snake_case")]
@@ -260,7 +260,7 @@ impl Juego {
                 pool = filtrado;
             }
         }
-        // Fisher-Yates: el orden de la ronda no tiene que coincidir con la V1.
+        // Fisher-Yates.
         let mut azar = crate::dj::azar::Azar::sin_semilla();
         for i in (1..pool.len()).rev() {
             let j = ((azar.real() * (i + 1) as f64) as usize).min(i);
@@ -417,7 +417,7 @@ pub const fn indicios_disponibles() -> [Indicio; 5] {
 
 #[cfg(test)]
 mod pruebas {
-    //! `tests/test_explorador_ciego_service.py` y `_modelo.py` de la V1.
+    //! `tests/test_explorador_ciego_service.py` y `_modelo.py`.
 
     use super::*;
 

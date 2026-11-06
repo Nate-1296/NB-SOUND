@@ -1,7 +1,5 @@
-//! Las pruebas de la cola de la V1, traducidas una a una. Cada una lleva el nombre
-//! de la original de `legado/tests/test_reproductor_ui_contract.py` sin el prefijo
-//! `test_`, que ya describe la propiedad. Como allí,
-//! barajar invierte el orden y el sitio al azar es siempre el último, para que
+//! Las pruebas de la cola. Cada una lleva el nombre de la propiedad que verifica.
+//! Barajar invierte el orden y el sitio al azar es siempre el último, para que
 //! sean deterministas.
 
 use super::*;
@@ -394,7 +392,7 @@ fn mover_en_cola_reordena_y_preserva_indice_activo() {
     assert_eq!(activa(&c), Some(2));
 }
 
-// --- Propiedades de la V2 ------------------------------------------------------
+// --- Propiedades de NB Sound ------------------------------------------------------
 
 #[test]
 fn lo_previsto_es_lo_que_sonara_al_acabar_la_pista() {

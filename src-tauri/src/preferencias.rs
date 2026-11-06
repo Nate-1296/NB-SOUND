@@ -1,7 +1,7 @@
 //! Preferencias del usuario que la interfaz lee y cambia (Ajustes).
 //!
-//! Viven en la tabla `preferencias` como JSON (V3), adonde el importador trajo las
-//! de la V1. La interfaz solo puede escribir las claves de esta lista, y cada una
+//! Viven en la tabla `preferencias` como JSON (V3). La interfaz solo puede escribir
+//! las claves de esta lista, y cada una
 //! con su tipo: una clave nueva se añade aquí con su validación, no se acepta a
 //! ciegas lo que llegue del webview.
 
@@ -27,10 +27,10 @@ pub const TIPOGRAFIAS: [&str; 5] = [
 #[ts(export, export_to = "../../src/lib/bindings/")]
 #[serde(rename_all = "camelCase")]
 pub struct Apariencia {
-    /// El id de un tema de la V1.
+    /// El id de un tema.
     pub tema: String,
     pub tipografia: String,
-    /// En porcentaje, como la V1 (`ui_scale`).
+    /// En porcentaje (`ui_scale`).
     pub escala: f64,
     /// La vista de reproducción toma el color de la portada.
     pub color_por_portada: bool,
@@ -121,7 +121,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn sin_preferencias_la_apariencia_es_la_de_fabrica_de_la_v1() {
+    fn sin_preferencias_la_apariencia_es_la_de_fabrica() {
         let db = BaseDeDatos::en_memoria().unwrap();
         let a = apariencia(&db).unwrap();
         assert_eq!(

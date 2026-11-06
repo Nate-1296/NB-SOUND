@@ -1,7 +1,6 @@
 <!--
-  Los resultados de la búsqueda global. De la V1 (`VistaBusqueda.qml`) quedan las
-  secciones con su cuenta y las pistas por relevancia (el título pesa más que la
-  letra); arriba, el mejor resultado junto a las primeras canciones, y artistas,
+  Los resultados de la búsqueda global: las secciones con su cuenta y las pistas
+  por relevancia (el título pesa más que la letra); arriba, el mejor resultado junto a las primeras canciones, y artistas,
   álbumes y playlists en rejilla con su imagen, que es como se reconocen. Si la
   búsqueda expresa una intención ("algo triste"), sus secciones van primero
   (F5.3.3).

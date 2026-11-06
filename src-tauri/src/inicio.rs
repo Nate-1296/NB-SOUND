@@ -1,11 +1,11 @@
-//! Lo que muestra Inicio (F2.2.2), con las secciones de la V1
+//! Lo que muestra Inicio (F2.2.2), con las secciones
 //! (`VistaInicio.qml` y `ModeloEstadisticas.cargar`): las cifras de la biblioteca,
 //! la canción para retomar, el álbum destacado del día, "Vuelve a tu música", el
 //! top 10, los álbumes que vuelven a aparecer, los artistas que más suenan, los
 //! últimos añadidos y las playlists destacadas.
 //!
-//! Todo en una sola petición y fuera del hilo de la ventana: la V1 hacía doce
-//! consultas seguidas en el hilo de la interfaz y la congelaba al abrir.
+//! Todo en una sola petición y fuera del hilo de la ventana: doce consultas
+//! seguidas en el hilo de la interfaz la congelarían al abrir.
 
 use serde::Serialize;
 use ts_rs::TS;
@@ -110,7 +110,7 @@ pub fn resumen(db: &BaseDeDatos) -> NsResult<Inicio> {
         .map_err(|_| NsError::StorageFailure)?
     };
 
-    // Como `pistas_para_volver` de la V1: lo que sonó, de lo último a lo primero.
+    // Como `pistas_para_volver`: lo que sonó, de lo último a lo primero.
     let para_volver = escuchadas(
         db,
         &ids(
@@ -138,8 +138,8 @@ pub fn resumen(db: &BaseDeDatos) -> NsResult<Inicio> {
         )?,
     )?;
 
-    // Discos con favoritas o escuchas: el destacado del día es el primero, como en
-    // la V1, que lo sacaba de esta misma lista.
+    // Discos con favoritas o escuchas: de esta misma lista sale el destacado del
+    // día.
     let que_gustan = ids(
         db,
         "SELECT album_id, sum(favorita) * 10 + sum(reproducciones) AS peso FROM pistas
@@ -186,7 +186,7 @@ pub fn resumen(db: &BaseDeDatos) -> NsResult<Inicio> {
     let ultimos_anadidos = biblioteca::resumenes(db, &recientes)?;
 
     // Las ancladas y las creadas por el usuario primero, como "Tus playlists
-    // destacadas" de la V1.
+    // destacadas".
     let mut playlists_destacadas = playlists::listar(
         db,
         &playlists::ConsultaPlaylists {
@@ -216,9 +216,8 @@ pub fn resumen(db: &BaseDeDatos) -> NsResult<Inicio> {
 const TURNO_DESTACADO: usize = 10;
 
 /// El "álbum destacado del día": cambia cada día entre los diez que más gustan, y
-/// solo entre los que tienen portada, que es lo que llena la tarjeta. La V1 ponía
-/// siempre el primero, y el título prometía algo que no pasaba; si ninguno tiene
-/// portada, el primero.
+/// solo entre los que tienen portada, que es lo que llena la tarjeta. Si ninguno
+/// tiene portada, el primero.
 fn destacado_del_dia(albumes: &[AlbumResumen], dia: u64) -> Option<AlbumResumen> {
     let con_portada: Vec<&AlbumResumen> = albumes
         .iter()

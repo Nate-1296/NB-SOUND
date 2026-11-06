@@ -1,6 +1,6 @@
 <!--
   @component
-  Tu música, con la disposición de la V1 (`VistaPerfil.qml`): la identidad musical
+  Tu música: la identidad musical
   con la foto y el nombre, sus fichas y Reproducir tu esencia; Tu actividad; el
   mood del día y los días activos del mes; y Lo que más has querido, con los tops
   de canciones, álbumes y artistas.

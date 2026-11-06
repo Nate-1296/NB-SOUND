@@ -1,9 +1,8 @@
-//! Los tipos que recorren la canalización (`domain/models.py` de la V1).
+//! Los tipos que recorren la canalización.
 //!
-//! Las causas conservan los valores de la V1 (`archivo_corrupto`,
-//! `puntaje_intermedio`…): son las claves con las que Por revisar dice el motivo
-//! en lenguaje llano (enmienda de ADR-007), y la tabla de esa enmienda las nombra
-//! así.
+//! Las causas (`archivo_corrupto`, `puntaje_intermedio`…) son las claves con las
+//! que Por revisar dice el motivo en lenguaje llano (enmienda de ADR-007), y la
+//! tabla de esa enmienda las nombra así.
 
 use serde::Serialize;
 

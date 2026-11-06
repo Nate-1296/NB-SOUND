@@ -1,9 +1,8 @@
 //! El control remoto (F3.2.1): `WS /api/v1/control`.
 //!
 //! El teléfono recibe el estado del reproductor al conectar y en cada cambio, y la
-//! cola cuando cambia o la pide; manda órdenes y recibe un ack por cada una. Es
-//! `ModeloSincronizacion` de la V1 (`_construir_snapshot`, `_aplicar_comando`,
-//! `_difundir_cola`) sobre el reproductor de la V2.
+//! cola cuando cambia o la pide; manda órdenes y recibe un ack por cada una
+//! (`_construir_snapshot`, `_aplicar_comando`, `_difundir_cola`).
 //!
 //! El reproductor publica su [`Instantanea`] en un [`Puente`] aunque el servidor
 //! esté apagado; cada conexión la observa y construye sus propios frames, con la
@@ -98,7 +97,7 @@ struct PistaRemota {
     cover_url: Option<String>,
 }
 
-/// El frame `estado`, plano y con los campos de la V1 en su orden.
+/// El frame `estado`, plano y con los campos del contrato en su orden.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 struct Estado {
     tipo: &'static str,
@@ -139,7 +138,7 @@ struct Cola {
     indice: i64,
 }
 
-/// El título, el artista y el álbum de una pista, como los da la cola de la V1.
+/// El título, el artista y el álbum de una pista, como los da la cola.
 struct DatosPista {
     titulo: String,
     artista: String,
@@ -167,7 +166,7 @@ fn datos_pista(db: &BaseDeDatos, id: i64) -> NsResult<Option<DatosPista>> {
 
 fn estado(db: &BaseDeDatos, i: Option<&Instantanea>) -> NsResult<Estado> {
     let Some(i) = i else {
-        // Sin reproductor (no hay salida de audio): lo que la V1 enviaba sin él.
+        // Sin reproductor (no hay salida de audio): lo que espera el teléfono.
         return Ok(Estado {
             tipo: "estado",
             reproduciendo: false,
@@ -244,7 +243,7 @@ fn cola(db: &BaseDeDatos, i: Option<&Instantanea>) -> NsResult<Cola> {
         .iter()
         .filter_map(|id| por_id.get(id).cloned())
         .collect();
-    // La V1 mandaba -1 cuando el índice era 0 (`int(x or -1)`): aquí va el índice.
+    // El índice tal cual, también cuando es 0.
     Ok(Cola {
         tipo: "cola",
         items,
@@ -277,9 +276,9 @@ fn existe(db: &BaseDeDatos, id: i64) -> bool {
         .is_some()
 }
 
-/// Lo que hace cada acción, con los alias de la V1. Devuelve `true` si hay que
+/// Lo que hace cada acción, con los alias. Devuelve `true` si hay que
 /// responder con la cola. Una acción desconocida no hace nada, y su ack dice
-/// igualmente `encolado`, como en la V1.
+/// igualmente `encolado`.
 fn aplicar(db: &BaseDeDatos, puente: &Puente, m: &Value, actual: Option<&Instantanea>) -> bool {
     let accion = m
         .get("accion")
@@ -292,7 +291,7 @@ fn aplicar(db: &BaseDeDatos, puente: &Puente, m: &Value, actual: Option<&Instant
         "play_pause" | "play" | "pause" | "toggle" => puente.ordenar(Orden::PausarReanudar),
         "next" | "siguiente" => puente.ordenar(Orden::Siguiente),
         "prev" | "previous" | "anterior" => puente.ordenar(Orden::Anterior),
-        // La V2 no tiene "detener" aparte: parar es pausar, y la cola se queda.
+        // NB Sound no tiene "detener" aparte: parar es pausar, y la cola se queda.
         "stop" | "detener" => {
             if actual.is_some_and(|i| i.estado == "reproduciendo") {
                 puente.ordenar(Orden::PausarReanudar);
@@ -617,7 +616,7 @@ mod tests {
     }
 
     #[test]
-    fn el_estado_tiene_la_forma_de_la_v1() {
+    fn el_estado_tiene_la_forma() {
         let db = base();
         let e = String::from_utf8(pyjson::a_bytes(&estado(&db, Some(&instantanea())).unwrap()))
             .unwrap();

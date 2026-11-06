@@ -20,7 +20,7 @@ export type VistaBiblioteca = 'albumes' | 'artistas' | 'pistas';
 export class EstadoTabAlbumes {
   busqueda = $state('');
   orden = $state<OrdenAlbumes>('tituloAsc');
-  /** Los grupos de la V1: todos, solo álbumes o solo sencillos y EP. */
+  /** Los grupos: todos, solo álbumes o solo sencillos y EP. */
   grupo = $state<'todos' | 'albumes' | 'sencillos'>('todos');
   modoRejilla = $state<ModoRejilla>('md');
 }

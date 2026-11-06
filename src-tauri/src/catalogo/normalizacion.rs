@@ -1,5 +1,5 @@
 //! De las etiquetas crudas, Shazam, AcoustID y el nombre del archivo a unos datos
-//! listos para buscar (F4.1.2): `core/normalizer.py` de la V1.
+//! listos para buscar (F4.1.2): `core/normalizer.py`.
 //!
 //! Primero las etiquetas; Shazam rellena lo que falte y aporta su ISRC; AcoustID
 //! sube la confianza; y el nombre del archivo es el último recurso, sin títulos

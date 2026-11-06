@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { duracionDetallada, duracionLarga } from './formato';
 
-describe('los formatos de duración de la V1', () => {
+describe('los formatos de duración', () => {
   it('modelo_estadisticas_formatear_duracion_detallada', () => {
     expect(duracionDetallada(86400 + 3661)).toBe('1d 1h 1m 1s');
     expect(duracionDetallada(86400)).toBe('1d');

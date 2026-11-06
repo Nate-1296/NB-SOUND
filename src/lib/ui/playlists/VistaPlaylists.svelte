@@ -1,6 +1,6 @@
 <!--
   @component
-  Playlists, con la disposición de la V1 (`VistaPlaylists.qml`): título, Crear para
+  Playlists: título, Crear para
   mí, Nueva inteligente, Nueva playlist, la búsqueda, las categorías y los órdenes
   en fichas, la rejilla de tarjetas con su mosaico y, a la derecha, el panel de la
   seleccionada con Abrir, Anclar y Reproducir.
@@ -107,9 +107,9 @@
   let panel = $state<HTMLElement>();
 
   /**
-   * Como la V1: un clic la elige y la enseña en el panel; otro clic la abre. En
-   * ventanas estrechas el panel no se ve, y el primer clic no hacía nada visible:
-   * entonces la abre ya.
+   * Un clic la elige y la enseña en el panel; otro clic la abre. En ventanas
+   * estrechas el panel no se ve, y el primer clic no haría nada visible: entonces
+   * la abre ya.
    */
   async function pulsar(id: number) {
     if (seleccionada === id) return goto(`/playlists/ver?id=${id}`);
@@ -610,8 +610,8 @@
       box-shadow 140ms ease;
   }
 
-  /* El distintivo de la V1 (VistaPlaylists.qml, PinChip): un círculo con borde
-     de acento sobre la esquina de la portada, legible sobre cualquier mosaico. */
+  /* El distintivo de las ancladas: un círculo con borde de acento sobre la
+     esquina de la portada, legible sobre cualquier mosaico. */
   .ancla {
     position: absolute;
     top: calc(var(--ns-espacio-3) + var(--ns-espacio-2));

@@ -1,7 +1,7 @@
 <!--
   @component
   Los avisos, apilados en la esquina, sobre la barra de reproducción: la
-  respuesta a "¿ha pasado algo?" que la V1 daba con `ToastMessage.qml`.
+  respuesta a "¿ha pasado algo?".
 
   Viene de NB Books (`Notificaciones.svelte`), con su contrato: dos regiones,
   porque una confirmación espera a que el lector de pantalla termine y un fallo

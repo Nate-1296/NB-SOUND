@@ -1,7 +1,6 @@
 <!--
   @component
-  La cola de reproducción (`QueuePanel.qml` de la V1): título y Vaciar (que deja la
-  que suena), la cuenta y la duración total, y cada fila con su portada, la
+  La cola de reproducción: título y Vaciar (que deja la que suena), la cuenta y la duración total, y cada fila con su portada, la
   insignia Sonando o Pausada, su duración, reproducir y quitar. Se reordena
   arrastrando o, con el teclado, con Alt+Arriba y Alt+Abajo sobre la fila.
 -->

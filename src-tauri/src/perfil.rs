@@ -1,10 +1,9 @@
-//! Tu música (F2.2.8): lo que el historial local dice del usuario, con las
-//! secciones de la V1 (`VistaPerfil.qml`): identidad, actividad, el ánimo del día,
-//! los días activos del mes y los tops.
+//! Tu música (F2.2.8): lo que el historial local dice del usuario: identidad,
+//! actividad, el ánimo del día, los días activos del mes y los tops.
 //!
-//! Todo sale de `historial`, que la V2 trajo entero de la V1. Las horas y los días
-//! se cuentan en la hora local del equipo (`'localtime'` de SQLite): la V1 los
-//! guardaba en UTC, y la hora pico de alguien en Colombia no son las 23:00.
+//! Todo sale de `historial`. Las horas y los días se cuentan en la hora local del
+//! equipo (`'localtime'` de SQLite): la hora pico de alguien en Colombia no son
+//! las 23:00.
 
 use std::f64::consts::PI;
 use std::path::Path;
@@ -641,8 +640,7 @@ pub fn perfil(db: &BaseDeDatos) -> NsResult<Perfil> {
         &conn,
         "SELECT count(DISTINCT p.album_id) FROM historial h JOIN pistas p ON p.id = h.pista_id",
     )?;
-    // La V1 no apuntó cuánto se escuchó en más de la mitad de las filas: entonces
-    // cuenta la duración de la pista, que es lo que la V1 sumaba.
+    // Si no se apuntó cuánto se escuchó, cuenta la duración de la pista.
     let segundos_escuchados: f64 = uno(
         &conn,
         "SELECT total(coalesce(h.escuchado_seg, p.duracion_seg, 0))
@@ -777,7 +775,7 @@ const MAX_FOTO: u64 = 32 * 1024 * 1024;
 ///
 /// Se decodifica (lo que no es PNG o JPEG no entra), se reduce y se guarda como
 /// PNG con su huella por nombre, en `datos/perfil/<2>/<huella>.png`: la misma forma
-/// que dejó el importador de la V1. Al cambiar el nombre cambia la respuesta de
+/// que dejó el importador. Al cambiar el nombre cambia la respuesta de
 /// `portada://localhost/perfil`, y la anterior se borra si ya nadie la usa.
 ///
 /// # Errors

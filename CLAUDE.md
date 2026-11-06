@@ -18,26 +18,23 @@ se cambia el documento por el proceso de decisión. Nunca se deja la contradicci
 | 2 | [Plan](docs/plan/README.md) | Qué iteración toca y su criterio de aceptación |
 | 3 | [Preguntas abiertas](docs/contextual/open-questions/README.md) | Si el trabajo depende de algo no decidido |
 | 4 | [ADR](docs/adr/README.md) | Por qué las cosas son como son |
-| 5 | [Inventario de la V1](docs/contextual/inventario-v1.md) | Qué hacía la V1 y qué destino tiene |
+| 5 | [NB Sound, de punta a punta](docs/contextual/la-aplicacion.md) | Qué hace la aplicación, pantalla por pantalla |
 
 Si el trabajo depende de una decisión no tomada, **no se empieza**: se plantea la decisión.
 
 ## 3. Estado del repositorio
 
-* **La V1 está congelada en la etiqueta `v1.1.16`** y se retiró del repositorio en F7.1.2 (`legado/` y `docs/v1/`
-  ya no existen). Se consulta en esa etiqueta; para medir la paridad hay una copia local fuera del repositorio con su
-  entorno de Python. Lo que la V2 cita de la V1 en sus comentarios usa las rutas de entonces.
-* **La V2 se construye en la raíz** con la estructura de NB Books ([ADR-011](docs/adr/decisions/ADR-011-transicion-del-repositorio.md)).
+* **NB Sound vive en la raíz** con la estructura de NB Books.
 * **Solo existe la rama `main`.** No se crean ramas.
 * **NB Sound Mobile no se toca** ([ADR-005](docs/adr/decisions/ADR-005-contrato-movil.md)). Su
-  `docs/pc-contract.md` es el contrato que la V2 cumple byte a byte.
+  `docs/pc-contract.md` es el contrato que NB Sound cumple byte a byte.
 
 ## 4. Innegociables
 
 | Regla | Mecanismo |
 |---|---|
 | Nada que instalar fuera de la aplicación; lo opcional es un agregado de un clic | Puerta de empaquetado en máquina limpia; `check-plataforma` |
-| Ningún intérprete de Python en la V2 | `check-sin-python` |
+| Ningún intérprete de Python en NB Sound | `check-sin-python` |
 | Un solo producto, sin modos ni vistas de diagnóstico | [ADR-007](docs/adr/decisions/ADR-007-arquitectura-de-informacion.md) |
 | Ningún error viaja como cadena | `check-error-contract` |
 | Los tipos del puente se generan | `ts-rs` + `check-bindings` |
@@ -57,7 +54,7 @@ Si el trabajo depende de una decisión no tomada, **no se empieza**: se plantea 
 * **Español**, registro profesional, **sin emojis** en código, documentación ni commits.
 * Los comentarios explican **por qué**, no qué. Cuando una decisión no es obvia, dicen qué se descartó y por qué.
 * Las pruebas se nombran por la propiedad que verifican, no por la función que llaman.
-* Lo que se porta de la V1 cita en un comentario el archivo de origen solo cuando ayuda a entender una regla rara.
+* Lo que se porta de otro proyecto cita en un comentario su origen solo cuando ayuda a entender una regla rara.
 
 ## 6. Verificación
 
@@ -72,19 +69,17 @@ cargo test
 ```
 
 
-## 7. Los corpus reales
+## 7. El corpus real
 
 <!-- check-docs: allow-absolute-path -->
 
 | Corpus | Ruta |
 |---|---|
 | Música | `/home/nathan/Música/biblioteca/` (2.397 MP3, 14 GB) |
-| Base de la V1 | `/home/nathan/.local/share/nb_sound/biblioteca/nb_sound.sqlite3` |
-| Identidad del servidor móvil de la V1 | `/home/nathan/.config/nb_sound/sync/` |
 
-**Jamás se escribe en esas rutas** durante el desarrollo; se leen en solo lectura. `.claude/settings.json` lo
-deniega. Nada derivado de ellas entra al repositorio ni a los registros. Las pruebas que las usan se saltan solas si
-no existen.
+**Jamás se escribe en esa ruta** durante el desarrollo; se lee en solo lectura. `.claude/settings.json` lo
+deniega. Nada derivado de ella entra al repositorio ni a los registros. Las pruebas que la usan se saltan solas si
+no existe.
 
 ## 8. Commits
 

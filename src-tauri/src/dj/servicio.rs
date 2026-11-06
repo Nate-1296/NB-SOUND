@@ -5,9 +5,9 @@
 //! usuario hace con cada pista, regenerarla, descartarla o guardarla como playlist.
 //! Mantiene una sola sesión activa; las demás se consultan en el historial.
 //!
-//! Una diferencia con la V1: toda sesión nueva guarda su semilla. La V1 solo la
-//! guardaba si se la daban, y una sesión sin semilla no se podía reconstruir; aquí
-//! retomar una sesión del historial sigue construyéndola igual que la primera vez.
+//! Toda sesión nueva guarda su semilla: una sesión sin semilla no se podría
+//! reconstruir, y así retomar una sesión del historial sigue construyéndola igual
+//! que la primera vez.
 
 use serde::Serialize;
 use ts_rs::TS;
@@ -21,9 +21,9 @@ use super::sesiones::{self, Evento};
 use crate::db::BaseDeDatos;
 use crate::error::{NsError, NsResult};
 
-/// Lo que se guarda en `dj_sesiones.motor_version`: la V2 planifica como la V1.
+/// Lo que se guarda en `dj_sesiones.motor_version`: NB Sound planifica.
 pub const MOTOR_VERSION: &str = "dj_v1";
-/// Cuántas pistas se leen como candidatas, como la V1 (`cargar_candidatos`).
+/// Cuántas pistas se leen como candidatas (`cargar_candidatos`).
 const LIMITE_POOL: usize = 5000;
 /// Cuántas sesiones mira el historial antes de filtrar.
 const HISTORIAL: u32 = 60;
@@ -51,11 +51,11 @@ pub enum Inicio {
     /// Con su primer bloque guardado.
     Lista { id: i64 },
     /// No hay ninguna pista que encaje: biblioteca vacía o exclusiones que lo
-    /// descartan todo (`PoolVacioError` de la V1). La sesión queda en `error`.
+    /// descartan todo. La sesión queda en `error`.
     SinCandidatas { id: i64 },
 }
 
-/// Una fila del historial, con lo que la V1 enseñaba de cada sesión.
+/// Una fila del historial, con lo que se enseña de cada sesión.
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]
 #[ts(export, export_to = "../../src/lib/bindings/")]
 #[serde(rename_all = "camelCase")]
@@ -236,8 +236,7 @@ impl Dj {
         }
     }
 
-    /// `regenerar_sesion`: otra sesión con el mismo pedido y otra semilla (la de la
-    /// V1: la anterior más 17). La anterior queda descartada.
+    /// `regenerar_sesion`: otra sesión con el mismo pedido y otra semilla. La anterior queda descartada.
     ///
     /// # Errors
     ///
@@ -379,8 +378,7 @@ impl Dj {
     }
 
     /// Las sesiones recientes que contienen `texto` (sin distinguir tildes ni
-    /// mayúsculas) y, si se da, con ese `estado`. Cota: las 60 más recientes, como
-    /// la V1.
+    /// mayúsculas) y, si se da, con ese `estado`. Cota: las 60 más recientes.
     ///
     /// # Errors
     ///
@@ -431,13 +429,13 @@ impl Dj {
 
 #[cfg(test)]
 mod pruebas {
-    //! `tests/test_dj_privado_integracion.py` de la V1, sobre una base en memoria.
+    //! `tests/test_dj_privado_integracion.py`, sobre una base en memoria.
 
     use super::*;
     use crate::dj::embeddings::Determinista;
     use crate::dj::sesiones::EnCurso;
 
-    /// La biblioteca de la V1: diez pistas de cinco artistas con rasgos sintéticos.
+    /// La biblioteca: diez pistas de cinco artistas con rasgos sintéticos.
     fn biblioteca() -> BaseDeDatos {
         let db = BaseDeDatos::en_memoria().unwrap();
         let conn = db.conexion().unwrap();
@@ -558,7 +556,7 @@ mod pruebas {
             ),
         ];
         for (id, bpm, tono, modo, v) in rasgos {
-            // Las columnas de la V1, en su orden: energy, valence, danceability,
+            // Las columnas, en su orden: energy, valence, danceability,
             // melancholy, calmness, aggressiveness, brightness, darkness, focus,
             // workout, party y night.
             conn.execute(

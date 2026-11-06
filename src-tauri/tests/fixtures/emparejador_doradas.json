@@ -1,5 +1,5 @@
 {
-  "origen": "NB Sound v1.1.16 (core/normalizer.py, core/matcher.py)",
+  "origen": "Decisiones de referencia del emparejador (core/normalizer.py, core/matcher.py)",
   "casos": [
     {
       "cruda": {
@@ -17,7 +17,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -81,7 +81,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -177,7 +177,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -215,7 +215,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -292,7 +292,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -350,7 +350,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -446,7 +446,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -526,7 +526,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -622,7 +622,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -718,7 +718,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -782,7 +782,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -865,7 +865,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -951,7 +951,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -1047,7 +1047,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -1127,7 +1127,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -1248,7 +1248,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -1369,7 +1369,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -1407,7 +1407,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -1490,7 +1490,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -1534,7 +1534,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -1620,7 +1620,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -1678,7 +1678,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -1742,7 +1742,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -1819,7 +1819,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -1918,7 +1918,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -2020,7 +2020,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -2067,7 +2067,7 @@
         "confianzas": [0.8]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -2144,7 +2144,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -2240,7 +2240,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -2317,7 +2317,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -2435,7 +2435,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -2473,7 +2473,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -2514,7 +2514,7 @@
         "confianzas": [0.8]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -2555,7 +2555,7 @@
         "confianzas": [0.62]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -2651,7 +2651,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -2715,7 +2715,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -2753,7 +2753,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -2858,7 +2858,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -2916,7 +2916,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -3031,7 +3031,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -3095,7 +3095,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -3197,7 +3197,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -3312,7 +3312,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -3370,7 +3370,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -3494,7 +3494,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -3574,7 +3574,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -3679,7 +3679,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -3720,7 +3720,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -3758,7 +3758,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -3805,7 +3805,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -3863,7 +3863,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -3907,7 +3907,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -3945,7 +3945,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -4044,7 +4044,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -4121,7 +4121,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -4204,7 +4204,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -4262,7 +4262,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -4339,7 +4339,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -4416,7 +4416,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -4512,7 +4512,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -4614,7 +4614,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -4652,7 +4652,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -4767,7 +4767,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -4844,7 +4844,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -4908,7 +4908,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -4988,7 +4988,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -5026,7 +5026,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -5090,7 +5090,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -5205,7 +5205,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -5310,7 +5310,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -5428,7 +5428,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -5533,7 +5533,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -5571,7 +5571,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -5692,7 +5692,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -5775,7 +5775,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -5890,7 +5890,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -5948,7 +5948,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -6044,7 +6044,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -6140,7 +6140,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -6226,7 +6226,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -6347,7 +6347,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -6446,7 +6446,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -6510,7 +6510,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -6625,7 +6625,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -6721,7 +6721,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -6779,7 +6779,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -6859,7 +6859,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -6942,7 +6942,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -6986,7 +6986,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -7101,7 +7101,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -7145,7 +7145,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -7260,7 +7260,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -7356,7 +7356,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -7465,7 +7465,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -7526,7 +7526,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -7584,7 +7584,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -7661,7 +7661,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -7719,7 +7719,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -7815,7 +7815,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -7911,7 +7911,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -7991,7 +7991,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -8109,7 +8109,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -8224,7 +8224,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -8320,7 +8320,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -8416,7 +8416,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -8454,7 +8454,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -8531,7 +8531,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -8633,7 +8633,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -8677,7 +8677,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -8754,7 +8754,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -8869,7 +8869,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -8946,7 +8946,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -8984,7 +8984,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -9080,7 +9080,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -9138,7 +9138,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -9196,7 +9196,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -9273,7 +9273,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -9334,7 +9334,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -9417,7 +9417,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -9478,7 +9478,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -9555,7 +9555,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -9596,7 +9596,7 @@
         "confianzas": [0.8]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -9654,7 +9654,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -9753,7 +9753,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -9830,7 +9830,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -9868,7 +9868,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -9983,7 +9983,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -10021,7 +10021,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -10085,7 +10085,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -10146,7 +10146,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -10242,7 +10242,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -10357,7 +10357,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -10478,7 +10478,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -10558,7 +10558,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -10660,7 +10660,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -10718,7 +10718,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -10762,7 +10762,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -10800,7 +10800,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -10902,7 +10902,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -10949,7 +10949,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -10987,7 +10987,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -11092,7 +11092,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -11172,7 +11172,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -11252,7 +11252,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -11296,7 +11296,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -11420,7 +11420,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -11503,7 +11503,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -11605,7 +11605,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -11646,7 +11646,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -11729,7 +11729,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -11793,7 +11793,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -11911,7 +11911,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -11975,7 +11975,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -12071,7 +12071,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -12148,7 +12148,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -12209,7 +12209,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -12247,7 +12247,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -12324,7 +12324,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -12439,7 +12439,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -12560,7 +12560,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -12643,7 +12643,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -12687,7 +12687,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -12748,7 +12748,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -12806,7 +12806,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -12921,7 +12921,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -13036,7 +13036,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -13151,7 +13151,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -13269,7 +13269,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -13371,7 +13371,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -13409,7 +13409,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -13470,7 +13470,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -13566,7 +13566,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -13668,7 +13668,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -13726,7 +13726,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -13806,7 +13806,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -13864,7 +13864,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -13928,7 +13928,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -13975,7 +13975,7 @@
         "confianzas": [0.8]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -14090,7 +14090,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -14154,7 +14154,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -14192,7 +14192,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -14313,7 +14313,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -14409,7 +14409,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -14527,7 +14527,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -14623,7 +14623,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -14664,7 +14664,7 @@
         "confianzas": [0.8]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -14747,7 +14747,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -14824,7 +14824,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -14882,7 +14882,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -14978,7 +14978,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -15058,7 +15058,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -15176,7 +15176,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -15220,7 +15220,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -15316,7 +15316,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -15377,7 +15377,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -15495,7 +15495,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -15553,7 +15553,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -15649,7 +15649,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -15748,7 +15748,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -15812,7 +15812,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -15898,7 +15898,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -15942,7 +15942,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -16000,7 +16000,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -16044,7 +16044,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito (feat. Daddy Yankee)",
           "titulo_para_match": "despacito feat daddy yankee",
@@ -16159,7 +16159,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -16197,7 +16197,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -16296,7 +16296,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -16343,7 +16343,7 @@
         "confianzas": [0.8]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -16448,7 +16448,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "track",
           "titulo_para_match": "track",
@@ -16563,7 +16563,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -16662,7 +16662,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -16764,7 +16764,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -16841,7 +16841,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -16882,7 +16882,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -16920,7 +16920,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -17016,7 +17016,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -17131,7 +17131,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -17227,7 +17227,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -17265,7 +17265,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -17389,7 +17389,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -17469,7 +17469,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -17565,7 +17565,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -17603,7 +17603,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -17670,7 +17670,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -17728,7 +17728,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -17824,7 +17824,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -17907,7 +17907,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -17984,7 +17984,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -18061,7 +18061,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -18144,7 +18144,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -18208,7 +18208,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -18269,7 +18269,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -18333,7 +18333,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -18391,7 +18391,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -18458,7 +18458,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -18502,7 +18502,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -18598,7 +18598,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -18678,7 +18678,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -18793,7 +18793,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -18857,7 +18857,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -18975,7 +18975,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -19019,7 +19019,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -19134,7 +19134,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -19233,7 +19233,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -19271,7 +19271,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -19309,7 +19309,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -19408,7 +19408,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -19446,7 +19446,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -19561,7 +19561,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -19676,7 +19676,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -19714,7 +19714,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -19835,7 +19835,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -19931,7 +19931,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -19989,7 +19989,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -20047,7 +20047,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -20130,7 +20130,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -20207,7 +20207,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -20325,7 +20325,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -20443,7 +20443,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -20564,7 +20564,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -20622,7 +20622,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -20666,7 +20666,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -20762,7 +20762,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -20883,7 +20883,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -21004,7 +21004,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -21100,7 +21100,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -21199,7 +21199,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -21257,7 +21257,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -21295,7 +21295,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -21410,7 +21410,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -21531,7 +21531,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -21572,7 +21572,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -21668,7 +21668,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -21709,7 +21709,7 @@
         "confianzas": [0.8]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -21789,7 +21789,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -21833,7 +21833,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -21916,7 +21916,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -21960,7 +21960,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -22018,7 +22018,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -22120,7 +22120,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -22197,7 +22197,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -22296,7 +22296,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -22376,7 +22376,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -22472,7 +22472,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -22568,7 +22568,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -22686,7 +22686,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -22782,7 +22782,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -22897,7 +22897,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -22958,7 +22958,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -23038,7 +23038,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -23124,7 +23124,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -23239,7 +23239,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -23354,7 +23354,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -23450,7 +23450,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -23497,7 +23497,7 @@
         "confianzas": [0.8]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -23621,7 +23621,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -23723,7 +23723,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -23781,7 +23781,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -23822,7 +23822,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -23886,7 +23886,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -24001,7 +24001,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -24039,7 +24039,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -24157,7 +24157,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -24195,7 +24195,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -24291,7 +24291,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -24349,7 +24349,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -24426,7 +24426,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -24541,7 +24541,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -24659,7 +24659,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -24720,7 +24720,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -24841,7 +24841,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -24943,7 +24943,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -25058,7 +25058,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -25116,7 +25116,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -25160,7 +25160,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -25262,7 +25262,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -25309,7 +25309,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -25433,7 +25433,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -25491,7 +25491,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -25587,7 +25587,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -25683,7 +25683,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -25730,7 +25730,7 @@
         "confianzas": [0.8]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -25774,7 +25774,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -25851,7 +25851,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -25889,7 +25889,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -25988,7 +25988,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -26032,7 +26032,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -26109,7 +26109,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -26150,7 +26150,7 @@
         "confianzas": [0.62]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -26246,7 +26246,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -26342,7 +26342,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -26444,7 +26444,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -26502,7 +26502,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -26617,7 +26617,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -26655,7 +26655,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -26713,7 +26713,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -26771,7 +26771,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -26809,7 +26809,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -26905,7 +26905,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -26991,7 +26991,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -27049,7 +27049,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -27164,7 +27164,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -27202,7 +27202,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -27246,7 +27246,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -27290,7 +27290,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -27408,7 +27408,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -27513,7 +27513,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -27551,7 +27551,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -27669,7 +27669,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -27746,7 +27746,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -27842,7 +27842,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -27919,7 +27919,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -28037,7 +28037,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -28095,7 +28095,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -28172,7 +28172,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -28230,7 +28230,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -28326,7 +28326,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -28403,7 +28403,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -28461,7 +28461,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -28582,7 +28582,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -28678,7 +28678,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -28719,7 +28719,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -28763,7 +28763,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -28865,7 +28865,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -28923,7 +28923,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -28981,7 +28981,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -29058,7 +29058,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -29096,7 +29096,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Yesterday",
           "titulo_para_match": "yesterday",
@@ -29220,7 +29220,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -29297,7 +29297,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -29374,7 +29374,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -29492,7 +29492,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -29588,7 +29588,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -29665,7 +29665,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -29767,7 +29767,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -29844,7 +29844,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -29965,7 +29965,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -30042,7 +30042,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -30119,7 +30119,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -30177,7 +30177,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -30254,7 +30254,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -30331,7 +30331,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Track",
           "titulo_para_match": "track",
@@ -30375,7 +30375,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -30490,7 +30490,7 @@
           "procedencia_acoustid": true
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -30586,7 +30586,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -30669,7 +30669,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -30790,7 +30790,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Tití Me Preguntó",
           "titulo_para_match": "titi me pregunto",
@@ -30905,7 +30905,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -30963,7 +30963,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -31030,7 +31030,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Song (Remix)",
           "titulo_para_match": "song remix",
@@ -31071,7 +31071,7 @@
         "confianzas": [0.95]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -31129,7 +31129,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Live Forever",
           "titulo_para_match": "live forever",
@@ -31173,7 +31173,7 @@
       },
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -31234,7 +31234,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "",
           "titulo_para_match": "",
@@ -31349,7 +31349,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "La Bachata",
           "titulo_para_match": "la bachata",
@@ -31387,7 +31387,7 @@
       "shazam": null,
       "acoustid": null,
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Clavado en un bar",
           "titulo_para_match": "clavado en un bar",
@@ -31428,7 +31428,7 @@
         "confianzas": [0.62]
       },
       "candidatos": [],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -31486,7 +31486,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Hello",
           "titulo_para_match": "hello",
@@ -31544,7 +31544,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",
@@ -31602,7 +31602,7 @@
           "procedencia_acoustid": false
         }
       ],
-      "v1": {
+      "esperado": {
         "normalizada": {
           "titulo": "Despacito",
           "titulo_para_match": "despacito",

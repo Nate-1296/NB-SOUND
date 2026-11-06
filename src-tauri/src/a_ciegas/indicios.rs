@@ -32,7 +32,7 @@ fn alfabeto_de(c: char) -> &'static str {
 }
 
 /// `detectar_alfabeto`: el de más letras; sin letras, latino. Con empate gana el
-/// primero que aparece, como el `max` sobre el `dict` de la V1.
+/// primero que aparece, como el `max` sobre el `dict`.
 #[must_use]
 pub fn alfabeto(titulo: &str) -> &'static str {
     let mut cuenta: Vec<(&'static str, usize)> = Vec::new();
@@ -169,7 +169,7 @@ pub fn valor(indicio: Indicio, titulo: &str) -> String {
 
 #[cfg(test)]
 mod pruebas {
-    //! `tests/test_explorador_ciego_hints.py` de la V1.
+    //! `tests/test_explorador_ciego_hints.py`.
 
     use super::*;
 

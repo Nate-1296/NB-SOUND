@@ -1,8 +1,8 @@
 //! El emparejamiento (F3.1.3): el token del QR, el código corto para teclearlo a
 //! mano y el `device_token` que se queda el teléfono.
 //!
-//! Los dos primeros son de un solo uso y caducan a los 300 s, como en la V1
-//! (`servidor_sync.py`). El `device_token` mide lo mismo que el de la V1
+//! Los dos primeros son de un solo uso y caducan a los 300 s
+//! (`servidor_sync.py`). El `device_token` mide lo mismo que el
 //! (`secrets.token_urlsafe(32)`, 43 caracteres): el teléfono lo guarda y el
 //! servidor solo conserva su SHA-256.
 
@@ -17,7 +17,7 @@ use crate::error::{NsError, NsResult};
 
 pub const TTL: Duration = Duration::from_secs(300);
 
-/// Sin caracteres ambiguos (0/O, 1/I/L), como la V1: se lee en una pantalla y se
+/// Sin caracteres ambiguos (0/O, 1/I/L): se lee en una pantalla y se
 /// teclea en otra.
 const ALFABETO_CODIGO: &[u8] = b"ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const LARGO_CODIGO: usize = 8;
@@ -45,7 +45,7 @@ fn base64_url(bytes: &[u8]) -> String {
     s
 }
 
-/// 256 bits, como la V1.
+/// 256 bits.
 pub fn generar_token() -> NsResult<String> {
     let mut buf = [0u8; 32];
     aleatorio(&mut buf)?;
@@ -123,7 +123,7 @@ impl Emparejamiento {
     }
 }
 
-/// Lo que va dentro del QR, con los campos y el orden de la V1 (`payload_qr`).
+/// Lo que va dentro del QR, con los campos y el orden del contrato (`payload_qr`).
 #[derive(Debug, Serialize)]
 pub struct ContenidoQr<'a> {
     pub host: &'a str,
@@ -171,7 +171,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn el_device_token_mide_lo_mismo_que_el_de_la_v1() {
+    fn el_device_token_mide_lo_que_espera_el_telefono() {
         let t = generar_token().unwrap();
         assert_eq!(t.len(), 43);
         assert!(t

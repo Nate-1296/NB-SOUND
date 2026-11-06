@@ -72,8 +72,8 @@ fn preparar_archivo(ruta: &Path) -> NsResult<()> {
 /// Nunca la diferida que da `Connection::transaction`: en WAL, una transacción
 /// diferida que lee y después escribe recibe `SQLITE_BUSY` **de inmediato y sin
 /// respetar `busy_timeout`** si otro escritor confirmó entre medias. NB Books
-/// perdió así 1.207 documentos en una importación real, y la V1 abría `BEGIN` a
-/// secas (`legado/db/conexion.py`). Lo vigila `scripts/check-transacciones.mjs`.
+/// perdió así 1.207 documentos en una importación real. Lo vigila
+/// `scripts/check-transacciones.mjs`.
 ///
 /// # Errors
 ///

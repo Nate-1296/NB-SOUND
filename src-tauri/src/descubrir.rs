@@ -1,16 +1,15 @@
 //! Descubrir música por lo que se pide en palabras (F5.3.3):
-//! `core/music_discovery_service.py` de la V1.
+//! `core/music_discovery_service.py`.
 //!
 //! "Algo triste", "para entrenar", "música de noche": la frase se lleva a pesos
-//! por intención con las palabras y frases de la V1, cada pista con rasgos se
-//! puntúa con las fórmulas de la V1 (rasgos básicos y, si los hay, los del análisis
+//! por intención con las palabras y frases, cada pista con rasgos se
+//! puntúa con sus fórmulas (rasgos básicos y, si los hay, los del análisis
 //! con modelos), se quedan las que pasan de 0,35 y se reparten en secciones de
 //! ocho sin repetir pistas.
 //!
-//! Dos diferencias con la V1, a propósito: las secciones viajan como
-//! identificadores y la interfaz pone su título desde el diccionario (`check-i18n`),
-//! y la activación del análisis solo cuenta si es de esta versión,
-//! porque la de la V1 estaba recortada a 1 (ver `analisis.rs`).
+//! Las secciones viajan como identificadores y la interfaz pone su título desde el
+//! diccionario (`check-i18n`), y la activación del análisis solo cuenta si es de
+//! esta versión (ver `analisis.rs`).
 
 use std::collections::BTreeMap;
 
@@ -22,9 +21,9 @@ use crate::catalogo::texto::para_comparacion;
 use crate::db::BaseDeDatos;
 use crate::error::{NsError, NsResult};
 
-/// `MUSIC_DISCOVERY_MIN_CONFIDENCE` de la V1.
+/// `MUSIC_DISCOVERY_MIN_CONFIDENCE`.
 const CONFIANZA_MINIMA: f64 = 0.35;
-/// Pistas por sección, como la V1.
+/// Pistas por sección.
 const POR_SECCION: usize = 8;
 /// Tope de lo que se pide: `MUSIC_DISCOVERY_DEFAULT_LIMIT` admite hasta 200.
 pub const LIMITE_MAXIMO: u32 = 200;
@@ -49,7 +48,7 @@ pub enum Intencion {
 
 use Intencion as I;
 
-/// `KEYWORDS` de la V1, en su orden.
+/// `KEYWORDS`, en su orden.
 const PALABRAS: [(Intencion, &[&str]); 11] = [
     (
         I::Triste,
@@ -144,7 +143,7 @@ const PALABRAS: [(Intencion, &[&str]); 11] = [
     (I::Lenta, &["lento", "despacio", "slow", "pausad"]),
 ];
 
-/// `PHRASE_HINTS` de la V1.
+/// `PHRASE_HINTS`.
 const FRASES: [(&str, Intencion, f64); 16] = [
     ("baja energia", I::Suave, 1.0),
     ("energia baja", I::Suave, 1.0),
@@ -243,7 +242,7 @@ impl Metricas {
         inv(self.bpm / 160.0)
     }
 
-    /// `_score_intent` de la V1.
+    /// `_score_intent`.
     fn por_intencion(&self, i: Intencion) -> f64 {
         let d = self.profundo.clone().unwrap_or_default();
         match i {
@@ -322,7 +321,7 @@ pub struct Descubrimiento {
 
 type Puntuador = fn(&Metricas) -> f64;
 
-/// `_section_specs` de la V1: las secciones de cada intención, sin repetir.
+/// `_section_specs`: las secciones de cada intención, sin repetir.
 fn secciones_de(intenciones: &[Intencion]) -> Vec<(&'static str, Puntuador)> {
     let mut v: Vec<(&'static str, Puntuador)> = Vec::new();
     let mut anadir = |id: &'static str, f: Puntuador| {
@@ -466,7 +465,7 @@ fn filas(db: &BaseDeDatos) -> NsResult<Vec<(i64, Metricas)>> {
 
 /// Los `id` de las pistas que alcanzan `confianza_minima` para la frase, de mayor
 /// a menor puntuación y hasta `limite`. Alimenta las playlists automáticas por
-/// ánimo (`auto:mood:*`, con umbral 0,45 como en la V1).
+/// ánimo.
 ///
 /// # Errors
 ///
@@ -588,7 +587,7 @@ mod tests {
     }
 
     #[test]
-    fn la_frase_se_entiende_como_en_la_v1() {
+    fn la_frase_se_entiende() {
         let p = interpretar("Algo TRISTE y melancólico");
         assert_eq!(
             p.get(&I::Triste).copied(),
@@ -660,7 +659,7 @@ mod tests {
     }
 
     #[test]
-    fn la_activacion_del_analisis_de_la_v1_no_cuenta() {
+    fn la_activacion_de_un_analisis_antiguo_no_cuenta() {
         let db = base(&[(1, 0.5, 0.5, 100.0)]);
         db.conexion()
             .unwrap()

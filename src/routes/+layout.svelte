@@ -10,8 +10,8 @@
 
   let { children } = $props();
 
-  // El tema de la V1 que eligió el usuario: el de la caché antes de pintar, y el
-  // de la base en cuanto responde (ver `apariencia.svelte.ts`).
+  // El tema que eligió el usuario: el de la caché antes de pintar, y el de la
+  // base en cuanto responde (ver `apariencia.svelte.ts`).
   $effect.pre(() => {
     aparienciaActual.aplicarCache(document.documentElement);
     void aparienciaActual.cargar(document.documentElement);

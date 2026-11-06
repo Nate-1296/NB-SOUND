@@ -114,7 +114,7 @@ mod tests {
 
 // --- La lista de canciones ---------------------------------------------------------
 
-/// Los órdenes de la V1 (`VistaBiblioteca.qml`), en su orden.
+/// Los órdenes de la biblioteca, en el orden en que se ofrecen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize, TS)]
 #[ts(export, export_to = "../../src/lib/bindings/")]
 #[serde(rename_all = "camelCase")]
@@ -328,8 +328,8 @@ pub fn pistas(
     })
 }
 
-/// Tope de una cola que se arma desde una lista: la V1 metía la lista entera, y con
-/// cien mil canciones eso es una cola que nadie recorre.
+/// Tope de una cola que se arma desde una lista: con cien mil canciones, meter la
+/// lista entera es una cola que nadie recorre.
 pub const MAX_COLA_DESDE_LISTA: u32 = 5_000;
 
 /// Los `id` alrededor de la canción elegida para armar la cola, y en qué posición
@@ -402,7 +402,7 @@ mod pruebas_lista {
     }
 
     #[test]
-    fn cada_orden_de_la_v1_ordena_y_su_inverso_lo_invierte() {
+    fn cada_orden_ordena_y_su_inverso_lo_invierte() {
         let db = base();
         let p = |o| ids(&pistas(&db, &consulta(o), 0, 50).unwrap());
         assert_eq!(p(OrdenPistas::TituloAsc), [1, 2, 3]);
@@ -539,7 +539,7 @@ pub struct AlbumResumen {
     pub artista_id: i64,
     #[ts(type = "number | null")]
     pub anio: Option<i64>,
-    /// `Album` o `Single`, como los guardaba la V1.
+    /// `Album` o `Single`.
     pub tipo: String,
     pub num_pistas: u32,
     pub duracion_seg: f64,
@@ -579,7 +579,7 @@ pub struct ConsultaAlbumes {
     #[ts(type = "number | null")]
     pub artista_id: Option<i64>,
     pub orden: OrdenAlbumes,
-    /// Los grupos de la V1 ("Álbumes" y "Singles/EP"): `false`, solo los de tipo
+    /// Los grupos ("Álbumes" y "Singles/EP"): `false`, solo los de tipo
     /// `Album`; `true`, los demás; sin decir, todos. Opcional para que las
     /// consultas que no lo dicen sigan valiendo.
     #[serde(default)]
@@ -595,7 +595,7 @@ pub struct PaginaAlbumes {
     pub albumes: Vec<AlbumResumen>,
 }
 
-/// Álbumes con alguna canción visible: la V1 ocultaba los vacíos.
+/// Álbumes con alguna canción visible: los vacíos no se enseñan.
 ///
 /// # Errors
 ///
@@ -848,7 +848,7 @@ mod pruebas_albumes {
     }
 
     #[test]
-    fn los_albumes_y_los_sencillos_se_separan_como_en_la_v1() {
+    fn los_albumes_y_los_sencillos_se_separan() {
         let db = base();
         db.conexion()
             .unwrap()

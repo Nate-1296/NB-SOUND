@@ -28,7 +28,7 @@ fn todas(db: &BaseDeDatos) -> Vec<PlaylistResumen> {
 }
 
 #[test]
-fn la_clasificacion_es_la_que_envia_la_v1_al_movil() {
+fn la_clasificacion_es_la_que_espera_el_movil() {
     assert_eq!(
         clasificar("sistema", Some("favoritos"), "sistema"),
         (Categoria::MeGusta, "Me gusta")

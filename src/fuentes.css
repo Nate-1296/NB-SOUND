@@ -2,11 +2,10 @@
  * Las tipografías de la interfaz, servidas por la aplicación y no por el sistema.
  *
  * Sin ellas, la interfaz se pinta con Noto Sans en Linux, Segoe UI en Windows y SF
- * Pro en macOS, y ninguna es la elegida. La V1 dejaba escoger la tipografía
- * (`ui_font_family`) entre las del sistema; la V2 ofrece estas cinco, que viajan
- * dentro (enmienda de ADR-008): Inter de fábrica, como la V1, y Fira Sans, la que
- * tenía la instalación real. Pesos 400 a 700 (Atkinson Hyperlegible solo publica
- * 400 y 700) y los subconjuntos latin y latin-ext. Licencias en
+ * Pro en macOS, y ninguna es la elegida. NB Sound ofrece estas cinco, que viajan
+ * dentro (enmienda de ADR-008): Inter de fábrica, Fira Sans, Atkinson Hyperlegible,
+ * IBM Plex Sans y Source Sans 3. Pesos 400 a 700 (Atkinson Hyperlegible solo
+ * publica 400 y 700) y los subconjuntos latin y latin-ext. Licencias en
  * `static/fuentes/LICENCIAS.md`.
  *
  * `font-display: block` porque un intercambio de fuente a mitad del primer

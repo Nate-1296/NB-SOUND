@@ -1,12 +1,12 @@
 //! Los embeddings del DJ (F6.1.1): `servicios/dj_privado/embeddings.py`.
 //!
 //! Dos proveedores con la misma interfaz. El **determinista** funciona siempre: un
-//! vector sobre los 24 ejes y los 81 conceptos de la ontología, con las mismas
-//! cuentas que la V1, que no finge ser un modelo pero compara frases y pistas de
-//! forma coherente. El **real** usa `all-MiniLM-L6-v2` del agregado de texto: el
-//! tokenizador WordPiece de BERT sin mayúsculas, ONNX Runtime y la media de los
-//! tokens. El tokenizador se escribe aquí y no con `tokenizers` de HuggingFace, que
-//! ningún ADR aprueba: para BERT son unas decenas de líneas.
+//! vector sobre los 24 ejes y los 81 conceptos de la ontología, que no finge ser
+//! un modelo pero compara frases y pistas de forma coherente. El **real** usa
+//! `all-MiniLM-L6-v2` del agregado de texto: el tokenizador WordPiece de BERT sin
+//! mayúsculas, ONNX Runtime y la media de los tokens. El tokenizador se escribe
+//! aquí y no con `tokenizers` de HuggingFace, que ningún ADR aprueba: para BERT son
+//! unas decenas de líneas.
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -15,7 +15,7 @@ use super::ontologia::{self, CONCEPTOS, EJES};
 use crate::agregados::{self, IdAgregado};
 use crate::error::{NsError, NsResult};
 
-/// Lo que se sabe de una pista para su embedding, con los nombres de la V1.
+/// Lo que se sabe de una pista para su embedding, con los nombres.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct RasgosPista {
     pub numericos: Vec<(&'static str, f64)>,
@@ -55,7 +55,7 @@ pub fn coseno(a: &[f64], b: &[f64]) -> f64 {
     }
 }
 
-/// Qué rasgo numérico empuja qué eje, en el orden de la V1.
+/// Qué rasgo numérico empuja qué eje, en el orden.
 const MAPEOS: [(&str, &str); 21] = [
     ("energy", "energy"),
     ("danceability_proxy", "danceability"),
@@ -134,7 +134,7 @@ impl Proveedor for Determinista {
         }
         if let Some(g) = r.genero.as_deref().map(str::trim).filter(|g| !g.is_empty()) {
             let g = g.to_lowercase();
-            // El último concepto que declara el género, como el `dict` de la V1.
+            // El último concepto que declara el género, como el `dict`.
             if let Some(i) = CONCEPTOS
                 .iter()
                 .rposition(|c| c.generos.iter().any(|x| x.to_lowercase() == g))
@@ -324,7 +324,7 @@ pub struct Real {
     dimension: usize,
 }
 
-/// Como mucho 256 tokens, como la V1.
+/// Como mucho 256 tokens.
 const MAX_TOKENS: usize = 256;
 
 impl Real {
@@ -463,7 +463,7 @@ mod tests {
     }
 
     #[test]
-    fn el_determinista_da_los_mismos_vectores_que_la_v1() {
+    fn el_determinista_da_siempre_los_mismos_vectores() {
         let d = dorada();
         let mut p = Determinista;
         assert_eq!(p.dimension() as u64, d["dim"].as_u64().unwrap());

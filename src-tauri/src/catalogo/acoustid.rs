@@ -2,8 +2,8 @@
 //!
 //! La huella la calcula `fpcalc` 1.6.2, que viaja dentro del instalador
 //! (F0.4.6: `rusty-chromaprint` no da huellas idénticas). AcoustID devuelve las
-//! grabaciones de MusicBrainz que suenan así, con su confianza; la V1
-//! (`external/acoustid_client.py`) descartaba las de menos de 0,60 y la V2 también.
+//! grabaciones de MusicBrainz que suenan así, con su confianza; las de menos de
+//! 0,60 se descartan.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -14,9 +14,9 @@ use serde::Deserialize;
 use crate::error::{NsError, NsResult};
 use crate::net::{Red, Servicio};
 
-/// `_SCORE_MINIMO` de la V1.
+/// `_SCORE_MINIMO`.
 pub const CONFIANZA_MINIMA: f64 = 0.60;
-/// `ACOUSTID_MAX_RETRIES` y la espera inicial de la V1, que se dobla.
+/// `ACOUSTID_MAX_RETRIES` y la espera inicial, que se dobla.
 const REINTENTOS: u32 = 3;
 const ESPERA_INICIAL: Duration = Duration::from_secs(2);
 
@@ -123,8 +123,8 @@ pub fn interpretar(cuerpo: &[u8]) -> NsResult<Vec<Coincidencia>> {
     Ok(salida)
 }
 
-/// Pregunta a AcoustID por una huella, con los reintentos de la V1 ante fallos de
-/// red. Sin consentimiento o sin red no reintenta: no va a cambiar.
+/// Pregunta a AcoustID por una huella, reintentando ante fallos de red. Sin
+/// consentimiento o sin red no reintenta: no va a cambiar.
 ///
 /// # Errors
 ///

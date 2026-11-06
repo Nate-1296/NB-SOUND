@@ -2,9 +2,7 @@
 //!
 //! Es una máquina de estados pura: no toca el motor ni la base. Cada operación
 //! cambia la cola y devuelve la [`Accion`] que el motor tiene que hacer. Su
-//! especificación son las pruebas de la V1 (`legado/tests/test_reproductor_ui_contract.py`),
-//! traducidas una a una al final de este archivo con el nombre de la original, y la
-//! lógica es la de `legado/servicios/reproductor.py`:
+//! especificación son las pruebas, al final de este archivo:
 //!
 //! * **La cola no se consume.** La pista que termina se queda; solo avanza el
 //!   puntero, y se puede volver atrás, como en Spotify.
@@ -13,9 +11,6 @@
 //!   partida, completo.
 //! * **Elegir una pista suelta sustituye la cola** por esa pista.
 //!
-//! La V1 guardaba además un "contexto" que reconstruía la cola con repetir todo,
-//! pero lo copiaba de la cola tras cada cambio, así que nunca difería de ella: no
-//! se porta.
 
 /// Una fila de la cola. Dos filas son la misma pista si comparten `pista_id`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,8 +26,8 @@ pub enum Repeticion {
 }
 
 impl Repeticion {
-    /// Los valores que guardaba la V1 (`modo_repeticion`).
-    pub fn desde_v1(texto: &str) -> Option<Self> {
+    /// Los valores con que se guarda (`modo_repeticion`).
+    pub fn desde_texto(texto: &str) -> Option<Self> {
         match texto {
             "ninguno" => Some(Self::Ninguno),
             "todo" => Some(Self::Todo),

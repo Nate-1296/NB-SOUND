@@ -1,5 +1,5 @@
 {
-  "$comentario": "Escenario inventado para las respuestas doradas del servidor móvil (ADR-005). Lo siembra scripts/prototipos/contrato-movil/grabar.py en la V1 y lo sembrará el arnés de Rust en la V2. Ningún dato es del usuario.",
+  "$comentario": "Escenario inventado para las respuestas doradas del servidor móvil (ADR-005). Lo siembra el arnés de Rust en NB Sound. Ningún dato es del usuario.",
   "artistas": [{ "id": 1, "nombre": "Banda Uno" }, { "id": 2, "nombre": "Solista Dos" }],
   "albums": [
     {

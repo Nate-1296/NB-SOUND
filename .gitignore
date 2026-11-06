@@ -2,7 +2,6 @@
 # NB Sound
 # Regla: en el repositorio solo entra código fuente y documentación.
 # Nada generado, nada descargado, nada secreto, ningún binario precompilado.
-# La V1 congelada tiene su propio .gitignore en legado/.
 # ---------------------------------------------------------------------------
 
 # Node / pnpm
@@ -81,6 +80,4 @@ Thumbs.db
 .idea/
 .directory
 
-# Entornos de las herramientas de prototipo (scripts/prototipos/)
 .venv/
-scripts/prototipos/lista/dist/

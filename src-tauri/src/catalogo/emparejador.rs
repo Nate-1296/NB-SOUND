@@ -1,8 +1,8 @@
-//! Puntuar a los candidatos y decidir (F4.1.6, primera etapa): `core/matcher.py`
-//! de la V1, con sus pesos, penalizaciones, bonos y umbrales.
+//! Puntuar a los candidatos y decidir (F4.1.6, primera etapa), con sus pesos,
+//! penalizaciones, bonos y umbrales.
 //!
 //! El desempate por IA (F4.1.7) entra por [`Desempate`]: sin él, una ambigüedad
-//! queda en revisión, como en la V1 sin clave de IA.
+//! queda en revisión sin clave de IA.
 
 use super::modelo::{CausaCuarentena, CausaRevision, DeAcoustid, DeShazam, Normalizada, Veredicto};
 use super::musicbrainz::{Candidato, MAX_CANDIDATOS};
@@ -11,7 +11,7 @@ use super::texto::{
     para_comparacion, redondear, similitud_combinada,
 };
 
-/// `SCORE_WEIGHTS`, en el orden en que la V1 los suma.
+/// `SCORE_WEIGHTS`, en el orden en que se suman.
 const PESOS: [(Criterio, f64); 7] = [
     (Criterio::Titulo, 0.28),
     (Criterio::Artista, 0.23),
@@ -202,11 +202,10 @@ fn suma_python(valores: impl Iterator<Item = f64>) -> f64 {
 pub fn puntuar(c: &mut Candidato, ctx: &Contexto<'_>) -> Detalle {
     let n = ctx.norm;
     let isrc_archivo = ctx.isrc();
-    // La V1 empezaba cada puntuación con la lista vacía y la sustituía al final:
-    // las marcas `tipo_secundario:` que puso el cliente de MusicBrainz no llegaban
-    // nunca aquí, y la penalización por vivo o remix no se aplicaba. Se conserva
-    // así hasta medir la paridad global (el tipo penalizado sí cuenta, por
-    // `puntuar_tipo`).
+    // Cada puntuación empieza con la lista vacía y la sustituye al final: las
+    // marcas `tipo_secundario:` que puso el cliente de MusicBrainz no llegan
+    // aquí, y la penalización por vivo o remix no se aplica (el tipo penalizado sí
+    // cuenta, por `puntuar_tipo`).
     c.penalizaciones.clear();
     let mut d = Detalle {
         isrc: match (isrc_archivo, c.isrc.as_deref()) {
@@ -536,7 +535,7 @@ mod tests {
     }
 
     #[test]
-    fn la_duracion_y_el_numero_puntuan_como_en_la_v1() {
+    fn la_duracion_y_el_numero_puntuan() {
         assert_eq!(puntuar_duracion(Some(200.0), Some(202.5)), 1.0);
         assert_eq!(puntuar_duracion(Some(200.0), Some(206.5)), 0.75);
         assert_eq!(puntuar_duracion(Some(200.0), Some(220.0)), 0.275);
@@ -660,7 +659,7 @@ mod tests {
         );
     }
 
-    fn veredicto_v1(v: Veredicto) -> (&'static str, Option<String>) {
+    fn veredicto(v: Veredicto) -> (&'static str, Option<String>) {
         let texto = |x: &dyn erased_serialize::A| x.texto();
         match v {
             Veredicto::Aceptado => ("aceptado", None),
@@ -685,15 +684,17 @@ mod tests {
         }
     }
 
-    /// Lo que decidió la V1 en los casos de `scripts/prototipos/emparejador/grabar.py`.
+    /// Las decisiones esperadas en los casos de `tests/fixtures/emparejador_doradas.json`.
     #[test]
-    fn la_normalizacion_y_la_decision_son_las_de_la_v1() {
+    fn la_normalizacion_y_la_decision_son_las_esperadas() {
         use crate::catalogo::modelo::Fuente;
-        let v1: serde_json::Value =
-            serde_json::from_str(include_str!("../../tests/fixtures/emparejador_v1.json")).unwrap();
+        let doradas: serde_json::Value = serde_json::from_str(include_str!(
+            "../../tests/fixtures/emparejador_doradas.json"
+        ))
+        .unwrap();
         let txt = |v: &serde_json::Value| v.as_str().map(str::to_owned);
         let mut fallos = Vec::new();
-        for (k, c) in v1["casos"].as_array().unwrap().iter().enumerate() {
+        for (k, c) in doradas["casos"].as_array().unwrap().iter().enumerate() {
             let cr = &c["cruda"];
             let cruda = Cruda {
                 titulo: txt(&cr["titulo"]),
@@ -725,7 +726,7 @@ mod tests {
                     .filter_map(|x| x.as_f64())
                     .collect(),
             });
-            let esperado = &c["v1"];
+            let esperado = &c["esperado"];
             let r = normalizar(
                 &cruda,
                 c["duracion"].as_f64().unwrap(),
@@ -735,12 +736,12 @@ mod tests {
             );
             let Ok(n) = r else {
                 if esperado["ok"].as_bool() != Some(false) {
-                    fallos.push(format!("caso {k}: la V2 no normaliza y la V1 sí"));
+                    fallos.push(format!("caso {k}: no normaliza y se esperaba que sí"));
                 }
                 continue;
             };
             if esperado["ok"].as_bool() != Some(true) {
-                fallos.push(format!("caso {k}: la V2 normaliza y la V1 no"));
+                fallos.push(format!("caso {k}: normaliza y se esperaba que no"));
                 continue;
             }
             let en = &esperado["normalizada"];
@@ -753,7 +754,9 @@ mod tests {
                 "fuente_titulo": fuente(n.fuente_titulo), "fuente_artista": fuente(n.fuente_artista),
             });
             if *en != nuestra {
-                fallos.push(format!("caso {k}: normalizada\n  V1 {en}\n  V2 {nuestra}"));
+                fallos.push(format!(
+                    "caso {k}: normalizada\n  esperada {en}\n  obtenida {nuestra}"
+                ));
                 continue;
             }
             let candidatos: Vec<Candidato> = c["candidatos"]
@@ -802,14 +805,14 @@ mod tests {
                 acoustid: acoustid.as_ref(),
             };
             let d = evaluar(candidatos, &ctx, None);
-            let (tipo, causa) = veredicto_v1(d.veredicto);
+            let (tipo, causa) = veredicto(d.veredicto);
             let nuestra = serde_json::json!({
                 "tipo": tipo, "causa": causa, "puntaje": redondear(d.puntaje, 6),
                 "elegido": d.elegido.map(|e| e.candidato.mbid_grabacion),
             });
             if esperado["decision"] != nuestra {
                 fallos.push(format!(
-                    "caso {k}: decisión\n  V1 {}\n  V2 {nuestra}",
+                    "caso {k}: decisión\n  esperada {}\n  obtenida {nuestra}",
                     esperado["decision"]
                 ));
             }

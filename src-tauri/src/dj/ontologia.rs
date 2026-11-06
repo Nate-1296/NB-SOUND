@@ -5,9 +5,8 @@
 //! qué otros choca o se refuerza. Es determinista y sin modelos: detecta conceptos
 //! en una frase y los traduce a ejes.
 //!
-//! Los datos están en `ontologia_datos.rs`, transcritos de la V1 en su orden; aquí,
-//! la búsqueda y la agregación, que deben dar lo mismo que la V1 (lo comprueban las
-//! respuestas doradas de `intencion.rs`).
+//! Los datos están en `ontologia_datos.rs`, en un orden fijo; aquí, la búsqueda y
+//! la agregación (lo comprueban las respuestas doradas de `intencion.rs`).
 
 pub use super::ontologia_datos::{CONCEPTOS, EJES};
 use crate::catalogo::texto::eliminar_acentos;
@@ -41,7 +40,7 @@ pub struct Concepto {
 }
 
 /// Un mapa con el orden de inserción, como un `dict` de Python: el orden decide la
-/// suma de coma flotante y, con ella, la paridad con la V1.
+/// suma de coma flotante y, con ella, el resultado.
 pub type Mapa = Vec<(String, f64)>;
 
 pub fn sumar(m: &mut Mapa, clave: &str, valor: f64) {
@@ -57,8 +56,8 @@ pub fn valor(m: &Mapa, clave: &str) -> Option<f64> {
 }
 
 /// Un [`Mapa`] como objeto JSON, leído en el orden del documento: así una intención
-/// guardada por la V1 vuelve con el orden de su `dict`, y con él, las mismas sumas
-/// y los mismos desempates.
+/// guardada vuelve con su orden, y con él, las mismas sumas y los mismos
+/// desempates.
 pub mod objeto {
     use serde::de::{MapAccess, Visitor};
     use serde::ser::SerializeMap;
@@ -299,7 +298,7 @@ pub fn estilo_transicion(coincidencias: &[Coincidencia]) -> Mapa {
     pesos
 }
 
-/// `curva_energia_sugerida`, en el orden de prioridad de la V1.
+/// `curva_energia_sugerida`, en el orden de prioridad.
 #[must_use]
 pub fn curva_energia(coincidencias: &[Coincidencia]) -> Option<&'static str> {
     let hay = |nombres: &[&str]| {
@@ -348,7 +347,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn la_tabla_es_la_de_la_v1() {
+    fn la_tabla_es_la_esperada() {
         assert_eq!((CONCEPTOS.len(), EJES.len()), (81, 24));
         let mut nombres: Vec<&str> = CONCEPTOS.iter().map(|c| c.nombre).collect();
         nombres.sort_unstable();
@@ -369,10 +368,9 @@ mod tests {
                 }
             }
         }
-        // Cinco contradicciones de la V1 citan conceptos que no existen (ejes o un
-        // nombre mal escrito) y nunca se disparan. Se conservan: corregirlas
-        // cambiaría las sesiones respecto de la V1. Esta lista impide que aparezcan
-        // otras sin decidirlo.
+        // Cinco contradicciones citan conceptos que no existen (ejes o un nombre
+        // mal escrito) y nunca se disparan. Se conservan: corregirlas cambiaría las
+        // sesiones. Esta lista impide que aparezcan otras sin decidirlo.
         assert_eq!(
             muertas,
             [
@@ -386,8 +384,8 @@ mod tests {
     }
 
     #[test]
-    fn la_busqueda_da_las_mismas_coincidencias_que_la_v1() {
-        // Salidas de `buscar_conceptos` de la V1 (generadas con su módulo).
+    fn la_busqueda_da_las_coincidencias_esperadas() {
+        // Salidas esperadas de `buscar_conceptos`.
         type Esperado = &'static [(&'static str, usize, usize)];
         let casos: [(&str, Esperado); 3] = [
             (

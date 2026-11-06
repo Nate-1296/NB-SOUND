@@ -1,5 +1,5 @@
 <!--
-  Biblioteca, con la disposición de la V1 (`VistaBiblioteca.qml`): título y cuenta,
+  Biblioteca: título y cuenta,
   las pestañas Álbumes, Artistas y Pistas arriba a la derecha, la búsqueda, el
   filtro de favoritas y los órdenes en fichas. La lista de canciones es la ventana
   virtual medida en F0.4.7; Sin verificar es nuevo (enmienda de ADR-007).

@@ -1,18 +1,17 @@
 //! El arnés de respuestas doradas (ADR-005, F0.4.5 y Fase 3).
 //!
-//! Siembra en la base de la V2 el mismo escenario inventado que
-//! `scripts/prototipos/contrato-movil/grabar.py` sembró en la V1, enciende el
-//! servidor de la V2 y hace las mismas peticiones, como las haría el teléfono.
-//! Compara con lo que respondió la V1 (`respuestas.json`) con las reglas de
+//! Siembra en la base de NB Sound un escenario inventado, enciende el servidor y
+//! hace las mismas peticiones que haría el teléfono. Compara con las respuestas
+//! doradas (`respuestas.json`) con las reglas de
 //! `docs/engineering/contrato-movil.md`:
 //!
 //! * mismo código y mismas cabeceras de las cinco que se grabaron;
 //! * mismo cuerpo, salvo los marcadores `<...>` (cualquier cadena)
-//!   y los campos que la V2 añade;
-//! * el `content-length` de la V1 tiene que salir exacto al quitar lo añadido:
+//!   y los campos que NB Sound añade;
+//! * el `content-length` grabado tiene que salir exacto al quitar lo añadido:
 //!   es lo que prueba que el JSON se escribe como lo escribía Python;
-//! * las diferencias deliberadas con la V1 están en `DIFERENCIAS`, cada una con
-//!   su motivo, y en el documento del contrato.
+//! * las diferencias deliberadas están en `DIFERENCIAS`, cada una con su motivo,
+//!   y en el documento del contrato.
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -32,17 +31,18 @@ const CABECERAS: [&str; 5] = [
     "accept-ranges",
     "x-nb-sound-hash",
 ];
-/// Lo que la V2 hace distinto a propósito: la ruta del valor dentro de la
+/// Lo que NB Sound hace distinto a propósito: la ruta del valor dentro de la
 /// respuesta (`*` es cualquier índice) y por qué.
 const DIFERENCIAS: [(&str, &str); 2] = [
     (
         "playlists.*.cover_url",
-        "la V1 solo daba portada a las playlists con un mosaico ya generado, y en la \
-         instalación real lo tenían todas; la V2 lo compone al pedirlo",
+        "las respuestas grabadas solo daban portada a las playlists con un mosaico ya \
+         generado; NB Sound lo compone al pedirlo",
     ),
     (
         "frames.*.indice",
-        "la V1 mandaba -1 como índice de la cola cuando era 0 (`int(x or -1)`)",
+        "las respuestas grabadas mandaban -1 como índice de la cola cuando era 0 \
+         (`int(x or -1)`); NB Sound manda el índice",
     ),
 ];
 
@@ -57,8 +57,8 @@ fn leer(nombre: &str) -> Value {
     serde_json::from_str(&std::fs::read_to_string(ruta).unwrap()).unwrap()
 }
 
-/// Siembra el escenario como lo hace `grabar.py::sembrar` en la V1, con el
-/// contador en pausa y las mismas versiones, en el mismo orden.
+/// Siembra el escenario con el contador en pausa y las mismas versiones, en el
+/// mismo orden en que se grabaron las respuestas.
 fn sembrar(e: &Value, db: &BaseDeDatos, rutas: &Rutas, musica: &Path) {
     let mut conn = db.conexion().unwrap();
     let tx = conn.transaction().unwrap();
@@ -211,7 +211,7 @@ fn sembrar(e: &Value, db: &BaseDeDatos, rutas: &Rutas, musica: &Path) {
     tx.commit().unwrap();
 }
 
-/// El estado del reproductor del escenario, como lo publicaría el de la V2.
+/// El estado del reproductor del escenario, como lo publicaría el de NB Sound.
 fn instantanea(e: &Value) -> Instantanea {
     let r = &e["reproductor"];
     let s = &r["estado"];
@@ -255,19 +255,19 @@ fn tolerada(ruta: &str) -> bool {
     })
 }
 
-/// Compara lo de la V2 con lo de la V1 y devuelve lo de la V2 tal como lo habría
-/// escrito la V1: sin los campos añadidos y con las diferencias deliberadas
+/// Compara lo de NB Sound con la respuesta dorada y devuelve lo de NB Sound tal
+/// como lo habría escrito la grabación: sin los campos añadidos y con las diferencias deliberadas
 /// devueltas a su valor. Con eso se recalcula el `content-length`.
-fn comparar(ruta: &str, v1: &Value, v2: &Value, fallos: &mut Vec<String>) -> Value {
+fn comparar(ruta: &str, dorada: &Value, recibido: &Value, fallos: &mut Vec<String>) -> Value {
     if tolerada(ruta) {
-        return v1.clone();
+        return dorada.clone();
     }
-    match (v1, v2) {
+    match (dorada, recibido) {
         (Value::String(m), _) if m.starts_with('<') && m.ends_with('>') => {
-            if !v2.is_string() {
-                fallos.push(format!("{ruta}: se esperaba una cadena, llegó {v2}"));
+            if !recibido.is_string() {
+                fallos.push(format!("{ruta}: se esperaba una cadena, llegó {recibido}"));
             }
-            v2.clone()
+            recibido.clone()
         }
         (Value::Object(a), Value::Object(b)) => {
             let mut proyectado = Map::new();
@@ -285,7 +285,7 @@ fn comparar(ruta: &str, v1: &Value, v2: &Value, fallos: &mut Vec<String>) -> Val
         (Value::Array(a), Value::Array(b)) => {
             if a.len() != b.len() {
                 fallos.push(format!(
-                    "{ruta}: {} elementos en la V1, {} en la V2",
+                    "{ruta}: {} elementos esperados, {} recibidos",
                     a.len(),
                     b.len()
                 ));
@@ -301,12 +301,12 @@ fn comparar(ruta: &str, v1: &Value, v2: &Value, fallos: &mut Vec<String>) -> Val
         (Value::Number(a), Value::Number(b))
             if a.as_f64() == b.as_f64() && a.is_f64() == b.is_f64() =>
         {
-            v2.clone()
+            recibido.clone()
         }
-        _ if v1 == v2 => v2.clone(),
+        _ if dorada == recibido => recibido.clone(),
         _ => {
-            fallos.push(format!("{ruta}: la V1 dio {v1}, la V2 da {v2}"));
-            v2.clone()
+            fallos.push(format!("{ruta}: se esperaba {dorada}, llegó {recibido}"));
+            recibido.clone()
         }
     }
 }
@@ -522,7 +522,7 @@ fn temporal(nombre: &str) -> PathBuf {
 }
 
 #[test]
-fn la_v2_responde_al_telefono_lo_mismo_que_la_v1() {
+fn el_servidor_responde_al_telefono_lo_que_dicen_las_doradas() {
     let escenario = leer("escenario.json");
     let doradas = leer("respuestas.json");
     let dir = temporal("doradas");
@@ -546,7 +546,6 @@ fn la_v2_responde_al_telefono_lo_mismo_que_la_v1() {
             host: Some("127.0.0.1".parse().unwrap()),
             mdns: false,
             puertos: 0..=0,
-            identidad_v1: None,
         },
         || {},
     );
@@ -572,9 +571,9 @@ fn la_v2_responde_al_telefono_lo_mismo_que_la_v1() {
     assert_eq!(pasos.len(), respuestas.len());
     let mut token: Option<String> = None;
     let mut fallos = Vec::new();
-    for (paso, v1) in pasos.iter().zip(respuestas) {
+    for (paso, dorada) in pasos.iter().zip(respuestas) {
         let nombre = paso["nombre"].as_str().unwrap();
-        assert_eq!(nombre, v1["nombre"].as_str().unwrap());
+        assert_eq!(nombre, dorada["nombre"].as_str().unwrap());
         if paso.get("ws").is_some() {
             let runtime = tokio::runtime::Builder::new_current_thread()
                 .enable_all()
@@ -588,7 +587,7 @@ fn la_v2_responde_al_telefono_lo_mismo_que_la_v1() {
             ));
             comparar(
                 nombre,
-                &json!({"frames": v1["frames"]}),
+                &json!({"frames": dorada["frames"]}),
                 &json!({"frames": frames}),
                 &mut fallos,
             );
@@ -596,10 +595,10 @@ fn la_v2_responde_al_telefono_lo_mismo_que_la_v1() {
         }
         let qr = servidor.token_vigente().unwrap_or_default();
         let r = pedir(&agente, &base, paso, token.as_deref(), &qr);
-        if r.estado != v1["estado"].as_u64().unwrap() as u16 {
+        if r.estado != dorada["estado"].as_u64().unwrap() as u16 {
             fallos.push(format!(
-                "{nombre}: estado {} en la V1, {} en la V2",
-                v1["estado"], r.estado
+                "{nombre}: estado {} esperado, {} recibido",
+                dorada["estado"], r.estado
             ));
         }
         let tipo = r
@@ -617,28 +616,28 @@ fn la_v2_responde_al_telefono_lo_mismo_que_la_v1() {
             json!({"bytes": r.cuerpo.len(), "sha256": hex(&Sha256::digest(&r.cuerpo))})
         };
         let mut avisos = Vec::new();
-        let como_v1 = comparar(nombre, &v1["cuerpo"], &cuerpo, &mut avisos);
+        let como_referencia = comparar(nombre, &dorada["cuerpo"], &cuerpo, &mut avisos);
         fallos.extend(avisos);
-        let esperadas = v1["cabeceras"].as_object().unwrap();
+        let esperadas = dorada["cabeceras"].as_object().unwrap();
         for c in CABECERAS {
             let (a, b) = (esperadas.get(c), r.cabeceras.get(c));
             if c == "content-length" && tipo.contains("json") {
-                // Sin lo añadido, el cuerpo de la V2 tiene que medir lo mismo.
-                let medido = if como_v1 == cuerpo {
+                // Sin lo añadido, el cuerpo de NB Sound tiene que medir lo mismo.
+                let medido = if como_referencia == cuerpo {
                     r.cuerpo.len()
                 } else {
-                    movil::json_como_v1(&como_v1).len()
+                    movil::json_del_telefono(&como_referencia).len()
                 };
                 if a.and_then(Value::as_str) != Some(medido.to_string().as_str()) {
                     fallos.push(format!(
-                        "{nombre}: content-length {a:?} en la V1, {medido} sin lo añadido"
+                        "{nombre}: content-length {a:?} esperado, {medido} sin lo añadido"
                     ));
                 }
                 continue;
             }
             if a != b {
                 fallos.push(format!(
-                    "{nombre}: cabecera {c}: {a:?} en la V1, {b:?} en la V2"
+                    "{nombre}: cabecera {c}: {a:?} esperada, {b:?} recibida"
                 ));
             }
         }
@@ -646,7 +645,7 @@ fn la_v2_responde_al_telefono_lo_mismo_que_la_v1() {
     servidor.apagar();
     assert!(
         fallos.is_empty(),
-        "diferencias con la V1:\n{}",
+        "diferencias con las respuestas doradas:\n{}",
         fallos.join("\n")
     );
     assert_eq!(
@@ -680,7 +679,6 @@ fn el_telefono_recibe_los_cambios_y_quitarlo_lo_desconecta() {
             host: Some("127.0.0.1".parse().unwrap()),
             mdns: false,
             puertos: 0..=0,
-            identidad_v1: None,
         },
         || {},
     );

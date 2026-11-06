@@ -7,13 +7,12 @@
 
 ## Contexto
 
-La V1 tiene 18 vistas y 23.848 líneas de QML solo en ellas. Las más grandes son justo las que menos deberían pesar:
-Configuración (2.951 líneas), Importación (1.726), Karaoke (1.277) y Estado del Sistema (587). La barra lateral
-tiene un interruptor **Modo Pro / Modo Simple** (`NavLateral.qml`, `ui_mode`) que activa "Configuración avanzada e
-Importación avanzada". Es decir: la aplicación admite que tiene dos productos y le pide al usuario que elija.
+Un reproductor con 18 vistas acaba con las más grandes justo donde menos deberían pesar: Configuración,
+Importación, Karaoke y Estado del Sistema. Un interruptor **Modo Pro / Modo Simple** que activa "Configuración
+avanzada e Importación avanzada" admite que la aplicación tiene dos productos y le pide al usuario que elija.
 
-La V1 pide además configurar seis directorios (entrada, biblioteca, cuarentena, revisión, logs, procesados) y
-expone más de 100 variables en `.env`.
+Tampoco tiene sentido pedir que se configuren seis directorios (entrada, biblioteca, cuarentena, revisión, logs,
+procesados) ni exponer más de 100 variables en un `.env`.
 
 ## Decisión
 
@@ -74,10 +73,9 @@ está.
 **Dónde vive.** Una entrada **Por revisar** en la barra lateral, con su número, que **solo aparece cuando hay algo
 pendiente** y desaparece al vaciarse (revelación progresiva). No se cuenta entre los siete destinos fijos.
 
-**Qué muestra.** Cada archivo como "No importado", con el motivo en lenguaje llano. Las causas reales de la V1
-(116 casos en la instalación real) se traducen así:
+**Qué muestra.** Cada archivo como "No importado", con el motivo en lenguaje llano. Las causas se traducen así:
 
-| Causa interna (V1) | Lo que ve el usuario | Acciones |
+| Causa interna | Lo que ve el usuario | Acciones |
 |---|---|---|
 | `candidatos_ambiguos` | "Encontramos varias versiones posibles de esta canción" | Elegir una (comparador lado a lado), importar tal como está, descartar |
 | `puntaje_intermedio`, `duracion_marginal` | "No estamos seguros de que sea esta canción" | Confirmar el candidato, importar tal como está, descartar |
@@ -103,7 +101,6 @@ aditivo y el móvil lo ignora ([ADR-005](./ADR-005-contrato-movil.md)).
 en una carpeta que el usuario tenga que gestionar. Al importarlo se organiza en la carpeta de música por sus
 etiquetas (si está activado "organizar archivos"; si no, se queda donde estaba). Descartar lo manda a la papelera
 del sistema; nunca se borra definitivamente.
-
 
 ## Enmienda del 2026-11-04: la consola de karaoke
 

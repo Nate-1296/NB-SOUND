@@ -14,7 +14,7 @@
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
   import MenuSelector from '#lib/ui/MenuSelector.svelte';
-  import type { TemaV1 } from '#lib/ui/temas-v1.ts';
+  import type { TemaDelCatalogo } from '#lib/ui/temas.ts';
 
   interface Props {
     seccion?: 'reproduccion' | 'apariencia';
@@ -79,9 +79,9 @@
   }
 
   // Los 63 temas se cargan aparte: no pesan en el arranque (`check-paquete`).
-  let temas = $state<readonly TemaV1[]>([]);
+  let temas = $state<readonly TemaDelCatalogo[]>([]);
   $effect(() => {
-    void import('#lib/ui/temas-v1.ts').then((m) => (temas = m.TEMAS_V1));
+    void import('#lib/ui/temas.ts').then((m) => (temas = m.TEMAS));
   });
 
   function esClaro(fondo: string): boolean {

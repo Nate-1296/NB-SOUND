@@ -106,7 +106,7 @@ añadir canciones sueltas* y *Vengo de otro equipo* (restaurar una copia de segu
 Tres pestañas, cada una con su búsqueda, su orden y cuatro tamaños de vista (cuadrícula pequeña, mediana, grande o
 lista). Cada pestaña recuerda los suyos.
 
-* **Álbumes**: todos, solo álbumes, o sencillos y EP, como en la V1. Se cargan por páginas al llegar al final.
+* **Álbumes**: todos, solo álbumes, o sencillos y EP. Se cargan por páginas al llegar al final.
 * **Artistas**: en círculos, con su número de álbumes y canciones.
 * **Pistas**: la lista entera, con filtros de favoritas, sin verificar y listas para cantar ("Preparar mis
   favoritas" está en la consola de karaoke, no aquí). Cada fila: portada, título y artista, álbum, la favorita, la

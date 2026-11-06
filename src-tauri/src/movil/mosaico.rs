@@ -1,10 +1,9 @@
 //! La portada de una playlist para el teléfono (`/api/v1/asset/playlist/{id}`).
 //!
-//! La V1 guardaba un mosaico generado en cada playlist; el importador no lo trajo
-//! porque se recalcula (`migracion-v1.md`). La interfaz de la V2 lo compone en el
-//! webview, pero el teléfono pide una imagen, así que aquí se compone una vez, con
-//! las mismas cuatro portadas, y se guarda en la caché con el nombre de lo que la
-//! forma: si cambian las pistas, cambia el nombre y se compone otra.
+//! La interfaz de NB Sound compone el mosaico de una playlist en el webview, pero
+//! el teléfono pide una imagen, así que aquí se compone una vez, con las mismas
+//! cuatro portadas, y se guarda en la caché con el nombre de lo que la forma: si
+//! cambian las pistas, cambia el nombre y se compone otra.
 
 use std::io::Cursor;
 use std::path::PathBuf;
@@ -30,8 +29,8 @@ fn abrir(ruta: &PathBuf) -> Option<DynamicImage> {
         .ok()
 }
 
-/// Una sola portada si hay menos de cuatro distintas, como el mosaico de la V1 y
-/// el de la interfaz; con cuatro, la cuadrícula de 2×2.
+/// Una sola portada si hay menos de cuatro distintas, como el mosaico de la
+/// interfaz; con cuatro, la cuadrícula de 2×2.
 fn componer(portadas: &[DynamicImage]) -> RgbImage {
     if portadas.len() < 4 {
         return portadas[0]

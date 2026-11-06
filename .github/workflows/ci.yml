@@ -1,8 +1,6 @@
 name: CI
 
-# Verificación de la V2 en las tres plataformas (F0.3.2). Mientras el
-# repositorio sea privado y sin minutos, puede no llegar a ejecutarse; el estado
-# real está en docs/plan/fase-0-fundaciones.md.
+# Verificación de NB Sound en las tres plataformas (F0.3.2).
 
 on:
   push:

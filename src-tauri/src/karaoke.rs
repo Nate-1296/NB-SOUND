@@ -1,11 +1,10 @@
 //! El karaoke: separar la voz con `htdemucs` en ONNX (F5.2.1, ADR-002).
 //!
-//! El algoritmo es el de `_separar_por_segmentos` de la V1
-//! (`legado/servicios/karaoke/separador.py`), el mismo que midió F0.4.2 contra
+//! El algoritmo es el de `_separar_por_segmentos`, el mismo que midió F0.4.2 contra
 //! PyTorch: la mezcla se normaliza por su media y su desviación, se recorre en
 //! segmentos de 7,8 s (la entrada fija del grafo exportado) con un 25 % de
 //! solapamiento y ventana triangular, y se deshace la normalización. El
-//! instrumental es la mezcla menos la voz, como en la V1. Solo se acumula la voz:
+//! instrumental es la mezcla menos la voz. Solo se acumula la voz:
 //! los otros tres stems no se usan y ocuparían otro tanto de memoria.
 //!
 //! **Memoria (P8).** F0.4.2 vio a ONNX Runtime llegar a 9 GB con su configuración
@@ -16,7 +15,7 @@
 //! **Formato (P14).** El instrumental se guarda como WAV de 16 bits: sin `ffmpeg`
 //! (enmienda de ADR-006) no hay codificador de MP3, y el teléfono reproduce WAV con
 //! seguridad, cosa que con FLAC está sin comprobar (P7). Ocupa unas cuatro veces
-//! lo que el MP3 de la V1.
+//! lo que el MP3.
 
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
@@ -292,8 +291,8 @@ fn inferir(s: &mut ort::session::Session, trozo: &[f32]) -> NsResult<Vec<f32>> {
     Ok(datos.to_vec())
 }
 
-/// Diez segundos con contenido en todo el espectro, como `_generar_audio_sintetico`
-/// de la V1: grave, medio y agudo modulados, con un poco de ruido para que el
+/// Diez segundos con contenido en todo el espectro (`_generar_audio_sintetico`):
+/// grave, medio y agudo modulados, con un poco de ruido para que el
 /// modelo no tenga un silencio fácil, y el canal derecho 30 muestras detrás.
 fn audio_de_prueba() -> (Vec<f32>, Vec<f32>) {
     use std::f64::consts::TAU;

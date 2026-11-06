@@ -1,16 +1,13 @@
 -- V6: karaoke y DJ Privado (F1.1.6).
 --
--- Destino de cada columna de la V1: docs/engineering/migracion-v1.md.
 
--- Los stems de cada pista. La V1 repartía este estado entre cinco columnas de
--- `pistas` y la tabla de trabajos; aquí hay una fila por pista que tiene, o
--- espera, su instrumental. Una pista sin fila no se ha pedido nunca.
+-- Los stems de cada pista: una fila por pista que tiene, o espera, su
+-- instrumental. Una pista sin fila no se ha pedido nunca.
 CREATE TABLE stems (
     pista_id       INTEGER PRIMARY KEY REFERENCES pistas (id) ON DELETE CASCADE,
     estado         TEXT    NOT NULL DEFAULT 'pendiente'
                            CHECK (estado IN ('pendiente', 'separando', 'lista', 'fallida')),
-    -- Relativas a la carpeta de stems de la V2. La voz es opcional: la V1 solo
-    -- guardaba el instrumental.
+    -- Relativas a la carpeta de stems de NB Sound. La voz es opcional.
     instrumental   TEXT,
     voz            TEXT,
     bytes          INTEGER CHECK (bytes >= 0),
@@ -29,8 +26,7 @@ CREATE TABLE stems (
 -- "Listas para cantar" de Biblioteca.
 CREATE INDEX stems_por_estado ON stems (estado, solicitada_en);
 
--- Que una pista tenga instrumental es un cambio que el móvil descarga (la V1
--- subía la versión de la pista al terminar la separación, `karaoke/jobs_repo.py`).
+-- Que una pista tenga instrumental es un cambio que el móvil descarga.
 CREATE TRIGGER stems_sync_al_cambiar AFTER UPDATE OF estado ON stems
 WHEN (SELECT pausada FROM sincronizacion) = 0
      AND (OLD.estado = 'lista') <> (NEW.estado = 'lista')
@@ -113,8 +109,7 @@ CREATE TABLE dj_eventos (
 CREATE INDEX dj_eventos_por_sesion ON dj_eventos (sesion_id, tipo, creado_en);
 CREATE INDEX dj_eventos_por_pista ON dj_eventos (pista_id);
 
--- Una sola fila: dónde va la sesión que está sonando. La V1 lo guardaba en seis
--- claves de `config_ui`.
+-- Una sola fila: dónde va la sesión que está sonando.
 CREATE TABLE dj_en_curso (
     id               INTEGER PRIMARY KEY CHECK (id = 1),
     sesion_id        INTEGER REFERENCES dj_sesiones (id) ON DELETE SET NULL,

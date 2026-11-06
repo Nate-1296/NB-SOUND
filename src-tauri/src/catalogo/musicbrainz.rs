@@ -1,14 +1,9 @@
 //! MusicBrainz (F4.1.4): de unos datos normalizados a las grabaciones candidatas,
 //! cada una con el mejor lanzamiento en el que aparece.
 //!
-//! Es `external/musicbrainz_client.py` de la V1 con sus seis estrategias, en su
-//! orden y con sus condiciones de parada. La V1 hablaba con la API XML a través
-//! de `musicbrainzngs`; la V2 usa la JSON, que trae lo mismo con otros nombres
-//! (`releases` por `release-list`, `secondary-types` por `secondary-type-list`).
-//! Una diferencia conocida: en los resultados de búsqueda la V1 casi nunca
-//! encontraba el número de pista (buscaba la grabación dentro de cada pista, y la
-//! búsqueda XML no la trae); la JSON da la pista de esa grabación directamente.
-//! Se mide en la paridad global de la fase.
+//! Seis estrategias de búsqueda, en su orden y con sus condiciones de parada.
+//! Se usa la API JSON (`releases`, `secondary-types`): da directamente el número de
+//! pista de cada grabación encontrada.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Mutex;
@@ -24,13 +19,13 @@ use crate::error::{NsError, NsResult};
 use crate::net::{Red, Servicio};
 
 /// `MB_SEARCH_LIMIT`, `MB_MAX_RELEASES_PER_RECORDING`, `MAX_CANDIDATES_PER_FILE`,
-/// `MIN_RESULTS_PER_STRATEGY` y `_UMBRAL_CANDIDATOS_SUFICIENTES` de la V1.
+/// `MIN_RESULTS_PER_STRATEGY` y `_UMBRAL_CANDIDATOS_SUFICIENTES`.
 const LIMITE_BUSQUEDA: usize = 10;
 const MAX_LANZAMIENTOS: usize = 15;
 pub const MAX_CANDIDATOS: usize = 8;
 const MIN_RESULTADOS_POR_ESTRATEGIA: usize = 3;
 const CANDIDATOS_SUFICIENTES: usize = 3;
-/// MusicBrainz pide como mucho una petición por segundo; la V1 dejaba 1,1 s.
+/// MusicBrainz pide como mucho una petición por segundo; se deja 1,1 s.
 const ENTRE_PETICIONES: Duration = Duration::from_millis(1100);
 const REINTENTOS: u32 = 3;
 const ESPERA_INICIAL: Duration = Duration::from_secs(2);
@@ -63,7 +58,7 @@ fn prioridad_tipo(tipo: &str) -> i64 {
     }
 }
 
-/// Los alias de tipo de la V1 (`_ALIASES_TIPO`).
+/// Los alias de tipo (`_ALIASES_TIPO`).
 fn tipo_canonico(tipo: &str) -> String {
     match tipo.to_lowercase().as_str() {
         "album" => "Album",
@@ -235,7 +230,7 @@ pub fn candidato_de(g: &Value) -> Option<Candidato> {
         .flatten()
         .take(MAX_LANZAMIENTOS)
         .collect();
-    // El primero con la mejor calidad, como `max` estricto de la V1.
+    // El primero con la mejor calidad, como `max` estricto.
     let mut mejor: Option<(&Value, i64)> = None;
     for l in lanzamientos {
         let c = calidad(l);
@@ -336,7 +331,7 @@ pub trait Fuente: Send + Sync {
     fn pedir(&self, ruta_y_consulta: &str) -> NsResult<Option<Value>>;
 }
 
-/// La red de verdad, con el ritmo que pide MusicBrainz y los reintentos de la V1.
+/// La red de verdad, con el ritmo que pide MusicBrainz y los reintentos.
 pub struct EnLaRed<'a> {
     red: &'a Red,
     ultima: Mutex<Option<Instant>>,
@@ -605,7 +600,7 @@ impl<F: Fuente> Cliente<F> {
             );
         }
         // Las puntuaciones las pone después el emparejador; aquí todas valen 0 y el
-        // orden es el de llegada, como en la V1 antes de puntuar.
+        // orden es el de llegada antes de puntuar.
         pool.truncate(MAX_CANDIDATOS);
         Ok(pool)
     }
@@ -689,7 +684,7 @@ mod tests {
     }
 
     #[test]
-    fn lucene_se_escapa_como_en_la_v1() {
+    fn lucene_se_escapa() {
         assert_eq!(
             escapar_lucene("AC/DC: Back (In) Black!"),
             "AC\\/DC\\: Back \\(In\\) Black\\!"
@@ -744,8 +739,8 @@ mod tests {
             ["a", "b", "c"]
         );
         assert!(c[2].de_acoustid, "la que llegó por AcoustID queda marcada");
-        // La que ya estaba por el ISRC no se sustituye (misma puntuación), y la V1
-        // perdía ahí la marca: se conserva ese comportamiento hasta medir la paridad.
+        // La que ya estaba por el ISRC no se sustituye (misma puntuación), y la
+        // marca se pierde ahí.
         assert!(!c[0].de_acoustid);
         let pedidas = cliente.fuente.pedidas.lock().unwrap().clone();
         assert!(

@@ -94,7 +94,7 @@
     }
   }
 
-  // "Añadir canciones" desde la propia playlist, como la V1 (`buscar_pistas_para_playlist`).
+  // "Añadir canciones" desde la propia playlist (`buscar_pistas_para_playlist`).
   let espera: ReturnType<typeof setTimeout> | undefined;
   $effect(() => {
     const q = busqueda.trim();

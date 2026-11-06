@@ -9,7 +9,7 @@
 -- "Maná". El prefijo de 2 y 3 caracteres hace que buscar mientras se escribe no
 -- recorra el índice entero en las primeras letras.
 --
--- La V1 indexaba también el género, vacío en todas las pistas, y no las letras.
+-- Se indexan las letras; el género no, porque casi nunca viene en las etiquetas.
 
 CREATE VIRTUAL TABLE busqueda USING fts5 (
     titulo, artista, album, letra,

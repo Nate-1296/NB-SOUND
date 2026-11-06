@@ -4,21 +4,19 @@
 -- cambió desde la versión N", así que cada cambio visible para él tiene que subir
 -- la `sync_version` de su fila, y cada borrado tiene que dejar una tumba.
 --
--- La V1 lo hacía a mano: cada servicio llamaba a `marcar_sync_version` después de
--- escribir, en 15 sitios, y un sitio que lo olvidaba dejaba al teléfono con datos
--- viejos para siempre. Aquí lo hacen **disparadores**: ningún camino de escritura
--- puede olvidarlo, tampoco las acciones de las claves foráneas (borrar un álbum
--- anula el `album_id` de sus pistas, y eso también sube su versión).
+-- Si cada servicio tuviera que subir la versión a mano después de escribir, uno
+-- que lo olvidara dejaría al teléfono con datos viejos para siempre. Aquí lo hacen
+-- **disparadores**: ningún camino de escritura puede olvidarlo, tampoco las
+-- acciones de las claves foráneas (borrar un álbum anula el `album_id` de sus
+-- pistas, y eso también sube su versión).
 
 -- Una sola fila: el contador global y el interruptor del importador.
 CREATE TABLE sincronizacion (
     id       INTEGER PRIMARY KEY CHECK (id = 1),
-    -- Monótono. Tras importar la V1 vale lo mismo que su `sync_version_actual`,
-    -- para que el siguiente cambio de la V2 sea mayor que todo lo que el móvil vio.
+    -- Monótono: cada cambio es mayor que todo lo que el móvil vio.
     version  INTEGER NOT NULL DEFAULT 0 CHECK (version >= 0),
-    -- 1 solo mientras el importador copia la V1: sus filas traen ya su
-    -- `sync_version` y no pueden recibir una nueva, o el móvil volvería a
-    -- descargar la biblioteca entera.
+    -- 1 mientras se copian filas que ya traen su `sync_version` y no pueden
+    -- recibir una nueva, o el móvil volvería a descargar la biblioteca entera.
     pausada  INTEGER NOT NULL DEFAULT 0 CHECK (pausada IN (0, 1))
 ) STRICT;
 
@@ -39,8 +37,7 @@ CREATE TABLE dispositivos (
     id                   INTEGER PRIMARY KEY,
     -- El SHA-256 del `device_token`, no el token: quien lea la base no puede
     -- hacerse pasar por el teléfono. El móvil no nota nada, porque el servidor
-    -- calcula el hash del token que recibe y lo busca aquí. La V1 los guardaba en
-    -- claro.
+    -- calcula el hash del token que recibe y lo busca aquí.
     token_sha256         TEXT    NOT NULL UNIQUE CHECK (length(token_sha256) = 64),
     nombre               TEXT    NOT NULL,
     plataforma           TEXT,
@@ -57,7 +54,7 @@ CREATE TABLE dispositivos (
 CREATE TABLE transferencias_stems (
     dispositivo_id  INTEGER NOT NULL REFERENCES dispositivos (id) ON DELETE CASCADE,
     pista_id        INTEGER NOT NULL REFERENCES pistas (id) ON DELETE CASCADE,
-    -- Los valores de la V1, que el móvil envía tal cual.
+    -- Los valores tal como los envía el móvil.
     estado          TEXT    NOT NULL DEFAULT 'pending'
                             CHECK (estado IN ('pending', 'in_progress', 'done', 'failed')),
     bytes_enviados  INTEGER NOT NULL DEFAULT 0 CHECK (bytes_enviados >= 0),

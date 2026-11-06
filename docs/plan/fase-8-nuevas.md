@@ -1,7 +1,7 @@
 # Fase 8: Capacidades nuevas
 
-> **Objetivo:** lo que el documento de visión proponía y la V1 no tenía. No empieza antes de la paridad
-> (Fase 7) salvo lo que ya entró de paso por ser barato: LUFS (Fase 2) y la forma de onda, si sale de la misma
+> **Objetivo:** las capacidades nuevas. No empieza antes de la Fase 7, salvo lo que ya entró de paso por ser
+> barato: LUFS (Fase 2) y la forma de onda, si sale de la misma
 > pasada de decodificación que LUFS.
 
 | Iteración | Qué | Depende de |
@@ -36,7 +36,7 @@ del DJ en el reproductor único).
 
 * Los picos salen de **la misma decodificación** que mide los LUFS (`audio/sonoridad.rs`): no se abre el archivo
   una segunda vez. Por eso se calculan donde se calcula la sonoridad, en el hilo que mide lo importado, y no en la
-  importación misma, que la V2 no retrasa con análisis.
+  importación misma, que NB Sound no retrasa con análisis.
 * Se guardan **1.000 picos por pista**, un byte cada uno (el máximo absoluto de las dos voces en su tramo, de 0 a
   255), en una columna nueva de `sonoridad` (migración V10). Un número fijo, y no uno por segundo, porque lo que
   se pinta es siempre la pista entera en un ancho dado; 1.000 da para la barra más ancha sin pesar: unos 2,4 MB en
@@ -70,7 +70,7 @@ corpus, y que la nueva medida de la biblioteca entera no se note en el equipo.
 **Objetivo.** El usuario puede crear y editar listas inteligentes cuyas reglas sobre rasgos (BPM, energía,
 instrumental listo, ánimo) y uso (favoritas, reproducciones, última escucha, año, género) se evalúan en SQLite y se
 mantienen vivas al cambiar la biblioteca o el historial, convergiendo en el mismo mecanismo con las playlists
-automáticas de la V1 ("Crear para mí").
+automáticas ("Crear para mí").
 
 **Depende de.** F2.2.4 (playlists manuales y clasificación móvil), F5.2.1 (instrumentales del karaoke), F5.3.1
 (rasgos, análisis profundo y etiquetas de ambiente) y F5.3.3 (`descubrir.rs`).
@@ -86,8 +86,7 @@ automáticas de la V1 ("Crear para mí").
   Al listar, abrir o reproducir una lista inteligente viva se evalúa su regla y solo se reescribe `playlist_pistas`
   cuando la lista de `id` resultante cambió: así la lista está siempre al día y `sync_version` solo sube cuando de
   verdad entraron, salieron o cambiaron de orden sus canciones.
-* **Convergencia con las automáticas de la V1 (F7.1.1):** el mismo módulo regenera las playlists automáticas que la
-  V1 creaba en `servicios/biblioteca.py` (`auto:favoritas_sonando`, `auto:redescubrir`, `auto:recientes_biblioteca`,
+* **Convergencia con las automáticas:** el mismo módulo regenera las playlists automáticas (`auto:favoritas_sonando`, `auto:redescubrir`, `auto:recientes_biblioteca`,
   `auto:descubrir:canciones`, `auto:recientes_sin_escuchar`, `auto:favoritas_olvidadas`, `auto:top_canciones`,
   `auto:artist_mix_frecuentes`, `auto:album_mix_frecuentes`, `auto:albumes_para_volver`, `auto:this_is:<artista_id>`
   y las siete `auto:mood:*` apoyadas en `descubrir`), respetando `editada = 1` y `visible = 0`.
@@ -105,14 +104,14 @@ automáticas de la V1 ("Crear para mí").
 2. Una lista inteligente es **viva**: si una pista pasa a cumplir la regla (por ejemplo, se marca como favorita, se
    reproduce, recibe sus rasgos o su instrumental), al abrir o listar la playlist la pista aparece en ella y
    `playlist_pistas` se actualiza; si el resultado no cambia, `sync_version` no sube.
-3. `regenerar_automaticas` crea o actualiza las playlists automáticas de la V1 que alcanzan su mínimo de pistas,
+3. `regenerar_automaticas` crea o actualiza las playlists automáticas que alcanzan su mínimo de pistas,
    respeta las que el usuario editó (`editada = 1`) y actualiza las inteligentes vivas.
 4. En la vista de Playlists, el usuario puede crear y editar una lista inteligente con su diálogo de reglas, borrarla
    y pulsar "Crear para mí" para regenerar las automáticas.
 
 **A las pruebas finales.** Crear en la instalación real una lista inteligente por BPM + ánimo + favoritas y comprobar
 que el teléfono la sincroniza y que al marcar una nueva favorita entra sola; pulsar "Crear para mí" sobre la
-biblioteca migrada de la V1 y verificar las listas generadas.
+biblioteca real y verificar las listas generadas.
 
 ## F8.3 Resumen local de escucha
 
@@ -148,7 +147,7 @@ una tarjeta exportable a archivo desde el propio equipo sin que ningún dato sal
    por día y hora y el botón "Exportar tarjeta".
 
 **A las pruebas finales.** En la instalación real, recorrer en Tu música los resúmenes mensuales y anuales del
-historial migrado de la V1, comprobar el radar y el mapa de calor y exportar la tarjeta de un mes y de un año.
+historial real, comprobar el radar y el mapa de calor y exportar la tarjeta de un mes y de un año.
 
 ## F8.4 Copia a dispositivos
 

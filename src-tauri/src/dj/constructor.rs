@@ -15,7 +15,7 @@ use super::narrativa;
 use super::planificador::{self, Candidata, Opciones, Planificada};
 use super::transiciones::{self, Transicion};
 
-/// `OpcionesConstructor`, con los valores de la V1.
+/// `OpcionesConstructor`, con los valores.
 #[derive(Debug, Clone, Copy)]
 pub struct Ajustes {
     pub bloque_inicial: usize,
@@ -50,7 +50,7 @@ pub enum Corte {
 
 impl Corte {
     #[must_use]
-    pub const fn como_v1(self) -> &'static str {
+    pub const fn como_texto(self) -> &'static str {
         match self {
             Self::ObjetivoCumplido => "objetivo_cumplido",
             Self::PoolAgotado => "pool_agotado",
@@ -79,8 +79,8 @@ pub struct Constructor {
     estilo: String,
     proveedor: Box<dyn Proveedor + Send>,
     /// El embedding del pedido y la similitud de cada pista, que no cambian en toda
-    /// la sesión: la V1 los recalculaba en cada bloque, y con MiniLM eso es una
-    /// inferencia por pista y bloque.
+    /// la sesión: recalcularlos en cada bloque, con MiniLM, es una inferencia por
+    /// pista y bloque.
     pedido: Option<Vec<f64>>,
     similitudes: HashMap<i64, f64>,
 }
@@ -114,8 +114,8 @@ impl Constructor {
     }
 
     /// Retoma una sesión guardada: la siguiente pista va en `posicion` y ya suena
-    /// `acumulada`. La V1 (`cargar_sesion`) suma la duración entera de lo
-    /// planificado, sin descontar los solapamientos, y aquí se hace igual.
+    /// `acumulada`, que suma la duración entera de lo planificado, sin descontar
+    /// los solapamientos (`cargar_sesion`).
     pub fn retomar(&mut self, posicion: usize, acumulada: f64) {
         self.posicion = posicion;
         self.acumulada = acumulada;
@@ -222,7 +222,7 @@ impl Constructor {
     }
 }
 
-/// `resumen_sesion`: lo que guarda `dj_sesiones.resumen`, con las claves de la V1.
+/// `resumen_sesion`: lo que guarda `dj_sesiones.resumen`, con las claves.
 #[must_use]
 pub fn resumen(bloques: &[Bloque], i: &Intencion) -> serde_json::Value {
     let pistas: Vec<&Planificada> = bloques.iter().flat_map(|b| &b.pistas).collect();
@@ -259,7 +259,7 @@ pub fn resumen(bloques: &[Bloque], i: &Intencion) -> serde_json::Value {
         "transiciones_buenas": transiciones.iter().filter(|t| t.puntuacion >= 0.7).count(),
         "transiciones_total": transiciones.len(),
         "curva_energia": i.curva_energia,
-        "estilo_transicion": serde_json::to_value(OrdenV1(&i.estilo_transicion)).unwrap_or_default(),
+        "estilo_transicion": serde_json::to_value(OrdenTexto(&i.estilo_transicion)).unwrap_or_default(),
         "focos": i.focos,
         "exclusiones": i.exclusiones,
         "perfil_narrativo": narrativa::a_json(&narrativa::perfil(i)),
@@ -267,9 +267,9 @@ pub fn resumen(bloques: &[Bloque], i: &Intencion) -> serde_json::Value {
 }
 
 /// El mapa de estilos con el serializador de la intención.
-struct OrdenV1<'a>(&'a super::ontologia::Mapa);
+struct OrdenTexto<'a>(&'a super::ontologia::Mapa);
 
-impl serde::Serialize for OrdenV1<'_> {
+impl serde::Serialize for OrdenTexto<'_> {
     fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         super::ontologia::objeto::serialize(self.0, s)
     }
@@ -289,7 +289,7 @@ mod pruebas {
         v.as_f64()
     }
 
-    /// Las candidatas sintéticas de las doradas, con los nombres de la V1.
+    /// Las candidatas sintéticas de las doradas, con los nombres.
     fn candidatas(d: &serde_json::Value) -> Vec<Candidata> {
         d["pistas"]
             .as_array()
@@ -352,7 +352,7 @@ mod pruebas {
     }
 
     #[test]
-    fn con_la_misma_semilla_la_sesion_es_la_de_la_v1() {
+    fn con_la_misma_semilla_la_sesion_es_la_misma() {
         let d = doradas();
         let pool = candidatas(&d);
         for s in d["sesiones"].as_array().expect("sesiones") {
@@ -393,7 +393,7 @@ mod pruebas {
                 );
                 assert_eq!(json!(b.duracion_seg), esperado["duracion_seg"], "{prompt}");
                 assert_eq!(json!(b.completado), esperado["completado"], "{prompt}");
-                assert_eq!(b.corte.como_v1(), esperado["motivo"], "{prompt}");
+                assert_eq!(b.corte.como_texto(), esperado["motivo"], "{prompt}");
                 bloques.push(b);
             }
             assert_eq!(resumen(&bloques, &i), s["resumen"], "{prompt}");
@@ -408,7 +408,7 @@ mod pruebas {
         let mut ids = HashSet::new();
         for n in 0..20 {
             let b = c.bloque(n == 0);
-            // El tope es por bloque, como en la V1: cada bloque planifica de cero
+            // El tope es por bloque: cada bloque planifica de cero
             // sobre lo que queda del pool.
             let mut artistas: HashMap<i64, usize> = HashMap::new();
             for p in &b.pistas {

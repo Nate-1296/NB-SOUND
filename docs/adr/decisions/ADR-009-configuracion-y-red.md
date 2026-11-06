@@ -5,9 +5,9 @@
 
 ## Contexto
 
-La V1 se configura con más de 100 variables en `.env` (`SECOND_STAGE_MIN_GAP`, `AUDIO_INTELLIGENCE_BACKGROUND_BATCH_SIZE`,
-`NB_SOUND_PROGRESS_MODE`…) y guarda en el mismo archivo, en texto plano, las claves de AcoustID, Anthropic, OpenAI
-y TheAudioDB. Sale a la red desde nueve clientes distintos en `external/` y `core/`.
+Configurar con más de 100 variables en un `.env` y guardar en el mismo archivo, en texto plano, las claves de
+AcoustID, Anthropic, OpenAI y TheAudioDB es lo contrario de lo que pide la Constitución. Y salir a la red desde
+muchos clientes distintos hace imposible garantizar el consentimiento.
 
 ## Decisión
 
@@ -24,11 +24,10 @@ y TheAudioDB. Sale a la red desde nueve clientes distintos en `external/` y `cor
 3. **Una sola puerta de red** (`net.rs`): toda salida declara servicio y propósito; la puerta comprueba el
    interruptor general y el del servicio. Servicios: AcoustID, MusicBrainz, Cover Art Archive, Shazam, iTunes, LRCLIB,
    lyrics.ovh, Deezer, Wikipedia, TheAudioDB, el proveedor de IA y la descarga de agregados.
-4. **Shazam** usa una API no oficial (como `shazamio` en la V1). En Ajustes se presenta con esa advertencia y se
+4. **Shazam** usa una API no oficial. En Ajustes se presenta con esa advertencia y se
    puede desactivar; la identificación funciona sin él con AcoustID.
 5. **Desempate por IA**: opcional y desactivado por defecto. Solo se envían los metadatos de los candidatos, nunca
    audio. Modelo por defecto `claude-haiku-5-5`; el proveedor y el modelo se pueden cambiar.
-6. El `.env` de la V1 no se lee. El importador migra sus rutas y sus claves al llavero una vez, con aviso.
 
 ## Consecuencias
 

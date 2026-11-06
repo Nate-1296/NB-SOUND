@@ -26,7 +26,7 @@ pub enum ProveedorIa {
 
 impl ProveedorIa {
     /// El anfitrión de su API; también nombra la cuenta de su clave en el
-    /// llavero, la misma bajo la que el importador dejó la de la V1.
+    /// llavero, la misma bajo la que el importador dejó la.
     #[must_use]
     pub fn anfitrion(self) -> &'static str {
         match self {
@@ -36,7 +36,7 @@ impl ProveedorIa {
     }
 
     /// El modelo económico de cada uno. El de Anthropic lo fija ADR-009; el de
-    /// OpenAI es el que usaba la V1 (`config/settings.py`).
+    /// OpenAI está en `config/settings.py`.
     #[must_use]
     pub fn modelo_por_defecto(self) -> &'static str {
         match self {
@@ -259,7 +259,7 @@ mod tests {
     }
 
     #[test]
-    fn la_clave_de_cada_proveedor_es_la_que_dejo_el_importador_de_la_v1() {
+    fn la_clave_de_cada_proveedor_es_la_que_dejo_el_importador() {
         assert_eq!(ProveedorIa::Anthropic.cuenta(), "ia@api.anthropic.com");
         assert_eq!(ProveedorIa::Openai.cuenta(), "ia@api.openai.com");
     }

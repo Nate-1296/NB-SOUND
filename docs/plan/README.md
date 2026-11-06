@@ -1,7 +1,7 @@
-# Plan de ejecución de la V2
+# Plan de ejecución de NB Sound
 
 > **Estado:** Vigente desde el 2026-10-29.
-> Describe **en qué orden se construye NB Sound V2, con qué criterio se da algo por terminado y por qué ese orden**.
+> Describe **en qué orden se construye NB Sound, con qué criterio se da algo por terminado y por qué ese orden**.
 > Las decisiones que lo sostienen están en los [ADR](../adr/README.md); las reglas que no se negocian, en la
 > [Constitución](../contextual/constitution/README.md).
 
@@ -10,23 +10,22 @@
 | Orden | Fase | Objetivo | Documento |
 |---|---|---|---|
 | 1.º | 0 | Fundaciones y prototipos que deciden (**cerrada el 2026-10-30**) | [fase-0-fundaciones.md](./fase-0-fundaciones.md) |
-| 2.º | 1 | Datos: esquema V2 e importación de la V1 sin pérdida | [fase-1-datos.md](./fase-1-datos.md) |
+| 2.º | 1 | Datos: el esquema y la búsqueda | [fase-1-datos.md](./fase-1-datos.md) |
 | 3.º | 2 | Escuchar: reproductor, biblioteca y la carcasa completa | [fase-2-escuchar.md](./fase-2-escuchar.md) |
-| 4.º | 3 | El móvil sigue funcionando: servidor compatible | [fase-3-movil.md](./fase-3-movil.md) |
+| 4.º | 3 | El teléfono: servidor compatible con NB Sound Mobile | [fase-3-movil.md](./fase-3-movil.md) |
 | 5.º | 4 | Importar y catalogar sin vista de importación | [fase-4-catalogar.md](./fase-4-catalogar.md) |
 | 6.º | 5 | Agregados: karaoke y análisis musical | [fase-5-agregados.md](./fase-5-agregados.md) |
 | 7.º | 6 | DJ Privado y A ciegas | [fase-6-dj.md](./fase-6-dj.md) |
-| 8.º | 7 | Retiro de la V1 y publicación de la 2.0 | [fase-7-retiro.md](./fase-7-retiro.md) |
+| 8.º | 7 | Publicación de la 2.0 | [fase-7-retiro.md](./fase-7-retiro.md) |
 | 9.º | 8 | Capacidades nuevas (**cerrada el 2026-10-31**) | [fase-8-nuevas.md](./fase-8-nuevas.md) |
 
 Lo que se hace en cada sesión, con sus commits y lo que quedó pendiente, se registra en la
 [bitácora](./bitacora.md).
 
-**Por qué este orden.** Lo irreversible va primero (licencia, datos, contratos). Después, lo que hace que la V2 se
-pueda usar a diario: escuchar (Fase 2) y que el móvil no note el cambio (Fase 3). Al terminar la Fase 3, la V2 ya
-puede sustituir a la V1 para escuchar y sincronizar, aunque la importación siga en la V1. La catalogación (Fase 4)
-es lo más grande de portar y no bloquea escuchar. Los agregados (Fase 5) dependen del motor y de los datos. El DJ
-(Fase 6) depende de todo lo anterior. **Nada nuevo entra antes de la paridad** (Fase 8).
+**Por qué este orden.** Lo irreversible va primero (licencia, datos, contratos). Después, lo que hace que NB Sound se
+pueda usar a diario: escuchar (Fase 2) y el teléfono (Fase 3). La catalogación (Fase 4) es lo más grande y no bloquea
+escuchar. Los agregados (Fase 5) dependen del motor y de los datos. El DJ (Fase 6) depende de todo lo anterior. Las
+capacidades nuevas van al final (Fase 8).
 
 ---
 
@@ -35,9 +34,7 @@ es lo más grande de portar y no bloquea escuchar. Los agregados (Fase 5) depend
 1. **Nada se construye sobre una decisión no tomada.** Si una iteración depende de algo no decidido, se registra
    en [preguntas abiertas](../contextual/open-questions/README.md) y no se empieza.
 2. **Cada iteración termina con algo verificable**, preferiblemente automático.
-3. **La V1 es la especificación.** Su comportamiento se porta medido contra ella: respuestas doradas, pruebas
-   traducidas y comparación sobre el corpus real. Lo que se rediseña a propósito está en el
-   [inventario](../contextual/inventario-v1.md) con su motivo.
+3. **Lo que tiene referencia se mide contra ella**: respuestas doradas, pruebas y comparación sobre el corpus real.
 4. **Ninguna iteración deja `main` en rojo.**
 5. **La documentación es parte de terminar.**
 
@@ -86,12 +83,12 @@ Una iteración está terminada cuando:
    sin VLC, sin Python y sin `ffmpeg`).
 4. Desinstalar no se lleva la biblioteca del usuario.
 
-Es exactamente lo que la V1 incumplía, y es la [regla 1](../contextual/constitution/README.md) de la Constitución.
+Es la [regla 1](../contextual/constitution/README.md) de la Constitución.
 
 ## 6. Los corpus reales
 
-Las pruebas que miden paridad o rendimiento usan la música y la base de la V1 de la máquina de desarrollo. Dónde
-están y qué reglas las protegen está en [CLAUDE.md](../../CLAUDE.md), sección 7: **jamás se escribe en ellas**, se
-abren en solo lectura, nada derivado entra al repositorio ni a los registros, y las pruebas que las usan se saltan
-solas si no existen. El simulador que las sustituye en `pnpm verify` conserva la variedad (títulos, duraciones,
-portadas y formatos distintos) y tiene un modo de 100.000 pistas para medir rendimiento.
+Las pruebas que miden rendimiento o resultados reales usan la música de la máquina de desarrollo. Dónde está y qué
+reglas la protegen está en [CLAUDE.md](../../CLAUDE.md), sección 7: **jamás se escribe en ella**, se abre en solo
+lectura, nada derivado entra al repositorio ni a los registros, y las pruebas que la usan se saltan solas si no
+existe. El simulador que la sustituye en `pnpm verify` conserva la variedad (títulos, duraciones, portadas y
+formatos distintos) y tiene un modo de 100.000 pistas para medir rendimiento.

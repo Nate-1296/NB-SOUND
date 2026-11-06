@@ -1,8 +1,8 @@
-//! El análisis musical con modelos (F5.3.1 y F5.3.2): `core/audio_intelligence_deep.py`
-//! de la V1, sin Essentia ni TensorFlow (ADR-002).
+//! El análisis musical con modelos (F5.3.1 y F5.3.2), sin Essentia ni TensorFlow
+//! (ADR-002).
 //!
-//! La cadena es la que F0.4.3 midió contra lo que guardó la V1 en 407 pistas (peor
-//! diferencia 0,0041): la pista entera en mono, remuestreada a 16 kHz con el
+//! La cadena, medida en F0.4.3 sobre 407 pistas de referencia (peor diferencia
+//! 0,0041): la pista entera en mono, remuestreada a 16 kHz con el
 //! conversor **lineal** de libsamplerate y la razón en `f32` (lo que hacía Essentia
 //! con `resampleQuality = 4`; uno de calidad desviaba las salidas hasta 0,1), las 96
 //! bandas mel de `TensorflowInputMusiCNN`, parches de 187 marcos cada 93
@@ -10,10 +10,10 @@
 //! una pista llega a 3,6 GB) y sus siete cabezas sobre los embeddings. Cada salida
 //! es la media sobre los parches.
 //!
-//! **Un defecto de la V1 que no se porta.** DEAM da valencia y activación en su
-//! escala de 1 a 9, y la V1 las recortaba a `[0, 1]`: guardaba casi siempre 1. Aquí
-//! se llevan a `(v − 1) / 8`, la escala con la que F0.4.3 las comparó. Por eso las
-//! filas que trajo la V1 se vuelven a analizar: su versión no es esta (V4).
+//! **La escala de DEAM.** DEAM da valencia y activación de 1 a 9; recortarlas a
+//! `[0, 1]` daba casi siempre 1. Aquí se llevan a `(v − 1) / 8`, la escala con la
+//! que F0.4.3 las comparó. Las filas de otra versión del análisis se vuelven a
+//! analizar.
 
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -763,7 +763,7 @@ mod tests {
     }
 
     #[test]
-    fn lo_de_la_v1_se_vuelve_a_analizar_y_lo_hecho_no() {
+    fn lo_anterior_se_vuelve_a_analizar_y_lo_hecho_no() {
         let db = BaseDeDatos::en_memoria().unwrap();
         db.conexion()
             .unwrap()
@@ -776,7 +776,7 @@ mod tests {
         assert_eq!(
             siguiente(&db, &[2]).unwrap().map(|s| s.0),
             Some(1),
-            "la de la V1 caduca"
+            "la de otra versión caduca"
         );
         guardar(&db, 1, None, None).unwrap();
         assert_eq!(siguiente(&db, &[2]).unwrap(), None);

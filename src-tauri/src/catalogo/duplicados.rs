@@ -1,4 +1,4 @@
-//! Duplicados (F4.1.8): `core/dedupe.py` de la V1, con sus tres ejes.
+//! Duplicados (F4.1.8): `core/dedupe.py`, con sus tres ejes.
 //!
 //! 1. **Exacto**: el mismo archivo, por su huella de contenido.
 //! 2. **Identidad**: la misma grabación de MusicBrainz o el mismo ISRC. Si el nuevo
@@ -26,7 +26,7 @@ const TOLERANCIA_SEG: f64 = 3.0;
 const INICIO: u64 = 512 * 1024;
 const FINAL: u64 = 512 * 1024;
 
-/// La huella de contenido de un archivo (`_calcular_hash_combinado` de la V1): el
+/// La huella de contenido de un archivo: el
 /// SHA-256 de los primeros 512 KB y los últimos 512 KB. Es la `x-nb-sound-hash`
 /// que el teléfono comprueba al descargar, con esta misma regla
 /// (`download_repository.dart`), y la que trajo el importador; hasta 1 MB coincide
@@ -157,7 +157,7 @@ pub struct Gestor {
 
 impl Gestor {
     /// Con lo que ya está en la biblioteca (`_precargar_desde_biblioteca`). La
-    /// calidad de lo que ya estaba vale 0,5, como en la V1.
+    /// calidad de lo que ya estaba vale 0,5.
     ///
     /// # Errors
     ///
@@ -327,9 +327,9 @@ struct EnBarrido {
 /// pero no se borran ni se toca su archivo, así que se puede deshacer.
 ///
 /// A diferencia del eje observable de la importación, no exige la misma
-/// portada: la V1 lo quitó porque dos importaciones del mismo álbum guardan la
-/// portada dos veces con huellas distintas. Sin álbum no hay clave: el mismo
-/// título de un artista en un recopilatorio no cuenta como copia.
+/// portada: dos importaciones del mismo álbum guardan la portada dos veces con
+/// huellas distintas. Sin álbum no hay clave: el mismo título de un artista en un
+/// recopilatorio no cuenta como copia.
 ///
 /// Devuelve cuántas se apartaron.
 ///
@@ -429,7 +429,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn la_huella_es_la_de_la_v1_y_la_que_comprueba_el_telefono() {
+    fn la_huella_es_la_que_comprueba_el_telefono() {
         let dir = std::env::temp_dir().join(format!("ns-duplicados-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let pequeno = dir.join("p.bin");
@@ -521,7 +521,7 @@ mod tests {
     }
 
     #[test]
-    fn la_calidad_suma_como_en_la_v1() {
+    fn la_calidad_suma() {
         let c = Calidad {
             puntaje: 0.9,
             con_grabacion: true,

@@ -7,7 +7,7 @@
 -->
 <script module lang="ts">
   // Las canciones ya jugadas en esta sesión, para no repetirlas enseguida. Vive
-  // lo que la aplicación, como la memoria de la V1.
+  // lo que la aplicación, como la memoria.
   const jugadas: number[] = [];
 </script>
 

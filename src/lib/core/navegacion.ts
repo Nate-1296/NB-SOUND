@@ -67,8 +67,8 @@ export const POR_REVISAR: Destino = {
 };
 
 /**
- * Las secciones de la barra lateral, con los rótulos de la V1 (`NavLateral.qml`).
- * Ajustes y Por revisar van aparte, al pie.
+ * Las secciones de la barra lateral, con sus rótulos. Ajustes y Por revisar van
+ * aparte, al pie.
  */
 export const SECCIONES: readonly {
   readonly etiqueta: string;

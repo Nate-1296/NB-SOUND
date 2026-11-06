@@ -1,6 +1,6 @@
-// Transcrito de `legado/servicios/dj_privado/ontologia.py` (V1, `CONCEPTOS`), en su
-// mismo orden: el orden decide los empates de la búsqueda y las dimensiones de los
-// embeddings deterministas. No se edita a mano sin cambiar también su prueba.
+// En un orden fijo: el orden decide los empates de la búsqueda y las
+// dimensiones de los embeddings deterministas. No se edita a mano sin cambiar
+// también su prueba.
 
 use super::ontologia::{Concepto, Rol};
 

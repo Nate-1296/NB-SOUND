@@ -1,8 +1,7 @@
 <!--
   El detalle de un artista: su imagen y cifras, las más escuchadas, sus álbumes y
-  sus sencillos por separado, y todas sus canciones, como en la V1 (que exponía
-  todas las pistas y no solo las destacadas). Las canciones van en la ventana
-  virtual, porque un artista puede tener cientos.
+  sus sencillos por separado, y todas sus canciones, no solo las destacadas. Las
+  canciones van en la ventana virtual, porque un artista puede tener cientos.
 -->
 <script lang="ts">
   import { cambios } from '#lib/core/cambios.svelte.ts';

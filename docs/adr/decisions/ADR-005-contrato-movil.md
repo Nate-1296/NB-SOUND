@@ -22,15 +22,16 @@ Hay 12 dispositivos emparejados en la instalación real.
 
 ## Decisión
 
-1. El servidor se reescribe en Rust (`axum`, `rustls`, `mdns-sd`), **compatible byte a byte** con el protocolo `1`:
-   mismas rutas, códigos, nombres de campo, paginación, semántica de `sync_version` y reglas de autoridad del merge.
-2. **Misma identidad**: el importador ([ADR-004](./ADR-004-datos.md)) copia el certificado y la clave, así que la
-   huella no cambia y los teléfonos ya emparejados se reconectan sin volver a escanear el QR. Se migran también los
+1. El servidor está escrito en Rust (`axum`, `rustls`, `mdns-sd`), **compatible byte a byte** con el protocolo
+   `1`: mismas rutas, códigos, nombres de campo, paginación, semántica de `sync_version` y reglas de autoridad del
+   merge.
+2. **Una identidad que no cambia**: el certificado y la clave se crean una vez y se guardan, así que la huella no
+   cambia y los teléfonos emparejados se reconectan sin volver a escanear el QR. Se guardan también los
    `device_token`, la selección por dispositivo y la última versión sincronizada.
-3. **Respuestas doradas**: en la Fase 0 se graban respuestas reales de la V1 a cada endpoint y cada frame del
-   WebSocket, con los datos sensibles redactados. Un arnés las reproduce contra el servidor de la V2 en cada
-   verificación. Una diferencia que no sea un campo añadido rompe la verificación.
-4. Cualquier campo nuevo que necesite la V2 (por ejemplo, LUFS, la paleta del álbum o `verificada` para las
+3. **Respuestas doradas**: cada endpoint y cada frame del WebSocket tiene su respuesta grabada, con los datos
+   sensibles redactados. Un arnés las reproduce contra el servidor de NB Sound en cada verificación. Una diferencia
+   que no sea un campo añadido rompe la verificación.
+4. Cualquier campo nuevo que necesite NB Sound (por ejemplo, LUFS, la paleta del álbum o `verificada` para las
    pistas importadas tal como están) es aditivo y se documenta en
    `docs/engineering/contrato-movil.md` con una nota para el móvil, que no tiene obligación de usarlo.
 5. **La app móvil no se modifica.** Si una mejora del escritorio exigiera romper el protocolo, se escribe un ADR
@@ -38,10 +39,10 @@ Hay 12 dispositivos emparejados en la instalación real.
 
 ## Consecuencias
 
-- **Positivas:** el móvil sigue funcionando el mismo día en que la V2 sustituye a la V1.
-- **Negativas:** la V2 hereda nombres de campo en español y en inglés mezclados, que no se pueden cambiar.
-- **Riesgos:** comportamiento implícito de aiohttp (cabeceras, formato de errores, cierre del WebSocket) que no esté
-  en el contrato. Las respuestas doradas lo capturan porque se graban de la V1 real, no del documento.
+- **Positivas:** el móvil funciona sin cambios.
+- **Negativas:** NB Sound hereda nombres de campo en español y en inglés mezclados, que no se pueden cambiar.
+- **Riesgos:** comportamiento implícito (cabeceras, formato de errores, cierre del WebSocket) que no esté en el
+  contrato. Las respuestas doradas lo capturan porque se grabaron de un servidor real, no del documento.
 
 ## Enmienda del 2026-10-30: dependencias del servidor
 
@@ -49,9 +50,8 @@ Además de `axum`, `rustls` y `mdns-sd`, el servidor usa, con la aprobación de 
 
 * **`tokio-rustls`**: une rustls con el servidor. Con la pila criptográfica `ring`, la que ya trae `ureq`; sin
   `aws-lc-rs`.
-* **`rcgen`**: crea el certificado autofirmado cuando no hay identidad de la V1 (una instalación nueva). ECDSA P-256
-  como la de la V1 y con una validez que no vence: el teléfono fija la huella, y regenerar el certificado lo
-  obligaría a emparejarse de nuevo.
+* **`rcgen`**: crea el certificado autofirmado la primera vez. ECDSA P-256 y con una validez que no vence: el
+  teléfono fija la huella, y regenerar el certificado lo obligaría a emparejarse de nuevo.
 * **`qrcode`**, sin las features de imagen: solo la matriz de módulos; la interfaz la dibuja.
 
 `tokio` y `futures-util` ya estaban en el árbol por Tauri y axum; se nombran en `Cargo.toml` porque el servidor los

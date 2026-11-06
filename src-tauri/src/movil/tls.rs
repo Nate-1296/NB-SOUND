@@ -1,9 +1,8 @@
 //! TLS del servidor móvil (F3.1.1): la identidad y el oyente.
 //!
 //! El teléfono fija la huella del certificado la primera vez (TOFU) y la exige en
-//! cada conexión. Por eso la identidad nunca se regenera si existe: la que copió el
-//! importador de la V1 se usa tal cual, y la que crea una instalación nueva se
-//! guarda para siempre, con una validez que no va a vencer.
+//! cada conexión. Por eso la identidad nunca se regenera si existe: la que crea
+//! una instalación se guarda para siempre, con una validez que no va a vencer.
 
 use std::net::SocketAddr;
 use std::path::Path;
@@ -26,7 +25,7 @@ use crate::identidad_movil::{self, CERTIFICADO, CLAVE};
 /// hilo que acepta a los demás.
 const PLAZO_SALUDO: Duration = Duration::from_secs(10);
 
-/// Crea una identidad nueva en `dir`. ECDSA P-256, como la de la V1.
+/// Crea una identidad nueva en `dir`. ECDSA P-256, como la.
 fn crear(dir: &Path) -> NsResult<()> {
     let mut params = rcgen::CertificateParams::new(vec!["nbsound.local".to_owned()])
         .map_err(|_| NsError::Internal)?;

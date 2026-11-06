@@ -14,12 +14,10 @@
       "!**/pnpm-lock.yaml",
       "!**/.claude/settings.local.json",
       "!**/src/lib/bindings",
-      "!**/src/lib/ui/temas-v1.ts",
+      "!**/src/lib/ui/temas.ts",
       "!**/test-results",
       "!**/playwright-report",
-      "!**/legado",
       "!**/src-tauri/binarios",
-      "!**/scripts/prototipos",
       "!**/src-tauri/tests/contrato_movil/respuestas.json"
     ]
   },

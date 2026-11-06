@@ -6,7 +6,7 @@
 ## Contexto
 
 * NB Sound se publica bajo **GPL-3.0** (`LICENSE`); NB Books, bajo Apache-2.0.
-* **Essentia**, la librería, es AGPL-3.0 para uso no comercial. Con [ADR-002](./ADR-002-sin-python.md) la V2 ya no
+* **Essentia**, la librería, es AGPL-3.0 para uso no comercial. Con [ADR-002](./ADR-002-sin-python.md) NB Sound ya no
   la incluye.
 * **Los modelos de Essentia** se licencian aparte, para uso no comercial: la página de modelos dice CC BY-NC-SA 4.0
   y la de licencias dice CC BY-NC-ND 4.0. Hay licencia propietaria a petición del MTG (UPF). CC 4.0 (sección 2.a.4)

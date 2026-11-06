@@ -1,5 +1,5 @@
 //! La segunda y la tercera etapa (F4.1.6): `core/second_stage.py` y
-//! `core/third_stage.py` de la V1, más iTunes (F4.1.5, `external/itunes_client.py`).
+//! `core/third_stage.py`, más iTunes (F4.1.5, `external/itunes_client.py`).
 //!
 //! Lo que quedó en revisión o en cuarentena recuperable tiene otra oportunidad,
 //! siempre con una señal fuerte (el ISRC o la huella) y con distancia sobre el

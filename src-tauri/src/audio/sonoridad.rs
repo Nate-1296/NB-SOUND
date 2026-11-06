@@ -1,7 +1,7 @@
 //! Normalización de volumen por sonoridad EBU R128 (F2.1.4).
 //!
-//! La V1 usaba el filtro `normvol` de VLC, que sube y baja el volumen sobre la
-//! marcha según lo que suena y bombea en los pasajes tranquilos. La V2 mide una vez
+//! Un filtro que sube y baja el volumen sobre la marcha según lo que suena bombea
+//! en los pasajes tranquilos. NB Sound mide una vez
 //! la sonoridad integrada de cada pista (al importar o analizar) y aplica una
 //! ganancia fija al decodificarla: dentro de una pista no cambia nada, y entre
 //! pistas el nivel se iguala.

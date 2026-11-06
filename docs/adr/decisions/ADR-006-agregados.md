@@ -6,11 +6,9 @@
 
 ## Contexto
 
-La V1 tiene una vista entera, **Estado del Sistema** (`VistaEstadoSistema.qml`, 587 líneas), que enseña "Python del
-sistema", "Site-packages runtime", la versión de cada librería y comandos de reparación para `apt` o `dnf`.
-`infra/dependencias.py` clasifica dependencias como `SISTEMA` ("instalación manual"), `PIP` y `MODELOS`, e
-`infra/instalador.py` (676 líneas) busca un Python utilizable en el sistema y ejecuta `pip`. Es la consecuencia
-directa de una aplicación diseñada para usar el entorno al que llega.
+Una aplicación que usa el entorno al que llega acaba con una vista entera de "Estado del Sistema" que enseña
+"Python del sistema", "Site-packages runtime", la versión de cada librería y comandos de reparación para `apt` o
+`dnf`, y con un instalador que busca un Python utilizable y ejecuta `pip`. NB Sound no quiere nada de eso.
 
 ## Decisión
 
@@ -24,7 +22,7 @@ con el móvil.
 | Agregado | Contenido | Habilita |
 |---|---|---|
 | Karaoke | `htdemucs` en ONNX (166 MB en fp16) | Modo karaoke en el reproductor, stems para el móvil, mezcla armónica del DJ |
-| Análisis musical | MusiCNN y sus siete cabezas de Essentia en ONNX (unos 4 MB; F0.4.3 retiró VGGish y EffNet, que la V1 calculaba sin usar) | Estados de ánimo, bailabilidad, valencia y activación, etiquetas, listas inteligentes, DJ semántico |
+| Análisis musical | MusiCNN y sus siete cabezas de Essentia en ONNX | Estados de ánimo, bailabilidad, valencia y activación, etiquetas, listas inteligentes, DJ semántico |
 | Comprensión de texto del DJ | `all-MiniLM-L6-v2` en ONNX | Pedidos al DJ en lenguaje natural |
 | Aceleración por GPU | Proveedor de ejecución de ONNX Runtime para la GPU detectada (CUDA, DirectML o CoreML) | Karaoke y análisis varias veces más rápidos |
 
@@ -55,11 +53,11 @@ Python del sistema, los comandos de reparación y cualquier texto que nombre una
 ## Enmienda del 2026-10-29: ffmpeg no viaja dentro
 
 Al fijar los binarios en F0.3.3 se midió lo que costaba `ffmpeg`: la compilación estática completa (BtbN, 8.1.3)
-son 165 MB por ejecutable en Windows, y hacen falta dos (`ffmpeg` y `ffprobe`). Y al revisar para qué lo usaba la
-V1 apareció que su uso principal era un defecto: `core/pipeline.py` **convertía a MP3 todo lo que no lo fuera**
-(`external/transcoder.py`), así que un FLAC importado perdía calidad para siempre.
+son 165 MB por ejecutable en Windows, y hacen falta dos (`ffmpeg` y `ffprobe`). Y su uso típico en una canalización
+de importación, convertir a MP3 todo lo que no lo sea, es un defecto: un FLAC importado perdería calidad para
+siempre.
 
-La V2 no hace eso. Symphonia reproduce MP3, FLAC, AAC-LC, ALAC, Vorbis y WAV ([ADR-003](./ADR-003-motor-de-audio.md)),
+NB Sound no hace eso. Symphonia reproduce MP3, FLAC, AAC-LC, ALAC, Vorbis y WAV ([ADR-003](./ADR-003-motor-de-audio.md)),
 `lofty` escribe las etiquetas de todos ellos, y `fpcalc` 1.6.2 trae su propio decodificador para la huella. Cada
 archivo se queda en su formato.
 

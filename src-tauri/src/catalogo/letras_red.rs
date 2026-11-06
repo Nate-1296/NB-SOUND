@@ -1,5 +1,4 @@
-//! Letras de la red (F4.1.11): LRCLIB y lyrics.ovh, como `external/lyrics_client.py`
-//! de la V1.
+//! Letras de la red (F4.1.11): LRCLIB y lyrics.ovh.
 //!
 //! Orden: LRCLIB exacto, LRCLIB buscando, lyrics.ovh exacto y lyrics.ovh por sus
 //! sugerencias. La primera que dé letra gana. Un 429 se apunta como «bloqueado» y
@@ -67,7 +66,7 @@ pub trait Fuente {
     fn pedir(&self, servicio: Servicio, url: &str) -> Respuesta;
 }
 
-/// La red de verdad, con un reintento ante fallos de servidor, como la V1.
+/// La red de verdad, con un reintento ante fallos de servidor.
 pub struct EnLaRed<'a>(pub &'a Red);
 
 impl Fuente for EnLaRed<'_> {

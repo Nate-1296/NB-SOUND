@@ -128,19 +128,22 @@ fn por_revisar_solo_admite_causas_que_tienen_mensaje() {
 }
 
 #[test]
-fn la_duracion_conserva_toda_la_precision_de_la_v1() {
+fn la_duracion_conserva_toda_la_precision() {
     let (_db, conn) = base();
     sembrar(&conn);
     // Tal como la escribe el JSON del contrato móvil.
-    let v1: f64 = "285.91020408163263".parse().unwrap();
-    conn.execute("UPDATE pistas SET duracion_seg = ?1 WHERE id = 100", [v1])
-        .unwrap();
+    let valor: f64 = "285.91020408163263".parse().unwrap();
+    conn.execute(
+        "UPDATE pistas SET duracion_seg = ?1 WHERE id = 100",
+        [valor],
+    )
+    .unwrap();
     let leida: f64 = conn
         .query_row("SELECT duracion_seg FROM pistas WHERE id = 100", [], |f| {
             f.get(0)
         })
         .unwrap();
-    assert_eq!(leida.to_bits(), v1.to_bits());
+    assert_eq!(leida.to_bits(), valor.to_bits());
 }
 
 #[test]
@@ -557,10 +560,10 @@ fn reordenar_una_playlist_es_un_cambio_de_la_playlist() {
     assert!(version_de(&conn, "playlists", 5) > antes);
 }
 
-/// El importador copia las filas de la V1 con su `sync_version`: si recibieran
-/// una nueva, el móvil volvería a descargar la biblioteca entera.
+/// Las filas que llegan con su `sync_version` la conservan: si recibieran una
+/// nueva, el móvil volvería a descargar la biblioteca entera.
 #[test]
-fn con_la_sincronizacion_pausada_se_conserva_la_version_de_la_v1() {
+fn con_la_sincronizacion_pausada_se_conserva_la_version() {
     let (_db, conn) = base();
     conn.execute_batch(
         "UPDATE sincronizacion SET pausada = 1, version = 5217;

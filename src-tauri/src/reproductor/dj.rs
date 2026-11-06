@@ -1,16 +1,14 @@
-//! La sesión del DJ en el reproductor (F6.1.6): `reproductor_sesion.py` de la V1.
+//! La sesión del DJ en el reproductor (F6.1.6): `reproductor_sesion.py`.
 //!
-//! La V1 tenía un reproductor propio para el DJ, con dos decks de VLC, y un gestor
-//! que pausaba el reproductor normal mientras sonaba. En la V2 hay un solo motor y
-//! una sola barra: el DJ es un modo del servicio de reproducción. Mientras dura, la
-//! cola del usuario queda en pausa donde estaba, y el servicio toca las pistas de la
-//! sesión y dirige cada mezcla desde su bucle: cuando la que suena llega a su punto
-//! de salida, arma la siguiente con la técnica que decide `dj::mezcla` y la lleva
-//! con `dj::ejecutor`. Al acabar la sesión, o al pedir otra cosa, la cola vuelve tal
-//! como estaba, en pausa.
+//! En NB Sound hay un solo motor y una sola barra: el DJ es un modo del servicio de
+//! reproducción. Mientras dura, la cola del usuario queda en pausa donde estaba, y
+//! el servicio toca las pistas de la sesión y dirige cada mezcla desde su bucle:
+//! cuando la que suena llega a su punto de salida, arma la siguiente con la técnica
+//! que decide `dj::mezcla` y la lleva con `dj::ejecutor`. Al acabar la sesión, o al
+//! pedir otra cosa, la cola vuelve tal como estaba, en pausa.
 //!
 //! La sesión que sonaba se recuerda en `dj_en_curso` y vuelve en pausa al abrir la
-//! aplicación, como en la V1.
+//! aplicación.
 
 use std::collections::HashSet;
 use std::time::Instant;

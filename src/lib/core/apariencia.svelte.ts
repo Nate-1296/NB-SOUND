@@ -1,5 +1,5 @@
 /**
- * La apariencia que eligió el usuario: tema de la V1, tipografía y escala.
+ * La apariencia que eligió el usuario: tema, tipografía y escala.
  *
  * Las preferencias viven en la base, que solo se lee de forma asíncrona. Para que
  * el primer fotograma ya tenga el tema y no parpadee con el de fábrica, las
@@ -9,7 +9,7 @@
  */
 
 import { type Apariencia, apariencia, guardarPreferencia } from '#lib/core/ipc/index.ts';
-import { aplicarTemaV1, aplicarVariables, TEMA_V1_DE_FABRICA } from '#lib/ui/tema.ts';
+import { aplicarTema, aplicarVariables, TEMA_DE_FABRICA } from '#lib/ui/tema.ts';
 
 const CACHE = 'ns-apariencia';
 const BARRA_COMPACTA = 'ns-barra-lateral-compacta';
@@ -23,7 +23,7 @@ interface EnCache {
 }
 
 const DE_FABRICA: Apariencia = {
-  tema: TEMA_V1_DE_FABRICA,
+  tema: TEMA_DE_FABRICA,
   tipografia: 'Inter',
   escala: 100,
   colorPorPortada: true,
@@ -35,7 +35,7 @@ function aplicarTipografia(raiz: HTMLElement, familia: string, escala: number): 
     '--ns-font-ui',
     `'${familia}', system-ui, -apple-system, 'Segoe UI', sans-serif`
   );
-  // La escala de la V1 (`ui_scale`) mueve el tamaño base: todo está en rem.
+  // La escala (`ui_scale`) mueve el tamaño base: todo está en rem.
   raiz.style.fontSize = `${escala}%`;
 }
 
@@ -80,7 +80,7 @@ class EstadoDeApariencia {
   async #aplicar(raiz: HTMLElement, a: Apariencia): Promise<void> {
     this.actual = a;
     const variables =
-      (await aplicarTemaV1(raiz, a.tema)) ?? (await aplicarTemaV1(raiz, DE_FABRICA.tema));
+      (await aplicarTema(raiz, a.tema)) ?? (await aplicarTema(raiz, DE_FABRICA.tema));
     aplicarTipografia(raiz, a.tipografia, a.escala);
     if (!variables) return;
     try {

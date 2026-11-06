@@ -18,7 +18,7 @@ use super::etiquetas;
 use crate::db::{self, BaseDeDatos};
 use crate::error::{NsError, NsResult};
 
-/// Tope de lo que se lista: en la instalación real de la V1 había 116.
+/// Tope de lo que se lista: más de esto no se revisa a mano.
 pub const MAX_PENDIENTES: usize = 5_000;
 
 /// Un candidato que se ofrece para elegir.
@@ -260,8 +260,7 @@ pub fn descartar(db: &BaseDeDatos, id: i64) -> NsResult<()> {
     resolver(db, id)
 }
 
-/// Dónde está un pendiente, para enseñarlo en el gestor de archivos (`abrir_directorio`
-/// de la V1). No sale del puente: lo abre el runtime.
+/// Dónde está un pendiente, para enseñarlo en el gestor de archivos. No sale del puente: lo abre el runtime.
 ///
 /// # Errors
 ///

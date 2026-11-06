@@ -1,10 +1,10 @@
 //! Quien aplica una mezcla al motor: `EjecutorMezcla` y la puerta de
-//! `_tick_transicion_locked` de la V1.
+//! `_tick_transicion_locked`.
 //!
 //! Se arma cargando la pista que entra en el plato libre, en silencio. La mezcla no
-//! empieza hasta que esa pista suena de verdad (la **puerta**): en la V1, empezar el
-//! fundido mientras VLC aún abría el archivo producía el bajón que se oía en cada
-//! transición. Si en 2,5 s no suena, empieza igual para no bloquear la sesión.
+//! empieza hasta que esa pista suena de verdad (la **puerta**): empezar el fundido
+//! mientras el archivo aún se abre produce un bajón en cada transición. Si en
+//! 2,5 s no suena, empieza igual para no bloquear la sesión.
 //!
 //! El avance se mide con el reloj del audio (los segundos que lleva sonando cada
 //! plato), no con el de la pared: una pausa en mitad de la mezcla la congela, y el
@@ -140,9 +140,9 @@ impl Ejecutor {
         let (fb, sb) = motor.entrante();
         let suena = fb == self.ficha && sb > 0.0;
         if self.origen.is_none() {
-            // Si la entrante debía empezar más adelante, se espera a que esté allí:
-            // en la V1 el salto llegaba tarde. En la V2 se aplica antes del primer
-            // bloque, pero la condición no cuesta nada.
+            // Si la entrante debía empezar más adelante, se espera a que esté
+            // allí. Se aplica antes del primer bloque, pero la condición no cuesta
+            // nada.
             let en_su_punto = self.plan.entrada_b_seg <= 0.5 || sb >= self.plan.entrada_b_seg - 1.0;
             if !(suena && en_su_punto) && ahora.duration_since(self.armado) < ESPERA_MAXIMA {
                 motor.mezclar(
@@ -194,7 +194,7 @@ impl Ejecutor {
 
 #[cfg(test)]
 mod pruebas {
-    //! La puerta, como `tests/test_dj_transicion_gate.py` de la V1.
+    //! La puerta.
 
     use std::path::PathBuf;
 

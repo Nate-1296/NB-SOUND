@@ -2,11 +2,11 @@
 /**
  * Descarga los binarios que viajan en el instalador, con el hash fijado (F0.3.3).
  *
- * Lo que la V1 hacía mal y esto no repite: bajaba ffmpeg de espejos que cambiaban
- * de contenido y de disponibilidad, y el empaquetado fallaba según el día. Aquí
- * cada archivo tiene su SHA-256 en `scripts/binarios.json`; si el que llega no
- * coincide, no se extrae nada. Ningún binario entra al repositorio: se dejan en
- * `src-tauri/binarios/`, que está ignorado.
+ * Bajar binarios de espejos que cambian de contenido y de disponibilidad hace que el
+ * empaquetado falle según el día. Aquí cada archivo tiene su SHA-256 en
+ * `scripts/binarios.json`; si el que llega no coincide, no se extrae nada. Ningún
+ * binario entra al repositorio: se dejan en `src-tauri/binarios/`, que está
+ * ignorado.
  *
  * Uso:
  *   node scripts/fetch-binarios.mjs            descarga lo que falte para esta plataforma

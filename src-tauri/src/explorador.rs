@@ -1,5 +1,5 @@
 //! "Mostrar en la carpeta": abre el gestor de archivos del sistema con el archivo
-//! señalado, como `abrir_directorio` de la V1 (`DecisionPanel.qml`).
+//! señalado (`DecisionPanel.qml`).
 //!
 //! En Linux se pide por D-Bus a `org.freedesktop.FileManager1`, que Dolphin,
 //! Nautilus, Nemo y Thunar implementan y que deja el archivo seleccionado; si no

@@ -1,6 +1,6 @@
-# Fase 7: Retiro de la V1 y publicación de la 2.0
+# Fase 7: Publicación de la 2.0
 
-> **Objetivo:** que no quede nada de la V1 en el repositorio y que NB Sound 2.0 se publique en las tres plataformas.
+> **Objetivo:** que NB Sound 2.0 se publique en las tres plataformas.
 >
 > **Prerrequisitos:** Fases 1 a 6.
 
@@ -8,17 +8,12 @@
 
 | Iteración | Estado |
 |---|---|
-| F7.1.1 Auditoría de paridad contra el [inventario de la V1](../contextual/inventario-v1.md) | Hecha: cada fila con su estado; la auditoría de la biblioteca, que faltaba, rediseñada en `catalogo/auditoria.rs`. Las automáticas de la V1 se regeneran con las inteligentes de F8.2 |
-| F7.1.2 Borrar `legado/` y `docs/v1/` | Hecha: también los prototipos de Python y el generador de temas; `git ls-files "*.py" "*.qml"` no devuelve nada. Los enlaces apuntan a la etiqueta `v1.1.16` |
-| F7.1.3 Borrar el guardián `check-sin-python` y sus excepciones, que ya no tienen sentido | Hecha: se quitaron las excepciones; el guardián se queda, sin ninguna y también para `.qml`, porque es el mecanismo del innegociable de CLAUDE.md |
 | F7.2.1 Instaladores para Linux (AppImage, deb, rpm, tar.gz), Windows (MSI/NSIS) y macOS (dmg) | Hecha a falta de ejecutarla: `.github/workflows/publicacion.yml` compila las tres plataformas con `tauri-action`, empaqueta además el `.tar.gz` de sistema para Linux (`usr/bin`, `usr/lib`, `usr/share`), firma los artefactos del actualizador (`createUpdaterArtifacts` solo ahí), sube `latest.json` y deja la publicación en **borrador**. Ejecutada en cada publicación desde la 2.0.1; en la 2.0.7, 2.0.8 y 2.0.9, los 16 artefactos de las tres plataformas en verde. La puerta de máquina limpia sigue en las pruebas finales |
 | F7.2.2 Actualizaciones de la aplicación desde la propia aplicación | Hecha: `tauri-plugin-updater` detrás de la puerta de red, con el servicio Actualizaciones y "Buscar actualizaciones" en Acerca de; firma obligatoria con la clave pública de `tauri.conf.json`. Enmiendas en ADR-001 y ADR-009. El `.tar.gz` firmado de la 2.0.7 a la 2.0.9 se comprobó contra esa clave y se instaló en el equipo de Nathan por el mismo camino que usa la aplicación. Que una 2.0.x real se actualice sola desde Acerca de, a las pruebas finales |
-| F7.2.3 Avisos de terceros y atribución de modelos | Hecha: las cinco tipografías, el código portado (songrec, librosa, difflib y la V1) y los modelos; regenerados con las dependencias del actualizador |
+| F7.2.3 Avisos de terceros y atribución de modelos | Hecha: las cinco tipografías, el código portado y los modelos; regenerados con las dependencias del actualizador |
 | F7.2.4 Publicación de la 2.0.0 | Parcial: Nathan decidió publicar antes de pasar las pruebas finales; publicadas de la 2.0.0 a la 2.0.9 (la última, la vigente). Falta lo que la regla 1 de la Constitución exige: la puerta de máquina limpia y las pruebas finales a mano ([revisión de producto](../contextual/revision-de-producto.md), A7) |
 
 ## Criterios
 
-* **F7.1.1:** cada fila del inventario está Hecha, Rediseñada (con enlace a su ADR) o Eliminada (con motivo).
-* **F7.1.2:** `git ls-files '*.py' '*.qml'` no devuelve nada.
 * **F7.2.x:** la puerta de empaquetado completa en las tres plataformas, con máquina o CI real. Lo que no se pueda
   comprobar se dice antes de publicar.

@@ -1,9 +1,8 @@
 <!--
   @component
-  La barra de reproducción permanente, con la disposición de la V1
-  (`legado/ui/qml/componentes/BarraReproduccion.qml`): la pista a la izquierda, los
-  controles y el progreso en el centro, y a la derecha letras, karaoke, cola y
-  volumen. El micrófono del karaoke vive aquí y no en una vista propia (ADR-007).
+  La barra de reproducción permanente: la pista a la izquierda, los controles y el
+  progreso en el centro, y a la derecha letras, karaoke, cola, volumen, pantalla
+  completa y el menú ···. El micrófono del karaoke vive aquí y no en una vista propia (ADR-007).
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';

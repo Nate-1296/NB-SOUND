@@ -1,5 +1,5 @@
 /**
- * Formatos de tiempo de la V1, con sus pruebas traducidas en `formato.test.ts`.
+ * Formatos de tiempo, con sus pruebas traducidas en `formato.test.ts`.
  */
 
 /** `1d 1h 1m 1s`, omitiendo las unidades a cero (`formatear_duracion_detallada`). */

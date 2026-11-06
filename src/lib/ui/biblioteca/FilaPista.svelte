@@ -1,13 +1,13 @@
 <!--
   @component
-  Una canción en una lista, con la disposición de la V1 (`VistaBiblioteca.qml`):
-  número, portada, título con el artista debajo, álbum, favorita, duración y las
-  acciones (añadir a playlist y el menú ··· con las secundarias: DIS-03).
+  Una canción en una lista: número (en álbumes y playlists), portada, título con
+  el artista debajo, álbum, favorita, duración y las acciones (añadir a playlist y
+  el menú ··· con las secundarias: DIS-03).
 
-  El número se cambia por el botón de reproducir al pasar por encima o con el
-  foco, y por el ecualizador mientras suena: la V1 tenía un botón "Reproducir"
-  por fila y la versión anterior de esta, uno más junto a la favorita. La
-  favorita se ve siempre que lo es, como la estrella de la V1; si no, al pasar.
+  El número, o la portada si no hay número, se cambia por el botón de reproducir
+  al pasar por encima o con el foco, y por el ecualizador mientras suena: así no
+  hace falta un botón "Reproducir" por fila. La favorita se ve siempre que lo es;
+  si no, al pasar.
   Las columnas las comparte con `CabeceraPistas`.
 -->
 <script lang="ts">
