@@ -78,3 +78,11 @@ Para portar la canalización de la V1 (Fase 4), con la aprobación de Nathan:
 | `rustfft` y `rubato` | Los rasgos básicos de F0.4.4 y la firma de Shazam, portada de `shazamio-core` | `librosa`, `numpy`, `shazamio` |
 
 Cada una entra en el commit de la iteración que la usa.
+
+## Enmienda del 2026-11-05: prioridad del trabajo de fondo
+
+Medido en la 2.0.8 instalada, preparar el karaoke ocupaba la mitad de los núcleos a prioridad normal y competía con
+la interfaz. Con la aprobación de Nathan entra `libc` (MIT o Apache-2.0; ya estaba en el árbol por `alsa`, `gtk` y
+otras), solo en Unix, para bajar la prioridad de los hilos de fondo (`prioridad.rs`): en Linux, `setpriority` del
+hilo a 19; en macOS, la clase de calidad de servicio `UTILITY`. Los hilos de ONNX Runtime heredan la del hilo que
+crea la sesión. En Windows no se baja todavía: haría falta `windows-sys`, que no está aprobada.

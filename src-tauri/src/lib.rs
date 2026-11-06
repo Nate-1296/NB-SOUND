@@ -39,6 +39,7 @@ pub mod perfil;
 pub mod playlists;
 pub mod portadas;
 pub mod preferencias;
+pub mod prioridad;
 pub mod privacidad;
 pub mod rasgos;
 pub mod reproductor;

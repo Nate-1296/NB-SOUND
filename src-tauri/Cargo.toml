@@ -105,6 +105,11 @@ ort = { version = "=2.0.0-rc.15", default-features = false, features = ["load-dy
 [target.'cfg(target_os = "linux")'.dependencies]
 mpris-server = "0.11.0"
 
+# Bajar la prioridad de los hilos de fondo (karaoke, análisis, sonoridad), para que
+# nunca compitan con la interfaz ni con el audio (enmienda de ADR-002, 2026-11-05).
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.191"
+
 [target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
 souvlaki = "0.9.3"
 

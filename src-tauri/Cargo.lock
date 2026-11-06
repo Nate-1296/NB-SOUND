@@ -2879,6 +2879,7 @@ dependencies = [
  "image",
  "keyring",
  "kira",
+ "libc",
  "lofty",
  "mdns-sd",
  "minisign-verify",

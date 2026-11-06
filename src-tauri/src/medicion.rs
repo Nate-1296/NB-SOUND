@@ -164,24 +164,27 @@ pub fn picos(db: &BaseDeDatos, pista_id: i64) -> NsResult<Vec<u8>> {
 pub fn arrancar(db: BaseDeDatos) {
     let lanzado = std::thread::Builder::new()
         .name("sonoridad".into())
-        .spawn(move || loop {
-            match medir_pendientes(&db, PAUSA_ENTRE_PISTAS) {
-                Ok(n) if n > 0 => tracing::info!(pistas = n, "sonoridad medida"),
-                Ok(_) => {}
-                Err(error) => {
-                    tracing::error!(codigo = error.code(), "no se pudo medir la sonoridad")
+        .spawn(move || {
+            crate::prioridad::bajar_hilo_actual();
+            loop {
+                match medir_pendientes(&db, PAUSA_ENTRE_PISTAS) {
+                    Ok(n) if n > 0 => tracing::info!(pistas = n, "sonoridad medida"),
+                    Ok(_) => {}
+                    Err(error) => {
+                        tracing::error!(codigo = error.code(), "no se pudo medir la sonoridad")
+                    }
                 }
-            }
-            // Los rasgos básicos de lo importado (F4.1.12), en el mismo hilo: dos
-            // análisis a la vez se notarían en el equipo.
-            match crate::rasgos::analizar_pendientes(&db, PAUSA_ENTRE_PISTAS) {
-                Ok(n) if n > 0 => tracing::info!(pistas = n, "rasgos analizados"),
-                Ok(_) => {}
-                Err(error) => {
-                    tracing::error!(codigo = error.code(), "no se pudieron analizar los rasgos")
+                // Los rasgos básicos de lo importado (F4.1.12), en el mismo hilo: dos
+                // análisis a la vez se notarían en el equipo.
+                match crate::rasgos::analizar_pendientes(&db, PAUSA_ENTRE_PISTAS) {
+                    Ok(n) if n > 0 => tracing::info!(pistas = n, "rasgos analizados"),
+                    Ok(_) => {}
+                    Err(error) => {
+                        tracing::error!(codigo = error.code(), "no se pudieron analizar los rasgos")
+                    }
                 }
+                std::thread::sleep(PAUSA_SIN_TRABAJO);
             }
-            std::thread::sleep(PAUSA_SIN_TRABAJO);
         });
     if lanzado.is_err() {
         tracing::error!("no se pudo lanzar la medición de sonoridad");

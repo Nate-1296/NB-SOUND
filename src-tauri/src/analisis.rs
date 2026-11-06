@@ -631,22 +631,28 @@ pub fn analizar_pendientes(
 pub fn arrancar(db: BaseDeDatos, rutas: Rutas) {
     let lanzado = std::thread::Builder::new()
         .name("analisis".into())
-        .spawn(move || loop {
-            if activado(&db) {
-                if let Some(dir) = modelos_instalados(&rutas) {
-                    match EnOnnx::abrir(&dir) {
-                        Ok(mut m) => match analizar_pendientes(&db, &mut m, PAUSA) {
-                            Ok(n) if n > 0 => tracing::info!(pistas = n, "análisis profundo"),
-                            Ok(_) => {}
-                            Err(e) => tracing::error!(codigo = e.code(), "falló el análisis"),
-                        },
-                        Err(e) => {
-                            tracing::error!(codigo = e.code(), "no se pudieron abrir los modelos");
+        .spawn(move || {
+            crate::prioridad::bajar_hilo_actual();
+            loop {
+                if activado(&db) {
+                    if let Some(dir) = modelos_instalados(&rutas) {
+                        match EnOnnx::abrir(&dir) {
+                            Ok(mut m) => match analizar_pendientes(&db, &mut m, PAUSA) {
+                                Ok(n) if n > 0 => tracing::info!(pistas = n, "análisis profundo"),
+                                Ok(_) => {}
+                                Err(e) => tracing::error!(codigo = e.code(), "falló el análisis"),
+                            },
+                            Err(e) => {
+                                tracing::error!(
+                                    codigo = e.code(),
+                                    "no se pudieron abrir los modelos"
+                                );
+                            }
                         }
                     }
                 }
+                std::thread::sleep(Duration::from_secs(180));
             }
-            std::thread::sleep(Duration::from_secs(180));
         });
     if lanzado.is_err() {
         tracing::error!("no se pudo lanzar el análisis");

@@ -585,6 +585,7 @@ impl Karaoke {
         let lanzado = std::thread::Builder::new()
             .name("karaoke".into())
             .spawn(move || {
+                crate::prioridad::bajar_hilo_actual();
                 let _ = retomar(&db);
                 // Cada vez que la cola despierta (al arrancar, al pedir algo, al
                 // instalar el agregado o cada cinco minutos), lo que falló por no
