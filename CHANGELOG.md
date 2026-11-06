@@ -3,6 +3,22 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.11] — 2026-11-06
+
+El teléfono, el Modo fiesta y los permisos de red.
+
+### Novedades
+
+- Ajustes > Permisos muestra si el cortafuegos del sistema deja pasar al teléfono y al Modo fiesta, y lo comprueba
+  mientras está a la vista. Al encender cualquiera de los dos, si está bloqueado, NB Sound lo pide con la ventana de
+  administrador del sistema; si se dice que no, Dispositivos lo avisa con un botón para pedirlo de nuevo.
+
+### Correcciones
+
+- Al cerrar la app del teléfono, Dispositivos seguía diciendo "Conectado ahora". Ahora deja de decirlo en menos de
+  un minuto.
+- El Modo fiesta no cargaba en el móvil cuando el cortafuegos solo dejaba pasar al teléfono.
+
 ## [2.0.10] — 2026-11-06
 
 ### Correcciones

@@ -2871,7 +2871,7 @@ dependencies = [
 
 [[package]]
 name = "nb-sound"
-version = "2.0.10"
+version = "2.0.11"
 dependencies = [
  "axum",
  "ebur128",
