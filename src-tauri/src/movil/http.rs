@@ -1,10 +1,10 @@
-//! Las rutas HTTP del protocolo `1` (F3.1.1 a F3.1.6), con las respuestas de la
-//! V1: mismos códigos, mismos cuerpos de error y mismas cabeceras.
+//! Las rutas HTTP del protocolo `1` (F3.1.1 a F3.1.6), como las espera el
+//! teléfono: mismos códigos, mismos cuerpos de error y mismas cabeceras.
 //!
-//! Lo que la V1 dejaba a `aiohttp` sin decirlo también se reproduce, porque el
-//! teléfono lo recibió durante todo su desarrollo y las respuestas doradas lo
-//! guardan: un id de pista que no es un número da 404 y no 400, el 404 de una
-//! ruta desconocida es texto plano, y los archivos se sirven con `Range`.
+//! También lo que el teléfono recibió durante todo su desarrollo sin que el contrato
+//! lo dijera, porque las respuestas doradas lo guardan: un id de pista que no es un
+//! número da 404 y no 400, el 404 de una ruta desconocida es texto plano, y los
+//! archivos se sirven con `Range`.
 
 use std::io::SeekFrom;
 use std::path::PathBuf;
@@ -27,7 +27,7 @@ use super::{control, json as pyjson, manifiesto, mosaico, Contexto};
 use crate::error::{NsError, NsResult};
 
 /// Cada cuánto se apunta, como mucho, la última conexión de un teléfono. Cada
-/// tramo de una descarga es una petición, y la presencia tiene 75 s de margen.
+/// tramo de una descarga es una petición, y la presencia tiene 40 s de margen.
 const INTERVALO_TOQUE: std::time::Duration = std::time::Duration::from_secs(15);
 
 /// Lo que se lee de un archivo en cada trozo de la respuesta.
@@ -53,7 +53,7 @@ pub fn rutas(ctx: Arc<Contexto>) -> Router {
         .with_state(ctx)
 }
 
-/// Una respuesta JSON con el formato de la V1.
+/// Una respuesta JSON con el formato.
 pub fn json<T: Serialize + ?Sized>(estado: StatusCode, cuerpo: &T) -> Response {
     (
         estado,
@@ -192,7 +192,7 @@ async fn ping(State(ctx): State<Arc<Contexto>>) -> Response {
     )
 }
 
-/// Lo que haría `str(valor or "")` en la V1.
+/// Lo que haría `str(valor or "")`.
 fn texto_python(v: Option<&Value>) -> String {
     match v {
         Some(Value::String(s)) => s.clone(),
@@ -283,7 +283,7 @@ async fn manifiesto(
     peticion: Request,
 ) -> Response {
     let consulta = peticion.uri().query();
-    // `int(x or "0")` con `ValueError` a 0, como la V1.
+    // `int(x or "0")` con `ValueError` a 0.
     let since = parametro(consulta, "since")
         .map_or(Some(0), |s| {
             if s.is_empty() {
@@ -570,7 +570,7 @@ fn fecha_http(t: SystemTime) -> String {
     )
 }
 
-/// Sirve un archivo como `web.FileResponse` de la V1: entero, o el tramo pedido
+/// Sirve un archivo: entero, o el tramo pedido
 /// con 206, y 416 si el tramo no existe. Se envía a trozos, sin cargarlo entero.
 pub async fn servir(
     ruta: &PathBuf,
@@ -675,7 +675,7 @@ mod tests {
     }
 
     #[test]
-    fn los_parametros_se_leen_como_en_la_v1() {
+    fn los_parametros_se_leen() {
         assert_eq!(parametro(Some("since=3&limit=500"), "limit"), Some("500"));
         assert_eq!(parametro(Some("since"), "since"), Some(""));
         assert_eq!(parametro(None, "since"), None);

@@ -1,8 +1,8 @@
 //! Lo que el servidor móvil lee y escribe en la base: los teléfonos, su
 //! selección, el historial y los favoritos que suben, y los archivos que piden.
 //!
-//! Es `sync_repositorio.py` de la V1 sobre el esquema de la V2. La diferencia que
-//! importa: el `device_token` no se guarda, solo su SHA-256 (V5).
+//! El repositorio del servidor móvil (`sync_repositorio.py`) sobre el esquema de
+//! NB Sound. El `device_token` no se guarda, solo su SHA-256 (V5).
 
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -26,20 +26,20 @@ fn bd<T>(r: rusqlite::Result<T>) -> NsResult<T> {
     })
 }
 
-/// Las plataformas que acepta la V1; cualquier otra es `desconocida`.
+/// Las plataformas que acepta el contrato; cualquier otra es `desconocida`.
 const PLATAFORMAS: [&str; 5] = ["android", "ios", "ipados", "tablet", "desconocida"];
 
-/// Un teléfono cuenta como conectado si tocó el servidor en este margen: más que
-/// el latido del móvil (~25 s), para que un salto no lo haga parpadear (la V1).
-pub const VENTANA_PRESENCIA: Duration = Duration::from_secs(75);
+/// Un teléfono cuenta como conectado si tocó el servidor en este margen: algo más
+/// que su latido (~25 s), para que un latido perdido no lo haga parpadear. Con 75 s
+/// seguía saliendo "Conectado ahora" más de un minuto después de cerrar la app.
+pub const VENTANA_PRESENCIA: Duration = Duration::from_secs(40);
 
 /// Tope de teléfonos que se listan: en la instalación real hay doce, once
 /// revocados, y cada emparejamiento lo hace una persona a mano.
 pub const MAX_DISPOSITIVOS: usize = 200;
 
-/// ISO 8601 en UTC con microsegundos, como `_ahora_iso` de la V1. Las mismas
-/// cifras que la V1 importan: el `content-length` de las respuestas doradas las
-/// cuenta, y el orden de las cadenas es el cronológico.
+/// ISO 8601 en UTC con microsegundos. Las cifras importan: el `content-length` de
+/// las respuestas doradas las cuenta, y el orden de las cadenas es el cronológico.
 pub fn iso(t: SystemTime) -> String {
     let d = t.duration_since(UNIX_EPOCH).unwrap_or_default();
     let segundos = d.as_secs() as i64;
@@ -218,7 +218,7 @@ pub fn revocar(db: &BaseDeDatos, id: i64) -> NsResult<bool> {
     .map(|n| n > 0)
 }
 
-/// Los teléfonos no revocados, del más reciente al más antiguo, como la V1.
+/// Los teléfonos no revocados, del más reciente al más antiguo.
 /// Cota: [`MAX_DISPOSITIVOS`].
 ///
 /// # Errors
@@ -262,7 +262,7 @@ fn entero(v: Option<&Value>) -> Option<i64> {
     }
 }
 
-/// La verdad de Python: lo que la V1 entendía por `if valor`.
+/// La verdad de Python: lo que el contrato entiende por `if valor`.
 pub fn verdad(v: Option<&Value>) -> bool {
     match v {
         None | Some(Value::Null) => false,
@@ -278,9 +278,8 @@ pub fn verdad(v: Option<&Value>) -> bool {
 ///
 /// El historial se añade siempre; el favorito del teléfono gana solo si su marca de
 /// tiempo es estrictamente más reciente que la del equipo (sin marca, no gana).
-/// Dos diferencias con la V1, las dos para no guardar basura: una escucha de una
-/// pista que el equipo no tiene no se apunta (la V1 la apuntaba sin título), y
-/// una escucha completa suma una reproducción, como las del equipo.
+/// Para no guardar basura, una escucha de una pista que el equipo no tiene no se
+/// apunta, y una escucha completa suma una reproducción, como las del equipo.
 ///
 /// # Errors
 ///
@@ -365,7 +364,7 @@ pub fn aplicar_historial(db: &BaseDeDatos, payload: &Value) -> NsResult<Resultad
              WHERE id = ?1",
             params![pista, favorita, remoto],
         ))?;
-        // "Me gusta" la mantiene la V2 al marcar favoritas; si todavía no existe, la
+        // "Me gusta" la mantiene NB Sound al marcar favoritas; si todavía no existe, la
         // creará entera la primera vez que se necesite (`playlists`).
         crate::playlists::reflejar_favorita_si_existe(&tx, pista, favorita)?;
         r.favoritos_aplicados += 1;
@@ -518,7 +517,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn la_fecha_tiene_el_formato_de_la_v1() {
+    fn la_fecha_tiene_el_formato() {
         let t = UNIX_EPOCH + Duration::new(1_780_000_000, 123_456_000);
         assert_eq!(iso(t), "2026-05-28T20:26:40.123456Z");
         assert_eq!(iso(UNIX_EPOCH), "1970-01-01T00:00:00.000000Z");
@@ -551,6 +550,35 @@ mod tests {
         assert!(
             por_token(&db, &token).unwrap().is_none(),
             "revocado no entra"
+        );
+    }
+
+    #[test]
+    fn un_telefono_que_dejo_de_hablar_deja_de_salir_conectado() {
+        let db = BaseDeDatos::en_memoria().unwrap();
+        let (id, _, _) = registrar(&db, "Teléfono", Some("android")).unwrap();
+        let apuntar = |hace: Duration| {
+            db.conexion()
+                .unwrap()
+                .execute(
+                    "UPDATE dispositivos SET ultima_conexion = ?1 WHERE id = ?2",
+                    params![iso(SystemTime::now() - hace), id],
+                )
+                .unwrap();
+        };
+        apuntar(Duration::from_secs(20));
+        assert!(
+            listar(&db, &HashSet::new()).unwrap()[0].conectado,
+            "latido reciente"
+        );
+        apuntar(VENTANA_PRESENCIA + Duration::from_secs(1));
+        assert!(
+            !listar(&db, &HashSet::new()).unwrap()[0].conectado,
+            "cerró la app hace más que el margen"
+        );
+        assert!(
+            listar(&db, &HashSet::from([id])).unwrap()[0].conectado,
+            "con el control abierto sigue conectado"
         );
     }
 

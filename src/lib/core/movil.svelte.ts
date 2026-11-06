@@ -22,10 +22,29 @@ class Telefonos {
   #arrancado = false;
   #pendiente: ReturnType<typeof setTimeout> | null = null;
 
+  #vigia: ReturnType<typeof setInterval> | null = null;
+
   async refrescar(): Promise<void> {
     const [estado, lista] = await Promise.all([movilEstado(), movilTelefonos()]);
     this.estado = estado;
     this.lista = lista;
+    this.#vigilar();
+  }
+
+  /**
+   * "Conectado" sale de la última vez que el teléfono habló con el equipo: cuando
+   * deja de hablar (se cerró la app) no llega ningún aviso, y antes la lista se
+   * quedaba en "Conectado ahora" para siempre. Mientras haya alguno conectado, se
+   * vuelve a pedir cada pocos segundos; sin ninguno, no se pregunta nada.
+   */
+  #vigilar(): void {
+    const hayConectados = this.lista.some((t) => t.conectado);
+    if (hayConectados && !this.#vigia) {
+      this.#vigia = setInterval(() => void this.refrescar(), 10_000);
+    } else if (!hayConectados && this.#vigia) {
+      clearInterval(this.#vigia);
+      this.#vigia = null;
+    }
   }
 
   /** Se llama una vez, desde la carcasa. */
