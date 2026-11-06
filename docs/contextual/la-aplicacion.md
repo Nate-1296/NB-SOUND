@@ -53,7 +53,8 @@ sola.
 
 * **La caja de búsqueda**, que busca en títulos, artistas, álbumes y letras. El atajo para llegar a ella es Ctrl+K,
   pero el recordatorio no está pintado en la caja: aparece en su texto de ayuda. Con texto, una equis la borra.
-* **Karaoke**, **Dispositivos** y **Añadir música**, que abren cada uno su consola lateral.
+* **Karaoke**, **Dispositivos** y **Añadir música**, que abren cada uno su consola lateral. Llevan su nombre solo si
+  la barra deja sitio para una búsqueda cómoda; si no, quedan en círculos con su icono. Nada se toca nunca.
 
 ### La barra de reproducción
 
@@ -71,6 +72,11 @@ Siempre abajo, siempre visible.
 título: **añadir a una playlist**, **poner o quitar de favoritas**, **minirreproductor** y **dónde suena** (este
 equipo, los teléfonos que lo controlan y "Conectar un teléfono", ahí mismo, sin abrir la consola de dispositivos).
 La barra tiene siempre la misma forma: ni el largo del título ni que la canción tenga karaoke la cambian.
+
+**Cuando falta sitio** la barra decide por su propio ancho, no por el de la ventana. Por debajo de 832 px, letras y
+pantalla completa pasan al menú ··· y se esconde la línea del álbum; por debajo de 704 px (la ventana más pequeña),
+también aleatorio, repetir y karaoke. Lo que sale de la barra aparece en una fila de botones arriba del menú ···:
+nada se pierde, y nada se pisa.
 
 ### El lienzo
 

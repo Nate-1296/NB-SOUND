@@ -26,3 +26,35 @@ export function clasificarAncho(px: number): ClaseDeAncho {
   if (px >= ANCHO_MINIMO.medio) return 'medio';
   return 'compacto';
 }
+
+/**
+ * Lo que cabe en cada barra según **su propio** ancho, no el de la ventana: la
+ * misma ventana deja más o menos sitio según la barra lateral esté plegada o se
+ * esté en la reproducción ampliada. Antes las barras decidían por la carcasa y,
+ * a 720 px, los extras pisaban "repetir" y el título se metía bajo "aleatorio".
+ *
+ * - Barra de reproducción: `amplia` lo tiene todo; `media` lleva letras y
+ *   pantalla completa al menú ···; `estrecha` lleva además aleatorio, repetir,
+ *   karaoke y el volumen. Lo que se esconde nunca se pierde: pasa al menú.
+ * - Barra superior: los botones llevan su nombre solo si queda sitio para una
+ *   búsqueda cómoda al lado.
+ */
+export type TramoDeBarra = 'estrecha' | 'media' | 'amplia';
+
+/** Desde qué ancho de la barra de reproducción, en píxeles CSS, rige cada tramo. */
+export const BARRA_REPRODUCCION: Readonly<Record<TramoDeBarra, number>> = {
+  estrecha: 0,
+  media: 704,
+  amplia: 832
+};
+
+/** Desde qué ancho de la barra superior los botones llevan su nombre. */
+export const BARRA_SUPERIOR_CON_NOMBRES = 816;
+
+/** El tramo de la barra de reproducción. Mientras no se ha medido, `amplia`. */
+export function tramoReproduccion(px: number): TramoDeBarra {
+  if (!Number.isFinite(px) || px <= 0) return 'amplia';
+  if (px >= BARRA_REPRODUCCION.amplia) return 'amplia';
+  if (px >= BARRA_REPRODUCCION.media) return 'media';
+  return 'estrecha';
+}

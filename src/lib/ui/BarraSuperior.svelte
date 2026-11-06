@@ -12,6 +12,7 @@
   import { textos } from '#lib/i18n/index.ts';
   import { untrack } from 'svelte';
 
+  import { BARRA_SUPERIOR_CON_NOMBRES } from './anchos';
   import Icon from './Icon.svelte';
 
   const t = textos.busqueda;
@@ -22,6 +23,10 @@
     page.url.pathname === '/buscar' ? (page.url.searchParams.get('q') ?? '') : ''
   );
   let rutaPrevia = $state(page.url.pathname);
+
+  /** Los botones llevan su nombre solo si la búsqueda sigue teniendo sitio (`anchos.ts`). */
+  let ancho = $state(0);
+  const conNombres = $derived(ancho === 0 || ancho >= BARRA_SUPERIOR_CON_NOMBRES);
 
   /** Los tres cajones de la barra: uno abierto a la vez, y el mismo botón lo cierra. */
   type Cajon = 'karaoke' | 'dispositivos' | 'anadir';
@@ -81,7 +86,7 @@
 
 <svelte:window onkeydown={alPulsar} />
 
-<header class="superior">
+<header class="superior" class:solo-iconos={!conNombres} bind:clientWidth={ancho}>
   <search class="busqueda">
     <label class="caja">
       <span class="ns-solo-lectores">{t.etiqueta}</span>
@@ -204,6 +209,7 @@
     contain: layout size;
     display: flex;
     align-items: center;
+    gap: var(--ns-espacio-4);
     height: var(--ns-alto-superior);
     padding: 0 var(--ns-espacio-5);
     background: var(--m3c-surface);
@@ -211,6 +217,7 @@
 
   .busqueda {
     flex: 1;
+    min-width: 0;
     max-width: 40rem;
   }
 
@@ -284,6 +291,7 @@
   }
 
   .acciones {
+    flex: 0 0 auto;
     margin-left: auto;
     display: flex;
     align-items: center;
@@ -326,17 +334,11 @@
     border-color: var(--m3c-primary);
   }
 
-  :global(.carcasa:not([data-ancho='amplio'])) .texto-karaoke,
-  :global(.carcasa:not([data-ancho='amplio'])) .texto-dispositivos,
-  :global(.carcasa.compacta) .texto-karaoke,
-  :global(.carcasa.compacta) .texto-dispositivos {
+  .solo-iconos :is(.texto-karaoke, .texto-dispositivos, .texto-anadir) {
     display: none;
   }
 
-  :global(.carcasa:not([data-ancho='amplio'])) .boton-karaoke,
-  :global(.carcasa:not([data-ancho='amplio'])) .boton-dispositivos,
-  :global(.carcasa.compacta) .boton-karaoke,
-  :global(.carcasa.compacta) .boton-dispositivos {
+  .solo-iconos :is(.boton-karaoke, .boton-dispositivos, .boton-anadir) {
     width: 2.75rem;
     padding: 0;
     justify-content: center;
@@ -370,17 +372,5 @@
   .boton-anadir[aria-expanded='true'] {
     background: var(--m3c-primary-container);
     color: var(--m3c-on-primary-container);
-  }
-
-  :global(.carcasa:not([data-ancho='amplio'])) .texto-anadir,
-  :global(.carcasa.compacta) .texto-anadir {
-    display: none;
-  }
-
-  :global(.carcasa:not([data-ancho='amplio'])) .boton-anadir,
-  :global(.carcasa.compacta) .boton-anadir {
-    width: 2.75rem;
-    padding: 0;
-    justify-content: center;
   }
 </style>

@@ -4,6 +4,10 @@
   título (la favorita y "+") y en los extras (el minirreproductor y dónde suena).
   Con ellos fuera, el título, el artista y el álbum largos se leen enteros.
 
+  Cuando la barra es estrecha (`anchos.ts`), lo que no cabe en ella aparece aquí
+  arriba, en una fila de botones: aleatorio, repetir, letras, karaoke y pantalla
+  completa. Esconder un control nunca lo quita.
+
   Es una capa como la de la cola: la canción arriba y sus acciones debajo; "Añadir
   a una playlist" se despliega dentro, sin abrir otra capa encima.
 -->
@@ -12,9 +16,11 @@
   import { abrirMinirreproductor, sorprendeme, urlPortada } from '#lib/core/ipc/index.ts';
   import { telefonos } from '#lib/core/movil.svelte.ts';
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
+  import { pantalla } from '#lib/core/pantalla.svelte.ts';
   import { reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
 
+  import type { TramoDeBarra } from './anchos';
   import Icon from './Icon.svelte';
   import MenuAnadir from './playlists/MenuAnadir.svelte';
 
@@ -22,10 +28,15 @@
     oncerrar: () => void;
     /** Abre el diálogo de conectar un teléfono, que vive fuera de este menú. */
     onconectar: () => void;
+    /** El tramo de la barra: decide qué controles viven aquí. */
+    tramo: TramoDeBarra;
+    onletras: () => void;
   }
 
-  let { oncerrar, onconectar }: Props = $props();
+  let { oncerrar, onconectar, tramo, onletras }: Props = $props();
   const t = textos.reproductor;
+  const i = $derived(reproductor.instantanea);
+  const hayPista = $derived(i.pistaId !== null);
   const pista = $derived(reproductor.pista);
   const favorita = $derived(pista ? favoritas.es(pista) : false);
   let anadiendo = $state(false);
@@ -50,6 +61,76 @@
 </script>
 
 <div class="menu" role="menu" aria-label={t.masOpciones}>
+  {#if tramo !== 'amplia'}
+    <div class="controles" role="group" aria-label={t.region}>
+      {#if tramo === 'estrecha'}
+        <button
+          type="button"
+          class="control"
+          class:activo={i.aleatorio}
+          aria-label={t.aleatorio}
+          aria-pressed={i.aleatorio}
+          title={t.aleatorio}
+          onclick={reproductor.alternarAleatorio}
+        >
+          <Icon nombre="aleatorio" tamano={20} />
+        </button>
+        <button
+          type="button"
+          class="control"
+          class:activo={i.repeticion !== 'ninguno'}
+          aria-label={t.repeticion[i.repeticion as keyof typeof t.repeticion] ?? t.repetir}
+          title={t.repeticion[i.repeticion as keyof typeof t.repeticion] ?? t.repetir}
+          onclick={reproductor.rotarRepeticion}
+        >
+          <Icon nombre={i.repeticion === 'uno' ? 'repetirUna' : 'repetir'} tamano={20} />
+        </button>
+        <button
+          type="button"
+          class="control"
+          class:activo={i.karaokeActivo}
+          aria-label={t.karaoke}
+          aria-pressed={i.karaokeActivo}
+          title={t.karaoke}
+          disabled={!hayPista || !i.karaokeDisponible}
+          onclick={reproductor.alternarKaraoke}
+        >
+          <Icon nombre="microfono" tamano={20} />
+        </button>
+      {/if}
+      <button
+        type="button"
+        class="control"
+        aria-label={t.letras}
+        title={t.letras}
+        disabled={!hayPista}
+        onclick={() => {
+          oncerrar();
+          onletras();
+        }}
+      >
+        <Icon nombre="letras" tamano={20} />
+      </button>
+      <button
+        type="button"
+        class="control"
+        class:activo={pantalla.completa}
+        aria-label={pantalla.completa ? t.salirPantallaCompleta : t.pantallaCompleta}
+        aria-pressed={pantalla.completa}
+        title={pantalla.completa ? t.salirPantallaCompleta : t.pantallaCompleta}
+        onclick={() => {
+          oncerrar();
+          void pantalla.alternar();
+        }}
+      >
+        <Icon
+          nombre={pantalla.completa ? 'salirPantallaCompleta' : 'pantallaCompleta'}
+          tamano={20}
+        />
+      </button>
+    </div>
+    <hr />
+  {/if}
   {#if pista}
     <header>
       <span class="portada">
@@ -141,6 +222,54 @@
     background: var(--m3c-surface-container-high);
     color: var(--m3c-on-surface);
     box-shadow: 0 12px 32px var(--m3c-shadow);
+  }
+
+  .controles {
+    display: flex;
+    justify-content: space-around;
+    gap: var(--ns-espacio-1);
+    padding: var(--ns-espacio-1) 0;
+  }
+
+  .control {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: none;
+    border-radius: var(--ns-radio-pleno);
+    background: none;
+    color: var(--m3c-on-surface-variant);
+    cursor: pointer;
+  }
+
+  .control:hover:not(:disabled),
+  .control:focus-visible {
+    background: var(--m3c-surface-container-highest);
+    color: var(--m3c-on-surface);
+  }
+
+  .control:disabled {
+    opacity: 0.38;
+    cursor: default;
+  }
+
+  .control.activo {
+    background: color-mix(in srgb, var(--m3c-primary) 12%, transparent);
+    color: var(--m3c-primary);
+  }
+
+  .control.activo::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    border-radius: var(--ns-radio-pleno);
+    background: currentColor;
+    translate: -50% 0;
   }
 
   header {

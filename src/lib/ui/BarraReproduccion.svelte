@@ -12,6 +12,7 @@
   import { formatoTiempo, reproductor } from '#lib/core/reproductor.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
 
+  import { tramoReproduccion } from './anchos';
   import FormaDeOnda from './FormaDeOnda.svelte';
   import DialogoConectar from './dispositivos/DialogoConectar.svelte';
   import Icon from './Icon.svelte';
@@ -20,6 +21,10 @@
   const i = $derived(reproductor.instantanea);
   const pista = $derived(reproductor.pista);
   const hayPista = $derived(i.pistaId !== null);
+
+  /** Lo que cabe depende del ancho de la propia barra (`anchos.ts`). */
+  let anchoBarra = $state(0);
+  const tramo = $derived(tramoReproduccion(anchoBarra));
 
   /** Mientras se arrastra, la barra sigue al dedo y no a la reproducción. */
   let arrastrando = $state<number | null>(null);
@@ -121,7 +126,13 @@
   }
 </script>
 
-<section class="reproductor" aria-label={t.region}>
+<section
+  class="reproductor"
+  class:media={tramo === 'media'}
+  class:estrecha={tramo === 'estrecha'}
+  aria-label={t.region}
+  bind:clientWidth={anchoBarra}
+>
   <div class="pista">
     <button
       type="button"
@@ -175,17 +186,19 @@
 
   <div class="centro">
     <div class="controles">
-      <button
-        type="button"
-        class="control conmutador"
-        class:activo={i.aleatorio}
-        aria-label={t.aleatorio}
-        aria-pressed={i.aleatorio}
-        title={t.aleatorio}
-        onclick={reproductor.alternarAleatorio}
-      >
-        <Icon nombre="aleatorio" tamano={20} />
-      </button>
+      {#if tramo !== 'estrecha'}
+        <button
+          type="button"
+          class="control conmutador"
+          class:activo={i.aleatorio}
+          aria-label={t.aleatorio}
+          aria-pressed={i.aleatorio}
+          title={t.aleatorio}
+          onclick={reproductor.alternarAleatorio}
+        >
+          <Icon nombre="aleatorio" tamano={20} />
+        </button>
+      {/if}
       <button
         type="button"
         class="control"
@@ -216,16 +229,18 @@
       >
         <Icon nombre="siguiente" tamano={20} />
       </button>
-      <button
-        type="button"
-        class="control conmutador"
-        class:activo={i.repeticion !== 'ninguno'}
-        aria-label={t.repeticion[i.repeticion as keyof typeof t.repeticion] ?? t.repetir}
-        title={t.repeticion[i.repeticion as keyof typeof t.repeticion] ?? t.repetir}
-        onclick={reproductor.rotarRepeticion}
-      >
-        <Icon nombre={i.repeticion === 'uno' ? 'repetirUna' : 'repetir'} tamano={20} />
-      </button>
+      {#if tramo !== 'estrecha'}
+        <button
+          type="button"
+          class="control conmutador"
+          class:activo={i.repeticion !== 'ninguno'}
+          aria-label={t.repeticion[i.repeticion as keyof typeof t.repeticion] ?? t.repetir}
+          title={t.repeticion[i.repeticion as keyof typeof t.repeticion] ?? t.repetir}
+          onclick={reproductor.rotarRepeticion}
+        >
+          <Icon nombre={i.repeticion === 'uno' ? 'repetirUna' : 'repetir'} tamano={20} />
+        </button>
+      {/if}
     </div>
     <div class="progreso">
       <span class="tiempo">{formatoTiempo(posicion)}</span>
@@ -259,32 +274,36 @@
   </div>
 
   <div class="extra">
-    <button
-      type="button"
-      class="control conmutador"
-      class:activo={page.url.pathname === '/reproduciendo' && page.url.searchParams.has('letras')}
-      aria-label={t.letras}
-      title={t.letras}
-      aria-pressed={page.url.pathname === '/reproduciendo' && page.url.searchParams.has('letras')}
-      disabled={!hayPista || i.ciego}
-      onclick={() => abrirVista(true)}
-    >
-      <Icon nombre="letras" tamano={20} />
-    </button>
-    <!-- Siempre está, apagado si la canción no está preparada: si aparecía y
-         desaparecía, la barra cambiaba de forma de una canción a otra. -->
-    <button
-      type="button"
-      class="control conmutador"
-      class:activo={i.karaokeActivo}
-      aria-label={t.karaoke}
-      aria-pressed={i.karaokeActivo}
-      title={t.karaoke}
-      disabled={!hayPista || !i.karaokeDisponible}
-      onclick={reproductor.alternarKaraoke}
-    >
-      <Icon nombre="microfono" tamano={20} />
-    </button>
+    {#if tramo === 'amplia'}
+      <button
+        type="button"
+        class="control conmutador"
+        class:activo={page.url.pathname === '/reproduciendo' && page.url.searchParams.has('letras')}
+        aria-label={t.letras}
+        title={t.letras}
+        aria-pressed={page.url.pathname === '/reproduciendo' && page.url.searchParams.has('letras')}
+        disabled={!hayPista || i.ciego}
+        onclick={() => abrirVista(true)}
+      >
+        <Icon nombre="letras" tamano={20} />
+      </button>
+    {/if}
+    {#if tramo !== 'estrecha'}
+      <!-- Siempre está, apagado si la canción no está preparada: si aparecía y
+           desaparecía, la barra cambiaba de forma de una canción a otra. -->
+      <button
+        type="button"
+        class="control conmutador"
+        class:activo={i.karaokeActivo}
+        aria-label={t.karaoke}
+        aria-pressed={i.karaokeActivo}
+        title={t.karaoke}
+        disabled={!hayPista || !i.karaokeDisponible}
+        onclick={reproductor.alternarKaraoke}
+      >
+        <Icon nombre="microfono" tamano={20} />
+      </button>
+    {/if}
     <button
       type="button"
       bind:this={botonCola}
@@ -363,17 +382,22 @@
         oninput={(e) => reproductor.volumen(Number(e.currentTarget.value))}
       />
     </div>
-    <button
-      type="button"
-      class="control conmutador"
-      class:activo={pantalla.completa}
-      aria-label={pantalla.completa ? t.salirPantallaCompleta : t.pantallaCompleta}
-      aria-pressed={pantalla.completa}
-      title={pantalla.completa ? t.salirPantallaCompleta : t.pantallaCompleta}
-      onclick={() => pantalla.alternar()}
-    >
-      <Icon nombre={pantalla.completa ? 'salirPantallaCompleta' : 'pantallaCompleta'} tamano={20} />
-    </button>
+    {#if tramo === 'amplia'}
+      <button
+        type="button"
+        class="control conmutador"
+        class:activo={pantalla.completa}
+        aria-label={pantalla.completa ? t.salirPantallaCompleta : t.pantallaCompleta}
+        aria-pressed={pantalla.completa}
+        title={pantalla.completa ? t.salirPantallaCompleta : t.pantallaCompleta}
+        onclick={() => pantalla.alternar()}
+      >
+        <Icon
+          nombre={pantalla.completa ? 'salirPantallaCompleta' : 'pantallaCompleta'}
+          tamano={20}
+        />
+      </button>
+    {/if}
     <button
       type="button"
       bind:this={botonMenu}
@@ -399,6 +423,8 @@
           <m.default
             oncerrar={() => capaMenu?.hidePopover()}
             onconectar={() => (conectando = true)}
+            {tramo}
+            onletras={() => abrirVista(true)}
           />
         {/await}
       {/if}
@@ -724,6 +750,32 @@
     color: var(--m3c-on-surface-variant);
     min-width: 2.25rem;
     text-align: right;
+  }
+
+  /* Lo que no cabe ya está en el menú ···: aquí solo se aprieta lo que queda. */
+  .reproductor.media,
+  .reproductor.estrecha {
+    gap: var(--ns-espacio-3);
+    padding: 0 var(--ns-espacio-3);
+  }
+
+  .reproductor.estrecha {
+    grid-template-columns: minmax(7rem, 1fr) minmax(13rem, 1.4fr) auto;
+  }
+
+  .reproductor.estrecha .portada {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .reproductor.media .album,
+  .reproductor.estrecha .album {
+    display: none;
+  }
+
+  .reproductor.estrecha .progreso {
+    grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem;
+    gap: var(--ns-espacio-1);
   }
 
   @container carcasa (max-width: 75rem) {
