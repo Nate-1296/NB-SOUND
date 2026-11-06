@@ -41,6 +41,7 @@ export const esAparte = {
     perdida: 'Tu música no está en esta carpeta. Elige dónde está ahora.',
     vacia: 'Tu biblioteca aún no tiene canciones.',
     comprobar: 'Comprobar',
+    elegir: 'Elegir',
     comprobado: 'Comprobado: todo está en su sitio.',
     // El aviso del arranque
     preguntaTitulo: '¿Dónde está tu música?',

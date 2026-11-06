@@ -272,7 +272,10 @@
       }
     } else if (vista === 'albumes') {
       const orden = ordenAlbumes;
-      if (albumes.length === 0) sembrarAlbumes(busqueda, orden);
+      // Sin `untrack`, leer la rejilla la hacía depender de sí misma: con la
+      // biblioteca vacía, sembrar escribía otra lista vacía y el efecto volvía a
+      // correr sin fin (Biblioteca acababa en "500" en una instalación nueva).
+      if (untrack(() => albumes.length) === 0) sembrarAlbumes(busqueda, orden);
       const g = ++pedidoGrid;
       cargandoGrid = true;
       void bibliotecaAlbumes(
@@ -288,7 +291,7 @@
       });
     } else if (vista === 'artistas') {
       const orden = ordenArtistas;
-      if (artistas.length === 0) sembrarArtistas(busqueda, orden);
+      if (untrack(() => artistas.length) === 0) sembrarArtistas(busqueda, orden);
       const g = ++pedidoGrid;
       cargandoGrid = true;
       void bibliotecaArtistas({ texto: busqueda, orden }, 0, PAGINA).then((p) => {

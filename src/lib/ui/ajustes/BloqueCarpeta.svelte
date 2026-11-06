@@ -11,7 +11,11 @@
 -->
 <script lang="ts">
   import { ubicacionMusica, type UbicacionMusica } from '#lib/core/ipc/index.ts';
-  import { elegirCarpetaMusica, type RevisionCarpeta } from '#lib/core/ipc/aparte.ts';
+  import {
+    aplicarCarpetaMusica,
+    elegirCarpetaMusica,
+    type RevisionCarpeta
+  } from '#lib/core/ipc/aparte.ts';
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { textosAparte } from '#lib/i18n/aparte.ts';
   import Icon from '#lib/ui/Icon.svelte';
@@ -44,6 +48,14 @@
     if (!r) return;
     if (r.misma) {
       notificar.informacion(tc.misma);
+      return;
+    }
+    // Sin canciones todavía no hay nada que comparar ni que llevar: se usa la
+    // carpeta y lo que tenga entra solo, como desde la bienvenida.
+    if (r.total === 0) {
+      await aplicarCarpetaMusica(false).catch(() => notificar.error(textosAparte.comun.error));
+      notificar.informacion(textosAparte.bienvenida.buscando);
+      await leer();
       return;
     }
     revision = r;
@@ -83,11 +95,13 @@
   </div>
   <p class="ayuda">{td.ayuda}</p>
   <div class="botones">
-    <button type="button" class="boton" onclick={comprobar} disabled={comprobando}>
-      <Icon nombre="reintentar" tamano={16} />{td.comprobar}
-    </button>
+    {#if u?.carpeta}
+      <button type="button" class="boton" onclick={comprobar} disabled={comprobando}>
+        <Icon nombre="reintentar" tamano={16} />{td.comprobar}
+      </button>
+    {/if}
     <button type="button" class="boton" class:relleno={u?.perdida} onclick={cambiar}>
-      <Icon nombre="carpeta" tamano={16} />{tc.cambiar}
+      <Icon nombre="carpeta" tamano={16} />{u?.carpeta ? tc.cambiar : td.elegir}
     </button>
   </div>
 </div>
