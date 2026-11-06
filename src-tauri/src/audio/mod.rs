@@ -360,6 +360,13 @@ impl<B: Backend> Motor<B> {
 
     pub fn buscar(&mut self, segundos: f64) {
         let plato = self.plato();
+        // La posición la escribe quien suena al consumir audio, y en pausa no
+        // consume: llevar la barra con la música en pausa la dejaba donde estaba
+        // hasta reanudar. Se adelanta aquí; al sonar, la fuente la sigue desde ahí.
+        let tasa = f64::from(plato.compartido.tasa.load(Ordering::Relaxed).max(1));
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+        let frame = (segundos.max(0.0) * tasa) as u64;
+        plato.compartido.frame.store(frame, Ordering::Relaxed);
         let generacion = plato.nueva_generacion();
         let _ = plato.ordenes.send(Orden::Buscar {
             generacion,

@@ -215,6 +215,20 @@ fn buscar_fuera_de_rango_se_acota_a_la_duracion() {
 }
 
 #[test]
+fn llevar_la_barra_en_pausa_mueve_la_posicion_sin_reanudar() {
+    let e = escenario("buscar-pausa", &[(1, 44_100 * 4)]);
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    s.atender(Orden::ReproducirPista(1));
+    correr(&mut s, |s| s.instantanea().posicion_seg > 0.0);
+    s.atender(Orden::PausarReanudar);
+    s.atender(Orden::Buscar(2.5));
+    let i = s.instantanea();
+    assert_eq!(i.estado, "pausado");
+    assert!((i.posicion_seg - 2.5).abs() < 0.05, "{}", i.posicion_seg);
+}
+
+#[test]
 fn llevar_la_barra_al_final_pasa_a_la_siguiente_sin_quedarse_colgada() {
     // Al soltar la barra en el extremo, la búsqueda caía justo en el final del
     // archivo, el decodificador la rechazaba y la pista se daba por ilegible: la
