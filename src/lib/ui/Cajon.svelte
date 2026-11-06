@@ -106,12 +106,18 @@
     animation: entra var(--ns-duracion-media) var(--ns-curva);
   }
 
+  /*
+   * Entra animando su borde derecho, no con `transform`: con la GPU, WebKitGTK
+   * pintaba el panel en mitad de la ventana mientras duraba la animación de
+   * `translateX` dentro del `<dialog>` modal, y al acabar saltaba a la derecha.
+   * Sin GPU no pasaba, por eso no se veía en la máquina de pruebas.
+   */
   @keyframes entra {
     from {
-      transform: translateX(100%);
+      right: calc(-1 * min(92vw, 30rem));
     }
     to {
-      transform: translateX(0);
+      right: 0;
     }
   }
 

@@ -209,6 +209,8 @@ estados de pasar por encima solo se vieron en el código.
       espera"; al cerrar NB Sound a la mitad y abrirla, sigue con la misma.
 - [ ] Con un cajón (Karaoke, Dispositivos, Añadir música), la cola o el menú ··· abiertos, la barra de
       desplazamiento de la vista de debajo no se ve encima.
+- [ ] Karaoke, Dispositivos y Añadir música entran deslizándose desde la derecha, sin aparecer antes en mitad de la
+      ventana (solo se veía con la GPU).
 - [x] Reproducir la biblioteca entera y abrir la cola: abre al momento, se desplaza fluida y Vaciar responde. *(Comprobado por guion el 2026-11-05 sobre la 2.0.9 instalada y la copia de los datos.)*
 - [ ] "Cooler Than Me" (48 kHz) se prepara para karaoke y aparece su micrófono en la barra.
 - [ ] Desplazarse rápido por Biblioteca (pistas, álbumes, artistas) y por Playlists va fluido, y al volver a una
