@@ -47,18 +47,18 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Mover la barra de posición cae donde se suelta; pausar y reanudar no hace clic.
 - [ ] Las 18 preselecciones del ecualizador se oyen como en la V1 y ninguna distorsiona al volumen máximo.
 - [ ] Con la normalización activa, pasar de una pista muy alta a una muy baja no obliga a tocar el volumen.
-- [ ] Al abrir, la cola, la pista y el segundo en que se quedó la última sesión están ahí, sin sonar hasta pulsar
-      reproducir.
-- [ ] Cerrar la ventana mientras suena no deja audio sonando ni procesos vivos.
+- [x] Al abrir, la cola, la pista y el segundo en que se quedó la última sesión están ahí, sin sonar hasta pulsar
+      reproducir. *(Comprobado por guion el 2026-11-05 sobre la 2.0.9 instalada y la copia de los datos.)*
+- [x] Cerrar la ventana mientras suena no deja audio sonando ni procesos vivos. *(Comprobado por guion el 2026-11-05 sobre la 2.0.9 instalada y la copia de los datos.)*
 - [ ] La primera vez, con la V1 importándose en segundo plano, el reproductor recoge la cola de la V1 al terminar.
 - [ ] Tras la importación, la medición de sonoridad recorre la biblioteca real sin que el equipo se note (CPU por debajo de un núcleo, sin cortes en lo que suena); con la normalización activa, una pista alta y una baja de la V1 suenan parecidas.
-- [ ] La carcasa, la barra lateral y la barra de reproducción se comparan con las capturas de la V1 (`legado/assets/screens/`) y con la V1 abierta al lado.
+- [ ] La carcasa, la barra lateral y la barra de reproducción se comparan con las capturas de la V1 (en la etiqueta `v1.1.16`, `legado/assets/screens/`) y con la V1 abierta al lado.
 - [ ] La biblioteca real (2.397 canciones, 1.421 álbumes) se desplaza sin tirones en WebKitGTK, con las portadas apareciendo al frenar; buscar, filtrar, ordenar y abrir álbum y artista funcionan como en la V1.
 - [ ] Las playlists de la V1 aparecen con sus categorías, mosaicos y orden; crear, renombrar, ordenar, quitar, borrar y añadir desde cualquier canción funcionan, y el móvil recibe los cambios y «Me gusta» al marcar favoritas.
 - [ ] La vista de reproducción toma el color de la portada; las letras sincronizadas siguen a la canción y llevan al segundo pulsado; el panel de la cola reordena con el ratón y con Alt+flechas; el minirreproductor flota encima y cerrar la ventana principal cierra todo.
 - [ ] La V2 abre con el tema de la V1 (`sangre_dragon`) y Fira Sans sin parpadear con el de fábrica; los 63 temas se ven como en la V1.
 - [ ] En Ajustes, cambiar de tema, tipografía y tamaño se ve al momento; el ecualizador suena con cada preselección y con las bandas movidas a mano; la normalización se nota desde la canción siguiente.
-- [ ] Inicio muestra las cifras, Retomar, el álbum destacado y las secciones de la V1 con la biblioteca real, y saluda por el nombre.
+- [ ] Inicio muestra Retomar (sin las cifras, por decisión de QA-R2), el álbum destacado y las secciones de la V1 con la biblioteca real, y saluda por el nombre.
 - [ ] KDE Plasma y GNOME muestran título, artista, portada, duración y posición; sus botones y las teclas multimedia controlan la aplicación; aleatorio y repetición se reflejan en los dos sentidos. En Windows (SMTC) y macOS, lo mismo salvo aleatorio y repetición desde el sistema.
 - [ ] Los atajos de la V1 funcionan en la ventana (espacio, flechas, S, R, L, F, K, +/-, Ctrl+Q, Ctrl+M) y no interfieren al escribir; la bandeja muestra el icono con su menú.
 - [ ] Tu música muestra la foto y el nombre de la V1, las cifras del historial real, la hora pico en la hora local, el mood del día, los días activos del mes y los tops.
@@ -78,7 +78,7 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Ajustes > Dispositivos: conectar un teléfono nuevo con el QR y con el código corto; quitar uno lo desconecta al
       momento (F3.3.1). El cortafuegos del sistema deja pasar el puerto 8731-8799 (en Windows, el aviso del
       sistema la primera vez).
-- [ ] El selector de la barra dice qué teléfono controla el equipo mientras lo hace (F3.3.2).
+- [ ] "Dónde suena", en el menú ··· de la barra, dice qué teléfono controla el equipo mientras lo hace (F3.3.2).
 - [ ] Una descarga completa de la biblioteca desde el teléfono no se nota en el equipo (audio sin cortes, ventana
       fluida).
 
@@ -93,8 +93,8 @@ carpetas de datos de la V2 y lo que Nathan haga con la aplicación. Las rutas de
 - [ ] Por revisar: cada motivo con su texto, elegir un candidato, importar tal como está, buscar de nuevo y descartar a
       la papelera del sistema (comprobar que el archivo está en la papelera).
 - [ ] Con la red desactivada en Ajustes, importar canciones con etiquetas: entran sin verificar.
-- [ ] Copiar un álbum en la carpeta de música con la aplicación abierta lo importa solo, cuando termina de copiarse
-      (F4.2.2); copiarlo con la aplicación cerrada lo importa al abrirla.
+- [x] Copiar un álbum en la carpeta de música con la aplicación abierta lo importa solo, cuando termina de copiarse
+      (F4.2.2); copiarlo con la aplicación cerrada lo importa al abrirla. *(Comprobado por guion el 2026-11-05 en la 2.0.7 instalada con un archivo sintético; a mano, con un álbum real.)*
 - [ ] Ajustes > Privacidad: apagar un servicio corta su siguiente petición sin reiniciar; con la conexión general
       apagada no sale nada (F4.2.7).
 - [ ] Ajustes > Inteligencia artificial con una clave real de Anthropic: se guarda en el llavero del sistema (visible
@@ -209,7 +209,7 @@ estados de pasar por encima solo se vieron en el código.
       espera"; al cerrar NB Sound a la mitad y abrirla, sigue con la misma.
 - [ ] Con un cajón (Karaoke, Dispositivos, Añadir música), la cola o el menú ··· abiertos, la barra de
       desplazamiento de la vista de debajo no se ve encima.
-- [ ] Reproducir la biblioteca entera y abrir la cola: abre al momento, se desplaza fluida y Vaciar responde.
+- [x] Reproducir la biblioteca entera y abrir la cola: abre al momento, se desplaza fluida y Vaciar responde. *(Comprobado por guion el 2026-11-05 sobre la 2.0.9 instalada y la copia de los datos.)*
 - [ ] "Cooler Than Me" (48 kHz) se prepara para karaoke y aparece su micrófono en la barra.
 - [ ] Desplazarse rápido por Biblioteca (pistas, álbumes, artistas) y por Playlists va fluido, y al volver a una
       vista ya visitada se ve al momento lo de antes.

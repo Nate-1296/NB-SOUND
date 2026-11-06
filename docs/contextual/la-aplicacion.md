@@ -2,7 +2,9 @@
 
 > **Qué es este documento:** la descripción de la aplicación tal como es y como tiene que ser, vista por dentro y
 > por fuera: qué hace, qué hay en cada pantalla, qué hace cada botón y qué pasa por debajo. Recoge las decisiones de
-> Nathan de la revisión QA-R2 (2026-11-05). Si una pantalla y este documento no coinciden, una de las dos está mal.
+> Nathan de la revisión QA-R2 (2026-11-05) y está al día con la 2.0.9. Si una pantalla y este documento no
+> coinciden, una de las dos está mal. Lo que le falta, comparada con otros reproductores, está en la
+> [revisión de producto](./revision-de-producto.md).
 
 ## En una frase
 
@@ -62,8 +64,8 @@ Siempre abajo, siempre visible.
 * **En el centro**, aleatorio, anterior, reproducir o pausar, siguiente y repetir (la cola entera o una canción).
   Activos, aleatorio y repetir toman el color de acento y llevan un punto debajo; no se confunden con el botón de
   reproducir. Debajo, la forma de onda de la canción, que es también la barra de progreso, con el tiempo a cada lado.
-* **A la derecha**, letras, karaoke (si la canción está lista para cantar), la cola con su número, el volumen,
-  pantalla completa y el menú **···**.
+* **A la derecha**, letras, karaoke (siempre en su sitio; apagado si la canción no está lista para cantar), la cola
+  con su número, el volumen, pantalla completa y el menú **···**.
 
 **El menú ···** de la barra es una ventana flotante como la de la cola, con lo que antes ocupaba sitio junto al
 título: **añadir a una playlist**, **poner o quitar de favoritas**, **minirreproductor** y **dónde suena** (este
@@ -106,9 +108,9 @@ lista). Cada pestaña recuerda los suyos.
 
 * **Álbumes**: todos, solo álbumes, o sencillos y EP, como en la V1. Se cargan por páginas al llegar al final.
 * **Artistas**: en círculos, con su número de álbumes y canciones.
-* **Pistas**: la lista entera, con filtros de favoritas, sin verificar y listas para cantar (y "Preparar mis
-  favoritas" cuando ese filtro está puesto). Cada fila: portada, título y artista, álbum, la favorita, la duración y
-  las acciones. Sin numeración ni rótulos de columnas: no es un ranking, es tu biblioteca en el orden que elijas.
+* **Pistas**: la lista entera, con filtros de favoritas, sin verificar y listas para cantar ("Preparar mis
+  favoritas" está en la consola de karaoke, no aquí). Cada fila: portada, título y artista, álbum, la favorita, la
+  duración y las acciones. Sin numeración ni rótulos de columnas: no es un ranking, es tu biblioteca en el orden que elijas.
 
 **Cada canción**, en cualquier lista, al pasar el ratón muestra la favorita, "+" (añadir a una playlist) y **···**:
 reproducir a continuación, añadir a la cola, abrir el álbum, abrir el artista, completar datos (si está sin
@@ -232,12 +234,13 @@ movimiento. Escape sale de la pantalla completa y luego de la vista.
 ### La cola
 
 Desde la barra o con Ctrl+Q: una ventana flotante con las canciones que vienen (aunque sean miles: solo se pintan
-las que se ven), su duración total, la que suena marcada, reproducir o quitar cada una, reordenar arrastrando o con el teclado, y vaciarla. La barra de desplazamiento
-tiene su propio carril y no tapa nada.
+las que se ven), su duración total, la que suena marcada, reproducir o quitar cada una, reordenar arrastrando o con
+el teclado, y vaciarla. La barra de desplazamiento tiene su propio carril y no tapa nada.
 
 ### El minirreproductor
 
-Una ventana pequeña que se queda encima de las demás: la portada a todo el alto, el título y el artista, la
+Una ventana pequeña que pide quedarse encima de las demás (en Wayland lo decide el escritorio: KDE la deja debajo al
+tocar otra ventana, y se decidió dejarlo así, P17): la portada a todo el alto, el título y el artista, la
 favorita, anterior, reproducir, siguiente y repetir, y el progreso como borde inferior. Arriba, volver a la ventana
 grande y cerrar. Cerrar solo la esconde, así que volver a abrirla es instantáneo. Se mueve arrastrándola.
 
@@ -250,7 +253,8 @@ Para cantar cualquier canción: la voz se separa en tu equipo, sin internet (agr
 * **Ahora suena**: la canción, si está lista y "Cantar ahora" o "Volver a la original"; si no, "Preparar esta
   canción".
 * **En preparación**: la canción que se está preparando, con su portada, su título y el porcentaje real, y las que
-  esperan detrás, en orden. Se ve siempre, también si la preparación empezó desde otra parte.
+  esperan detrás, en orden. Se ve siempre, también si la preparación empezó desde otra parte. Si alguna no se pudo
+  preparar, lo dice y cuántas son.
 * **Tu repertorio**: cuántas canciones están listas, verlas en la biblioteca y preparar tus favoritas.
 
 La preparación sigue sola en segundo plano; si cierras la aplicación, al volver a abrirla continúa donde iba y la
@@ -315,7 +319,15 @@ descartar (a la papelera) y mostrar en su carpeta; y en lote, importar todas o d
 * **El teléfono.** Un servidor en tu red, cifrado y con emparejamiento por QR, que sirve la biblioteca, las letras y
   los instrumentales, y recibe órdenes de control.
 * **La memoria.** La base de datos guarda la sesión del reproductor (cola, posición, volumen, aleatorio, repetición)
-  cada vez que cambia y al cerrar; las preferencias de cada pantalla se guardan al cambiarlas.
+  cada vez que cambia y al cerrar; las preferencias de cada pantalla y la pantalla en la que estabas se guardan al
+  cambiarlas.
+* **Se repara sola.** Un fallo pasajero se reintenta en el momento: una canción del karaoke hasta tres veces, un
+  archivo de la importación también. Lo que falla por no tener un componente (el modelo, ONNX Runtime) espera a que
+  esté, sin gastar intentos. Y la primera vez que abre una versión nueva, todo lo que había quedado fallido se intenta
+  una vez más, porque la versión puede traer el arreglo.
+* **El trabajo de fondo no estorba.** Cada tarea tiene su hilo, lejos de la ventana y del audio. El karaoke usa un
+  cuarto de los núcleos, el análisis un octavo, y los dos (con la sonoridad) corren a la prioridad más baja en Linux
+  y macOS: solo usan lo que el equipo no está usando.
 
 ## Atajos de teclado
 
