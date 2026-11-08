@@ -140,6 +140,11 @@ export async function call<T>(comando: string, args?: Record<string, unknown>): 
   return r;
 }
 
+/** Muestra la ventana principal cuando la apariencia ya está pintada. */
+export async function mostrarVentanaPrincipal(): Promise<void> {
+  await getCurrentWindow().show();
+}
+
 /*
  * Lo último que respondieron las lecturas con que se pinta una vista, para que al
  * volver a ella se vea al instante lo de la vez anterior mientras llega lo nuevo
