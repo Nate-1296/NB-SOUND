@@ -1,199 +1,153 @@
 # Pruebas finales en el entorno real
 
-> **Estado:** Vigente desde el 2026-10-30. Decisión de Nathan: las puertas de empaquetado y todo lo que solo se
-> comprueba a mano se acumulan aquí y se ejecutan juntas al terminar la Fase 8 ([plan](./README.md), sección 5.1).
-> Cada iteración que deja algo sin comprobar a mano lo apunta aquí en el mismo commit.
+> **Estado:** Vigente desde el 2026-10-30; reescrito el 2026-11-08.
+> **Decisión de Nathan (2026-11-08):** quedan solo las pruebas que puede hacer una IA, sin nadie delante. Salen las
+> de Windows y macOS (Nathan lo probó en Windows y funciona), la instalación en máquina limpia y todo lo que
+> necesita a Nathan: oído, ratón, teléfono físico, claves suyas, contraseñas del sistema o selectores nativos.
+> Cada iteración que deja algo sin comprobar lo apunta aquí en el mismo commit, solo si una IA lo puede comprobar.
 
-## Cómo se hará
+## Cómo se hace
 
-1. Se compilan los instaladores (Linux en el contenedor de Ubuntu 22.04; Windows y macOS desde el CI).
-2. Se prueba primero en máquina limpia (contenedor o máquina virtual): instala, arranca, no pide nada de fuera.
-3. En la máquina de Nathan, se instala NB Sound y se recorre la lista de abajo.
-4. Lo que falle se corrige con su prueba de regresión antes de publicar.
+Todo sobre la aplicación compilada y una **copia** de los datos, nunca los reales: KWin virtual, audio a un sumidero
+nulo y la interfaz manejada con JavaScript por el inspector remoto de WebKit (la receta está en la memoria del
+proyecto, "Probar la app aislada"). Los trabajos pesados van con `systemd-run` y `MemoryMax`, de uno en uno.
 
-Durante esta prueba, y solo durante ella, NB Sound escribe en el entorno real de Nathan con su permiso: el llavero, las
-carpetas de datos de NB Sound y lo que Nathan haga con la aplicación. Las rutas siguen siendo de solo lectura.
+| Lo que antes era a mano | Cómo lo comprueba una IA |
+|---|---|
+| Oír huecos, clics o saltos de volumen | Grabar el monitor del sumidero nulo (`parec`) y medir: muestras a cero entre pistas, discontinuidades, sonoridad (EBU R128) |
+| Pasar el ratón por encima | `CSS.forcePseudoState` (`:hover`) por el inspector y captura de pantalla |
+| El teléfono | Un cliente HTTP que habla el [contrato móvil](../adr/decisions/ADR-005-contrato-movil.md), comparado con las respuestas doradas |
+| KDE y GNOME (MPRIS) | `busctl --user` sobre `org.mpris.MediaPlayer2.*` |
+| Una memoria USB | Una carpeta temporal como destino |
+| CPU y memoria | `/proc/<pid>/task/*/stat` y `status` muestreados durante la prueba |
 
-## Fase 0
+Lo que falle se corrige con su prueba de regresión antes de cerrar.
 
-- [ ] El `.deb` y la AppImage arrancan en Ubuntu 22.04, Ubuntu 24.04 y Debian 12 limpios (ya comprobado el
-      2026-10-30 con la Fase 0; se repite con la aplicación completa).
-- [ ] Los instaladores de Windows y macOS instalan y arrancan en una máquina real.
-- [ ] `fpcalc` instalado en `/usr/bin` por el `.deb` no choca con el paquete `chromaprint` (F7.2.1).
+El arnés de audio vive en `scripts/qa/audio-qa.sh`. Prepara
+`~/.cache/nb-sound-qa/pruebas-finales`, enlaza la música sin copiar sus datos y ejecuta las grabaciones y medidas
+con `scripts/qa/audio-qa.sh todo`; el propio guion se relanza bajo
+`systemd-run --user --scope -p MemoryMax=6G`.
 
 ## Fase 2
 
-- [ ] Suena por la salida por defecto en Linux (PipeWire y PulseAudio), Windows y macOS, y sigue sonando al
-      cambiar de dispositivo (auriculares que se conectan) con la tasa nueva.
-- [ ] Un álbum en MP3 y otro en FLAC se oyen sin hueco entre pistas.
-- [ ] Mover la barra de posición cae donde se suelta; pausar y reanudar no hace clic.
-- [ ] Las 18 preselecciones del ecualizador se oyen y ninguna distorsiona al volumen máximo.
-- [ ] Con la normalización activa, pasar de una pista muy alta a una muy baja no obliga a tocar el volumen.
 - [x] Al abrir, la cola, la pista y el segundo en que se quedó la última sesión están ahí, sin sonar hasta pulsar
       reproducir. *(Comprobado por guion el 2026-11-05 sobre la 2.0.9 instalada y la copia de los datos.)*
-- [x] Cerrar la ventana mientras suena no deja audio sonando ni procesos vivos. *(Comprobado por guion el 2026-11-05 sobre la 2.0.9 instalada y la copia de los datos.)*
-- [ ] Tras la importación, la medición de sonoridad recorre la biblioteca real sin que el equipo se note (CPU por debajo de un núcleo, sin cortes en lo que suena); con la normalización activa, una pista alta y una baja suenan parecidas.
-- [ ] La biblioteca real (2.397 canciones, 1.421 álbumes) se desplaza sin tirones en WebKitGTK, con las portadas apareciendo al frenar; buscar, filtrar, ordenar y abrir álbum y artista funcionan.
-- [ ] Las playlists aparecen con sus categorías, mosaicos y orden; crear, renombrar, ordenar, quitar, borrar y añadir desde cualquier canción funcionan, y el móvil recibe los cambios y «Me gusta» al marcar favoritas.
-- [ ] La vista de reproducción toma el color de la portada; las letras sincronizadas siguen a la canción y llevan al segundo pulsado; el panel de la cola reordena con el ratón y con Alt+flechas; el minirreproductor flota encima y cerrar la ventana principal cierra todo.
-- [ ] NB Sound abre con el tema (`sangre_dragon`) y Fira Sans sin parpadear con el de fábrica; los 63 temas se ven.
-- [ ] En Ajustes, cambiar de tema, tipografía y tamaño se ve al momento; el ecualizador suena con cada preselección y con las bandas movidas a mano; la normalización se nota desde la canción siguiente.
-- [ ] Inicio muestra Retomar (sin las cifras, por decisión de QA-R2), el álbum destacado y las secciones con la biblioteca real, y saluda por el nombre.
-- [ ] KDE Plasma y GNOME muestran título, artista, portada, duración y posición; sus botones y las teclas multimedia controlan la aplicación; aleatorio y repetición se reflejan en los dos sentidos. En Windows (SMTC) y macOS, lo mismo salvo aleatorio y repetición desde el sistema.
-- [ ] Los atajos funcionan en la ventana (espacio, flechas, S, R, L, F, K, +/-, Ctrl+Q, Ctrl+M) y no interfieren al escribir; la bandeja muestra el icono con su menú.
-- [ ] Tu música muestra la foto y el nombre, las cifras del historial real, la hora pico en la hora local, el mood del día, los días activos del mes y los tops.
+- [x] Cerrar la ventana mientras suena no deja audio sonando ni procesos vivos. *(Comprobado por guion el 2026-11-05.)*
+- [x] Un álbum en MP3 y otro en FLAC, grabados del sumidero: ningún hueco entre pistas. *(Comprobado por guion el
+      2026-11-08 sobre el binario compilado y la copia: 10 uniones MP3 y 1 FLAC, con 0 ms añadidos.)*
+- [x] Buscar a una posición cae donde se pide; pausar y reanudar no deja discontinuidad en la grabación.
+      *(Comprobado por guion el 2026-11-08: 4,000000 s solicitados y observados, 0 discontinuidades.)*
+- [x] Las 18 preselecciones del ecualizador, grabadas al volumen máximo: ninguna recorta. *(Comprobado por guion el
+      2026-11-08: 0 muestras recortadas; pico máximo -5,94 dBFS.)*
+- [x] Con la normalización activa, una pista alta y una baja quedan a menos de 2 LU en la grabación. *(Comprobado
+      por guion el 2026-11-08: -14,047 y -14,038 LUFS; diferencia 0,008 LU.)*
+- [ ] La medición de sonoridad sobre la copia de la biblioteca: por debajo de un núcleo y sin vacíos de buffer en lo
+      que suena.
+- [ ] La biblioteca (2.397 canciones, 1.421 álbumes): desplazarse por guion sin fotogramas largos, portadas al frenar;
+      buscar, filtrar, ordenar y abrir álbum y artista.
+- [ ] Playlists: categorías, mosaicos y orden; crear, renombrar, ordenar, quitar, borrar y añadir; el cliente del
+      contrato recibe los cambios y «Me gusta».
+- [ ] La vista de reproducción toma el color de la portada; la letra sincronizada sigue a la canción y lleva al segundo
+      pulsado; la cola reordena con Alt+flechas.
+- [ ] Abre con `sangre_dragon` y Fira Sans sin un fotograma con el tema de fábrica; los 63 temas se pintan.
+- [ ] Ajustes: tema, tipografía y tamaño se aplican al momento; la normalización entra desde la canción siguiente.
+- [ ] Inicio muestra Retomar, el álbum destacado, las secciones y el saludo por el nombre.
+- [ ] MPRIS publica título, artista, portada, duración y posición; sus órdenes controlan la aplicación; aleatorio y
+      repetición se reflejan en los dos sentidos.
+- [ ] Los atajos (espacio, flechas, S, R, L, F, K, +/-, Ctrl+Q, Ctrl+M) funcionan y no interfieren al escribir.
+- [ ] Tu música: cifras del historial de la copia, hora pico en hora local, mood del día, días activos y tops.
 
 ## Fase 3
 
-- [ ] El teléfono encuentra el equipo por mDNS tras reiniciar el equipo con otra IP.
-- [ ] Con la biblioteca real, el teléfono recibe el manifiesto sin volver a descargar la biblioteca y las playlists traen su mosaico (F3.1.4).
-- [ ] Desde el teléfono: reproducir, pausar, saltar, buscar, volumen, aleatorio, repetición y karaoke; la cola
-      espejada se mantiene al cambiar de destino en los dos sentidos (F3.2.1).
-- [ ] Ajustes > Dispositivos: conectar un teléfono nuevo con el QR y con el código corto; quitar uno lo desconecta al
-      momento (F3.3.1). El cortafuegos del sistema deja pasar el puerto 8731-8799 (en Windows, el aviso del
-      sistema la primera vez).
-- [ ] "Dónde suena", en el menú ··· de la barra, dice qué teléfono controla el equipo mientras lo hace (F3.3.2).
-- [ ] Una descarga completa de la biblioteca desde el teléfono no se nota en el equipo (audio sin cortes, ventana
-      fluida).
+- [ ] Con la biblioteca de la copia, el cliente recibe el manifiesto sin volver a descargar todo y las playlists traen
+      su mosaico (F3.1.4).
+- [ ] Desde el cliente: reproducir, pausar, saltar, buscar, volumen, aleatorio, repetición y karaoke; la cola espejada
+      se mantiene al cambiar de destino (F3.2.1).
+- [ ] Emparejar con el código corto y quitar el dispositivo lo desconecta al momento (F3.3.1).
+- [ ] "Dónde suena" dice qué cliente controla el equipo mientras lo hace (F3.3.2).
+- [ ] Una descarga completa de la biblioteca: sin vacíos de buffer y la ventana sin fotogramas largos.
 
 ## Fase 4
 
-- [ ] Shazam reconoce de verdad pistas del corpus con la firma de NB Sound (API no oficial: se comprueba contra el
-      servicio real, con el consentimiento dado en Ajustes).
-- [ ] AcoustID y MusicBrainz responden con la clave de AcoustID que el importador llevó al llavero.
-- [ ] Arrastrar una carpeta con canciones sobre cualquier parte de la ventana las importa, con la tarjeta de progreso
-      y el resumen; "Añadir música" abre el selector del sistema.
-- [ ] Cerrar la aplicación a mitad de una importación y volver a abrirla: sigue por donde iba sin duplicar nada.
-- [ ] Por revisar: cada motivo con su texto, elegir un candidato, importar tal como está, buscar de nuevo y descartar a
-      la papelera del sistema (comprobar que el archivo está en la papelera).
-- [ ] Con la red desactivada en Ajustes, importar canciones con etiquetas: entran sin verificar.
-- [x] Copiar un álbum en la carpeta de música con la aplicación abierta lo importa solo, cuando termina de copiarse
-      (F4.2.2); copiarlo con la aplicación cerrada lo importa al abrirla. *(Comprobado por guion el 2026-11-05 en la 2.0.7 instalada con un archivo sintético; a mano, con un álbum real.)*
-- [ ] Ajustes > Privacidad: apagar un servicio corta su siguiente petición sin reiniciar; con la conexión general
-      apagada no sale nada (F4.2.7).
-- [ ] Ajustes > Inteligencia artificial con una clave real de Anthropic: se guarda en el llavero del sistema (visible
-      en su gestor de contraseñas como "NB Sound") y un empate entre candidatos se resuelve; con OpenAI, igual
-      (F4.1.7).
-- [ ] "Completar datos" sobre una pista sin verificar le pone portada y letra y, si la identifica, la verifica; el
-      teléfono la sigue reconociendo y la vuelve a descargar con los datos nuevos (F4.2.8, arnés de respuestas
-      doradas en verde).
-- [ ] Editar los datos de una canción y de un álbum: el teléfono recibe el cambio y el archivo lleva las etiquetas
-      nuevas; renombrar un álbum conserva su portada; borrar la pista e importar el mismo archivo otra vez respeta
-      lo editado (F4.2.5).
-- [ ] Crear una copia de seguridad, cambiar la biblioteca, restaurarla y reiniciar: vuelve a estar como en la copia;
-      la copia automática semanal aparece en su carpeta (F4.2.6).
+- [ ] AcoustID y MusicBrainz responden con la clave que ya está en el llavero, con el consentimiento de la copia.
+- [ ] Importar una carpeta por la orden del puente: tarjeta de progreso y resumen.
+- [ ] Matar el proceso a mitad de una importación y volver a abrir: sigue sin duplicar nada.
+- [ ] Por revisar: cada motivo con su texto, elegir candidato, importar tal como está, buscar de nuevo y descartar;
+      el archivo descartado está en `~/.local/share/Trash` (con un archivo sintético, no del corpus).
+- [ ] Con la red desactivada, importar canciones con etiquetas: entran sin verificar.
+- [x] Copiar un álbum en la carpeta vigilada lo importa al terminar de copiarse; con la aplicación cerrada, al abrirla.
+      *(Comprobado por guion el 2026-11-05 en la 2.0.7 con un archivo sintético.)*
+- [ ] Privacidad: apagar un servicio corta su siguiente petición sin reiniciar; con la conexión general apagada no
+      sale nada (contando conexiones con `ss`) (F4.2.7).
+- [ ] "Completar datos" sobre una pista sin verificar le pone portada y letra; el cliente la vuelve a descargar con los
+      datos nuevos (F4.2.8).
+- [ ] Editar una canción y un álbum (sobre una copia del archivo, no un enlace duro): el cliente recibe el cambio, el
+      archivo lleva las etiquetas, renombrar conserva la portada y reimportar respeta lo editado (F4.2.5).
+- [ ] Copia de seguridad, cambiar la biblioteca, restaurar y reiniciar: vuelve a estar como en la copia (F4.2.6).
 
 ## Fase 5
 
-- [ ] Con la Release de agregados publicada (P13): instalar cada agregado desde Ajustes, cortar la red a mitad y
-      reanudar; el archivo instalado es el del catálogo (F5.1.2).
-- [ ] Separar con el modelo real (`NS_MODELO_KARAOKE`, `NS_AUDIO_KARAOKE` y `NS_ONNXRUNTIME` en
-      `karaoke::tests::con_el_modelo_real_separa_una_pista`) y en la aplicación: con todos los núcleos ocupados, ningún
-      vacío de buffer en la reproducción, y el pico de memoria del proceso por debajo de 3 GB (F5.2.1, P8).
-- [ ] Con el agregado de karaoke: pulsar el micrófono en una canción sin instrumental, ver el avance en el botón,
-      seguir escuchando el original y, al terminar, cantar sin que la canción se corte (F5.2.2); sin el agregado,
-      el micrófono lo ofrece con su tamaño (F5.1.4).
+- [ ] Instalar cada agregado de la Release `agregados-1`, cortar la red a mitad y reanudar; la suma coincide con el
+      catálogo (F5.1.2).
+- [ ] Separar con el modelo real (`karaoke::tests::con_el_modelo_real_separa_una_pista`) y en la aplicación: sin vacíos
+      de buffer con todos los núcleos ocupados y el pico de memoria por debajo de 3 GB (F5.2.1, P8).
+- [ ] Preparar una canción para karaoke desde la orden del puente: avance en el botón, lo que suena no se corta y al
+      terminar se pasa al instrumental sin hueco (F5.2.2); sin el agregado, se ofrece con su tamaño (F5.1.4).
+- [ ] "Cooler Than Me" (48 kHz) se prepara para karaoke y aparece su micrófono.
 
 ## Fase 6
 
-- [ ] Con el agregado de texto instalado, el tokenizador propio da los mismos ids que el `tokenizer.json` de MiniLM con
-      `tokenizers` de HuggingFace en 50 frases del DJ, y los embeddings coinciden con los (F6.1.1).
-- [ ] A oído, en la instalación real, una sesión de una hora con las cinco técnicas: ninguna transición hace clic,
-      se hunde ni sube de golpe, y en las capas la voz de la entrante vuelve al final del solapamiento (F6.1.3).
-- [ ] Con los dos platos, la reproducción normal sigue por debajo del 2 % de un núcleo (criterio de ADR-003), y una
-      mezcla en curso, por debajo del 4 % (F6.1.3).
-- [ ] Con el agregado de karaoke instalado, la medida del equipo de desarrollo termina en menos de dos minutos y da
-      un perfil coherente con lo que tarda en preparar una pista para cantar (F6.1.4).
-- [ ] En la instalación real: pedir una sesión empieza a sonar en menos de 3 s, la vista muestra cómo se entendió el
-      pedido, la sesión crece mientras suena hasta la duración pedida, la barra la controla (pausa, saltar, anterior,
-      buscar), "Otra parecida" y "Descartar" devuelven la cola tal como estaba, y al cerrar y abrir vuelve en pausa
-      (F6.1.6).
-- [ ] En la instalación real, una ronda de cada modo de A ciegas: el fragmento suena desde el 30 % durante los
-      segundos elegidos, la barra y el móvil no dicen la canción, escribir el título con un error de una letra acierta
-      y al terminar la cola vuelve donde estaba (F6.2.2).
+- [ ] El tokenizador propio da los mismos ids que `tokenizer.json` de MiniLM en 50 frases del DJ, y los embeddings
+      coinciden (F6.1.1).
+- [ ] Una sesión de una hora con las cinco técnicas, grabada: ninguna discontinuidad, hundimiento ni subida brusca de
+      sonoridad en las transiciones (F6.1.3).
+- [ ] Reproducción normal por debajo del 2 % de un núcleo y una mezcla en curso por debajo del 4 % (F6.1.3).
+- [ ] La medida del equipo termina en menos de dos minutos con un perfil coherente (F6.1.4).
+- [ ] Una sesión del DJ suena en menos de 3 s, muestra cómo se entendió, crece hasta la duración, la barra la
+      controla, "Otra parecida" y "Descartar" devuelven la cola, y al cerrar y abrir vuelve en pausa (F6.1.6).
+- [ ] Una ronda de cada modo de A ciegas: el fragmento empieza en el 30 %, ni la barra ni MPRIS ni el cliente dicen la
+      canción, un error de una letra acierta y la cola vuelve donde estaba (F6.2.2).
 
 ## Fase 8
 
-- [ ] En la instalación real, diez pistas del corpus: la forma de onda en la barra se corresponde a la vista con lo que
-      suena, en una sesión del DJ marca el punto de entrada y el de salida de la pista actual, y volver a medir la
-      biblioteca entera en segundo plano para poblar los picos no se nota en el equipo (F8.1).
-- [ ] En la instalación real: crear una lista inteligente por BPM, ánimo y favoritas, comprobar que el teléfono la
-      recibe y que al marcar otra canción como favorita entra sola; pulsar "Crear para mí" sobre la biblioteca real
-       y comprobar las listas automáticas generadas (F8.2).
-- [ ] En la instalación real, en Tu música: recorrer el resumen local de escucha por año y por mes sobre el historial
-      real, comprobar el radar de ánimos y el mapa de calor 7×24 y exportar una tarjeta SVG (F8.3).
-- [ ] En la instalación real, en Ajustes > Dispositivos: copiar una playlist y las favoritas a una memoria USB o
-      microSD con portada incrustada y comprobar la estructura de carpetas, la portada en los archivos, el archivo
-      `.m3u8` y la conversión opcional a WAV (F8.4).
-- [ ] En la instalación real, en Ajustes > Dispositivos: encender el Modo fiesta, escanear el código QR desde un
-      teléfono en la misma red Wi-Fi, buscar canciones desde el navegador del teléfono, enviar sugerencias, aprobarlas,
-      descartarlas, probar el modo automático y rotar el QR comprobando que el enlace anterior deja de funcionar (F8.5).
+- [ ] Diez pistas: la forma de onda coincide con la envolvente de la grabación; en el DJ marca entrada y salida; medir
+      la biblioteca entera no se nota (F8.1).
+- [ ] Una lista inteligente por BPM, ánimo y favoritas llega al cliente y una favorita nueva entra sola; "Crear para
+      mí" genera las listas automáticas (F8.2).
+- [ ] Tu música: resumen por año y mes, radar de ánimos, mapa 7×24 y una tarjeta SVG exportada y válida (F8.3).
+- [ ] Copiar una playlist y las favoritas a una carpeta temporal: estructura, portada incrustada, `.m3u8` y la
+      conversión a WAV (F8.4).
+- [ ] Modo fiesta con un cliente HTTP: buscar, sugerir, aprobar, descartar, modo automático y rotar el QR deja sin
+      efecto el enlace anterior (F8.5).
 
-## Revisión QA-R1
+## Revisiones QA-R1, QA-R2 y QA-R3
 
-- [ ] En la instalación de Arch con el `.tar.gz`: con una publicación nueva hecha por la CI (que ya firma el `.tar.gz`),
-      "Instalar y reiniciar" pide la contraseña con `pkexec`, instala sobre `/usr` y arranca la versión nueva. La
-      publicación 2.0.6 y anteriores no tienen `.tar.gz.sig`: desde ellas el aviso será que no se pudo instalar.
-- [ ] Quitar una canción "y mover el archivo a la papelera": el archivo aparece en la papelera de KDE y se puede
-      restaurar; la canción sale de sus playlists, de la cola y del teléfono en la siguiente sincronización.
-- [ ] "Mostrar en su carpeta" abre Dolphin con el archivo seleccionado, también con comas y tildes en la ruta.
+- [ ] Quitar una canción "y mover el archivo a la papelera": está en la papelera y se puede restaurar; sale de sus
+      playlists, de la cola y del cliente (archivo sintético).
 - [ ] Cancelar una importación grande a la mitad: lo importado se queda, el resto no vuelve al reabrir.
-- [ ] "Buscar duplicados" sobre la biblioteca real no aparta nada que no sea una copia real.
-- [ ] Cambiar la foto de perfil por un PNG y por un JPG grandes: se ve al momento en Tu música.
-
-## Revisión QA-R2 (interfaz)
-
-Lo que la pasada con la aplicación en marcha no pudo comprobar: el puntero del entorno de pruebas no se mueve, y los
-estados de pasar por encima solo se vieron en el código.
-
-- [ ] En una lista de canciones, al pasar por encima el número se cambia por reproducir, aparecen la favorita, "+" y
-      ···; con el teclado, Tab llega a los mismos botones y el número también se cambia.
-- [ ] El menú ··· de una fila, de un álbum y de una playlist se abre junto al botón, se recorre con las flechas y se
-      cierra con Escape; cerca del borde inferior se abre hacia arriba.
-- [ ] La cabecera de un álbum, de un artista y de una playlist toma el color de su portada, y con "Color por portada"
-      apagado se queda con el del tema.
-- [ ] En la consola de karaoke, "Cantar ahora" activa el karaoke de lo que suena y el botón pasa a "Volver a la
-      original"; "Verlas en la biblioteca" abre Pistas con "Listas para cantar" aplicado, también estando ya en
-      Biblioteca.
-- [ ] Ajustes > Biblioteca > "Cambiar" la carpeta de tu música: con una copia ya hecha en otro disco, dice que están
-      todas y solo apunta; con una carpeta vacía en otro disco, "Llevar mi música" muestra el avance, la música
-      suena desde la nueva y la vieja queda sin las canciones (y sin carpetas vacías). Lo nuevo que se copie en la
-      carpeta nueva se importa solo.
-- [ ] En Tu música, tocar el nombre lo deja editar; Enter guarda, Escape cancela, y Ajustes e Inicio lo ven.
-- [ ] Las playlists ancladas llevan su distintivo en la esquina de la portada, en las cuatro densidades de Playlists.
-- [ ] En pantalla completa con la letra o la portada, al dejar quieto el ratón 3,5 s los controles se esconden
-      aunque la letra siga avanzando, y no queda ninguna franja vacía abajo; al moverlo vuelven.
-- [ ] El minirreproductor se arrastra desde la portada o el fondo; cerrarlo y volverlo a abrir (Ctrl+M) es
-      instantáneo; el botón de volver trae delante la ventana grande.
-- [ ] En la cola, con muchas canciones, la barra de desplazamiento no tapa la duración ni el botón de quitar.
-- [ ] La consola de karaoke con varias canciones pedidas: la primera lleva su barra y su porcentaje, las demás "En
-      espera"; al cerrar NB Sound a la mitad y abrirla, sigue con la misma.
-- [ ] Con un cajón (Karaoke, Dispositivos, Añadir música), la cola o el menú ··· abiertos, la barra de
-      desplazamiento de la vista de debajo no se ve encima.
-- [x] Karaoke, Dispositivos y Añadir música entran deslizándose desde la derecha, sin aparecer antes en mitad de la
-      ventana (solo se veía con la GPU). *(Comprobado el 2026-11-06 en la 2.0.10 instalada, en el escritorio de Nathan
-      con la GPU, la animación ralentizada a 3 s y capturas a mitad.)*
-- [x] Reproducir la biblioteca entera y abrir la cola: abre al momento, se desplaza fluida y Vaciar responde. *(Comprobado por guion el 2026-11-05 sobre la 2.0.9 instalada y la copia de los datos.)*
-- [ ] "Cooler Than Me" (48 kHz) se prepara para karaoke y aparece su micrófono en la barra.
-- [ ] Desplazarse rápido por Biblioteca (pistas, álbumes, artistas) y por Playlists va fluido, y al volver a una
-      vista ya visitada se ve al momento lo de antes.
-- [ ] Al pasar por encima: las tarjetas de Inicio, los carruseles con sus flechas, el botón grande de reproducir (crece
-      un poco) y las filas de la sesión del DJ.
-- [ ] Una instalación nueva abre en la bienvenida; "Elegir la carpeta" importa lo que hay en ella y lo sigue vigilando.
-
-
-## Revisión QA-R3
-
-Lo que la pasada de la 2.0.12 no pudo comprobar en el entorno de pruebas: el selector nativo de carpetas no se
-maneja desde el inspector y el puntero no se mueve.
-
-- [ ] Por revisar con el ratón: el ··· de cada fila se abre junto al botón; "Otras 3 versiones" despliega y repliega;
-      las filas se apagan mientras se importan y vuelven si algo falla.
-- [ ] "¿Dónde está tu música?" → "Buscar mi música" → elegir la carpeta buena: dice que están todas y, al usarla, la
-      biblioteca suena sin reiniciar. Con una carpeta vacía dice que no hay ninguna y ofrece elegir otra.
-- [ ] La barra de reproducción a 720 px con el ratón: la fila de controles del menú ··· responde y el menú se cierra
-      al elegir letras o pantalla completa.
-- [ ] "Restaurar una copia" desde la bienvenida con el selector nativo: el entorno de pruebas no puede escribir en
-      él, así que la restauración del 2026-11-06 se preparó con un guion que hace las mismas comprobaciones (sumas,
-      `integrity_check`) y la aplicó NB Sound al arrancar.
-
+- [ ] "Buscar duplicados" sobre la copia no aparta nada que no sea una copia real.
+- [ ] Cambiar la foto de perfil por un PNG y un JPG grandes desde la orden del puente: se ve al momento.
+- [ ] Con `:hover` forzado y con Tab: en una fila el número se cambia por reproducir y aparecen favorita, "+" y ···;
+      tarjetas de Inicio, flechas de carruseles, el botón grande y las filas del DJ.
+- [ ] El menú ··· de fila, álbum y playlist se abre junto al botón, se recorre con flechas, se cierra con Escape y
+      cerca del borde inferior se abre hacia arriba.
+- [ ] La cabecera de álbum, artista y playlist toma el color de la portada; con "Color por portada" apagado, el del tema.
+- [ ] Consola de karaoke: "Cantar ahora" pasa a "Volver a la original"; "Verlas en la biblioteca" abre Pistas filtrado;
+      con varias pedidas, la primera con porcentaje y las demás "En espera", y sigue con la misma tras reiniciar.
+- [ ] Cambiar la carpeta de la música por la orden del puente a otra carpeta temporal: con copia hecha solo apunta;
+      vacía, "Llevar mi música" mueve con avance y no deja carpetas vacías; lo nuevo se importa solo.
+- [ ] Tu música: editar el nombre, Enter guarda, Escape cancela, y Ajustes e Inicio lo ven.
+- [ ] Las ancladas llevan su distintivo en las cuatro densidades de Playlists.
+- [ ] Pantalla completa: sin eventos de ratón 3,5 s los controles se esconden sin dejar franja vacía.
+- [ ] Ctrl+M abre y cierra el minirreproductor al momento; volver trae delante la ventana grande.
+- [ ] En la cola larga la barra de desplazamiento no tapa la duración ni quitar; con un cajón, la cola o un menú
+      abiertos, la de debajo no se ve encima.
+- [x] Karaoke, Dispositivos y Añadir música entran deslizándose desde la derecha. *(Comprobado el 2026-11-06.)*
+- [x] Reproducir la biblioteca entera y abrir la cola: abre al momento y Vaciar responde. *(Comprobado el 2026-11-05.)*
+- [ ] Desplazarse rápido por Biblioteca y Playlists sin fotogramas largos; volver a una vista la muestra al momento.
+- [ ] Una instalación con datos vacíos abre en la bienvenida; elegir la carpeta por la orden del puente la importa y
+      la vigila.
+- [ ] Por revisar: "Otras 3 versiones" despliega y repliega; las filas se apagan al importar y vuelven si algo falla.
+- [ ] "¿Dónde está tu música?" con la carpeta buena dice que están todas y suena sin reiniciar; con una vacía, ofrece
+      otra.
+- [ ] La barra a 720 px: la fila de controles del menú ··· responde y se cierra al elegir letras o pantalla completa.
