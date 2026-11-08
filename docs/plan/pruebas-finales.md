@@ -28,6 +28,10 @@ El arnés de audio vive en `scripts/qa/audio-qa.sh`. Prepara
 con `scripts/qa/audio-qa.sh todo`; el propio guion se relanza bajo
 `systemd-run --user --scope -p MemoryMax=6G`.
 
+Las pruebas de interfaz y contrato móvil se ejecutan con `scripts/qa/ui-qa.sh todo`. Levanta KWin y Xwayland
+virtuales, enruta el audio al mismo sumidero, conecta el inspector de WebKit y compara el DOM, MPRIS, `/proc` y el
+manifest con la copia. Igual que el arnés de audio, se relanza bajo `systemd-run` con `MemoryMax=6G`.
+
 ## Fase 2
 
 - [x] Al abrir, la cola, la pista y el segundo en que se quedó la última sesión están ahí, sin sonar hasta pulsar
@@ -41,21 +45,36 @@ con `scripts/qa/audio-qa.sh todo`; el propio guion se relanza bajo
       2026-11-08: 0 muestras recortadas; pico máximo -5,94 dBFS.)*
 - [x] Con la normalización activa, una pista alta y una baja quedan a menos de 2 LU en la grabación. *(Comprobado
       por guion el 2026-11-08: -14,047 y -14,038 LUFS; diferencia 0,008 LU.)*
-- [ ] La medición de sonoridad sobre la copia de la biblioteca: por debajo de un núcleo y sin vacíos de buffer en lo
-      que suena.
-- [ ] La biblioteca (2.397 canciones, 1.421 álbumes): desplazarse por guion sin fotogramas largos, portadas al frenar;
-      buscar, filtrar, ordenar y abrir álbum y artista.
-- [ ] Playlists: categorías, mosaicos y orden; crear, renombrar, ordenar, quitar, borrar y añadir; el cliente del
-      contrato recibe los cambios y «Me gusta».
-- [ ] La vista de reproducción toma el color de la portada; la letra sincronizada sigue a la canción y lleva al segundo
-      pulsado; la cola reordena con Alt+flechas.
-- [ ] Abre con `sangre_dragon` y Fira Sans sin un fotograma con el tema de fábrica; los 63 temas se pintan.
-- [ ] Ajustes: tema, tipografía y tamaño se aplican al momento; la normalización entra desde la canción siguiente.
-- [ ] Inicio muestra Retomar, el álbum destacado, las secciones y el saludo por el nombre.
-- [ ] MPRIS publica título, artista, portada, duración y posición; sus órdenes controlan la aplicación; aleatorio y
-      repetición se reflejan en los dos sentidos.
-- [ ] Los atajos (espacio, flechas, S, R, L, F, K, +/-, Ctrl+Q, Ctrl+M) funcionan y no interfieren al escribir.
-- [ ] Tu música: cifras del historial de la copia, hora pico en hora local, mood del día, días activos y tops.
+- [x] La medición de sonoridad sobre la copia de la biblioteca: por debajo de un núcleo y sin vacíos de buffer en lo
+      que suena. *(Comprobado por guion el 2026-11-08: 68,68 % de un núcleo, 104 → 100 pistas pendientes y 0 huecos
+      durante 4,08 s de reproducción.)*
+- [x] La biblioteca (2.397 canciones, 1.421 álbumes): desplazarse por guion sin fotogramas largos, portadas al frenar;
+      buscar, filtrar, ordenar y abrir álbum y artista. *(Comprobado por guion el 2026-11-08: 166 fotogramas, máximo
+      28 ms, p95 20 ms, 0 fotogramas sobre 50 ms; 15 de 15 portadas cargadas; búsqueda, 51 favoritas, orden Z-A y
+      ambos detalles abiertos.)*
+- [x] Playlists: categorías, mosaicos y orden; crear, renombrar, ordenar, quitar, borrar y añadir; el cliente del
+      contrato recibe los cambios y «Me gusta». *(Comprobado por guion el 2026-11-08 con el manifest HTTPS: orden
+      `[2,1]`, nombre, canción quitada, mosaico 1/1, categoría, favorita y tombstone recibidos.)*
+- [x] La vista de reproducción toma el color de la portada; la letra sincronizada sigue a la canción y lleva al segundo
+      pulsado; la cola reordena con Alt+flechas. *(Comprobado por guion el 2026-11-08: acento `#f5bd6f` frente a
+      `#ff2020` del tema, 35 líneas sincronizadas y cola `[1,2,3]` → `[2,1,3]`.)*
+- [x] Abre con `sangre_dragon` y Fira Sans sin un fotograma con el tema de fábrica; los 63 temas se pintan.
+      *(Comprobado por guion el 2026-11-08: ninguna captura negra desde el primer fotograma; 63/63 temas aplicados y
+      0 errores de consola.)*
+- [x] Ajustes: tema, tipografía y tamaño se aplican al momento; la normalización entra desde la canción siguiente.
+      *(Comprobado por guion el 2026-11-08: `#0e0000`, Fira Sans y 125 % inmediatos; la pista actual cambió 0,065 LU
+      al activar y la siguiente quedó a 0,646 LU.)*
+- [x] Inicio muestra Retomar, el álbum destacado, las secciones y el saludo por el nombre. *(Comprobado por guion el
+      2026-11-08: saludo «Nate», Retomar, álbum destacado y las siete secciones.)*
+- [x] MPRIS publica título, artista, portada, duración y posición; sus órdenes controlan la aplicación; aleatorio y
+      repetición se reflejan en los dos sentidos. *(Comprobado por guion el 2026-11-08 con `busctl`: metadatos y
+      posición correctos, PlayPause/Next/Previous/SetPosition, Shuffle y LoopStatus bidireccionales.)*
+- [x] Los atajos (espacio, flechas, S, R, L, F, K, +/-, Ctrl+Q, Ctrl+M) funcionan y no interfieren al escribir.
+      *(Comprobado por guion el 2026-11-08 con `KeyboardEvent`: todos actuaron, se abrió una segunda ventana para
+      Ctrl+M y el espacio no cambió el estado con el foco en la búsqueda.)*
+- [x] Tu música: cifras del historial de la copia, hora pico en hora local, mood del día, días activos y tops.
+      *(Comprobado por guion el 2026-11-08 contra `sqlite3 -readonly`: 3.604 reproducciones, 459 pistas, 146 artistas,
+      316 álbumes, hora pico 17:00, 8 días activos y top encabezado por «DEGENERE».)*
 
 ## Fase 3
 
