@@ -281,7 +281,7 @@ escenario_movil() {
     NB_QA_INFORMES="$QA_BASE/informes" \
     NB_QA_CERT_PATH="$QA_BASE/datos/movil/sync_cert.pem" \
     DISPLAY="$LISTA_DISPLAY" \
-    node "$RAIZ/scripts/qa/mobile-qa.mjs"
+    nice -n 10 node "$RAIZ/scripts/qa/mobile-qa.mjs"
 }
 
 todo() {

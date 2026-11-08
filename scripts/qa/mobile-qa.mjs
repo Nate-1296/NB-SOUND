@@ -3,7 +3,7 @@
 import { execFileSync, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { request as httpsRequest } from "node:https";
+import { request as httpsRequest, Agent as HttpsAgent } from "node:https";
 import { connect as tlsConnect } from "node:tls";
 
 import { Inspector, esperar } from "./inspector.mjs";
@@ -13,7 +13,7 @@ const APP_PID = Number(process.env.NB_QA_APP_PID ?? 0);
 const RAIZ = process.env.NB_QA_RAIZ ?? process.cwd();
 const INFORMES = process.env.NB_QA_INFORMES;
 const CERT_PATH = process.env.NB_QA_CERT_PATH ?? "";
-const inspector = await Inspector.conectar();
+let inspector = await Inspector.conectar();
 
 let base = "";
 let token = "";
@@ -21,6 +21,7 @@ let dispositivo = null;
 let websocket = null;
 let huellaEsperada = "";
 let pemEsperado = "";
+const agente = new HttpsAgent({ keepAlive: true, maxSockets: 1 });
 
 function salida(nombre, datos) {
   console.log(`QA_MOVIL ${JSON.stringify({ escenario: nombre, datos })}`);
@@ -94,6 +95,7 @@ function peticion({ ruta, metodo = "GET", cuerpo, cabeceras = {}, autenticar = t
         port: url.port,
         path: url.pathname + url.search,
         method: metodo,
+        agent: agente,
         ca: pemEsperado,
         rejectUnauthorized: true,
         servername: "nbsound.local",
@@ -219,6 +221,7 @@ function descargarAudio(pista) {
         port: url.port,
         path: url.pathname + url.search,
         method: "GET",
+        agent: agente,
         ca: pemEsperado,
         rejectUnauthorized: true,
         servername: "nbsound.local",
@@ -667,18 +670,25 @@ async function medirDescarga(manifiesto, idsLargos) {
       window.__qaCuadrosResultado = null;
       void (async () => {
       const intervalos = [];
+      const largos = [];
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+      );
       let anterior = performance.now();
       const inicio = anterior;
       await new Promise((resolve) => {
         const paso = (ahora) => {
           intervalos.push(ahora - anterior);
+          if (ahora - anterior > 50) {
+            largos.push({ ms: ahora - anterior, enMs: ahora - inicio });
+          }
           anterior = ahora;
           if (window.__qaDescargaTerminada || ahora - inicio >= 180000) resolve();
           else requestAnimationFrame(paso);
         };
         requestAnimationFrame(paso);
       });
-      const largos = intervalos.filter((ms) => ms > 50);
       window.__qaCuadrosResultado = {
         fotogramas: intervalos.length,
         maxMs: Math.max(...intervalos),
@@ -686,6 +696,7 @@ async function medirDescarga(manifiesto, idsLargos) {
           Math.floor(intervalos.length * 0.95)
         ],
         mayores50: largos.length,
+        largos,
         duracionMs: performance.now() - inicio
       };
       })().catch((error) => {
@@ -693,12 +704,16 @@ async function medirDescarga(manifiesto, idsLargos) {
       });
       return true;
     })()`);
+    inspector.cerrar();
+    inspector = null;
+    await esperar(650);
 
     const inicio = process.hrtime.bigint();
     let totalBytes = 0;
     let completadas = 0;
     let siguiente = 0;
-    const trabajadores = Array.from({ length: 4 }, async () => {
+    // El cliente Flutter procesa la cola de descargas de una pista a la vez.
+    const trabajadores = Array.from({ length: 1 }, async () => {
       while (true) {
         const indice = siguiente;
         siguiente += 1;
@@ -715,6 +730,7 @@ async function medirDescarga(manifiesto, idsLargos) {
     });
     await Promise.all(trabajadores);
     const duracionSeg = Number(process.hrtime.bigint() - inicio) / 1e9;
+    inspector = await Inspector.conectar();
     await inspector.evaluar(`window.__qaDescargaTerminada = true`);
     const metricas = await esperarHasta(
       `window.__qaCuadrosResultado`,
@@ -726,6 +742,7 @@ async function medirDescarga(manifiesto, idsLargos) {
     comprobar(metricas.mayores50 === 0, `Fotogramas largos: ${JSON.stringify(metricas)}`);
     return { rutaWav, metricas, completadas, totalBytes, duracionSeg };
   } catch (error) {
+    if (!inspector) inspector = await Inspector.conectar();
     await inspector.evaluar(`window.__qaDescargaTerminada = true`).catch(() => {});
     await grabacion.detener();
     throw error;
@@ -945,5 +962,6 @@ try {
   await main();
 } finally {
   websocket?.cerrar();
-  inspector.cerrar();
+  agente.destroy();
+  inspector?.cerrar();
 }
