@@ -53,6 +53,9 @@ trap limpiar EXIT INT TERM
 
 preparar() {
   NB_QA_EN_SCOPE=1 "$RAIZ/scripts/qa/audio-qa.sh" preparar
+  # La ruta recordada es del webview, no de la base: sin esto una corrida
+  # empieza donde terminó la anterior y deja de probar Inicio.
+  rm -f "$QA_BASE/xdg-data/org.nbsound.desktop/localstorage/tauri_localhost_0.localstorage"*
   sqlite3 "$DB" <<'SQL'
 UPDATE preferencias SET valor = 'false'
  WHERE clave IN ('analisis_activado', 'analisis_en_segundo_plano',
