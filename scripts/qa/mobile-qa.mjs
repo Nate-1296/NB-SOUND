@@ -168,8 +168,10 @@ function iniciarGrabacion(ruta) {
   );
   return {
     async detener() {
+      if (proceso.exitCode !== null || proceso.signalCode !== null) return;
+      const terminado = new Promise((resolve) => proceso.once("exit", resolve));
       proceso.kill("SIGINT");
-      await new Promise((resolve) => proceso.once("exit", resolve));
+      await terminado;
     }
   };
 }
