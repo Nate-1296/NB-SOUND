@@ -16,6 +16,7 @@ export const es = {
     region: 'Avisos',
     regionFallos: 'Fallos',
     cerrar: 'Cerrar el aviso',
+    ventanaNoVisible: 'No se pudo mostrar la ventana de NB Sound.',
     veces: (n: number) => `${n} veces`
   },
   nav: {

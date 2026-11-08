@@ -28,7 +28,11 @@ fn la_ventana_espera_a_que_la_apariencia_este_pintada() {
     );
 
     let layout = include_str!("../../src/routes/+layout.svelte");
-    assert!(layout.contains("await aparienciaLista"));
-    assert!(layout.contains("setTimeout"));
-    assert!(layout.contains("await mostrarVentanaPrincipal()"));
+    assert!(layout.contains("mostrarVentanaTrasApariencia"));
+    assert!(layout.contains("notificar.error"));
+
+    let arranque = include_str!("../../src/lib/core/arranque.ts");
+    assert!(arranque.contains("ESPERA_APARIENCIA_MS = 1500"));
+    assert!(arranque.contains("finally"));
+    assert!(arranque.contains("await mostrar()"));
 }

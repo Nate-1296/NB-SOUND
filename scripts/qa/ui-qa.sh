@@ -26,7 +26,7 @@ fi
 
 uso() {
   printf '%s\n' \
-    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|detener|todo'
+    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|fallo-apariencia|detener|todo'
 }
 
 limpiar() {
@@ -77,6 +77,12 @@ DELETE FROM sonoridad WHERE pista_id IN (
 UPDATE estado_reproductor SET normalizar = 0, volumen = 1, aleatorio = 0,
   repeticion = 'ninguno', posicion_seg = 0 WHERE id = 1;
 SQL
+}
+
+preparar_fallo_apariencia() {
+  preparar
+  # La versión de esquema queda al día, pero la lectura de preferencias falla.
+  sqlite3 "$DB" 'DROP TABLE preferencias;'
 }
 
 iniciar_sumidero() {
@@ -234,6 +240,28 @@ capturar_primer_fotograma() {
   fi
 }
 
+comprobar_ventana_con_apariencia_fallida() {
+  local inicio fin ventana=
+  inicio=$(date +%s%3N)
+  for _ in $(seq 1 200); do
+    ventana=$(DISPLAY="$LISTA_DISPLAY" xdotool search --onlyvisible --name '^NB Sound$' 2>/dev/null |
+      head -n 1 || true)
+    if [[ -n $ventana ]]; then
+      break
+    fi
+    sleep 0.025
+  done
+  fin=$(date +%s%3N)
+  if [[ -z $ventana ]]; then
+    printf 'VENTANAS_X11 %s\n' \
+      "$(DISPLAY="$LISTA_DISPLAY" xdotool search --name '.*' getwindowname %@ 2>/dev/null | paste -sd ';' - || true)"
+    printf 'La ventana no apareció con la carga de apariencia rechazada\n' >&2
+    return 1
+  fi
+  printf 'VENTANA_CON_APARIENCIA_FALLIDA ventana=%s aparicionMs=%s\n' \
+    "$ventana" "$((fin - inicio))"
+}
+
 escenario() {
   local nombre=$1
   env NB_QA_DB="$DB" NB_QA_APP_PID="$PID_APP" \
@@ -270,6 +298,11 @@ case ${1:-} in
   preparar) preparar ;;
   iniciar) iniciar_entorno ;;
   inicio|temas|biblioteca|playlists|reproduccion|mpris|atajos|perfil) iniciar_entorno; escenario "$1" ;;
+  fallo-apariencia)
+    preparar_fallo_apariencia
+    iniciar_entorno
+    comprobar_ventana_con_apariencia_fallida
+    ;;
   sonoridad) preparar; preparar_sonoridad; iniciar_entorno; escenario sonoridad ;;
   normalizacion) preparar; iniciar_entorno; escenario normalizacion ;;
   arranque)

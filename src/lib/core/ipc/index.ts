@@ -127,6 +127,11 @@ function aNsError(causa: unknown): NsError {
   return new NsError('INTERNAL');
 }
 
+/** Traduce al contrato cualquier fallo que no haya cruzado el puente. */
+export function comoNsError(causa: unknown): NsError {
+  return aNsError(causa);
+}
+
 export async function call<T>(comando: string, args?: Record<string, unknown>): Promise<T> {
   let r: T;
   try {
@@ -140,9 +145,19 @@ export async function call<T>(comando: string, args?: Record<string, unknown>): 
   return r;
 }
 
-/** Muestra la ventana principal cuando la apariencia ya está pintada. */
+/**
+ * Muestra la ventana principal con la apariencia ya pintada.
+ *
+ * Nace oculta porque WebKit pinta primero el tema de fábrica y el usuario veía
+ * dos fotogramas negros. Se descartó mostrarla desde el `setup` de Rust: ocurre
+ * antes de que el webview aplique la caché y el tema guardado.
+ */
 export async function mostrarVentanaPrincipal(): Promise<void> {
-  await getCurrentWindow().show();
+  try {
+    await getCurrentWindow().show();
+  } catch (causa) {
+    throw aNsError(causa);
+  }
 }
 
 /*

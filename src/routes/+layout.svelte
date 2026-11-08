@@ -7,7 +7,10 @@
   import { onMount, tick } from 'svelte';
   import { page } from '$app/state';
   import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
-  import { mostrarVentanaPrincipal } from '#lib/core/ipc/index.ts';
+  import { mostrarVentanaTrasApariencia } from '#lib/core/arranque.ts';
+  import { comoNsError, mostrarVentanaPrincipal } from '#lib/core/ipc/index.ts';
+  import { notificar } from '#lib/core/notificaciones.svelte.ts';
+  import { textos } from '#lib/i18n/index.ts';
   import AppShell from '#lib/ui/AppShell.svelte';
 
   let { children } = $props();
@@ -23,13 +26,16 @@
 
   onMount(() => {
     if (page.url.pathname === '/mini') return;
-    void (async () => {
-      await aparienciaLista;
+    const mostrar = async () => {
       await tick();
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
       await mostrarVentanaPrincipal();
-    })();
+    };
+    void mostrarVentanaTrasApariencia(aparienciaLista, mostrar).catch((causa) => {
+      const error = comoNsError(causa);
+      notificar.error(textos.avisos.ventanaNoVisible, error.code);
+    });
   });
 </script>
 

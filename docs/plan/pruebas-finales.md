@@ -32,6 +32,10 @@ Las pruebas de interfaz y contrato móvil se ejecutan con `scripts/qa/ui-qa.sh t
 virtuales, enruta el audio al mismo sumidero, conecta el inspector de WebKit y compara el DOM, MPRIS, `/proc` y el
 manifest con la copia. Igual que el arnés de audio, se relanza bajo `systemd-run` con `MemoryMax=6G`.
 
+La ventana principal nace oculta para no enseñar el tema de fábrica. Si la apariencia guardada falla o tarda más de
+1500 ms, se muestra con la que ya estaba en caché; `scripts/qa/ui-qa.sh fallo-apariencia` elimina solo la tabla de
+preferencias de la copia y comprueba que la ventana sigue apareciendo.
+
 ## Fase 2
 
 - [x] Al abrir, la cola, la pista y el segundo en que se quedó la última sesión están ahí, sin sonar hasta pulsar
