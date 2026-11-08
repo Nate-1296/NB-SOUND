@@ -62,8 +62,8 @@ manifest con la copia. Igual que el arnés de audio, se relanza bajo `systemd-ru
       *(Comprobado por guion el 2026-11-08: ninguna captura negra desde el primer fotograma; 63/63 temas aplicados y
       0 errores de consola.)*
 - [x] Ajustes: tema, tipografía y tamaño se aplican al momento; la normalización entra desde la canción siguiente.
-      *(Comprobado por guion el 2026-11-08: `#0e0000`, Fira Sans y 125 % inmediatos; la pista actual cambió 0,065 LU
-      al activar y la siguiente quedó a 0,646 LU.)*
+      *(Comprobado por guion el 2026-11-08: `#0e0000`, Fira Sans y 125 % inmediatos; la pista actual cambió 0,069 LU
+      al activar y la siguiente quedó a 0,642 LU.)*
 - [x] Inicio muestra Retomar, el álbum destacado, las secciones y el saludo por el nombre. *(Comprobado por guion el
       2026-11-08: saludo «Nate», Retomar, álbum destacado y las siete secciones.)*
 - [x] MPRIS publica título, artista, portada, duración y posición; sus órdenes controlan la aplicación; aleatorio y
