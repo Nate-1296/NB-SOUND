@@ -1031,6 +1031,14 @@ async function escenarioMpris() {
 
   metodoMpris("PlayPause");
   await esperaHasta(`(async () => (await window.__TAURI_INTERNALS__.invoke("reproductor_estado"))?.estado === "pausado")()`);
+  const posicionAntesSeek = Number(propiedadMpris("Position").split(" ").at(-1));
+  metodoMpris("Seek", "x", "3000000");
+  await esperar(150);
+  const posicionDespuesSeek = Number(propiedadMpris("Position").split(" ").at(-1));
+  const avanceSeekSeg = (posicionDespuesSeek - posicionAntesSeek) / 1e6;
+  if (Math.abs(avanceSeekSeg - 3) > 0.5) {
+    throw new Error(`Seek avanzó ${avanceSeekSeg.toFixed(3)} s en vez de 3 s`);
+  }
   metodoMpris("PlayPause");
   await esperaHasta(`(async () => (await window.__TAURI_INTERNALS__.invoke("reproductor_estado"))?.estado === "reproduciendo")()`);
 
@@ -1098,6 +1106,7 @@ async function escenarioMpris() {
   salida("mpris", {
     metadata,
     posicionMicros: posicion,
+    seekSeg: avanceSeekSeg,
     playPause: estado.estado,
     nextPrevious: [pistas[1].id, pistas[0].id],
     shuffleMpris,

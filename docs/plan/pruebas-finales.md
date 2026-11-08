@@ -68,7 +68,7 @@ manifest con la copia. Igual que el arnés de audio, se relanza bajo `systemd-ru
       2026-11-08: saludo «Nate», Retomar, álbum destacado y las siete secciones.)*
 - [x] MPRIS publica título, artista, portada, duración y posición; sus órdenes controlan la aplicación; aleatorio y
       repetición se reflejan en los dos sentidos. *(Comprobado por guion el 2026-11-08 con `busctl`: metadatos y
-      posición correctos, PlayPause/Next/Previous/SetPosition, Shuffle y LoopStatus bidireccionales.)*
+      posición correctos, PlayPause/Next/Previous/Seek/SetPosition, Shuffle y LoopStatus bidireccionales.)*
 - [x] Los atajos (espacio, flechas, S, R, L, F, K, +/-, Ctrl+Q, Ctrl+M) funcionan y no interfieren al escribir.
       *(Comprobado por guion el 2026-11-08 con `KeyboardEvent`: todos actuaron, se abrió una segunda ventana para
       Ctrl+M y el espacio no cambió el estado con el foco en la búsqueda.)*
