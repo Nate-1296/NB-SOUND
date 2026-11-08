@@ -304,10 +304,6 @@ todo() {
   arrancar_app
   escenario sonoridad
   escenario normalizacion
-  cerrar_app
-  preparar
-  arrancar_app
-  escenario_movil
 }
 
 case ${1:-} in

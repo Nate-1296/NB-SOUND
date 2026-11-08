@@ -28,9 +28,9 @@ El arnés de audio vive en `scripts/qa/audio-qa.sh`. Prepara
 con `scripts/qa/audio-qa.sh todo`; el propio guion se relanza bajo
 `systemd-run --user --scope -p MemoryMax=6G`.
 
-Las pruebas de interfaz y contrato móvil se ejecutan con `scripts/qa/ui-qa.sh todo`. Levanta KWin y Xwayland
-virtuales, enruta el audio al mismo sumidero, conecta el inspector de WebKit y compara el DOM, MPRIS, `/proc` y el
-manifest con la copia. Igual que el arnés de audio, se relanza bajo `systemd-run` con `MemoryMax=6G`.
+Las pruebas de interfaz de la Fase 2 se ejecutan con `scripts/qa/ui-qa.sh todo`. Levanta KWin y Xwayland virtuales,
+enruta el audio al mismo sumidero, conecta el inspector de WebKit y compara el DOM, MPRIS y `/proc` con la copia.
+Igual que el arnés de audio, se relanza bajo `systemd-run` con `MemoryMax=6G`.
 
 La ventana principal nace oculta para no enseñar el tema de fábrica. Si la apariencia guardada falla o tarda más de
 1500 ms, se muestra con la que ya estaba en caché; `scripts/qa/ui-qa.sh fallo-apariencia` elimina solo la tabla de
