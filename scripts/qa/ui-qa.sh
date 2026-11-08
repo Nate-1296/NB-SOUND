@@ -26,7 +26,7 @@ fi
 
 uso() {
   printf '%s\n' \
-    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|fallo-apariencia|detener|todo'
+    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|movil|fallo-apariencia|detener|todo'
 }
 
 limpiar() {
@@ -272,6 +272,15 @@ escenario() {
     node "$RAIZ/scripts/qa/ui-qa.mjs" "$nombre"
 }
 
+escenario_movil() {
+  env NB_QA_DB="$DB" NB_QA_APP_PID="$PID_APP" \
+    NB_QA_RAIZ="$RAIZ" \
+    NB_QA_INFORMES="$QA_BASE/informes" \
+    NB_QA_CERT_PATH="$QA_BASE/datos/movil/sync_cert.pem" \
+    DISPLAY="$LISTA_DISPLAY" \
+    node "$RAIZ/scripts/qa/mobile-qa.mjs"
+}
+
 todo() {
   preparar
   iniciar_entorno
@@ -292,12 +301,21 @@ todo() {
   arrancar_app
   escenario sonoridad
   escenario normalizacion
+  cerrar_app
+  preparar
+  arrancar_app
+  escenario_movil
 }
 
 case ${1:-} in
   preparar) preparar ;;
   iniciar) iniciar_entorno ;;
   inicio|temas|biblioteca|playlists|reproduccion|mpris|atajos|perfil) iniciar_entorno; escenario "$1" ;;
+  movil)
+    preparar
+    iniciar_entorno
+    escenario_movil
+    ;;
   fallo-apariencia)
     preparar_fallo_apariencia
     iniciar_entorno
