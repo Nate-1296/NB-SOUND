@@ -68,6 +68,10 @@ Una iteración está terminada cuando:
 
 ### 5.1 La puerta de empaquetado
 
+> **Decisión de Nathan (2026-11-08):** no se instala en máquina limpia ni se comprueban Windows y macOS (Nathan lo
+> probó en Windows). Las pruebas finales son solo las que puede hacer una IA sobre la aplicación compilada y una
+> copia de los datos. Los puntos 1 y 3 de abajo quedan sin efecto salvo para Linux en la CI.
+
 > **Decisión de Nathan (2026-10-30):** las puertas de cada fase y todo lo que solo se puede comprobar a mano o en el
 > entorno real **se acumulan** en [pruebas finales](./pruebas-finales.md) y se ejecutan juntas al terminar la Fase 8,
 > en la máquina de Nathan. Hasta entonces, una fase se cierra con sus pruebas automáticas en verde en las tres
