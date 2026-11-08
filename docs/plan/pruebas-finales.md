@@ -101,8 +101,9 @@ compara lo que recibe con la base de la copia, el DOM y el reproductor.
       2026-11-08: `QA IA Fase 3`, conectado y `controlando: true`; el menú mostró «QA IA Fase 3 lo está
       controlando».)*
 - [x] Una descarga completa de la biblioteca: sin vacíos de buffer y la ventana sin fotogramas largos. *(Comprobado
-      por guion el 2026-11-08: 2.352 audios y 14.001.578.045 bytes en 35,20 s; 2.188 fotogramas, máximo 47 ms, p95
-      17 ms y 0 sobre 50 ms; WAV de 35,22 s sin huecos ni discontinuidades. El servidor escuchó solo en
+      por guion el 2026-11-08: descarga secuencial, como el cliente real, de 2.352 audios y 14.001.578.045 bytes en
+      46,41 s; 2.889 fotogramas, máximo 22 ms, p95 17 ms y 0 sobre 50 ms; WAV de 47,16 s sin huecos ni
+      discontinuidades. El servidor escuchó solo en
       `192.168.18.119:8731` y todas sus conexiones establecidas quedaron en bucle local o red privada.)*
 
 ## Fase 4
