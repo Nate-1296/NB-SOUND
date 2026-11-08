@@ -628,6 +628,65 @@ fn la_normalizacion_iguala_las_pistas() {
 }
 
 #[test]
+#[ignore = "lo ejecuta scripts/qa/audio-qa.sh sobre las grabaciones del sumidero"]
+fn una_reproduccion_continua_no_tiene_huecos() {
+    let wav = ruta_de("NB_QA_WAV");
+    let grabacion = cargar(&wav);
+    assert!(
+        duracion(&grabacion) > 1.0,
+        "la grabación es demasiado corta"
+    );
+    assert!(pico(&grabacion) > 1e-4, "la grabación no contiene señal");
+    let huecos = silencios_interiores(&grabacion);
+    assert!(huecos.is_empty(), "la reproducción tuvo huecos: {huecos:?}");
+    informar(
+        "reproduccion_continua",
+        json!({
+            "archivo": wav,
+            "duracionSeg": duracion(&grabacion),
+            "huecosMs": lista_silencios(&huecos),
+            "discontinuidades": lista_discontinuidades(&discontinuidades(&grabacion)),
+            "picoDbfs": 20.0 * pico(&grabacion).max(f32::MIN_POSITIVE).log10(),
+            "sonoridadLufs": sonoridad(&grabacion).0,
+        }),
+    );
+}
+
+#[test]
+#[ignore = "lo ejecuta scripts/qa/audio-qa.sh sobre las grabaciones del sumidero"]
+fn la_normalizacion_entra_desde_la_siguiente_pista() {
+    let antes = cargar(&ruta_de("NB_QA_ANTES_WAV"));
+    let despues = cargar(&ruta_de("NB_QA_DESPUES_WAV"));
+    let siguiente = cargar(&ruta_de("NB_QA_SIGUIENTE_WAV"));
+    let (lufs_antes, _) = sonoridad(&antes);
+    let (lufs_despues, _) = sonoridad(&despues);
+    let (lufs_siguiente, _) = sonoridad(&siguiente);
+    let antes = lufs_antes.expect("sonoridad antes del cambio");
+    let despues = lufs_despues.expect("sonoridad después del cambio");
+    let siguiente = lufs_siguiente.expect("sonoridad de la pista siguiente");
+    assert!(
+        (antes - despues).abs() < 1.0,
+        "la pista actual cambió {:.3} LU al activar la normalización",
+        (antes - despues).abs()
+    );
+    assert!(
+        (siguiente - despues).abs() < 2.0,
+        "la pista siguiente quedó a {:.3} LU de la anterior",
+        (siguiente - despues).abs()
+    );
+    informar(
+        "normalizacion_siguiente",
+        json!({
+            "actualAntesLufs": antes,
+            "actualDespuesLufs": despues,
+            "siguienteLufs": siguiente,
+            "cambioActualLu": (antes - despues).abs(),
+            "diferenciaSiguienteLu": (siguiente - despues).abs(),
+        }),
+    );
+}
+
+#[test]
 #[ignore = "lo ejecuta scripts/qa/audio-qa.sh después de insertar las pistas sintéticas"]
 fn prepara_la_sonoridad_de_las_pistas_sinteticas() {
     let db = PathBuf::from(variable("NB_QA_DB"));
