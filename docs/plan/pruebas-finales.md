@@ -36,6 +36,10 @@ La ventana principal nace oculta para no enseñar el tema de fábrica. Si la apa
 1500 ms, se muestra con la que ya estaba en caché; `scripts/qa/ui-qa.sh fallo-apariencia` elimina solo la tabla de
 preferencias de la copia y comprueba que la ventana sigue apareciendo.
 
+La Fase 3 se ejecuta con `scripts/qa/ui-qa.sh movil`. [`mobile-qa.mjs`](../../scripts/qa/mobile-qa.mjs) es el
+cliente de prueba: habla HTTPS y el WebSocket de control con la huella TLS fijada, descarga el audio en streaming y
+compara lo que recibe con la base de la copia, el DOM y el reproductor.
+
 ## Fase 2
 
 - [x] Al abrir, la cola, la pista y el segundo en que se quedó la última sesión están ahí, sin sonar hasta pulsar
@@ -82,13 +86,24 @@ preferencias de la copia y comprueba que la ventana sigue apareciendo.
 
 ## Fase 3
 
-- [ ] Con la biblioteca de la copia, el cliente recibe el manifiesto sin volver a descargar todo y las playlists traen
-      su mosaico (F3.1.4).
-- [ ] Desde el cliente: reproducir, pausar, saltar, buscar, volumen, aleatorio, repetición y karaoke; la cola espejada
-      se mantiene al cambiar de destino (F3.2.1).
-- [ ] Emparejar con el código corto y quitar el dispositivo lo desconecta al momento (F3.3.1).
-- [ ] "Dónde suena" dice qué cliente controla el equipo mientras lo hace (F3.3.2).
-- [ ] Una descarga completa de la biblioteca: sin vacíos de buffer y la ventana sin fotogramas largos.
+- [x] Con la biblioteca de la copia, el cliente recibe el manifiesto sin volver a descargar todo y las playlists traen
+      su mosaico (F3.1.4). *(Comprobado por guion el 2026-11-08: 2.352 pistas, 1.507 álbumes, 492 artistas y 53
+      playlists; la segunda sincronización repitió 0 entidades, un cambio trajo solo la playlist nueva y el mosaico
+      respondió con 72.099 bytes en 600×600.)*
+- [x] Desde el cliente: reproducir, pausar, saltar, buscar, volumen, aleatorio, repetición y karaoke; la cola espejada
+      se mantiene al cambiar de destino (F3.2.1). *(Comprobado por guion el 2026-11-08 con WSS: PlayPause, Next y
+      Previous, Seek a 18,45 s, volumen 37, aleatorio, repetición «uno» y karaoke; la cola
+      `[1150,1253,172]` → `[1253,1150,172]` del móvil → `[1150,172,1253]` del equipo coincidió en ambos lados.)*
+- [x] Emparejar con el código corto y quitar el dispositivo lo desconecta al momento (F3.3.1). *(Comprobado por guion
+      el 2026-11-08 con un código de 8 caracteres: el WSS se cerró, el manifest siguiente respondió 401 y el
+      dispositivo desapareció de la lista.)*
+- [x] "Dónde suena" dice qué cliente controla el equipo mientras lo hace (F3.3.2). *(Comprobado por guion el
+      2026-11-08: `QA IA Fase 3`, conectado y `controlando: true`; el menú mostró «QA IA Fase 3 lo está
+      controlando».)*
+- [x] Una descarga completa de la biblioteca: sin vacíos de buffer y la ventana sin fotogramas largos. *(Comprobado
+      por guion el 2026-11-08: 2.352 audios y 14.001.578.045 bytes en 35,20 s; 2.188 fotogramas, máximo 47 ms, p95
+      17 ms y 0 sobre 50 ms; WAV de 35,22 s sin huecos ni discontinuidades. El servidor escuchó solo en
+      `192.168.18.119:8731` y todas sus conexiones establecidas quedaron en bucle local o red privada.)*
 
 ## Fase 4
 
