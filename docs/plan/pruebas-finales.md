@@ -144,8 +144,13 @@ compara lo que recibe con la base de la copia, el DOM y el reproductor.
 - [x] El tokenizador propio da los mismos ids que `tokenizer.json` de MiniLM en 50 frases del DJ, y los embeddings
       coinciden (F6.1.1). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase6`: 0 de 50 frases con ids distintos frente a `tokenizers` y ONNX Runtime de Python, fuera del repositorio; coseno mínimo 0,99999993.)*
 - [ ] Una sesión de una hora con las cinco técnicas, grabada: ninguna discontinuidad, hundimiento ni subida brusca de
-      sonoridad en las transiciones (F6.1.3).
-- [ ] Reproducción normal por debajo del 2 % de un núcleo y una mezcla en curso por debajo del 4 % (F6.1.3).
+      sonoridad en las transiciones (F6.1.3). *(2026-11-09, sin cerrar: en una hora, 18 mezclas sin un solo hueco ni
+      clic, pero solo salen tres técnicas (EQ sin graves, barrido y fundido) y las de filtros se hundían hasta 10,6 LU
+      en 6 de 18. Con las curvas de igual potencia (`8b26f9e`) bajó a 1 de 18, con 8,2 LU; en otra corrida de 15
+      minutos, una de 9,5. Lo que queda es el propio filtro, que quita graves a las dos a la vez: P19.)*
+- [ ] Reproducción normal por debajo del 2 % de un núcleo y una mezcla en curso por debajo del 4 % (F6.1.3). *(2026-11-09,
+      sin cerrar: el hilo de salida de audio (`cpal_alsa_out`) usa entre el 9 y el 11 % de un núcleo en reproducción
+      normal y el 13,5 % en una mezcla, contando el hilo del reproductor. Muy por encima del criterio de ADR-003: P20.)*
 - [x] La medida del equipo termina en menos de dos minutos con un perfil coherente (F6.1.4). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase6`: 44 a 50 s, factor 2,2 a 2,6 y perfil medio, coherente con el factor 2,0 de preparar una canción en la Fase 5.)*
 - [x] Una sesión del DJ suena en menos de 3 s, muestra cómo se entendió, crece hasta la duración, la barra la
       controla, "Otra parecida" y "Descartar" devuelven la cola, y al cerrar y abrir vuelve en pausa (F6.1.6). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase6`: suena en 1,6 a 1,9 s (antes 73 s: ver la memoria de vectores del DJ), la vista dice «fiesta, electrónica, pico de energía», crece a 30,9 minutos, pausa, reanudar, siguiente, anterior y buscar responden, la cola vuelve igual tras Otra parecida y Descartar, y al reabrir la sesión está en pausa.)*
