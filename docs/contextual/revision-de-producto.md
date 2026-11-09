@@ -20,17 +20,17 @@
 
 ## Lo que ya está a la altura, o por encima
 
-| Área | Por qué |
-|---|---|
-| Biblioteca propia | Importa, identifica (Shazam, AcoustID, MusicBrainz), etiqueta, organiza y aparta duplicados sola. Ni Spotify ni Apple Music lo hacen con tus archivos; MusicBee y foobar2000 lo dejan al usuario |
-| DJ Privado | Una sesión mezclada de verdad, con transiciones, a partir de una frase. Spotify tiene un DJ que habla y elige; no mezcla. Plexamp mezcla por "sweet fades", no construye la sesión |
-| Karaoke de cualquier canción | Separación de voz en el propio equipo y sin red. Apple Music Sing lo hace solo con su catálogo y en la nube |
-| A ciegas | No tiene equivalente en ningún reproductor |
-| Tu música | Identidad, tops, radar de ánimos, calendario y resumen exportable, todo local. Spotify lo da una vez al año (Wrapped) |
-| Privacidad | Sin cuenta, sin anuncios, cada servicio en línea con su interruptor y explicando qué recibe |
-| Teléfono | Sincroniza biblioteca, playlists, letras e instrumentales sin internet y sirve de mando; Modo fiesta para invitados desde el navegador |
-| Sonido | Sin huecos entre canciones, sonoridad EBU R128, ecualizador de diez bandas con preselecciones |
-| Robustez | Nunca hay que reiniciar, se acuerda de todo y se repara sola tras un fallo (2.0.7–2.0.9) |
+| Área                         | Por qué                                                                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Biblioteca propia             | Importa, identifica (Shazam, AcoustID, MusicBrainz), etiqueta, organiza y aparta duplicados sola. Ni Spotify ni Apple Music lo hacen con tus archivos; MusicBee y foobar2000 lo dejan al usuario |
+| DJ Privado                    | Una sesión mezclada de verdad, con transiciones, a partir de una frase. Spotify tiene un DJ que habla y elige; no mezcla. Plexamp mezcla por "sweet fades", no construye la sesión             |
+| Karaoke de cualquier canción | Separación de voz en el propio equipo y sin red. Apple Music Sing lo hace solo con su catálogo y en la nube                                                                                    |
+| A ciegas                      | No tiene equivalente en ningún reproductor                                                                                                                                                      |
+| Tu música                    | Identidad, tops, radar de ánimos, calendario y resumen exportable, todo local. Spotify lo da una vez al año (Wrapped)                                                                          |
+| Privacidad                    | Sin cuenta, sin anuncios, cada servicio en línea con su interruptor y explicando qué recibe                                                                                                    |
+| Teléfono                     | Sincroniza biblioteca, playlists, letras e instrumentales sin internet y sirve de mando; Modo fiesta para invitados desde el navegador                                                           |
+| Sonido                        | Sin huecos entre canciones, sonoridad EBU R128, ecualizador de diez bandas con preselecciones                                                                                                    |
+| Robustez                      | Nunca hay que reiniciar, se acuerda de todo y se repara sola tras un fallo (2.0.7–2.0.9)                                                                                                        |
 
 ## Lo que le falta
 
@@ -38,39 +38,39 @@ Ordenado por lo que aporta a quien la usa a diario. Cada fila dice qué app lo t
 
 ### Prioridad alta
 
-| # | Qué | Quién lo tiene | Qué implica |
-|---|---|---|---|
-| A1 | **Seguir sonando al acabar la cola** (radio de una canción, de un artista o de lo que sonaba) | Spotify (Autoplay), Apple Music, Plexamp (radio de artista, de álbum) | Las piezas existen: el análisis, los rasgos y el planificador del DJ ya saben qué se parece a qué. Es una regla en la cola y un ajuste para apagarlo |
-| A2 | **Fundido entre canciones** en la reproducción normal (0–12 s), además de sin huecos | Spotify, Apple Music, Plexamp, MusicBee | El motor del DJ ya hace fundidos con dos platos; falta usarlo fuera del DJ, respetando los álbumes continuos (como Plexamp: sin fundido dentro de un mismo álbum) |
-| A3 | **Elegir la salida de audio** (auriculares, altavoces, la tarjeta USB) sin ir al sistema | Spotify, MusicBee, foobar2000, Plexamp | `cpal` enumera los dispositivos; un selector en el menú ··· (Dónde suena) y recordar la elección |
-| A4 | **Selección múltiple** en las listas (Mayús y Ctrl): añadir a una playlist, a la cola, favoritas o quitar varias a la vez | Todos | Hoy todo se hace canción por canción. Es la carencia que más se nota al ordenar una biblioteca grande |
-| A5 | **Temporizador de apagado** (al acabar esta canción, en 15, 30, 60 min) | Spotify (móvil), Apple Music, Plexamp | Pequeño: una orden al reproductor y una entrada en el menú ··· |
-| A6 | **Firma de código** en Windows y macOS | Cualquier aplicación distribuida | Sin firma, Windows enseña "SmartScreen" y macOS dice que la aplicación "está dañada". Hace falta un certificado (Windows) y una cuenta de desarrollador de Apple: es una decisión de Nathan con coste |
-| A7 | **Las pruebas finales**, solo las que hace una IA (sin máquina limpia desde el 2026-11-08) | — | La [Constitución](./constitution/README.md) (regla 1) y el [plan](../plan/README.md) lo exigen antes de dar la 2.0 por publicada. Hoy está publicada sin pasarla |
-| A8 | **La memoria del karaoke** (P8: llegó a 9 GB) | — | Hecha el 2026-11-09: 1,4 GB de pico sin optimizar el grafo de ONNX Runtime (P8) |
-| A9 | **Completar en segundo plano lo que le falta a la biblioteca** (letras, portadas, fotos de artista, etiquetas), como el karaoke: una importación puede fallar a medias sin que falte el dato en el servicio, y una biblioteca que llega de otra instalación entra sin nada | Plexamp, MusicBee (con complementos) | Pedido por Nathan el 2026-11-09 tras restaurar en otro portátil (P18). Las piezas existen: "Completar datos" por pista y la puerta de red con consentimiento; falta la cola de fondo con su prioridad baja y su avance |
+| #  | Qué                                                                                                                                                                                                                                                                               | Quién lo tiene                                                        | Qué implica                                                                                                                                                                                                                                                                           |
+| -- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1 | **Seguir sonando al acabar la cola** (radio de una canción, de un artista o de lo que sonaba)                                                                                                                                                                               | Spotify (Autoplay), Apple Music, Plexamp (radio de artista, de álbum) | Las piezas existen: el análisis, los rasgos y el planificador del DJ ya saben qué se parece a qué. Es una regla en la cola y un ajuste para apagarlo                                                                                                                                |
+| A2 | **Fundido entre canciones** en la reproducción normal (0–12 s), además de sin huecos                                                                                                                                                                                      | Spotify, Apple Music, Plexamp, MusicBee                                | El motor del DJ ya hace fundidos con dos platos; falta usarlo fuera del DJ, respetando los álbumes continuos (como Plexamp: sin fundido dentro de un mismo álbum)                                                                                                                    |
+| A3 | **Elegir la salida de audio** (auriculares, altavoces, la tarjeta USB) sin ir al sistema                                                                                                                                                                                     | Spotify, MusicBee, foobar2000, Plexamp                                 | `cpal` enumera los dispositivos; un selector en el menú ··· (Dónde suena) y recordar la elección                                                                                                                                                                               |
+| A4 | **Selección múltiple** en las listas (Mayús y Ctrl): añadir a una playlist, a la cola, favoritas o quitar varias a la vez                                                                                                                                                | Todos                                                                  | Hoy todo se hace canción por canción. Es la carencia que más se nota al ordenar una biblioteca grande                                                                                                                                                                               |
+| A5 | **Temporizador de apagado** (al acabar esta canción, en 15, 30, 60 min)                                                                                                                                                                                                     | Spotify (móvil), Apple Music, Plexamp                                 | Pequeño: una orden al reproductor y una entrada en el menú ···                                                                                                                                                                                                                    |
+| A6 | **Firma de código** en Windows y macOS                                                                                                                                                                                                                                      | Cualquier aplicación distribuida                                      | Sin firma, Windows enseña "SmartScreen" y macOS dice que la aplicación "está dañada". Hace falta un certificado (Windows) y una cuenta de desarrollador de Apple: es una decisión de Nathan con coste                                                                             |
+| A7 | **Las pruebas finales**, solo las que hace una IA (sin máquina limpia desde el 2026-11-08)                                                                                                                                                                                  | —                                                                     | La [Constitución](./constitution/README.md) (regla 1) y el [plan](../plan/README.md) lo exigen antes de dar la 2.0 por publicada. Hoy está publicada sin pasarla                                                                                                                       |
+| A8 | **La memoria del karaoke** (P8: llegó a 9 GB)                                                                                                                                                                                                                               | —                                                                     | Hecha el 2026-11-09: 1,4 GB de pico sin optimizar el grafo de ONNX Runtime (P8)                                                                                                                                                                                                        |
+| A9 | **Completar en segundo plano lo que le falta a la biblioteca** (letras, portadas, fotos de artista, etiquetas), como el karaoke: una importación puede fallar a medias sin que falte el dato en el servicio, y una biblioteca que llega de otra instalación entra sin nada | Plexamp, MusicBee (con complementos)                                   | Hecha el 2026-11-09 (`catalogo/completar_fondo.rs`, V11): cinco minutos después de abrir, con prioridad baja y la conexión general encendida, cada pista sin portada, sin letra o con su artista sin imagen pasa por "Completar datos"; lo que no se encuentra se reintenta al mes |
 
 ### Prioridad media
 
-| # | Qué | Quién lo tiene | Qué implica |
-|---|---|---|---|
-| M1 | **Explorar por géneros y décadas** (una pestaña o tarjetas en Inicio) | Apple Music, MusicBee, Plexamp | El género ya está en los datos; las inteligentes lo usan, pero no hay dónde verlo |
-| M2 | **Registrar escuchas en ListenBrainz o Last.fm** (opcional) | MusicBee, foobar2000, Plexamp, Symfonium | Una salida de red más, con su interruptor y consentimiento (regla 5) y su clave en el llavero |
-| M3 | **Importar y exportar playlists en M3U** | MusicBee, foobar2000 | Hoy solo la copia a USB escribe M3U. Importar es lo que pide quien viene de otro reproductor |
-| M4 | **Inglés** | Todos | Toda la interfaz sale de un diccionario (`check-i18n`), así que es traducir `es.ts` y elegir por el idioma del sistema. Necesario para publicar fuera |
-| M5 | **Bajar la prioridad del trabajo de fondo en Windows** | — | En Linux y macOS ya está; en Windows hace falta `windows-sys` (P16) |
-| M6 | **Accesibilidad** revisada con lector de pantalla y solo teclado | Apple Music, Spotify | Las bases están (roles, foco visible, temas de alto contraste); falta una pasada con Orca y NVDA |
-| M7 | **Instrumentales más pequeños** (P14: 40 MB por canción en WAV) | — | FLAC los deja en la mitad o menos; depende de P7 en el teléfono |
+| #  | Qué                                                                           | Quién lo tiene                          | Qué implica                                                                                                                                               |
+| -- | ------------------------------------------------------------------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M1 | **Explorar por géneros y décadas** (una pestaña o tarjetas en Inicio) | Apple Music, MusicBee, Plexamp           | El género ya está en los datos; las inteligentes lo usan, pero no hay dónde verlo                                                                       |
+| M2 | **Registrar escuchas en ListenBrainz o Last.fm** (opcional)              | MusicBee, foobar2000, Plexamp, Symfonium | Una salida de red más, con su interruptor y consentimiento (regla 5) y su clave en el llavero                                                             |
+| M3 | **Importar y exportar playlists en M3U**                                 | MusicBee, foobar2000                     | Hoy solo la copia a USB escribe M3U. Importar es lo que pide quien viene de otro reproductor                                                               |
+| M4 | **Inglés**                                                              | Todos                                    | Toda la interfaz sale de un diccionario (`check-i18n`), así que es traducir `es.ts` y elegir por el idioma del sistema. Necesario para publicar fuera |
+| M5 | **Bajar la prioridad del trabajo de fondo en Windows**                   | —                                       | En Linux y macOS ya está; en Windows hace falta `windows-sys` (P16)                                                                                     |
+| M6 | **Accesibilidad** revisada con lector de pantalla y solo teclado         | Apple Music, Spotify                     | Las bases están (roles, foco visible, temas de alto contraste); falta una pasada con Orca y NVDA                                                          |
+| M7 | **Instrumentales más pequeños** (P14: 40 MB por canción en WAV)       | —                                       | FLAC los deja en la mitad o menos; depende de P7 en el teléfono                                                                                           |
 
 ### Prioridad baja
 
-| # | Qué | Quién lo tiene |
-|---|---|---|
-| B1 | Mostrar lo que suena en Discord | MusicBee, Plexamp (con complemento) |
-| B2 | Velocidad de reproducción (para audiolibros y clases) | Apple Music, foobar2000 |
-| B3 | Editar o sincronizar a mano una letra | MusicBee |
-| B4 | Un visualizador en la reproducción ampliada | MusicBee, foobar2000 |
-| B5 | Atajos globales configurables (además de las teclas multimedia, que ya van por MPRIS) | foobar2000, MusicBee |
+| #  | Qué                                                                                   | Quién lo tiene                     |
+| -- | -------------------------------------------------------------------------------------- | ----------------------------------- |
+| B1 | Mostrar lo que suena en Discord                                                        | MusicBee, Plexamp (con complemento) |
+| B2 | Velocidad de reproducción (para audiolibros y clases)                                 | Apple Music, foobar2000             |
+| B3 | Editar o sincronizar a mano una letra                                                  | MusicBee                            |
+| B4 | Un visualizador en la reproducción ampliada                                           | MusicBee, foobar2000                |
+| B5 | Atajos globales configurables (además de las teclas multimedia, que ya van por MPRIS) | foobar2000, MusicBee                |
 
 ### Lo que no conviene
 

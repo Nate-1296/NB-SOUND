@@ -315,7 +315,8 @@ que llegó.
   no está disponible en tu equipo, o todavía no existe, no se muestra.
 * **Privacidad y servicios en línea**: un interruptor general y uno por servicio (AcoustID, MusicBrainz, Cover Art
   Archive, Shazam, iTunes, LRCLIB, lyrics.ovh, Deezer, Wikipedia, TheAudioDB, actualizaciones), cada uno diciendo
-  qué recibe.
+  qué recibe. Debajo de AcoustID y de TheAudioDB, su clave: se guarda en el llavero del sistema y solo se ve si hay
+  una.
 * **Inteligencia artificial**: desempatar con IA cuando dos versiones empatan, con tu propia cuenta (Anthropic u
   OpenAI) y tu clave guardada en el llavero del sistema.
 * **Acerca de**: el logo, la versión, buscar actualizaciones e instalarlas, la licencia y los componentes de
@@ -328,6 +329,10 @@ que llegó.
   carpeta de la música (Artista / tipo / Álbum) y se le buscan letra e imagen del artista. Lo dudoso va a Por
   revisar; nada se pierde ni se pisa.
 * **La carpeta vigilada.** Lo que copies en la carpeta de la música entra solo cuando termina de copiarse.
+* **Lo que le falta, se completa solo.** Cinco minutos después de abrir, con los servicios en línea encendidos, NB
+  Sound recorre sin prisa las canciones sin portada, sin letra o con su artista sin imagen y les busca lo que falta,
+  como "Completar datos". Lo que no encuentra lo vuelve a intentar pasado un mes. Sirve tanto para una importación
+  que falló a medias como para una biblioteca que llega de otro equipo.
 * **La música que cambia de sitio.** Las canciones se guardan relativas a la carpeta de la música, así que mover la
   carpeta entera no rompe nada. Si al abrir la carpeta ya no tiene tu música (formateaste, cambiaste el nombre de tu
   usuario, restauraste una copia en otro equipo), NB Sound la busca sola: la misma ruta bajo tu carpeta personal de
@@ -348,8 +353,12 @@ que llegó.
   esté, sin gastar intentos. Y la primera vez que abre una versión nueva, todo lo que había quedado fallido se intenta
   una vez más, porque la versión puede traer el arreglo.
 * **El trabajo de fondo no estorba.** Cada tarea tiene su hilo, lejos de la ventana y del audio. El karaoke usa un
-  cuarto de los núcleos, el análisis un octavo, y los dos (con la sonoridad) corren a la prioridad más baja en Linux
-  y macOS: solo usan lo que el equipo no está usando.
+  cuarto de los núcleos y el análisis un octavo. El karaoke, el análisis, la sonoridad, los vectores del DJ, la
+  auditoría, la copia automática y lo que se completa solo corren a la prioridad más baja en Linux y macOS (en Linux
+  también la del disco): solo usan lo que el equipo no está usando. La copia automática espera además dos minutos
+  tras abrir, para no coincidir con la primera canción.
+* **El DJ responde al momento.** Los vectores de texto de cada canción se calculan una vez, al abrir y en segundo
+  plano, y se guardan junto al agregado: pedir una sesión tarda menos de dos segundos.
 
 ## Atajos de teclado
 

@@ -141,39 +141,46 @@ compara lo que recibe con la base de la copia, el DOM y el reproductor.
 
 ## Fase 6
 
-- [ ] El tokenizador propio da los mismos ids que `tokenizer.json` de MiniLM en 50 frases del DJ, y los embeddings
-      coinciden (F6.1.1).
+- [x] El tokenizador propio da los mismos ids que `tokenizer.json` de MiniLM en 50 frases del DJ, y los embeddings
+      coinciden (F6.1.1). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase6`: 0 de 50 frases con ids distintos frente a `tokenizers` y ONNX Runtime de Python, fuera del repositorio; coseno mínimo 0,99999993.)*
 - [ ] Una sesión de una hora con las cinco técnicas, grabada: ninguna discontinuidad, hundimiento ni subida brusca de
       sonoridad en las transiciones (F6.1.3).
 - [ ] Reproducción normal por debajo del 2 % de un núcleo y una mezcla en curso por debajo del 4 % (F6.1.3).
-- [ ] La medida del equipo termina en menos de dos minutos con un perfil coherente (F6.1.4).
-- [ ] Una sesión del DJ suena en menos de 3 s, muestra cómo se entendió, crece hasta la duración, la barra la
-      controla, "Otra parecida" y "Descartar" devuelven la cola, y al cerrar y abrir vuelve en pausa (F6.1.6).
-- [ ] Una ronda de cada modo de A ciegas: el fragmento empieza en el 30 %, ni la barra ni MPRIS ni el cliente dicen la
-      canción, un error de una letra acierta y la cola vuelve donde estaba (F6.2.2).
+- [x] La medida del equipo termina en menos de dos minutos con un perfil coherente (F6.1.4). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase6`: 44 a 50 s, factor 2,2 a 2,6 y perfil medio, coherente con el factor 2,0 de preparar una canción en la Fase 5.)*
+- [x] Una sesión del DJ suena en menos de 3 s, muestra cómo se entendió, crece hasta la duración, la barra la
+      controla, "Otra parecida" y "Descartar" devuelven la cola, y al cerrar y abrir vuelve en pausa (F6.1.6). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase6`: suena en 1,6 a 1,9 s (antes 73 s: ver la memoria de vectores del DJ), la vista dice «fiesta, electrónica, pico de energía», crece a 30,9 minutos, pausa, reanudar, siguiente, anterior y buscar responden, la cola vuelve igual tras Otra parecida y Descartar, y al reabrir la sesión está en pausa.)*
+- [x] Una ronda de cada modo de A ciegas: el fragmento empieza en el 30 %, ni la barra ni MPRIS ni el cliente dicen la
+      canción, un error de una letra acierta y la cola vuelve donde estaba (F6.2.2). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase6`: en los cuatro modos el fragmento encaja en la canción entera justo en el 30 % (0,13 a 0,15 s de retraso de la grabación), ni la barra, ni MPRIS, ni el estado que lee el teléfono dicen la canción, una letra cambiada acierta y la cola vuelve igual.)*
 
 ## Fase 8
 
-- [ ] Diez pistas: la forma de onda coincide con la envolvente de la grabación; en el DJ marca entrada y salida; medir
-      la biblioteca entera no se nota (F8.1).
-- [ ] Una lista inteligente por BPM, ánimo y favoritas llega al cliente y una favorita nueva entra sola; "Crear para
-      mí" genera las listas automáticas (F8.2).
-- [ ] Tu música: resumen por año y mes, radar de ánimos, mapa 7×24 y una tarjeta SVG exportada y válida (F8.3).
-- [ ] Copiar una playlist y las favoritas a una carpeta temporal: estructura, portada incrustada, `.m3u8` y la
-      conversión a WAV (F8.4).
-- [ ] Modo fiesta con un cliente HTTP: buscar, sugerir, aprobar, descartar, modo automático y rotar el QR deja sin
-      efecto el enlace anterior (F8.5).
+- [x] Diez pistas: la forma de onda coincide con la envolvente de la grabación; en el DJ marca entrada y salida; medir
+      la biblioteca entera no se nota (F8.1). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase8`: correlación de 0,95 a 0,997 con la envolvente real de cada canción; la barra marca la entrada y la salida (205 s) en el DJ; poblar 55 picos en un minuto usó el 70 % de un núcleo, sin huecos ni discontinuidades en lo que sonaba.)*
+- [x] Una lista inteligente por BPM, ánimo y favoritas llega al cliente y una favorita nueva entra sola; "Crear para
+      mí" genera las listas automáticas (F8.2). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase8`: «bailable» entre 90 y 140 BPM y favoritas, 27 pistas; al marcar una favorita entra sola (28) y el teléfono la recibe; «Crear para mí» tocó 36 listas, 52 automáticas.)*
+- [x] Tu música: resumen por año y mes, radar de ánimos, mapa 7×24 y una tarjeta SVG exportada y válida (F8.3). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase8`: 2026 con 3.596 reproducciones, igual que el historial; noviembre, 290; radar de seis ánimos; mapa de 168 celdas que suma las reproducciones; la tarjeta SVG (por `tests/qa_fase8.rs`, sin el selector nativo) es válida y lleva las cifras.)*
+- [x] Copiar una playlist y las favoritas a una carpeta temporal: estructura, portada incrustada, `.m3u8` y la
+      conversión a WAV (F8.4). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase8`: por `tests/qa_fase8.rs`, sin el selector nativo: 36 favoritas en Artista/Álbum, 35 con portada (la otra no tiene), `Favoritas.m3u8` apunta a archivos que existen y una playlist de 18 en WAV válido.)*
+- [x] Modo fiesta con un cliente HTTP: buscar, sugerir, aprobar, descartar, modo automático y rotar el QR deja sin
+      efecto el enlace anterior (F8.5). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase8`: página 200, 25 resultados, dos sugerencias con su espera de diez segundos (la de antes de tiempo, 429), aceptada en la cola, descartada fuera, el modo automático encola solo y, tras rotar, el enlace viejo da 401 y el nuevo 200.)*
 
-## Defectos que Nathan vio y no se han reproducido (2026-11-09)
+## Defectos que Nathan vio (2026-11-09)
 
 Se intentan reproducir por guion; si aparecen, se corrigen con su prueba de regresión.
 
-- [ ] **Audio entrecortado en la primera apertura de la sesión.** Al encender el portátil y abrir NB Sound por
+- [x] **Audio entrecortado en la primera apertura de la sesión.** *(Causa probable, 2026-11-09: la primera apertura
+      del día es la que hace la copia automática, que leía y escribía gigas a prioridad normal justo al abrir. Ahora
+      espera dos minutos y corre con prioridad baja de procesador y de disco, como la auditoría; en Windows la del
+      procesador sigue pendiente de P16. Comprobado con `scripts/qa/ui-qa.sh arranque-cargado`: con el análisis encendido y la copia automática del día haciéndose, 200 s de la primera canción sin huecos ni discontinuidades.)*
+      Al encender el portátil y abrir NB Sound por
       primera vez, la canción suena cortada; cerrar y abrir lo arregla. También pasó mientras otras pruebas
       reproducían audio. Se prueba arrancando en frío (PipeWire recién iniciado, sin caché de disco: `echo 3 >
       drop_caches` no es posible sin root, así que con un usuario de PipeWire nuevo y la copia de los datos
       recién escrita), con otra aplicación sonando a la vez y con la CPU ocupada, grabando el sumidero.
-- [ ] **Recién instalada, lo importado no suena hasta reiniciar.** Instalación nueva, importar música sin
+- [x] **Recién instalada, lo importado no suena hasta reiniciar.** *(Reproducido y corregido el 2026-11-09: el
+      reproductor leía la carpeta de la música al arrancar, cuando en una instalación nueva aún no hay ninguna; ahora
+      la lee al resolver cada pista. Prueba de regresión en `reproductor/pruebas.rs`.)*
+      Instalación nueva, importar música sin
       reiniciar y darle a reproducir: el botón cambia unos milisegundos y vuelve a pausa; tras reiniciar, todo
       suena. Visto en Windows en dos portátiles. Se prueba con datos vacíos (bienvenida), importando por la orden
       del puente y reproduciendo en la misma sesión.

@@ -234,3 +234,26 @@ de lo que no usa NB Sound y las barras sin pisarse a ningún tamaño. Después, 
 | `e1e976d` | QA-R3 | Un solo aviso al encontrar la música desde la pregunta del arranque | — |
 | — | QA-R3 | La 2.0.13 publicada e instalada. Prueba con los datos reales de Nathan: copia automática hecha por la 2.0.13 (3,4 GB, 23 s, con la foto), desinstalación, datos apartados como en un equipo nuevo, reinstalación (abre en la bienvenida), restauración de la copia y arranque: 2.243 canciones, 1.426 álbumes, 438 artistas, 56 playlists con las mismas canciones cada una y 35 favoritas, idénticos a antes; tema, nombre, foto, sesión y carpeta de la música en su sitio, y suena. El agregado de análisis se instala con un clic. Después se devolvieron los instrumentales del karaoke, los agregados y la identidad del teléfono, que la copia no lleva | Recuentos de la base y lista de archivos de la biblioteca comparados antes y después |
 
+
+## 2026-11-08 y 2026-11-09: pruebas finales hechas por IA (QA-IA)
+
+Decisión de Nathan: las pruebas finales son solo las que puede hacer una IA, sin Windows, macOS ni máquina limpia
+(la Constitución pasa a comprobar la regla 1 en la CI de Linux). DeepSeek V4.1 Flash, orquestado desde Claude,
+hizo las Fases 2 a 4; Claude, el resto. Todo sobre la aplicación compilada y una copia de los datos.
+
+| Commit | Iteración | Qué se hizo | Pruebas nuevas |
+|---|---|---|---|
+| `0e82231`…`674bda2` | QA-IA | Arnés de audio e interfaz; Fase 2 entera. La ventana nacía con dos fotogramas del tema de fábrica | Arranque sin tema de fábrica |
+| `4a50297`, `2b6f33c` | QA-IA | La ventana oculta hasta tener la apariencia, con red de seguridad en Rust a los 4 s | Fallo de JS inducido |
+| `12ffda8`…`c8bfc55` | QA-IA | Fase 3 con un cliente que habla el contrato móvil | — |
+| `0f721b5` | QA-IA | Matar NB Sound a mitad de un lote dejaba falsos duplicados; el vigilante tomaba lo recién importado por nuevo; Completar datos no tenía la clave de AcoustID | Una por defecto |
+| `1c3065c`, `5a47d3e` | QA-IA | Fase 4, con AcoustID y MusicBrainz reales | — |
+| `07bc09d` | P8 | El karaoke llegaba a 6,7 GB; sin optimizar el grafo, 1,4 GB y el mismo instrumental | Pico por debajo de 3 GB con el modelo real |
+| `bc7f946` | QA-IA | Fase 5: agregados reanudados tras cerrar a mitad, karaoke con los ocho núcleos ocupados | — |
+| `33feeb3` | — | RUSTSEC-2026-0459 ignorado hasta que `r2d2_sqlite` admita rusqlite 0.41 | — |
+| `7df2f12` | QA-IA | Lo importado en una instalación nueva no sonaba hasta reiniciar; salir del DJ adelantaba la cola | Una por defecto |
+| `8b26f9e` | QA-IA | El DJ tardaba 73 s en sonar (ahora menos de 2: vectores guardados); mezclas de igual potencia; A ciegas perdona una letra en títulos cortos | Memoria de vectores, igual potencia, una letra |
+| `30a82ce` | QA-IA | Copia automática diferida y con prioridad de disco ociosa: causa probable del audio entrecortado de la primera apertura | Arranque cargado |
+| `f6755ac` | A9 | Completar en segundo plano lo que le falta a la biblioteca (V11) | Qué se vuelve a intentar |
+| `4e2e43f` | QA-IA | Las claves de AcoustID y TheAudioDB se ponen en Ajustes > Privacidad | Cuentas del llavero |
+| `d8d172d` | QA-IA | Arneses de las Fases 6 y 8 y del arranque cargado | — |
