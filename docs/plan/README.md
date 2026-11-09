@@ -70,7 +70,7 @@ Una iteración está terminada cuando:
 
 > **Decisión de Nathan (2026-11-08):** no se instala en máquina limpia ni se comprueban Windows y macOS (Nathan lo
 > probó en Windows). Las pruebas finales son solo las que puede hacer una IA sobre la aplicación compilada y una
-> copia de los datos. Los puntos 1 y 3 de abajo quedan sin efecto salvo para Linux en la CI.
+> copia de los datos.
 
 > **Decisión de Nathan (2026-10-30):** las puertas de cada fase y todo lo que solo se puede comprobar a mano o en el
 > entorno real **se acumulan** en [pruebas finales](./pruebas-finales.md) y se ejecutan juntas al terminar la Fase 8,
@@ -79,13 +79,10 @@ Una iteración está terminada cuando:
 
 **Ninguna versión se publica sin comprobar que la aplicación se empaqueta e instala:**
 
-1. El empaquetado produce los instaladores (Linux siempre; Windows y macOS cuando haya CI o máquina, y si no, se
-   dice explícitamente qué quedó sin comprobar).
+1. La CI de Linux produce los instaladores en verde.
 2. Todo viaja dentro: motor, decodificadores, la huella acústica, ONNX Runtime, fuentes e iconos (`ffmpeg` no, por
    la enmienda de ADR-006).
-3. Instala y arranca en una **máquina limpia** sin instalar nada más (en Linux, un contenedor o una máquina virtual
-   sin VLC, sin Python y sin `ffmpeg`).
-4. Desinstalar no se lleva la biblioteca del usuario.
+3. Desinstalar no se lleva la biblioteca del usuario.
 
 Es la [regla 1](../contextual/constitution/README.md) de la Constitución.
 

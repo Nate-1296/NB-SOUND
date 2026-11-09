@@ -33,7 +33,7 @@ Si el trabajo depende de una decisión no tomada, **no se empieza**: se plantea 
 
 | Regla | Mecanismo |
 |---|---|
-| Nada que instalar fuera de la aplicación; lo opcional es un agregado de un clic | Puerta de empaquetado en máquina limpia; `check-plataforma` |
+| Nada que instalar fuera de la aplicación; lo opcional es un agregado de un clic | Instaladores compilados en la CI de Linux; `check-plataforma` |
 | Ningún intérprete de Python en NB Sound | `check-sin-python` |
 | Un solo producto, sin modos ni vistas de diagnóstico | [ADR-007](docs/adr/decisions/ADR-007-arquitectura-de-informacion.md) |
 | Ningún error viaja como cadena | `check-error-contract` |

@@ -33,4 +33,4 @@
 * **F5.3.1:** se mantiene la paridad de F0.4.3; el almacenamiento cumple el presupuesto de ADR-004.
 * Ajustes > Acerca de atribuye los modelos con su licencia.
 
-**Puerta de empaquetado**, incluida la instalación de cada agregado en la máquina limpia.
+**Puerta de empaquetado**, incluida la instalación de cada agregado en las pruebas finales.

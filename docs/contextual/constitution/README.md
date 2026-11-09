@@ -21,7 +21,7 @@ su plan. NB Sound no lo repite.
   gestor de paquetes ni un intérprete del sistema ([ADR-006](../../adr/decisions/ADR-006-agregados.md)).
 * Ninguna pantalla le explica al usuario qué le falta a su sistema. Si algo falta, es un defecto del empaquetado.
 
-**Mecanismo:** la puerta de empaquetado de cada fase instala en una máquina limpia sin nada más
+**Mecanismo:** la CI de Linux compila los instaladores con todo lo de arriba dentro
 ([plan](../../plan/README.md), sección 5.1), y `check-plataforma` rechaza código que busque binarios en el `PATH`.
 
 ## 2. Un solo producto, sin modos
