@@ -9,8 +9,9 @@
 //!
 //! **Memoria (P8).** F0.4.2 vio a ONNX Runtime llegar a 9 GB con su configuración
 //! por defecto. Aquí la sesión se crea una vez por pista, sin el *arena* del
-//! proveedor de CPU ni el patrón de memoria, y con la mitad de los núcleos: el
-//! audio corre en su propio hilo de tiempo real (P1) y la ventana no se nota.
+//! proveedor de CPU, sin el patrón de memoria y sin optimizar el grafo (lo que
+//! más pesaba: ver [`sesion`]), con un cuarto de los núcleos: el audio corre en su
+//! propio hilo de tiempo real (P1) y la ventana no se nota.
 //!
 //! **Formato (P14).** El instrumental se guarda como WAV de 16 bits: sin `ffmpeg`
 //! (enmienda de ADR-006) no hay codificador de MP3, y el teléfono reproduce WAV con
@@ -256,7 +257,13 @@ fn sesion(modelo: &Path) -> NsResult<ort::session::Session> {
         .map_err(fallo)?
         .with_inter_op_spinning(false)
         .map_err(fallo)?
-        .with_optimization_level(ort::session::builder::GraphOptimizationLevel::All)
+        // Sin optimizar el grafo (P8, medido el 2026-11-09 con 60 s de una canción
+        // real): con `All` o `Level1` el pico era de 6,6 GB, porque el plegado de
+        // constantes materializa tensores enormes de htdemucs; sin optimizar baja a
+        // 1,3 GB y el instrumental es el mismo (diferencia máxima de 1 en 32.767,
+        // 102 dB de relación señal/ruido). Cuesta en torno a un 15 % más de tiempo.
+        // Ni limitar los *arenas* de malloc ni un solo hilo bajaban el pico.
+        .with_optimization_level(ort::session::builder::GraphOptimizationLevel::Disable)
         .map_err(fallo)?
         .commit_from_file(modelo)
         .map_err(|_| NsError::ComponentUnavailable)
@@ -809,7 +816,7 @@ mod tests {
     /// Con el modelo real, si alguien lo deja en `NS_MODELO_KARAOKE`: no está en el
     /// repositorio (`CLAUDE.md`), así que de ordinario se salta sola.
     #[test]
-    fn con_el_modelo_real_separa_una_pista() {
+    fn con_el_modelo_real_separa_una_pista_sin_pasar_de_3_gb() {
         let (Some(modelo), Some(audio), Some(ort)) = (
             std::env::var_os("NS_MODELO_KARAOKE").map(PathBuf::from),
             std::env::var_os("NS_AUDIO_KARAOKE").map(PathBuf::from),
@@ -822,6 +829,18 @@ mod tests {
         let bytes = separar_archivo(&modelo, &audio, &d.join("i.wav"), &mut |_| true).unwrap();
         assert!(bytes > 44);
         let _ = std::fs::remove_dir_all(&d);
+        // El criterio de F5.2.1: por debajo de 3 GB. Con el grafo optimizado eran
+        // 6,6 GB (P8). Se mide el pico del proceso, así que se ejecuta sola.
+        #[cfg(target_os = "linux")]
+        {
+            let estado = std::fs::read_to_string("/proc/self/status").unwrap();
+            let pico_kb: u64 = estado
+                .lines()
+                .find_map(|l| l.strip_prefix("VmHWM:"))
+                .and_then(|v| v.trim().trim_end_matches("kB").trim().parse().ok())
+                .unwrap();
+            assert!(pico_kb < 3 * 1024 * 1024, "pico de {pico_kb} kB");
+        }
     }
 
     #[test]

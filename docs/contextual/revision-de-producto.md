@@ -47,7 +47,7 @@ Ordenado por lo que aporta a quien la usa a diario. Cada fila dice qué app lo t
 | A5 | **Temporizador de apagado** (al acabar esta canción, en 15, 30, 60 min) | Spotify (móvil), Apple Music, Plexamp | Pequeño: una orden al reproductor y una entrada en el menú ··· |
 | A6 | **Firma de código** en Windows y macOS | Cualquier aplicación distribuida | Sin firma, Windows enseña "SmartScreen" y macOS dice que la aplicación "está dañada". Hace falta un certificado (Windows) y una cuenta de desarrollador de Apple: es una decisión de Nathan con coste |
 | A7 | **Las pruebas finales**, solo las que hace una IA (sin máquina limpia desde el 2026-11-08) | — | La [Constitución](./constitution/README.md) (regla 1) y el [plan](../plan/README.md) lo exigen antes de dar la 2.0 por publicada. Hoy está publicada sin pasarla |
-| A8 | **La memoria del karaoke** (P8: llegó a 9 GB) | — | Sin bajarla, el karaoke no cabe en un equipo de 8 GB; con la prioridad baja ya no molesta, pero puede quedarse sin memoria |
+| A8 | **La memoria del karaoke** (P8: llegó a 9 GB) | — | Hecha el 2026-11-09: 1,4 GB de pico sin optimizar el grafo de ONNX Runtime (P8) |
 
 ### Prioridad media
 
