@@ -26,7 +26,7 @@ fi
 
 uso() {
   printf '%s\n' \
-    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|movil|fallo-apariencia|detener|todo'
+    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|movil|fallo-apariencia|fallo-js|detener|todo'
 }
 
 limpiar() {
@@ -159,7 +159,7 @@ esperar_inspector() {
   return 1
 }
 
-arrancar_app() {
+lanzar_app() {
   local registro="$QA_BASE/registros/app-ui.log"
   : >"$registro"
   env \
@@ -177,6 +177,10 @@ arrancar_app() {
     "$BINARIO" >"$registro" 2>&1 &
   PID_APP=$!
   export PID_APP
+}
+
+arrancar_app() {
+  lanzar_app
   esperar_inspector
 }
 
@@ -243,9 +247,8 @@ capturar_primer_fotograma() {
   fi
 }
 
-comprobar_ventana_con_apariencia_fallida() {
-  local inicio fin ventana=
-  inicio=$(date +%s%3N)
+comprobar_ventana_desde() {
+  local inicio=$1 fin ventana= limite=${2:-5000}
   for _ in $(seq 1 200); do
     ventana=$(DISPLAY="$LISTA_DISPLAY" xdotool search --onlyvisible --name '^NB Sound$' 2>/dev/null |
       head -n 1 || true)
@@ -258,11 +261,17 @@ comprobar_ventana_con_apariencia_fallida() {
   if [[ -z $ventana ]]; then
     printf 'VENTANAS_X11 %s\n' \
       "$(DISPLAY="$LISTA_DISPLAY" xdotool search --name '.*' getwindowname %@ 2>/dev/null | paste -sd ';' - || true)"
-    printf 'La ventana no apareció con la carga de apariencia rechazada\n' >&2
+    printf 'La ventana no apareció antes de %s ms\n' "$limite" >&2
     return 1
   fi
-  printf 'VENTANA_CON_APARIENCIA_FALLIDA ventana=%s aparicionMs=%s\n' \
+  printf 'VENTANA_DISPONIBLE ventana=%s aparicionMs=%s\n' \
     "$ventana" "$((fin - inicio))"
+}
+
+comprobar_ventana_con_apariencia_fallida() {
+  local inicio
+  inicio=$(date +%s%3N)
+  comprobar_ventana_desde "$inicio"
 }
 
 escenario() {
@@ -319,6 +328,19 @@ case ${1:-} in
     preparar_fallo_apariencia
     iniciar_entorno
     comprobar_ventana_con_apariencia_fallida
+    ;;
+  fallo-js)
+    preparar
+    iniciar_sumidero
+    iniciar_kwin
+    inicio=$(date +%s%3N)
+    lanzar_app
+    comprobar_ventana_desde "$inicio" 5000
+    if ! rg -q 'red de seguridad' "$QA_BASE/registros/app-ui.log"; then
+      printf 'La red de seguridad no dejó constancia en el registro\n' >&2
+      exit 1
+    fi
+    printf 'REGISTRO_RED_SEGURIDAD correcto\n'
     ;;
   sonoridad) preparar; preparar_sonoridad; iniciar_entorno; escenario sonoridad ;;
   normalizacion) preparar; iniciar_entorno; escenario normalizacion ;;

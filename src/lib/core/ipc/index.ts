@@ -117,7 +117,7 @@ export class NsError extends Error {
   }
 }
 
-function aNsError(causa: unknown): NsError {
+export function aNsError(causa: unknown): NsError {
   if (typeof causa === 'object' && causa !== null && 'code' in causa) {
     const { code } = causa as { code: unknown };
     if (typeof code === 'string') return new NsError(code);
@@ -125,11 +125,6 @@ function aNsError(causa: unknown): NsError {
   // Un fallo sin código canónico se saltó el contrato. Su contenido no se
   // propaga: podría llevar rutas del usuario.
   return new NsError('INTERNAL');
-}
-
-/** Traduce al contrato cualquier fallo que no haya cruzado el puente. */
-export function comoNsError(causa: unknown): NsError {
-  return aNsError(causa);
 }
 
 export async function call<T>(comando: string, args?: Record<string, unknown>): Promise<T> {
@@ -158,6 +153,11 @@ export async function mostrarVentanaPrincipal(): Promise<void> {
   } catch (causa) {
     throw aNsError(causa);
   }
+}
+
+/** Deja constancia en el registro de que la interfaz no pudo mostrar la ventana. */
+export function registrarVentanaNoVisible(): Promise<void> {
+  return call<void>('registrar_ventana_no_visible');
 }
 
 /*

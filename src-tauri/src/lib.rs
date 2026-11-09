@@ -47,6 +47,7 @@ pub mod secrets;
 pub mod security;
 pub mod sorpresa;
 pub mod telemetry;
+pub mod ventana;
 
 use std::sync::Arc;
 
@@ -315,6 +316,7 @@ pub fn run() {
         .setup(move |app| {
             use tauri::Manager;
             let _ = ventana.set(app.handle().clone());
+            crate::ventana::programar_red_de_seguridad(app.handle().clone());
             // ONNX Runtime viaja entre los recursos. Solo en depuración se busca
             // también en `binarios/`, para no dejar en el binario publicado la ruta
             // de la máquina que lo compiló.
@@ -455,6 +457,7 @@ pub fn run() {
             comandos::salud,
             comandos::reproductor_estado,
             comandos::reproductor_orden,
+            comandos::registrar_ventana_no_visible,
             comandos::pistas_resumen,
             comandos::biblioteca_pistas,
             comandos::biblioteca_albumes,

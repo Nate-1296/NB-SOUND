@@ -8,12 +8,20 @@
   import { page } from '$app/state';
   import { aparienciaActual } from '#lib/core/apariencia.svelte.ts';
   import { mostrarVentanaTrasApariencia } from '#lib/core/arranque.ts';
-  import { comoNsError, mostrarVentanaPrincipal } from '#lib/core/ipc/index.ts';
+  import {
+    aNsError,
+    mostrarVentanaPrincipal,
+    registrarVentanaNoVisible
+  } from '#lib/core/ipc/index.ts';
   import { notificar } from '#lib/core/notificaciones.svelte.ts';
   import { textos } from '#lib/i18n/index.ts';
   import AppShell from '#lib/ui/AppShell.svelte';
 
   let { children } = $props();
+
+  if (import.meta.env.MODE === 'qa-fallo-js' && typeof window !== 'undefined') {
+    throw new Error('fallo de JavaScript inducido por QA');
+  }
 
   // El tema que eligió el usuario: el de la caché antes de pintar, y el de la
   // base en cuanto responde (ver `apariencia.svelte.ts`).
@@ -33,7 +41,8 @@
       await mostrarVentanaPrincipal();
     };
     void mostrarVentanaTrasApariencia(aparienciaLista, mostrar).catch((causa) => {
-      const error = comoNsError(causa);
+      const error = aNsError(causa);
+      void registrarVentanaNoVisible().catch(() => {});
       notificar.error(textos.avisos.ventanaNoVisible, error.code);
     });
   });

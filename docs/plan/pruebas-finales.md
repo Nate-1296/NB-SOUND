@@ -36,6 +36,11 @@ La ventana principal nace oculta para no enseñar el tema de fábrica. Si la apa
 1500 ms, se muestra con la que ya estaba en caché; `scripts/qa/ui-qa.sh fallo-apariencia` elimina solo la tabla de
 preferencias de la copia y comprueba que la ventana sigue apareciendo.
 
+Además, Rust comprueba a los 4 s si `main` sigue oculta y la muestra sin depender de que el webview ejecute
+`onMount`. Un fallo de JavaScript puede reproducirse con una compilación `qa-fallo-js` y
+`scripts/qa/ui-qa.sh fallo-js`, que exige una ventana visible antes de 5 s y el aviso correspondiente en el registro.
+Si el propio `show()` del webview falla, `registrar_ventana_no_visible` deja el aviso en el registro del runtime.
+
 La Fase 3 se ejecuta con `scripts/qa/ui-qa.sh movil`. [`mobile-qa.mjs`](../../scripts/qa/mobile-qa.mjs) es el
 cliente de prueba: habla HTTPS y el WebSocket de control con la huella TLS fijada, descarga el audio en streaming y
 compara lo que recibe con la base de la copia, el DOM y el reproductor.

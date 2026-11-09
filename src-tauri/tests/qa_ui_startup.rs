@@ -30,9 +30,13 @@ fn la_ventana_espera_a_que_la_apariencia_este_pintada() {
     let layout = include_str!("../../src/routes/+layout.svelte");
     assert!(layout.contains("mostrarVentanaTrasApariencia"));
     assert!(layout.contains("notificar.error"));
+    assert!(layout.contains("qa-fallo-js"));
 
     let arranque = include_str!("../../src/lib/core/arranque.ts");
     assert!(arranque.contains("ESPERA_APARIENCIA_MS = 1500"));
     assert!(arranque.contains("finally"));
     assert!(arranque.contains("await mostrar()"));
+
+    let lib = include_str!("../src/lib.rs");
+    assert!(lib.contains("programar_red_de_seguridad"));
 }

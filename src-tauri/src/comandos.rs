@@ -923,6 +923,13 @@ pub async fn exportar_resumen_escucha(app: AppHandle, periodo: Option<String>) -
 
 // --- Dispositivos (F3.3) ------------------------------------------------------
 
+/// Deja en el registro que la interfaz no pudo mostrar la ventana principal.
+#[tauri::command]
+pub async fn registrar_ventana_no_visible() -> NsResult<()> {
+    tracing::error!("la interfaz no pudo mostrar la ventana principal");
+    Ok(())
+}
+
 /// Ejecuta un trabajo con el servidor móvil fuera del hilo de la ventana: encender
 /// espera a que escuche y, la primera vez, crea la identidad TLS.
 async fn con_movil<T: Send + 'static>(
