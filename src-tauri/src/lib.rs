@@ -308,6 +308,8 @@ pub fn run() {
     };
     let importador_setup = importador.clone();
     let fiesta_setup = Arc::clone(&servidor_fiesta);
+    let (rutas_vectores, db_vectores) = (rutas.clone(), db.clone());
+    let (db_fondo, red_fondo) = (db.clone(), Arc::clone(&red));
 
     let aplicacion = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -337,6 +339,9 @@ pub fn run() {
             if let Some(b) = biblioteca {
                 onnx::fijar_ruta(&b);
             }
+            // Los vectores del DJ, antes de que haga falta pedir una sesión. Aquí y
+            // no antes: sin la ruta de ONNX Runtime el modelo no abre.
+            dj::embeddings::precalentar(rutas_vectores.clone(), db_vectores.clone());
             // Sin salida de audio la aplicación sigue abriendo: la biblioteca se ve,
             // y Ajustes dice qué pasa con el sonido.
             let controles = Arc::new(std::sync::OnceLock::new());
@@ -378,15 +383,32 @@ pub fn run() {
             analisis::arrancar(db.clone(), rutas.clone());
             // La carpeta de música vigilada (F4.2.2).
             catalogo::vigilancia::vigilar(db.clone(), importador_setup.clone());
+            // Lo que le falta a la biblioteca, sin prisa (A9).
+            let app_fondo = app.handle().clone();
+            catalogo::completar_fondo::arrancar(
+                db_fondo.clone(),
+                Arc::clone(&red_fondo),
+                importador_setup.clone(),
+                move || {
+                    use tauri::Emitter;
+                    let _ = app_fondo.emit("biblioteca:cambio", ());
+                },
+            );
             // La copia automática, si toca (F4.2.6). Comprimir las portadas tarda:
             // en su hilo.
             let (d, r) = (db.clone(), rutas.clone());
             let _ = std::thread::Builder::new()
                 .name("copia-automatica".into())
-                .spawn(move || loop {
-                    // Quien deja NB Sound abierto días también tiene sus copias.
-                    copia_seguridad::automatica_si_toca(&d, &r);
-                    std::thread::sleep(std::time::Duration::from_secs(6 * 3600));
+                .spawn(move || {
+                    crate::prioridad::bajar_hilo_actual();
+                    // Al abrir, NB Sound ya lee mucho (la biblioteca, las portadas, lo
+                    // que suena): la copia espera a que eso pase.
+                    std::thread::sleep(std::time::Duration::from_secs(120));
+                    loop {
+                        // Quien deja NB Sound abierto días también tiene sus copias.
+                        copia_seguridad::automatica_si_toca(&d, &r);
+                        std::thread::sleep(std::time::Duration::from_secs(6 * 3600));
+                    }
                 });
             let (d, s) = (db.clone(), Arc::clone(&servidor_movil));
             let _ = std::thread::Builder::new()
@@ -511,6 +533,9 @@ pub fn run() {
             comandos::guardar_ajustes_ia,
             comandos::guardar_clave_ia,
             comandos::borrar_clave_ia,
+            comandos::claves_servicios,
+            comandos::guardar_clave_servicio,
+            comandos::borrar_clave_servicio,
             comandos::inicio,
             comandos::perfil,
             comandos::perfil_cambiar_foto,

@@ -568,6 +568,11 @@ export function alCambiarLaImportacion(
   return escuchar<ProgresoImportacion>('importacion:progreso', cada);
 }
 
+/** La biblioteca cambió por algo que no pidió la interfaz (lo completado en segundo plano). */
+export function alCambiarLaBiblioteca(cada: () => void): Promise<UnlistenFn> {
+  return escuchar<null>('biblioteca:cambio', () => cada());
+}
+
 /** Se arrastran archivos sobre la ventana (`true`) o se dejan de arrastrar. */
 export function alArrastrarArchivos(cada: (encima: boolean) => void): Promise<UnlistenFn> {
   return escuchar<boolean>('importacion:arrastre', cada);

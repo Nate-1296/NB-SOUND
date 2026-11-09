@@ -6,6 +6,7 @@
 
 import {
   alArrastrarArchivos,
+  alCambiarLaBiblioteca,
   alCambiarLaImportacion,
   importacionProgreso,
   type ProgresoImportacion,
@@ -43,6 +44,8 @@ class Importacion {
     await alArrastrarArchivos((encima) => {
       this.arrastrando = encima;
     });
+    // Lo que se completa en segundo plano también refresca las vistas abiertas.
+    await alCambiarLaBiblioteca(() => cambios.avisar());
     await alCambiarLaImportacion((p) => {
       const terminaba = this.progreso.activa && !p.activa;
       this.progreso = p;

@@ -75,6 +75,11 @@ const MIGRACIONES: &[Migracion] = &[
         nombre: "forma de onda",
         sql: include_str!("../../migrations/V10__forma_de_onda.sql"),
     },
+    Migracion {
+        version: 11,
+        nombre: "completar en segundo plano",
+        sql: include_str!("../../migrations/V11__completar_fondo.sql"),
+    },
 ];
 
 /// Versión de esquema aplicada (`PRAGMA user_version`).

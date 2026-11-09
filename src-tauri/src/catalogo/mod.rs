@@ -10,6 +10,7 @@ pub mod borrado;
 pub mod canalizacion;
 pub mod carpeta;
 pub mod completar_datos;
+pub mod completar_fondo;
 pub mod correcciones;
 pub mod duplicados;
 pub mod edicion;
