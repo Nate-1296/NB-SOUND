@@ -28,6 +28,11 @@ const ESPERA_CARPETA: Duration = Duration::from_secs(5);
 /// Cada cuánto se mira si lo que espera ya está quieto.
 const SONDEO: Duration = Duration::from_millis(500);
 
+/// Al arrancar, la interfaz puede pedir una importación antes de que este hilo
+/// haga su primer recorrido. Esperar un poco deja que sus pendientes existan y
+/// evita confundir las copias propias con música nueva.
+const MADURACION_INICIAL: Duration = Duration::from_millis(500);
+
 fn es_audio(r: &Path) -> bool {
     r.extension()
         .and_then(|e| e.to_str())
@@ -79,8 +84,9 @@ impl Atendidas {
 ///
 /// [`NsError::StorageFailure`] si la consulta falla.
 pub fn nuevos(db: &BaseDeDatos, musica: &Path) -> NsResult<Vec<PathBuf>> {
+    let candidatos = expandir(&[musica.to_path_buf()]);
     let ya = Atendidas::leer(db)?;
-    Ok(expandir(&[musica.to_path_buf()])
+    Ok(candidatos
         .into_iter()
         .filter(|r| !ya.contiene(musica, r))
         .collect())
@@ -138,6 +144,7 @@ fn bucle(
     mut mandar: impl FnMut(Vec<PathBuf>) -> bool,
     sigue: impl Fn() -> bool,
 ) {
+    std::thread::sleep(MADURACION_INICIAL);
     if !musica.is_dir() {
         return;
     }
@@ -311,6 +318,50 @@ mod tests {
         drop(rx);
         // Un último cambio para que el hilo vea que nadie escucha y termine.
         std::fs::write(album.join("03.mp3"), b"tres").unwrap();
+        hilo.join().unwrap();
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn el_primer_barrido_no_confunde_una_importacion_recien_catalogada() {
+        let d = std::env::temp_dir().join(format!("ns-vigilancia-carrera-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        let d = d.canonicalize().unwrap_or(d);
+        std::fs::write(d.join("propia.mp3"), b"x").unwrap();
+        let db = BaseDeDatos::en_memoria().unwrap();
+        let (tx, rx) = mpsc::channel();
+        let (dd, musica) = (db.clone(), d.clone());
+        let hilo = std::thread::spawn(move || {
+            bucle(
+                &dd,
+                &musica,
+                Duration::from_millis(200),
+                |n| tx.send(n).is_ok(),
+                || true,
+            );
+        });
+
+        std::thread::sleep(Duration::from_millis(100));
+        db.conexion()
+            .unwrap()
+            .execute(
+                "INSERT INTO pistas (titulo, ruta) VALUES ('propia', 'propia.mp3')",
+                [],
+            )
+            .unwrap();
+        assert!(
+            rx.recv_timeout(Duration::from_millis(800)).is_err(),
+            "la pista catalogada durante el arranque no era nueva"
+        );
+
+        std::fs::write(d.join("nueva.mp3"), b"y").unwrap();
+        assert_eq!(
+            rx.recv_timeout(Duration::from_secs(5)).unwrap(),
+            [d.join("nueva.mp3")]
+        );
+        drop(rx);
+        std::fs::write(d.join("fin.mp3"), b"z").unwrap();
         hilo.join().unwrap();
         let _ = std::fs::remove_dir_all(&d);
     }

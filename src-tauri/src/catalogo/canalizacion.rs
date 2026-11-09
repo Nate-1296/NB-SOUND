@@ -398,6 +398,7 @@ pub fn dar_de_alta(
     ruta: &Path,
     a: &Alta,
     t: &Tecnico,
+    origen_pendiente: &Path,
 ) -> NsResult<(i64, i64, Option<i64>)> {
     let huella = huella_de_archivo(ruta)?;
     let tamano = std::fs::metadata(ruta).map(|m| m.len()).unwrap_or(0);
@@ -460,8 +461,36 @@ pub fn dar_de_alta(
         ],
     ))?;
     let pista = tx.last_insert_rowid();
+    if let Some(importacion) = e.importacion {
+        cerrar_pendiente_aceptada(&tx, origen_pendiente, importacion)?;
+    }
     bd(tx.commit())?;
     Ok((pista, artista, album))
+}
+
+fn cerrar_pendiente_aceptada(
+    tx: &rusqlite::Transaction<'_>,
+    origen: &Path,
+    importacion: i64,
+) -> NsResult<()> {
+    bd(tx.execute(
+        "DELETE FROM pendientes_importacion WHERE ruta = ?1 AND importacion_id = ?2",
+        params![origen.to_string_lossy(), importacion],
+    ))?;
+    bd(tx.execute(
+        "UPDATE importaciones SET aceptados = aceptados + 1 WHERE id = ?1",
+        [importacion],
+    ))?;
+    bd(tx.execute(
+        "UPDATE importaciones SET estado = 'terminada',
+             terminada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+         WHERE id = ?1
+           AND NOT EXISTS (
+             SELECT 1 FROM pendientes_importacion WHERE importacion_id = ?1
+           )",
+        [importacion],
+    ))?;
+    Ok(())
 }
 
 /// Portada y letra de una pista recién dada de alta: de lo que trae el archivo y,
@@ -610,7 +639,7 @@ pub fn importar(
             },
         )?;
     }
-    let ids = dar_de_alta(e, &destino, a, t)?;
+    let ids = dar_de_alta(e, &destino, a, t, origen)?;
     completar(
         e,
         (ids.0, Some(ids.1), ids.2),
@@ -972,6 +1001,63 @@ mod tests {
     use super::*;
     use crate::audio::pruebas::wav;
     use crate::net::PoliticaDeRed;
+
+    #[test]
+    fn el_alta_aceptada_cierra_su_pendiente_en_la_misma_transaccion() {
+        let db = BaseDeDatos::en_memoria().unwrap();
+        let origen = Path::new("/entrada/nbqa-atomicidad.mp3");
+        db.conexion()
+            .unwrap()
+            .execute_batch(
+                "INSERT INTO importaciones (id, origen, descubiertos)
+                     VALUES (1, 'manual', 1);
+                 INSERT INTO pendientes_importacion (ruta, importacion_id, orden)
+                     VALUES ('/entrada/nbqa-atomicidad.mp3', 1, 1);",
+            )
+            .unwrap();
+
+        let mut conn = db.conexion().unwrap();
+        let tx = crate::db::transaccion_de_escritura(&mut conn).unwrap();
+        tx.execute(
+            "INSERT INTO pistas (titulo, ruta) VALUES ('QA atómica', 'qa.mp3')",
+            [],
+        )
+        .unwrap();
+        cerrar_pendiente_aceptada(&tx, origen, 1).unwrap();
+        tx.rollback().unwrap();
+        let tras_rollback: (i64, i64, String) = conn
+            .query_row(
+                "SELECT
+                   (SELECT count(*) FROM pistas),
+                   (SELECT count(*) FROM pendientes_importacion),
+                   (SELECT estado FROM importaciones WHERE id = 1)",
+                [],
+                |f| Ok((f.get(0)?, f.get(1)?, f.get(2)?)),
+            )
+            .unwrap();
+        assert_eq!(tras_rollback, (0, 1, "en_curso".into()));
+
+        let tx = crate::db::transaccion_de_escritura(&mut conn).unwrap();
+        tx.execute(
+            "INSERT INTO pistas (titulo, ruta) VALUES ('QA atómica', 'qa.mp3')",
+            [],
+        )
+        .unwrap();
+        cerrar_pendiente_aceptada(&tx, origen, 1).unwrap();
+        tx.commit().unwrap();
+        let tras_commit: (i64, i64, i64, String) = conn
+            .query_row(
+                "SELECT
+                   (SELECT count(*) FROM pistas),
+                   (SELECT count(*) FROM pendientes_importacion),
+                   (SELECT aceptados FROM importaciones WHERE id = 1),
+                   (SELECT estado FROM importaciones WHERE id = 1)",
+                [],
+                |f| Ok((f.get(0)?, f.get(1)?, f.get(2)?, f.get(3)?)),
+            )
+            .unwrap();
+        assert_eq!(tras_commit, (1, 0, 1, "terminada".into()));
+    }
 
     struct Montaje {
         db: BaseDeDatos,

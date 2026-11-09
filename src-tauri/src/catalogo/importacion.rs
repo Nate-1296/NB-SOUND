@@ -119,6 +119,15 @@ fn clave(servicio: Servicio, anfitrion: &str) -> Option<String> {
         .flatten()
 }
 
+fn claves_del_catalogo(
+    mut leer: impl FnMut(Servicio, &str) -> Option<String>,
+) -> (Option<String>, Option<String>) {
+    (
+        leer(Servicio::AcoustId, "api.acoustid.org"),
+        leer(Servicio::TheAudioDb, "www.theaudiodb.com"),
+    )
+}
+
 fn nueva_importacion(db: &BaseDeDatos, origen: &str, rutas: &[PathBuf]) -> NsResult<i64> {
     let mut conn = db.conexion()?;
     let tx = db::transaccion_de_escritura(&mut conn)?;
@@ -185,7 +194,11 @@ fn terminar_archivo(
     ruta: &Path,
     importacion: i64,
     r: Option<&Resultado>,
+    aceptada_atomicamente: bool,
 ) -> NsResult<()> {
+    if aceptada_atomicamente {
+        return Ok(());
+    }
     let mut conn = db.conexion()?;
     let tx = db::transaccion_de_escritura(&mut conn)?;
     tx.execute(
@@ -248,13 +261,14 @@ impl Importador {
     /// Los de `f`, y [`NsError::StorageFailure`] si no hay carpeta de música.
     pub fn con_entorno<T>(&self, f: impl FnOnce(&Entorno<'_>) -> NsResult<T>) -> NsResult<T> {
         let r = &self.recursos;
+        let (clave_acoustid, clave_theaudiodb) = claves_del_catalogo(clave);
         let e = Entorno {
             db: &r.db,
             rutas: &r.rutas,
             red: &r.red,
             musica: carpeta_musica(&r.db)?,
-            clave_acoustid: None,
-            clave_theaudiodb: clave(Servicio::TheAudioDb, "www.theaudiodb.com"),
+            clave_acoustid,
+            clave_theaudiodb,
             fpcalc: r.fpcalc.clone(),
             organizar: preferencia(&r.db, "organizar_archivos")
                 .and_then(|v| v.as_bool())
@@ -393,10 +407,7 @@ fn bucle(
             .unwrap_or(true);
         // Una vez por tanda: leer el llavero por archivo no aporta nada.
         let config_ia = super::ia::configurada(&r.db, &r.red);
-        let (clave_acoustid, clave_theaudiodb) = (
-            clave(Servicio::AcoustId, "api.acoustid.org"),
-            clave(Servicio::TheAudioDb, "www.theaudiodb.com"),
-        );
+        let (clave_acoustid, clave_theaudiodb) = claves_del_catalogo(clave);
         cancelada.store(false, Ordering::Relaxed);
         for (ruta, importacion) in cola {
             if cancelada.swap(false, Ordering::Relaxed) {
@@ -428,7 +439,15 @@ fn bucle(
             if resultado.is_none() {
                 tracing::error!("un archivo no se pudo procesar");
             }
-            let _ = terminar_archivo(&r.db, &ruta, importacion, resultado.as_ref());
+            let aceptada_atomicamente = e.importacion.is_some()
+                && matches!(resultado.as_ref(), Some(Resultado::Importada { .. }));
+            let _ = terminar_archivo(
+                &r.db,
+                &ruta,
+                importacion,
+                resultado.as_ref(),
+                aceptada_atomicamente,
+            );
             publicar(&|g| {
                 g.hechos += 1;
                 match resultado {
@@ -465,6 +484,28 @@ mod tests {
     use crate::audio::pruebas::wav;
     use crate::catalogo::etiquetas::{self, Escritura};
     use crate::net::PoliticaDeRed;
+
+    #[test]
+    fn el_entorno_del_catalogo_lee_las_dos_claves_de_red() {
+        let mut pedidas = Vec::new();
+        let (acoustid, theaudiodb) = claves_del_catalogo(|servicio, anfitrion| {
+            pedidas.push((servicio, anfitrion.to_owned()));
+            match servicio {
+                Servicio::AcoustId => Some("acoustid".into()),
+                Servicio::TheAudioDb => Some("theaudiodb".into()),
+                _ => None,
+            }
+        });
+        assert_eq!(acoustid.as_deref(), Some("acoustid"));
+        assert_eq!(theaudiodb.as_deref(), Some("theaudiodb"));
+        assert_eq!(
+            pedidas,
+            [
+                (Servicio::AcoustId, "api.acoustid.org".into()),
+                (Servicio::TheAudioDb, "www.theaudiodb.com".into())
+            ]
+        );
+    }
 
     #[test]
     fn expandir_recorre_carpetas_y_deja_lo_que_no_es_audio() {
