@@ -308,7 +308,13 @@ export const esAparte = {
     olvidarClave: 'Olvidar clave',
     sinLlavero:
       'Este sistema no tiene llavero de contraseñas, así que no se puede guardar ninguna clave. NB Sound nunca la guarda en un archivo.',
-    noGuardado: 'No se pudo guardar. Vuelve a intentarlo.'
+    noGuardado: 'No se pudo guardar. Vuelve a intentarlo.',
+    claveServicio: {
+      acoustId:
+        'Sin ella no se reconoce una canción por su sonido. Es gratuita: se pide en acoustid.org con una cuenta.',
+      theAudioDb:
+        'Opcional: más portadas e imágenes de artista. Sin ella se usan las demás fuentes.'
+    }
   },
   inteligentes: {
     nueva: 'Nueva inteligente',

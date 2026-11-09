@@ -845,6 +845,44 @@ pub async fn borrar_clave_ia(
     .await
 }
 
+/// Qué claves de servicio hay en el llavero (leerlo puede tardar: fuera del hilo
+/// de la ventana).
+#[tauri::command]
+pub async fn claves_servicios() -> NsResult<crate::privacidad::ClavesServicios> {
+    tauri::async_runtime::spawn_blocking(crate::privacidad::claves_servicios)
+        .await
+        .map_err(|_| NsError::Internal)
+}
+
+/// Guarda la clave de un servicio en el llavero; la clave no vuelve.
+#[tauri::command]
+pub async fn guardar_clave_servicio(
+    servicio: crate::privacidad::ServicioConClave,
+    clave: String,
+) -> NsResult<crate::privacidad::ClavesServicios> {
+    if clave.chars().count() > 1_000 {
+        return Err(NsError::InvalidInput);
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::privacidad::guardar_clave_servicio(servicio, &clave)?;
+        Ok(crate::privacidad::claves_servicios())
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
+#[tauri::command]
+pub async fn borrar_clave_servicio(
+    servicio: crate::privacidad::ServicioConClave,
+) -> NsResult<crate::privacidad::ClavesServicios> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::privacidad::borrar_clave_servicio(servicio)?;
+        Ok(crate::privacidad::claves_servicios())
+    })
+    .await
+    .map_err(|_| NsError::Internal)?
+}
+
 #[tauri::command]
 pub async fn inicio(estado: tauri::State<'_, Estado>) -> NsResult<crate::inicio::Inicio> {
     en_segundo_plano(&estado, crate::inicio::resumen).await
@@ -1339,8 +1377,13 @@ pub async fn agregado_instalar(app: AppHandle, id: crate::agregados::IdAgregado)
         .map_err(|_| NsError::Internal)??;
     }
     let karaoke = app.state::<Estado>().karaoke.clone();
+    let (db_dj, rutas_dj) = (app.state::<Estado>().db.clone(), rutas.clone());
     gestor.instalar(rutas, red, id, move || {
         let _ = app.emit("agregados:cambio", ());
+        // Recién instalado el modelo de texto, sus vectores se calculan ya.
+        if id == crate::agregados::IdAgregado::TextoDj {
+            crate::dj::embeddings::precalentar(rutas_dj.clone(), db_dj.clone());
+        }
         // Recién instalado, la cola del karaoke puede empezar sin esperar.
         if id == crate::agregados::IdAgregado::Karaoke {
             karaoke.despertar();

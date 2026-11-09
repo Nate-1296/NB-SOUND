@@ -9,6 +9,7 @@ import type { UnlistenFn } from '@tauri-apps/api/event';
 import type {
   Actualizacion,
   AjustesIa,
+  ClavesServicios,
   DatosAlbum,
   DatosPista,
   Descubrimiento,
@@ -30,6 +31,7 @@ import type {
   ResumenDuplicados,
   ResumenEscucha,
   RevisionCarpeta,
+  ServicioConClave,
   SugerenciaFiesta
 } from '#lib/bindings/index.ts';
 
@@ -268,6 +270,24 @@ export function guardarClaveIa(clave: string): Promise<AjustesIa> {
 
 export function borrarClaveIa(): Promise<AjustesIa> {
   return call<AjustesIa>('borrar_clave_ia');
+}
+
+export type { ClavesServicios, ServicioConClave };
+
+/** Qué claves de servicio hay en el llavero; las claves no cruzan el puente de vuelta. */
+export function clavesServicios(): Promise<ClavesServicios> {
+  return call<ClavesServicios>('claves_servicios');
+}
+
+export function guardarClaveServicio(
+  servicio: ServicioConClave,
+  clave: string
+): Promise<ClavesServicios> {
+  return call<ClavesServicios>('guardar_clave_servicio', { servicio, clave });
+}
+
+export function borrarClaveServicio(servicio: ServicioConClave): Promise<ClavesServicios> {
+  return call<ClavesServicios>('borrar_clave_servicio', { servicio });
 }
 
 // --- Duplicados (FDB-02, COMP-07) ------------------------------------------------

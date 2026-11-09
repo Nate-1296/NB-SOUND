@@ -10,10 +10,15 @@
 import {
   ajustesIa,
   borrarClaveIa,
+  borrarClaveServicio,
+  type ClavesServicios,
   cambiarPoliticaRed,
+  clavesServicios,
   guardarAjustesIa,
   guardarClaveIa,
-  politicaRed
+  guardarClaveServicio,
+  politicaRed,
+  type ServicioConClave
 } from '#lib/core/ipc/aparte.ts';
 import type { AjustesIa, PoliticaDeRed, ProveedorIa, Servicio } from '#lib/core/ipc/index.ts';
 
@@ -36,13 +41,19 @@ export const SERVICIOS_EN_LINEA = [
 class Privacidad {
   politica = $state<PoliticaDeRed>({ general: false, servicios: [] });
   ia = $state<AjustesIa | null>(null);
+  claves = $state<ClavesServicios | null>(null);
   /** El último cambio no se pudo guardar. */
   fallo = $state(false);
 
   async refrescar(): Promise<void> {
-    const [politica, ia] = await Promise.all([politicaRed(), ajustesIa()]);
+    const [politica, ia, claves] = await Promise.all([
+      politicaRed(),
+      ajustesIa(),
+      clavesServicios()
+    ]);
     this.politica = politica;
     this.ia = ia;
+    this.claves = claves;
   }
 
   activo(servicio: Servicio): boolean {
@@ -71,6 +82,24 @@ class Privacidad {
       ...this.politica,
       servicios: activo ? [...resto, servicio] : resto
     });
+  }
+
+  async guardarClaveServicio(servicio: ServicioConClave, clave: string): Promise<void> {
+    try {
+      this.claves = await guardarClaveServicio(servicio, clave);
+      this.fallo = false;
+    } catch {
+      this.fallo = true;
+    }
+  }
+
+  async olvidarClaveServicio(servicio: ServicioConClave): Promise<void> {
+    try {
+      this.claves = await borrarClaveServicio(servicio);
+      this.fallo = false;
+    } catch {
+      this.fallo = true;
+    }
   }
 
   async #ia(cambio: () => Promise<AjustesIa>): Promise<boolean> {

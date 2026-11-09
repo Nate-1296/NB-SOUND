@@ -198,11 +198,93 @@ pub fn borrar_clave_ia(db: &BaseDeDatos) -> NsResult<()> {
     secrets::borrar(&proveedor.cuenta())
 }
 
+// --- Claves de los servicios del catálogo ----------------------------------------
+
+/// Los servicios que piden una clave propia del usuario. Sin la de AcoustID no se
+/// reconoce por huella; sin la de TheAudioDB se usan las otras fuentes de imágenes.
+/// Antes no había dónde ponerlas: la única forma era el importador de la versión
+/// anterior (Nathan, 2026-11-09).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub enum ServicioConClave {
+    AcoustId,
+    TheAudioDb,
+}
+
+impl ServicioConClave {
+    fn cuenta(self) -> String {
+        match self {
+            Self::AcoustId => secrets::cuenta(Servicio::AcoustId, "api.acoustid.org"),
+            Self::TheAudioDb => secrets::cuenta(Servicio::TheAudioDb, "www.theaudiodb.com"),
+        }
+    }
+}
+
+/// Qué claves hay guardadas. Las claves nunca vuelven a la interfaz.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[ts(export, export_to = "../../src/lib/bindings/")]
+#[serde(rename_all = "camelCase")]
+pub struct ClavesServicios {
+    pub llavero: bool,
+    pub acoust_id: bool,
+    pub the_audio_db: bool,
+}
+
+#[must_use]
+pub fn claves_servicios() -> ClavesServicios {
+    let hay = |s: ServicioConClave| secrets::leer(&s.cuenta()).ok().flatten().is_some();
+    ClavesServicios {
+        llavero: secrets::disponible(),
+        acoust_id: hay(ServicioConClave::AcoustId),
+        the_audio_db: hay(ServicioConClave::TheAudioDb),
+    }
+}
+
+/// Guarda la clave de un servicio en el llavero.
+///
+/// # Errors
+///
+/// [`NsError::InvalidInput`] si está vacía; los de [`secrets::guardar`].
+pub fn guardar_clave_servicio(servicio: ServicioConClave, clave: &str) -> NsResult<()> {
+    let clave = clave.trim();
+    if clave.is_empty() {
+        return Err(NsError::InvalidInput);
+    }
+    secrets::guardar(&servicio.cuenta(), clave)
+}
+
+/// Olvida la clave de un servicio.
+///
+/// # Errors
+///
+/// Los de [`secrets::borrar`].
+pub fn borrar_clave_servicio(servicio: ServicioConClave) -> NsResult<()> {
+    secrets::borrar(&servicio.cuenta())
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeSet;
 
     use super::*;
+
+    #[test]
+    fn cada_servicio_guarda_su_clave_donde_la_busca_el_catalogo() {
+        // El importador las lee con estas mismas cuentas (`catalogo/importacion.rs`).
+        assert_eq!(
+            ServicioConClave::AcoustId.cuenta(),
+            "acoustid@api.acoustid.org"
+        );
+        assert_eq!(
+            ServicioConClave::TheAudioDb.cuenta(),
+            "theaudiodb@www.theaudiodb.com"
+        );
+        assert_eq!(
+            guardar_clave_servicio(ServicioConClave::AcoustId, "   "),
+            Err(NsError::InvalidInput)
+        );
+    }
 
     #[test]
     fn cambiar_la_politica_la_guarda_y_la_aplica_a_la_puerta_en_el_acto() {

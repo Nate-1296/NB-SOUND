@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
   import { privacidad, SERVICIOS_EN_LINEA } from '#lib/core/privacidad.svelte.ts';
+  import ClaveServicio from '#lib/ui/privacidad/ClaveServicio.svelte';
   import { textos } from '#lib/i18n/index.ts';
   import { textosAparte } from '#lib/i18n/aparte.ts';
 
@@ -40,6 +41,9 @@
             onchange={(e) => privacidad.servicio(servicio, e.currentTarget.checked)}
           />
         </label>
+        {#if servicio === 'acoustId' || servicio === 'theAudioDb'}
+          <ClaveServicio {servicio} />
+        {/if}
       </li>
     {/each}
   </ul>
