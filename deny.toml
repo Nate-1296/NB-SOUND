@@ -9,6 +9,11 @@ yanked = "deny"
 # versión a la que saltar. Revisado el 2026-10-29 con cargo-deny; las otras cinco
 # que acepta NB Books no aparecen en este árbol.
 ignore = [
+  # La copia de SQLite que integra `libsqlite3-sys` 0.38. El arreglo está en 0.39, que
+  # pide rusqlite 0.41, y `r2d2_sqlite` 0.35 (el último publicado) sigue atado a
+  # rusqlite 0.40 (ADR-004). Decisión de Nathan del 2026-11-09: se ignora hasta que
+  # salga un r2d2_sqlite compatible; entonces se sube y se quita esta línea.
+  "RUSTSEC-2026-0459", # libsqlite3-sys
   "RUSTSEC-2024-0370", # proc-macro-error
   # `zvariant`, `zvariant_derive` y `zbus_names` no tienen fallo: se fundieron en
   # zbus 6 y dejaron de publicarse sueltos. Llegan por `keyring` 4.2 (ADR-009),
