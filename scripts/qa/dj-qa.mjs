@@ -469,6 +469,11 @@ async function sesionDeUnaHora() {
   const porcentaje = (c) => (c.seg ? (c.ticks / TICKS / c.seg) * 100 : null);
   const cpuNormal = porcentaje(cpu.normal);
   const cpuMezcla = porcentaje(cpu.mezcla);
+  // Antes del análisis del audio, que puede fallar por su cuenta: la CPU se mide igual.
+  console.log(
+    'QA_DJ_CPU',
+    JSON.stringify({ cpuNormal, cpuMezcla, segNormal: cpu.normal.seg, segMezcla: cpu.mezcla.seg })
+  );
   const audio = analizar('las_mezclas_del_dj_no_se_hunden_ni_saltan', {
     NB_QA_WAV: wav,
     NB_QA_MEZCLAS: `${INFORMES}/fase6-mezclas.json`

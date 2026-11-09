@@ -657,6 +657,12 @@ preparar_revisiones() {
   sqlite3 "$DB" "INSERT INTO por_revisar (ruta, causa, metadatos) VALUES (
     '$f/revisar/nbqa-versiones.mp3', 'candidatos_ambiguos',
     '{\"nombre_original\":\"nbqa-versiones.mp3\",\"duracion_seg\":16.0,\"candidatos\":[$cand,$cand,$cand,$cand,$cand]}');"
+  # Más grupos en Por revisar, para ver cómo se reparte la vista.
+  local causa
+  for causa in sin_candidatos duplicado audio_ilegible; do
+    sqlite3 "$DB" "INSERT OR IGNORE INTO por_revisar (ruta, causa, metadatos) VALUES (
+      '$f/revisar/nbqa-$causa.mp3', '$causa', '{\"nombre_original\":\"nbqa-$causa.mp3\",\"duracion_seg\":16.0,\"candidatos\":[]}');"
+  done
   env NB_QA_DB="$DB" NB_QA_ROOT="$QA_BASE" NB_QA_SALIDA="$QA_BASE/fase8" \
     cargo test --manifest-path "$RAIZ/src-tauri/Cargo.toml" --test qa_fase8 \
       la_foto_de_perfil -- --ignored --nocapture --test-threads=1
@@ -666,7 +672,7 @@ preparar_revisiones() {
 }
 
 escenario_revision() {
-  env NB_QA_DB="$DB" NB_QA_ROOT="$QA_BASE" DISPLAY="$LISTA_DISPLAY" \
+  env NB_QA_DB="$DB" NB_QA_ROOT="$QA_BASE" NB_QA_APP_PID="$PID_APP" DISPLAY="$LISTA_DISPLAY" \
     nice -n 10 node "$RAIZ/scripts/qa/revision-qa.mjs" "$@"
 }
 
@@ -674,7 +680,7 @@ revisiones() {
   preparar_revisiones
   iniciar_entorno
   escenario_revision foto hover menu cabecera nombre ancladas pantalla mini cola desplazar barra720 \
-    duplicados revisar papelera karaoke cancelar
+    duplicados revisar diseno papelera karaoke cancelar
   cerrar_app
   arrancar_app
   escenario_revision karaoke-reabierto cancelar-reabierto
@@ -761,6 +767,11 @@ case ${1:-} in
     ;;
   fase8) fase8 ;;
   revisiones) revisiones ;;
+  por-revisar)
+    preparar_revisiones
+    iniciar_entorno
+    escenario_revision revisar diseno
+    ;;
   revisiones-repetir)
     shift
     preparar_fase6

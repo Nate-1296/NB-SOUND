@@ -856,6 +856,93 @@ await esperarHasta(
 ).catch(() => {});
 await esperar(1000);
 
+ESC.diseno = async () => {
+  // Por revisar rediseñada (2026-11-09): centrada, con la cabecera y cada grupo en su
+  // tarjeta y un resumen que lleva a cada grupo.
+  await ir('/por-revisar', '.vista');
+  await esperarHasta(
+    () => js(`document.querySelectorAll(".grupo").length >= 3`),
+    10000,
+    'los grupos'
+  );
+  const m = await js(`(() => {
+    const v = document.querySelector("section.vista").getBoundingClientRect();
+    const lienzo = document.querySelector("section.vista").parentElement.getBoundingClientRect();
+    const fichas = [...document.querySelectorAll(".resumen .ficha")].map((a) => a.getAttribute("href"));
+    const grupos = [...document.querySelectorAll(".grupo")].map((g) => {
+      const c = getComputedStyle(g);
+      return { borde: c.borderTopWidth, radio: c.borderTopLeftRadius, relleno: c.paddingTop };
+    });
+    return {
+      izquierda: Math.round(v.left - lienzo.left),
+      // Sin la barra de desplazamiento del lienzo: centrada respecto a lo que se ve.
+      derecha: Math.round(lienzo.left + document.querySelector("section.vista").parentElement.clientWidth - v.right),
+      ancho: Math.round(v.width),
+      fichas,
+      grupos
+    };
+  })()`);
+  // Una ficha del resumen lleva a su grupo.
+  // La segunda: la última puede no llegar arriba si debajo no hay más que desplazar.
+  const destino = m.fichas[1];
+  await js(
+    `(() => { document.querySelector('.resumen .ficha[href="${destino}"]').click(); return true; })()`
+  );
+  await esperar(1200);
+  const visible = await js(
+    `(() => { const r = document.querySelector("${destino}").closest(".grupo").getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight / 2; })()`
+  );
+  const [id] = ventanaPrincipal();
+  await js(`(() => { document.querySelector("section.vista").scrollIntoView(); return true; })()`);
+  await esperar(500);
+  execFileSync('import', ['-window', id, `${QA}/informes/por-revisar-diseno.png`], {
+    env: { ...process.env, DISPLAY }
+  });
+  const centrada = Math.abs(m.izquierda - m.derecha) <= 4;
+  return {
+    ok: centrada && m.fichas.length >= 3 && m.grupos.every((g) => g.borde !== '0px') && visible,
+    ...m,
+    visible
+  };
+};
+
+ESC.cpu = async () => {
+  const pid = Number(process.env.NB_QA_APP_PID);
+  const leer = () =>
+    Object.fromEntries(
+      readdirSync(`/proc/${pid}/task`).flatMap((tid) => {
+        try {
+          const st = readFileSync(`/proc/${pid}/task/${tid}/stat`, 'utf8');
+          const r = st
+            .slice(st.lastIndexOf(')') + 2)
+            .trim()
+            .split(/\s+/);
+          const nombre = readFileSync(`/proc/${pid}/task/${tid}/comm`, 'utf8').trim();
+          return [[`${nombre}#${tid}`, Number(r[11]) + Number(r[12])]];
+        } catch {
+          return [];
+        }
+      })
+    );
+  const pista = Number(
+    sql("SELECT id FROM pistas WHERE estado='biblioteca' AND duracion_seg > 200 LIMIT 1;")
+  );
+  await invocar('reproductor_orden', {
+    orden: { tipo: 'reproducirPistas', ids: [pista], desde: 0 }
+  });
+  await esperar(5000);
+  const a = leer();
+  const t0 = Date.now();
+  await esperar(30000);
+  const b = leer();
+  const seg = (Date.now() - t0) / 1000;
+  const hilos = Object.entries(b)
+    .map(([k, v]) => [k, Number((((v - (a[k] ?? v)) / 100 / seg) * 100).toFixed(2))])
+    .filter(([, v]) => v > 0.05)
+    .sort((x, y) => y[1] - x[1]);
+  return { ok: true, hilos };
+};
+
 for (const nombre of ESCENARIOS) {
   try {
     const r = await ESC[nombre]();
