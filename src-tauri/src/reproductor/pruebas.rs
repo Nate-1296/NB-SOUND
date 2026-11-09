@@ -635,3 +635,69 @@ fn pasar_de_cancion_tras_escucharla_lo_bastante_la_apunta_y_antes_no() {
         1
     );
 }
+
+#[test]
+fn salir_de_una_sesion_recien_empezada_no_adelanta_la_cola() {
+    // Pruebas finales, 2026-11-09: salir del DJ dejaba en el motor el aviso de que
+    // había empezado su primera pista, y la cola del usuario lo tomaba como el
+    // final de su canción y pasaba a la siguiente.
+    let e = escenario(
+        "dj-salir-mezcla",
+        &[
+            (1, 44_100 * 20),
+            (2, 44_100 * 20),
+            (3, 44_100 * 20),
+            (4, 44_100 * 20),
+        ],
+    );
+    let sesion = sesion_dj(&e.db, &[3, 4], "lista");
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    s.atender(Orden::ReproducirPistas {
+        ids: vec![1, 2],
+        desde: 0,
+    });
+    correr(&mut s, |s| s.instantanea().posicion_seg > 0.5);
+    s.atender(Orden::PausarReanudar);
+    // La sesión empieza a sonar en el motor, pero el servicio aún no ha atendido el
+    // aviso de que empezó cuando llega la orden de salir (descartarla nada más
+    // pedirla, en las pruebas finales).
+    dj(&mut s, sesion);
+    for _ in 0..4 {
+        let _ = renderizar(s.motor(), 2_048);
+    }
+    s.atender(Orden::Dj(OrdenDj::Salir));
+    for _ in 0..50 {
+        let _ = renderizar(s.motor(), 2_048);
+        s.atender_motor();
+    }
+    let i = s.instantanea();
+    assert_eq!(
+        (i.pista_id, i.indice_cola, i.estado.as_str()),
+        (Some(1), Some(0), "pausado")
+    );
+}
+
+#[test]
+fn lo_importado_tras_elegir_la_carpeta_suena_sin_reiniciar() {
+    // Nathan, 2026-11-09: en una instalación nueva, lo importado no sonaba hasta
+    // reiniciar (darle a reproducir volvía a pausa). El reproductor leía la carpeta
+    // de la música al arrancar, cuando aún no había ninguna.
+    let e = escenario("carpeta-nueva", &[(1, 44_100 * 4)]);
+    let apuntes = Apuntes::default();
+    let mut s = servicio(&e, &apuntes);
+    // Ya en marcha, se elige la carpeta y la pista queda guardada relativa a ella.
+    let conn = e.db.conexion().unwrap();
+    conn.execute(
+        "INSERT OR REPLACE INTO preferencias (clave, valor) VALUES ('carpeta_musica', ?1)",
+        [serde_json::to_string(&e.dir.to_string_lossy()).unwrap()],
+    )
+    .unwrap();
+    conn.execute("UPDATE pistas SET ruta = '1.wav' WHERE id = 1", [])
+        .unwrap();
+    drop(conn);
+    s.atender(Orden::ReproducirPista(1));
+    correr(&mut s, |s| s.instantanea().posicion_seg > 0.2);
+    let i = s.instantanea();
+    assert_eq!((i.pista_id, i.estado.as_str()), (Some(1), "reproduciendo"));
+}

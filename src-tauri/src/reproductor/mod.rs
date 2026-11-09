@@ -156,7 +156,6 @@ pub struct Servicio<B: Backend> {
     cola: Cola,
     db: BaseDeDatos,
     stems: PathBuf,
-    musica: Option<PathBuf>,
     oyente: Box<dyn Oyente>,
     siguiente_ficha: u64,
     actual: Option<Sonando>,
@@ -194,7 +193,6 @@ impl<B: Backend> Servicio<B> {
             cola,
             db,
             stems,
-            musica: None,
             oyente,
             siguiente_ficha: 1,
             actual: None,
@@ -224,15 +222,13 @@ impl<B: Backend> Servicio<B> {
 
     /// Lee la sesión guardada y las preferencias y las aplica sin empezar a sonar.
     fn restaurar(&mut self) -> NsResult<()> {
-        let (sesion, musica, eq) = {
+        let (sesion, eq) = {
             let conn = self.db.conexion()?;
             (
                 persistencia::leer_sesion(&conn)?,
-                persistencia::carpeta_musica(&conn)?,
                 persistencia::leer_ecualizador(&conn)?,
             )
         };
-        self.musica = musica;
         self.volumen = sesion.volumen;
         self.normalizar = sesion.normalizar;
         self.motor.volumen(sesion.volumen);
@@ -255,10 +251,15 @@ impl<B: Backend> Servicio<B> {
 
     fn resolver(&mut self, fila: Fila) -> Option<(PistaEnCola, Sonando)> {
         let conn = self.db.conexion().ok()?;
+        // La carpeta de la música se lee cada vez y no al arrancar: en una
+        // instalación nueva se elige después, y lo importado en esa misma sesión no
+        // sonaba hasta reiniciar (Nathan, en Windows, 2026-11-09). Cambiarla en
+        // Ajustes tenía el mismo problema.
+        let musica = persistencia::carpeta_musica(&conn).ok().flatten();
         let pista = persistencia::resolver(
             &conn,
             fila.pista_id,
-            self.musica.as_deref(),
+            musica.as_deref(),
             &self.stems,
             self.normalizar,
         )
@@ -482,10 +483,11 @@ impl<B: Backend> Servicio<B> {
                     .filter(|s| s.fila.pista_id == pista && !s.karaoke)
                     .and_then(|_| self.db.conexion().ok())
                     .and_then(|conn| {
+                        let musica = persistencia::carpeta_musica(&conn).ok().flatten();
                         persistencia::resolver(
                             &conn,
                             pista,
-                            self.musica.as_deref(),
+                            musica.as_deref(),
                             &self.stems,
                             self.normalizar,
                         )
@@ -554,6 +556,13 @@ impl<B: Backend> Servicio<B> {
             match evento {
                 EventoMotor::PistaEmpieza { ficha } => {
                     if self.actual.as_ref().is_some_and(|s| s.ficha == ficha) {
+                        continue;
+                    }
+                    // Fuera de una sesión, solo la prevista empieza sola. Cualquier otra
+                    // ficha es un aviso atrasado de una sesión del DJ o de un fragmento
+                    // que ya se dejó: tomarlo por el final de la canción adelantaba la
+                    // cola del usuario al salir del DJ (pruebas finales, 2026-11-09).
+                    if self.prevista.as_ref().is_none_or(|p| p.ficha != ficha) {
                         continue;
                     }
                     // El motor encadenó la prevista: la anterior acabó entera.
