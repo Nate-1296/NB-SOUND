@@ -95,6 +95,7 @@ async function iniciarGrabacion(ruta) {
       const salida = new Promise((resolve) => proceso.once('exit', resolve));
       proceso.kill('SIGINT');
       await Promise.race([salida, esperar(3000)]);
+      if (proceso.exitCode === null) proceso.kill('SIGKILL');
     }
   };
 }

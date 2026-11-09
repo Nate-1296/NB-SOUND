@@ -138,6 +138,9 @@ async function iniciarGrabacion(ruta) {
       const salida = new Promise((resolve) => proceso.once('exit', resolve));
       proceso.kill('SIGINT');
       await Promise.race([salida, esperar(3000)]);
+      // Un parec que no se va seguiría escribiendo en el mismo archivo en la
+      // corrida siguiente y estropearía su grabación.
+      if (proceso.exitCode === null) proceso.kill('SIGKILL');
     }
   };
 }

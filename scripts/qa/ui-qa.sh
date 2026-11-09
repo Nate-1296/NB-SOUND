@@ -30,6 +30,8 @@ uso() {
 }
 
 limpiar() {
+  # Ningún parec de una corrida anterior puede seguir escribiendo en la copia.
+  pkill -f "parec .*nb-sound-qa" 2>/dev/null || true
   if [[ -n ${PID_CAPTURA:-} ]] && kill -0 "$PID_CAPTURA" 2>/dev/null; then
     kill -TERM "$PID_CAPTURA" 2>/dev/null || true
     wait "$PID_CAPTURA" 2>/dev/null || true
@@ -50,6 +52,9 @@ limpiar() {
   fi
   find "$HOME/.local/share/Trash/files" -maxdepth 1 -name 'nbqa-*' -delete 2>/dev/null || true
   find "$HOME/.local/share/Trash/info" -maxdepth 1 -name 'nbqa-*.trashinfo' -delete 2>/dev/null || true
+  # La canción sintética de la papelera se guarda con el nombre de su título.
+  find "$HOME/.local/share/Trash/files" -maxdepth 1 -name '00_qa_papelera.mp3*' -delete 2>/dev/null || true
+  find "$HOME/.local/share/Trash/info" -maxdepth 1 -name '00_qa_papelera.mp3*.trashinfo' -delete 2>/dev/null || true
 }
 trap limpiar EXIT INT TERM
 
@@ -629,6 +634,73 @@ fase8() {
       -- --ignored --nocapture --test-threads=1
 }
 
+preparar_revisiones() {
+  preparar_fase6
+  limpiar_restos_de_importacion
+  local f="$QA_BASE/fase4/fuentes"
+  mkdir -p "$f/papelera" "$f/revisar" "$QA_BASE/fase8"
+  rm -f "$f/papelera"/*
+  ffmpeg -hide_banner -loglevel error -y -f lavfi \
+    -i 'sine=frequency=611:sample_rate=48000:duration=16' \
+    -metadata title='QA Papelera' -metadata artist='QA Revisiones' \
+    -metadata album='QA Papelera' -id3v2_version 3 "$f/papelera/nbqa-papelera.mp3"
+  if [[ ! -f "$f/lote/nbqa-lote-120.mp3" ]]; then
+    preparar_lote_qa
+  fi
+  ffmpeg -hide_banner -loglevel error -y -f lavfi -i 'sine=frequency=700:duration=16' \
+    "$f/revisar/nbqa-versiones.mp3"
+  ffmpeg -hide_banner -loglevel error -y -f lavfi -i 'testsrc2=s=4000x4000' -frames:v 1 \
+    "$QA_BASE/fase8/foto-grande.png"
+  ffmpeg -hide_banner -loglevel error -y -f lavfi -i 'mandelbrot=s=4000x3000' -frames:v 1 \
+    -q:v 2 "$QA_BASE/fase8/foto-grande.jpg"
+  local cand='{"titulo":"QA Versiones","artista":"QA","album":"Uno","anio":2020,"tipo":"Album","duracion_seg":16.0}'
+  sqlite3 "$DB" "INSERT INTO por_revisar (ruta, causa, metadatos) VALUES (
+    '$f/revisar/nbqa-versiones.mp3', 'candidatos_ambiguos',
+    '{\"nombre_original\":\"nbqa-versiones.mp3\",\"duracion_seg\":16.0,\"candidatos\":[$cand,$cand,$cand,$cand,$cand]}');"
+  env NB_QA_DB="$DB" NB_QA_ROOT="$QA_BASE" NB_QA_SALIDA="$QA_BASE/fase8" \
+    cargo test --manifest-path "$RAIZ/src-tauri/Cargo.toml" --test qa_fase8 \
+      la_foto_de_perfil -- --ignored --nocapture --test-threads=1
+  env NB_QA_SALIDA="$QA_BASE/fase8" \
+    cargo test --manifest-path "$RAIZ/src-tauri/Cargo.toml" --test qa_fase8 \
+      cambiar_la_carpeta -- --ignored --nocapture --test-threads=1
+}
+
+escenario_revision() {
+  env NB_QA_DB="$DB" NB_QA_ROOT="$QA_BASE" DISPLAY="$LISTA_DISPLAY" \
+    nice -n 10 node "$RAIZ/scripts/qa/revision-qa.mjs" "$@"
+}
+
+revisiones() {
+  preparar_revisiones
+  iniciar_entorno
+  escenario_revision foto hover menu cabecera nombre ancladas pantalla mini cola desplazar barra720 \
+    duplicados revisar papelera karaoke cancelar
+  cerrar_app
+  arrancar_app
+  escenario_revision karaoke-reabierto cancelar-reabierto
+  cerrar_app
+  # Una instalación nueva: otra carpeta de datos, vacía.
+  local base_vieja=$QA_BASE db_viejo=$DB
+  QA_BASE="$base_vieja/nueva"
+  DB="$QA_BASE/datos/nb-sound.sqlite"
+  rm -rf "$QA_BASE"
+  mkdir -p "$QA_BASE/musica" "$QA_BASE/datos" "$QA_BASE/registros" "$QA_BASE/xdg-data" \
+    "$QA_BASE/xdg-cache" "$QA_BASE/xdg-config"
+  arrancar_app
+  escenario_revision bienvenida
+  cerrar_app
+  sqlite3 "$DB" "INSERT INTO preferencias (clave, valor) VALUES ('carpeta_musica', json_quote('$QA_BASE/musica'))
+    ON CONFLICT (clave) DO UPDATE SET valor = excluded.valor;"
+  arrancar_app
+  sleep 8
+  ffmpeg -hide_banner -loglevel error -y -f lavfi -i 'sine=frequency=500:duration=16' \
+    -metadata title='QA Bienvenida' -metadata artist='QA' "$QA_BASE/musica/nbqa-bienvenida.mp3"
+  escenario_revision bienvenida-carpeta
+  cerrar_app
+  QA_BASE=$base_vieja
+  DB=$db_viejo
+}
+
 todo() {
   preparar
   iniciar_entorno
@@ -688,6 +760,13 @@ case ${1:-} in
     escenario_dj hora
     ;;
   fase8) fase8 ;;
+  revisiones) revisiones ;;
+  revisiones-repetir)
+    shift
+    preparar_fase6
+    iniciar_entorno
+    escenario_revision "$@"
+    ;;
   fase8-fiesta)
     preparar_fase8
     iniciar_entorno

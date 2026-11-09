@@ -158,6 +158,11 @@ export class Inspector {
     return objeto?.value;
   }
 
+  /** Una orden cualquiera del protocolo (DOM, CSS...), para lo que JavaScript no alcanza. */
+  enviar(metodo, params = {}) {
+    return this.#enviar(metodo, params);
+  }
+
   async evaluarDirecto(expresion) {
     const evaluado = await this.#enviar('Runtime.evaluate', {
       expression: expresion,

@@ -179,3 +179,86 @@ fn la_copia_a_un_dispositivo_lleva_carpetas_portada_lista_y_wav() {
         mp3.len()
     );
 }
+
+/// QA-R1: la foto de perfil por un PNG y un JPG grandes. En la aplicación pasa por el
+/// selector nativo; aquí se llama a la misma función con lo que el selector devolvería.
+#[test]
+#[ignore = "lo ejecuta scripts/qa/ui-qa.sh revisiones sobre la copia aislada"]
+fn la_foto_de_perfil_admite_un_png_y_un_jpg_grandes() {
+    let db = BaseDeDatos::abrir(&variable("NB_QA_DB")).unwrap();
+    let datos = variable("NB_QA_ROOT").join("datos");
+    let mut resultados = Vec::new();
+    for nombre in ["foto-grande.png", "foto-grande.jpg"] {
+        let origen = variable("NB_QA_SALIDA").join(nombre);
+        nb_sound_lib::perfil::cambiar_foto(&db, &datos, &origen).unwrap();
+        let perfil = nb_sound_lib::perfil::perfil(&db).unwrap();
+        resultados.push(serde_json::json!({ "origen": nombre, "perfil": serde_json::to_value(&perfil).unwrap() }));
+    }
+    informar("foto_perfil", serde_json::json!(resultados));
+}
+
+fn sin_carpetas_vacias(dir: &Path) -> bool {
+    std::fs::read_dir(dir).unwrap().flatten().all(|e| {
+        let p = e.path();
+        !p.is_dir() || (std::fs::read_dir(&p).unwrap().next().is_some() && sin_carpetas_vacias(&p))
+    })
+}
+
+/// QA-R2 y QA-R3: cambiar la carpeta de la música y "¿Dónde está tu música?". En la
+/// aplicación la carpeta se elige con el selector nativo; aquí, con archivos sintéticos
+/// (nunca la biblioteca real, que `mover` movería), se llama a lo mismo que el comando.
+#[test]
+#[ignore = "lo ejecuta scripts/qa/ui-qa.sh revisiones"]
+fn cambiar_la_carpeta_de_la_musica_apunta_o_mueve_sin_dejar_carpetas_vacias() {
+    use nb_sound_lib::catalogo::carpeta;
+    let base = variable("NB_QA_SALIDA").join("carpetas");
+    let _ = std::fs::remove_dir_all(&base);
+    let (vieja, copia, vacia) = (base.join("vieja"), base.join("copia"), base.join("vacia"));
+    let db = BaseDeDatos::en_memoria().unwrap();
+    let conn = db.conexion().unwrap();
+    conn.execute(
+        "INSERT INTO artistas (id, nombre, clave) VALUES (1, 'a', 'a')",
+        [],
+    )
+    .unwrap();
+    for i in 1..=6 {
+        let rel = format!("artista_{}/albumes/disco/0{i}_cancion.mp3", i % 2);
+        for raiz in [&vieja, &copia] {
+            let p = raiz.join(&rel);
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+            std::fs::write(&p, vec![i as u8; 2048]).unwrap();
+        }
+        conn.execute(
+            "INSERT INTO pistas (id, artista_id, titulo, ruta, estado) VALUES (?1, 1, ?2, ?3, 'biblioteca')",
+            rusqlite::params![i, format!("c{i}"), rel],
+        )
+        .unwrap();
+    }
+    drop(conn);
+    std::fs::create_dir_all(&vacia).unwrap();
+    carpeta::fijar(&db, &vieja).unwrap();
+
+    // Con una copia ya hecha en otro sitio: están todas y solo se apunta.
+    let r = carpeta::revisar(&db, Some(&vieja), &copia).unwrap();
+    assert_eq!((r.encontradas, r.total), (6, 6));
+    // Con una vacía: ninguna, y "Llevar mi música" las mueve con su avance.
+    let r = carpeta::revisar(&db, Some(&vieja), &vacia).unwrap();
+    assert_eq!((r.encontradas, r.total), (0, 6));
+    let mut avances = Vec::new();
+    let movidas = carpeta::mover(&db, &vieja, &vacia, |h, t| avances.push((h, t))).unwrap();
+    assert_eq!(movidas, 6);
+    assert_eq!(avances.last(), Some(&(6, 6)));
+    assert_eq!(carpeta::revisar(&db, None, &vacia).unwrap().encontradas, 6);
+    assert!(
+        sin_carpetas_vacias(&vieja),
+        "la vieja quedó con carpetas vacías"
+    );
+    assert!(
+        archivos(&vieja, "mp3").is_empty(),
+        "la vieja aún tiene canciones"
+    );
+    informar(
+        "cambiar_carpeta",
+        serde_json::json!({ "copia": 6, "vacia": 0, "movidas": movidas, "avances": avances.len() }),
+    );
+}
