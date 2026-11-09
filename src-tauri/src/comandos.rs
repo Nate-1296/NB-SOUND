@@ -2155,7 +2155,10 @@ mod pruebas_qa {
         let fuera = base.join("fuera");
         std::fs::create_dir_all(&fuentes).unwrap();
         std::fs::create_dir_all(&fuera).unwrap();
-        assert_eq!(carpeta_de_fuentes_qa(&base, &fuentes), Ok(fuentes));
+        // Se compara con la forma canónica: en macOS el temporal cuelga de /private
+        // y en Windows lleva el prefijo \\?\.
+        let canonica = fuentes.canonicalize().unwrap();
+        assert_eq!(carpeta_de_fuentes_qa(&base, &fuentes), Ok(canonica));
         assert_eq!(
             carpeta_de_fuentes_qa(&base, &fuera),
             Err(NsError::PathNotAllowed)
