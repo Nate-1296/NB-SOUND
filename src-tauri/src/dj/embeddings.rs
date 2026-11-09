@@ -9,7 +9,8 @@
 //! unas decenas de líneas.
 
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 
 use super::ontologia::{self, CONCEPTOS, EJES};
 use crate::agregados::{self, IdAgregado};
@@ -322,6 +323,147 @@ pub struct Real {
     tokenizador: Tokenizador,
     con_tipos: bool,
     dimension: usize,
+    memoria: Arc<Mutex<Memoria>>,
+}
+
+// --- La memoria de vectores ----------------------------------------------------------
+
+/// Los vectores ya calculados, por texto, en un archivo junto al modelo.
+///
+/// Sin ella, cada sesión calculaba el vector de las ~2.400 pistas de la biblioteca
+/// antes de sonar: 73 s con la biblioteca de Nathan (pruebas finales, 2026-11-09),
+/// cuando el criterio de F6.1.6 son 3 s. El vector de una pista solo depende de
+/// su texto y del modelo, así que se guarda por la huella del texto y se calcula
+/// una vez, en segundo plano ([`precalentar`]). Se descartó guardarlo en la base:
+/// es derivado, se rehace solo y no merece una migración; vive y se borra con el
+/// agregado de texto.
+pub struct Memoria {
+    ruta: PathBuf,
+    vectores: HashMap<[u8; 16], Vec<f64>>,
+    sin_guardar: usize,
+}
+
+const MAGIA: &[u8; 4] = b"NBV1";
+/// Cada cuántos vectores nuevos se escribe el archivo: si NB Sound se cierra a
+/// mitad del precalentamiento, lo hecho no se pierde entero.
+const GUARDAR_CADA: usize = 200;
+
+fn huella(texto: &str) -> [u8; 16] {
+    use sha2::Digest;
+    let h = sha2::Sha256::digest(texto.as_bytes());
+    let mut k = [0u8; 16];
+    k.copy_from_slice(&h[..16]);
+    k
+}
+
+impl Memoria {
+    /// La de `ruta`, vacía si no existe o no se puede leer: se rehace.
+    #[must_use]
+    pub fn abrir(ruta: PathBuf) -> Self {
+        let vectores = std::fs::read(&ruta)
+            .ok()
+            .and_then(|b| Self::leer(&b))
+            .unwrap_or_default();
+        Self {
+            ruta,
+            vectores,
+            sin_guardar: 0,
+        }
+    }
+
+    fn leer(b: &[u8]) -> Option<HashMap<[u8; 16], Vec<f64>>> {
+        if b.len() < 8 || &b[..4] != MAGIA {
+            return None;
+        }
+        let dim = u32::from_le_bytes(b[4..8].try_into().ok()?) as usize;
+        let tam = 16 + dim * 8;
+        let cuerpo = &b[8..];
+        if dim == 0 || !cuerpo.len().is_multiple_of(tam) {
+            return None;
+        }
+        Some(
+            cuerpo
+                .chunks_exact(tam)
+                .map(|e| {
+                    let mut k = [0u8; 16];
+                    k.copy_from_slice(&e[..16]);
+                    let v = e[16..]
+                        .as_chunks::<8>()
+                        .0
+                        .iter()
+                        .map(|x| f64::from_le_bytes(*x))
+                        .collect();
+                    (k, v)
+                })
+                .collect(),
+        )
+    }
+
+    #[must_use]
+    pub fn get(&self, texto: &str) -> Option<&Vec<f64>> {
+        self.vectores.get(&huella(texto))
+    }
+
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.vectores.len()
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.vectores.is_empty()
+    }
+
+    pub fn poner(&mut self, texto: &str, v: Vec<f64>) {
+        self.vectores.insert(huella(texto), v);
+        self.sin_guardar += 1;
+        if self.sin_guardar >= GUARDAR_CADA {
+            self.guardar();
+        }
+    }
+
+    /// Escribe el archivo si hay algo nuevo, en un temporal que se coloca al final.
+    pub fn guardar(&mut self) {
+        if self.sin_guardar == 0 {
+            return;
+        }
+        let Some(dim) = self.vectores.values().next().map(Vec::len) else {
+            return;
+        };
+        let mut b = Vec::with_capacity(8 + self.vectores.len() * (16 + dim * 8));
+        b.extend_from_slice(MAGIA);
+        b.extend_from_slice(&u32::try_from(dim).unwrap_or(0).to_le_bytes());
+        for (k, v) in self.vectores.iter().filter(|(_, v)| v.len() == dim) {
+            b.extend_from_slice(k);
+            for x in v {
+                b.extend_from_slice(&x.to_le_bytes());
+            }
+        }
+        let temporal = self.ruta.with_extension("bin.parcial");
+        let escrito =
+            std::fs::write(&temporal, &b).and_then(|()| std::fs::rename(&temporal, &self.ruta));
+        if escrito.is_ok() {
+            self.sin_guardar = 0;
+        } else {
+            tracing::warn!("no se pudo guardar la memoria de vectores del DJ");
+        }
+    }
+}
+
+/// Una sola memoria por archivo en todo el proceso: la comparten el DJ y el
+/// precalentamiento, cada uno con su sesión de ONNX Runtime.
+fn memoria_de(dir: &Path) -> Arc<Mutex<Memoria>> {
+    static TODAS: OnceLock<Mutex<HashMap<PathBuf, Arc<Mutex<Memoria>>>>> = OnceLock::new();
+    let ruta = dir.join("vectores.bin");
+    let mut todas = TODAS
+        .get_or_init(|| Mutex::new(HashMap::new()))
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner);
+    Arc::clone(
+        todas
+            .entry(ruta.clone())
+            .or_insert_with(|| Arc::new(Mutex::new(Memoria::abrir(ruta)))),
+    )
 }
 
 /// Como mucho 256 tokens.
@@ -351,6 +493,7 @@ impl Real {
             tokenizador,
             con_tipos,
             dimension: 384,
+            memoria: memoria_de(dir),
         };
         r.dimension = r.incrustar("test")?.len();
         Ok(r)
@@ -410,8 +553,24 @@ impl Proveedor for Real {
         if texto.is_empty() {
             return vec![0.0; self.dimension];
         }
-        self.incrustar(texto)
-            .unwrap_or_else(|_| vec![0.0; self.dimension])
+        let memoria = Arc::clone(&self.memoria);
+        if let Some(v) = memoria
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(texto)
+        {
+            return v.clone();
+        }
+        match self.incrustar(texto) {
+            Ok(v) => {
+                memoria
+                    .lock()
+                    .unwrap_or_else(PoisonError::into_inner)
+                    .poner(texto, v.clone());
+                v
+            }
+            Err(_) => vec![0.0; self.dimension],
+        }
     }
 
     fn de_pista(&mut self, r: &RasgosPista) -> Vec<f64> {
@@ -423,6 +582,58 @@ impl Proveedor for Real {
             .collect();
         partes.extend(r.etiquetas.iter().map(|(e, _)| e.as_str()));
         self.de_texto(&partes.join(". "))
+    }
+}
+
+impl Drop for Real {
+    fn drop(&mut self) {
+        self.memoria
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .guardar();
+    }
+}
+
+/// Calcula, con prioridad baja, el vector de cada pista que aún no lo tiene, para
+/// que pedir una sesión no tenga que hacerlo. Sin el agregado de texto no hace
+/// nada; si ya hay otro en marcha, tampoco.
+pub fn precalentar(rutas: crate::paths::Rutas, db: crate::db::BaseDeDatos) {
+    static EN_MARCHA: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    use std::sync::atomic::Ordering;
+    if agregados::instalado(&rutas, IdAgregado::TextoDj).is_none()
+        || EN_MARCHA.swap(true, Ordering::AcqRel)
+    {
+        return;
+    }
+    let lanzado = std::thread::Builder::new()
+        .name("dj-vectores".into())
+        .spawn(move || {
+            crate::prioridad::bajar_hilo_actual();
+            let inicio = std::time::Instant::now();
+            let hechos = (|| -> NsResult<usize> {
+                let mut real = Real::abrir(&agregados::carpeta(&rutas, IdAgregado::TextoDj))?;
+                let pool = super::planificador::cargar(&db, 5000, &[], false)?;
+                for c in &pool {
+                    real.de_pista(&c.rasgos());
+                }
+                Ok(pool.len())
+            })();
+            match hechos {
+                Ok(n) => tracing::info!(
+                    pistas = n,
+                    segundos = inicio.elapsed().as_secs_f64(),
+                    "vectores del DJ al día"
+                ),
+                Err(e) => tracing::warn!(
+                    codigo = e.code(),
+                    "no se pudieron precalcular los vectores del DJ"
+                ),
+            }
+            EN_MARCHA.store(false, Ordering::Release);
+        })
+        .is_ok();
+    if !lanzado {
+        EN_MARCHA.store(false, Ordering::Release);
     }
 }
 
@@ -476,6 +687,27 @@ mod tests {
             ..RasgosPista::default()
         };
         igual(&p.de_pista(&r), &d["pista"]);
+    }
+
+    #[test]
+    fn la_memoria_de_vectores_sobrevive_a_cerrar_y_abrir() {
+        let d = std::env::temp_dir().join(format!("ns-vectores-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        let ruta = d.join("vectores.bin");
+        let mut m = Memoria::abrir(ruta.clone());
+        assert!(m.is_empty(), "sin archivo empieza vacía");
+        m.poner("Song 2. Blur", vec![0.25, -1.5, 3.0]);
+        m.poner("Wonderwall. Oasis", vec![1.0, 2.0, 0.125]);
+        m.guardar();
+        let m = Memoria::abrir(ruta.clone());
+        assert_eq!(m.len(), 2);
+        assert_eq!(m.get("Song 2. Blur"), Some(&vec![0.25, -1.5, 3.0]));
+        assert_eq!(m.get("Otra cosa"), None);
+        // Un archivo dañado no rompe nada: se rehace.
+        std::fs::write(&ruta, b"NBV1\x03\0\0\0basura").unwrap();
+        assert!(Memoria::abrir(ruta).is_empty());
+        let _ = std::fs::remove_dir_all(&d);
     }
 
     #[test]

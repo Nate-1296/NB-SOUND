@@ -95,10 +95,32 @@ pub fn comprobar(titulo: &str, intento: &str) -> Intento {
     let a: Vec<char> = real.chars().take(200).collect();
     let b: Vec<char> = dicho.chars().take(200).collect();
     let ratio = ratio_secuencias(&a, &b);
+    // En un título corto una sola letra pesa demasiado para el ratio: "Ux año" por
+    // "Un año" daba 0,83 y no acertaba (pruebas finales, 2026-11-09). Una letra
+    // cambiada, sobrante o que falta acierta siempre desde cuatro caracteres; por
+    // debajo, adivinar a ciegas sería demasiado fácil.
+    let una_letra = a.len() >= 4 && a.len().abs_diff(b.len()) <= 1 && distancia_hasta_uno(&a, &b);
     Intento {
-        acierto: ratio >= UMBRAL_ACIERTO,
+        acierto: ratio >= UMBRAL_ACIERTO || una_letra,
         cerca: (UMBRAL_CERCA..UMBRAL_ACIERTO).contains(&ratio),
         ratio: crate::dj::redondear(ratio, 4),
+    }
+}
+
+/// Si `a` y `b` están a una edición (cambiar, quitar o poner un carácter) o menos.
+fn distancia_hasta_uno(a: &[char], b: &[char]) -> bool {
+    let (corto, largo) = if a.len() <= b.len() { (a, b) } else { (b, a) };
+    let mut i = 0;
+    while i < corto.len() && corto[i] == largo[i] {
+        i += 1;
+    }
+    if corto.len() == largo.len() {
+        corto[i.min(corto.len())..]
+            .iter()
+            .skip(1)
+            .eq(largo[i.min(largo.len())..].iter().skip(1))
+    } else {
+        corto[i..] == largo[i + 1..]
     }
 }
 
@@ -192,6 +214,12 @@ mod pruebas {
     #[test]
     fn una_letra_mal_acierta_otra_cancion_no_y_lo_parcial_queda_cerca() {
         assert!(comprobar("Bohemian Rhapsody", "Bohemia Rapsody").acierto);
+        // Un título corto también acierta con una letra mal, de más o de menos.
+        assert!(comprobar("Un año", "Ux año").acierto);
+        assert!(comprobar("Un año", "Un añoo").acierto);
+        assert!(comprobar("Un año", "Un ao").acierto);
+        assert!(!comprobar("Un año", "Ux axo").acierto);
+        assert!(!comprobar("Up", "Ux").acierto, "por debajo de cuatro, no");
         let lejos = comprobar("Bohemian Rhapsody", "Imagine");
         assert!(!lejos.acierto && !lejos.cerca);
         let parcial = comprobar("Stairway to Heaven", "Stairway Heaven");

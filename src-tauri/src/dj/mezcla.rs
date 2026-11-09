@@ -180,7 +180,11 @@ pub fn volumenes(tecnica: Tecnica, p: f64) -> (f64, f64) {
             let b = f64::min(1.0, 0.4 + p * 0.6) * f64::min(1.0, p / 0.05);
             (a, b)
         }
-        Tecnica::Barrido | Tecnica::SinGraves => (1.0 - p, p),
+        // De igual potencia, como el fundido. Con la curva lineal de la versión
+        // anterior, a mitad de la mezcla las dos sonaban al 50 % (-3 dB) y, sumado a
+        // las bandas quitadas, la sesión de una hora de las pruebas finales se hundía
+        // hasta 10 LU en seis de dieciocho transiciones (2026-11-09).
+        Tecnica::Barrido | Tecnica::SinGraves => ((1.0 - p).sqrt(), p.sqrt()),
     }
 }
 
@@ -425,8 +429,13 @@ mod pruebas {
         }
         assert_eq!(volumenes(Tecnica::Corte, 0.3), (1.0, 0.0));
         assert_eq!(volumenes(Tecnica::Corte, 0.7), (0.0, 1.0));
-        let (a, b) = volumenes(Tecnica::Fundido, 0.5);
-        assert!((a - b).abs() < 1e-9 && (a * a + b * b - 1.0).abs() < 1e-9);
+        // Las tres mezclas largas son de igual potencia: a mitad no hay hueco de 3 dB.
+        for t in [Tecnica::Fundido, Tecnica::SinGraves, Tecnica::Barrido] {
+            for p in [0.25, 0.5, 0.75] {
+                let (a, b) = volumenes(t, p);
+                assert!((a * a + b * b - 1.0).abs() < 1e-9, "{t:?} en {p}");
+            }
+        }
     }
 
     #[test]
