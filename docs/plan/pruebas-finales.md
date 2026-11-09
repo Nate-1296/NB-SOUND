@@ -113,21 +113,21 @@ compara lo que recibe con la base de la copia, el DOM y el reproductor.
 
 ## Fase 4
 
-- [ ] AcoustID y MusicBrainz responden con la clave que ya está en el llavero, con el consentimiento de la copia.
-- [ ] Importar una carpeta por la orden del puente: tarjeta de progreso y resumen.
-- [ ] Matar el proceso a mitad de una importación y volver a abrir: sigue sin duplicar nada.
-- [ ] Por revisar: cada motivo con su texto, elegir candidato, importar tal como está, buscar de nuevo y descartar;
-      el archivo descartado está en `~/.local/share/Trash` (con un archivo sintético, no del corpus).
-- [ ] Con la red desactivada, importar canciones con etiquetas: entran sin verificar.
+- [x] AcoustID y MusicBrainz responden con la clave que ya está en el llavero, con el consentimiento de la copia. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase4`: 1 petición a AcoustID y 4 a MusicBrainz; la pista pasó a Por revisar con sus candidatas.)*
+- [x] Importar una carpeta por la orden del puente: tarjeta de progreso y resumen. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase4`: tarjeta «Catalogando 120 canciones 35 de 120» y resumen al terminar.)*
+- [x] Matar el proceso a mitad de una importación y volver a abrir: sigue sin duplicar nada. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase4`: `kill -9` con 31 de 120 hechas; al reabrir, 72 reanudadas, 120 pistas, 0 duplicadas, 0 pendientes.)*
+- [x] Por revisar: cada motivo con su texto, elegir candidato, importar tal como está, buscar de nuevo y descartar;
+      el archivo descartado está en `~/.local/share/Trash` (con un archivo sintético, no del corpus). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase4`: los seis motivos con su texto; el sintético llegó a la papelera y se restauró.)*
+- [x] Con la red desactivada, importar canciones con etiquetas: entran sin verificar. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase4`: entra con `tag_local`, sin verificar, 0 autorizaciones y 0 conexiones nuevas.)*
 - [x] Copiar un álbum en la carpeta vigilada lo importa al terminar de copiarse; con la aplicación cerrada, al abrirla.
       *(Comprobado por guion el 2026-11-05 en la 2.0.7 con un archivo sintético.)*
-- [ ] Privacidad: apagar un servicio corta su siguiente petición sin reiniciar; con la conexión general apagada no
-      sale nada (contando conexiones con `ss`) (F4.2.7).
-- [ ] "Completar datos" sobre una pista sin verificar le pone portada y letra; el cliente la vuelve a descargar con los
-      datos nuevos (F4.2.8).
-- [ ] Editar una canción y un álbum (sobre una copia del archivo, no un enlace duro): el cliente recibe el cambio, el
-      archivo lleva las etiquetas, renombrar conserva la portada y reimportar respeta lo editado (F4.2.5).
-- [ ] Copia de seguridad, cambiar la biblioteca, restaurar y reiniciar: vuelve a estar como en la copia (F4.2.6).
+- [x] Privacidad: apagar un servicio corta su siguiente petición sin reiniciar; con la conexión general apagada no
+      sale nada (contando conexiones con `ss`) (F4.2.7). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase4`: con LRCLIB apagado, ninguna petición a LRCLIB; con todo apagado, ninguna conexión nueva.)*
+- [x] "Completar datos" sobre una pista sin verificar le pone portada y letra; el cliente la vuelve a descargar con los
+      datos nuevos (F4.2.8). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase4`: portada y letra añadidas; el cliente las descargó con 200.)*
+- [x] Editar una canción y un álbum (sobre una copia del archivo, no un enlace duro): el cliente recibe el cambio, el
+      archivo lleva las etiquetas, renombrar conserva la portada y reimportar respeta lo editado (F4.2.5). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase4`: el manifiesto trae título y álbum nuevos, el archivo lleva título, álbum y número, el álbum conserva su portada y reimportar respeta la edición.)*
+- [x] Copia de seguridad, cambiar la biblioteca, restaurar y reiniciar: vuelve a estar como en la copia (F4.2.6). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase4`: las siete sumas de la base idénticas y el cambio posterior a la copia desaparece.)*
 
 ## Fase 5
 
