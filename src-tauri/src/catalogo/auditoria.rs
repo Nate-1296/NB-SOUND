@@ -222,6 +222,7 @@ pub fn arrancar(db: BaseDeDatos, rutas: Rutas) {
     let lanzado = std::thread::Builder::new()
         .name("auditoria".into())
         .spawn(move || {
+            crate::prioridad::bajar_hilo_actual();
             // Que arranquen antes la ventana y el reproductor.
             std::thread::sleep(std::time::Duration::from_secs(30));
             let musica = db
