@@ -47,10 +47,13 @@ export class Inspector {
     this.#ws = new WebSocket(`ws://127.0.0.1:${PUERTO}${socket}`);
     this.#ws.onmessage = (evento) => this.#recibir(JSON.parse(String(evento.data)));
     await new Promise((resolve, reject) => {
-      const limite = setTimeout(() => reject(new Error("WebSocket del inspector sin respuesta")), ESPERA_MS);
+      const limite = setTimeout(
+        () => reject(new Error('WebSocket del inspector sin respuesta')),
+        ESPERA_MS
+      );
       this.#ws.onerror = () => {
         clearTimeout(limite);
-        reject(new Error("no se pudo abrir el WebSocket del inspector"));
+        reject(new Error('no se pudo abrir el WebSocket del inspector'));
       };
       this.#ws.onopen = () => {
         clearTimeout(limite);
@@ -59,14 +62,14 @@ export class Inspector {
     });
     await new Promise((resolve, reject) => {
       const limite = setTimeout(
-        () => reject(new Error("el inspector no anunció ninguna página")),
+        () => reject(new Error('el inspector no anunció ninguna página')),
         ESPERA_MS
       );
       const original = this.#ws.onmessage;
       this.#ws.onmessage = (evento) => {
         const mensaje = JSON.parse(String(evento.data));
         original(evento);
-        if (mensaje.method === "Target.targetCreated") {
+        if (mensaje.method === 'Target.targetCreated') {
           this.#target = mensaje.params.targetInfo.targetId;
           clearTimeout(limite);
           this.#ws.onmessage = original;
@@ -74,18 +77,18 @@ export class Inspector {
         }
       };
     });
-    await this.#enviar("Runtime.enable");
-    await this.#enviar("Console.enable");
+    await this.#enviar('Runtime.enable');
+    await this.#enviar('Console.enable');
   }
 
   #recibir(mensaje) {
-    if (mensaje.method === "Target.dispatchMessageFromTarget") {
+    if (mensaje.method === 'Target.dispatchMessageFromTarget') {
       const interno = JSON.parse(mensaje.params.message);
       if (
-        interno.method === "Console.messageAdded" &&
-        ["error", "assert"].includes(interno.params?.message?.level)
+        interno.method === 'Console.messageAdded' &&
+        ['error', 'assert'].includes(interno.params?.message?.level)
       ) {
-        this.#erroresConsola.push(interno.params.message.text ?? "");
+        this.#erroresConsola.push(interno.params.message.text ?? '');
       }
       const pendiente = this.#pendientes.get(interno.id);
       if (pendiente) {
@@ -97,7 +100,7 @@ export class Inspector {
   }
 
   async #enviar(metodo, params = {}) {
-    if (!this.#target) throw new Error("el inspector no tiene una página asociada");
+    if (!this.#target) throw new Error('el inspector no tiene una página asociada');
     const id = this.#siguiente++;
     const interno = JSON.stringify({ id, method: metodo, params });
     const respuesta = await new Promise((resolve, reject) => {
@@ -118,7 +121,7 @@ export class Inspector {
       this.#ws.send(
         JSON.stringify({
           id,
-          method: "Target.sendMessageToTarget",
+          method: 'Target.sendMessageToTarget',
           params: { targetId: this.#target, message: interno }
         })
       );
@@ -127,19 +130,19 @@ export class Inspector {
   }
 
   async evaluar(expresion) {
-    const evaluado = await this.#enviar("Runtime.evaluate", {
+    const evaluado = await this.#enviar('Runtime.evaluate', {
       expression: `Promise.resolve(${expresion})`,
       returnByValue: false,
       doNotPauseOnExceptionsAndMuteConsole: true
     });
-    if (evaluado.wasThrown || evaluado.result?.subtype === "error") {
-      throw new Error(evaluado.result?.description ?? "Runtime.evaluate lanzó una excepción");
+    if (evaluado.wasThrown || evaluado.result?.subtype === 'error') {
+      throw new Error(evaluado.result?.description ?? 'Runtime.evaluate lanzó una excepción');
     }
     let objeto = evaluado.result;
-    if (objeto?.className === "Promise") {
+    if (objeto?.className === 'Promise') {
       let resuelto;
       try {
-        resuelto = await this.#enviar("Runtime.awaitPromise", {
+        resuelto = await this.#enviar('Runtime.awaitPromise', {
           promiseObjectId: objeto.objectId,
           returnByValue: true,
           generatePreview: false
@@ -148,7 +151,7 @@ export class Inspector {
         throw new Error(`${error.message} al evaluar ${expresion.slice(0, 160)}`);
       }
       if (resuelto.wasThrown) {
-        throw new Error(resuelto.result?.description ?? "la promesa evaluada fue rechazada");
+        throw new Error(resuelto.result?.description ?? 'la promesa evaluada fue rechazada');
       }
       objeto = resuelto.result;
     }
@@ -156,20 +159,20 @@ export class Inspector {
   }
 
   async evaluarDirecto(expresion) {
-    const evaluado = await this.#enviar("Runtime.evaluate", {
+    const evaluado = await this.#enviar('Runtime.evaluate', {
       expression: expresion,
       returnByValue: true,
       doNotPauseOnExceptionsAndMuteConsole: true
     });
-    if (evaluado.wasThrown || evaluado.result?.subtype === "error") {
-      throw new Error(evaluado.result?.description ?? "Runtime.evaluate lanzó una excepción");
+    if (evaluado.wasThrown || evaluado.result?.subtype === 'error') {
+      throw new Error(evaluado.result?.description ?? 'Runtime.evaluate lanzó una excepción');
     }
     return evaluado.result?.value;
   }
 
   async instalarCapturaDeErrores() {
     this.#erroresConsola = [];
-    await this.#enviar("Console.clearMessages");
+    await this.#enviar('Console.clearMessages');
     await this.evaluar(`(() => {
       if (window.__nbQaErrores) return true;
       window.__nbQaErrores = [];
@@ -198,9 +201,7 @@ export class Inspector {
   }
 
   async errores() {
-    const delRuntime = await this.evaluar(
-      `window.__nbQaErrores ? [...window.__nbQaErrores] : []`
-    );
+    const delRuntime = await this.evaluar(`window.__nbQaErrores ? [...window.__nbQaErrores] : []`);
     return [...this.#erroresConsola, ...(delRuntime ?? [])];
   }
 

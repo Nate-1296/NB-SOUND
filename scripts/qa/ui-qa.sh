@@ -26,7 +26,7 @@ fi
 
 uso() {
   printf '%s\n' \
-    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|movil|fase4|fase5|catalog-probe|catalog-red|fallo-apariencia|fallo-js|detener|todo'
+    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|movil|fase4|fase5|fase6|fase8|catalog-probe|catalog-red|fallo-apariencia|fallo-js|detener|todo'
 }
 
 limpiar() {
@@ -470,18 +470,7 @@ fase4() {
   escenario_catalogo verificar-copia
 }
 
-preparar_fase5() {
-  preparar
-  # Sin agregados ni instrumentales: la copia de la base trae las filas de stems
-  # de la biblioteca real, pero no sus archivos, y la cola del karaoke se pondría
-  # a rehacerlas antes que las pistas de la prueba.
-  rm -rf "$QA_BASE/datos/agregados" "$QA_BASE/datos/stems"
-  mkdir -p "$QA_BASE/datos/agregados" "$QA_BASE/datos/stems"
-  sqlite3 "$DB" <<'SQL'
-DELETE FROM stems;
-UPDATE preferencias SET valor = '{"general":true,"servicios":[]}'
- WHERE clave = 'politica_de_red';
-SQL
+insertar_fondo() {
   # Lo que suena mientras se prepara: un tono continuo de media hora. Con
   # canciones reales, el silencio con que acaba una y empieza la siguiente se
   # contaba como hueco del reproductor.
@@ -500,6 +489,21 @@ SQL
       'qa/senales/fondo.flac', $(stat -c %s "$fondo"), 'biblioteca', 1
     FROM albumes WHERE id = $album;"
   printf '%s\n' "$id" >"$QA_BASE/fixtures/id-fondo"
+}
+
+preparar_fase5() {
+  preparar
+  # Sin agregados ni instrumentales: la copia de la base trae las filas de stems
+  # de la biblioteca real, pero no sus archivos, y la cola del karaoke se pondría
+  # a rehacerlas antes que las pistas de la prueba.
+  rm -rf "$QA_BASE/datos/agregados" "$QA_BASE/datos/stems"
+  mkdir -p "$QA_BASE/datos/agregados" "$QA_BASE/datos/stems"
+  sqlite3 "$DB" <<'SQL'
+DELETE FROM stems;
+UPDATE preferencias SET valor = '{"general":true,"servicios":[]}'
+ WHERE clave = 'politica_de_red';
+SQL
+  insertar_fondo
 }
 
 escenario_karaoke() {
@@ -527,6 +531,102 @@ fase5() {
   escenario_karaoke con-carga
   escenario_karaoke instrumental
   escenario_karaoke cooler
+}
+
+preparar_arranque() {
+  preparar_fase6
+  # Como en el equipo de Nathan: el análisis encendido y una copia automática
+  # pendiente, que se escribe en la carpeta de copias de la copia aislada.
+  sqlite3 "$DB" <<'SQL'
+UPDATE preferencias SET valor = 'true'
+ WHERE clave IN ('analisis_activado', 'analisis_en_segundo_plano');
+INSERT INTO preferencias (clave, valor) VALUES ('copia_cada_dias', '1')
+  ON CONFLICT (clave) DO UPDATE SET valor = excluded.valor;
+INSERT INTO preferencias (clave, valor) VALUES ('copia_ultima', '"2026-01-01T00:00:00Z"')
+  ON CONFLICT (clave) DO UPDATE SET valor = excluded.valor;
+SQL
+  rm -rf "$QA_BASE/copia-seguridad"
+  mkdir -p "$QA_BASE/copia-seguridad"
+}
+
+preparar_fase6() {
+  preparar
+  # Los agregados y los instrumentales de verdad, enlazados en solo lectura: el
+  # DJ usa el modelo de texto y las capas necesitan instrumentales listos. Nada
+  # de lo que hace la prueba escribe en ellos.
+  rm -rf "$QA_BASE/datos/agregados" "$QA_BASE/datos/stems"
+  cp -al "$HOME/.local/share/nb-sound/agregados" "$QA_BASE/datos/agregados"
+  cp -al "$HOME/.local/share/nb-sound/stems" "$QA_BASE/datos/stems"
+}
+
+escenario_dj() {
+  env NB_QA_DB="$DB" NB_QA_APP_PID="$PID_APP" \
+    NB_QA_RAIZ="$RAIZ" \
+    NB_QA_ROOT="$QA_BASE" \
+    NB_QA_INFORMES="$QA_BASE/informes" \
+    DISPLAY="$LISTA_DISPLAY" \
+    nice -n 10 node "$RAIZ/scripts/qa/dj-qa.mjs" "$@"
+}
+
+tokenizador_dj() {
+  # Lado de NB Sound: ids y vectores de las 50 frases. La referencia
+  # (`tokenizers` de HuggingFace y ONNX Runtime de Python) no vive en el
+  # repositorio; si NB_QA_REFERENCIA_PY apunta a un guion que la calcula, se
+  # compara aquí.
+  env NB_QA_TEXTO_DJ="$QA_BASE/datos/agregados/texto-dj" \
+    NB_QA_FRASES="$RAIZ/scripts/qa/frases-dj.txt" \
+    NB_QA_ONNXRUNTIME="$RAIZ/src-tauri/binarios/libonnxruntime.so" \
+    NB_QA_SALIDA="$QA_BASE/informes/fase6-tokenizador.json" \
+    cargo test --manifest-path "$RAIZ/src-tauri/Cargo.toml" --test qa_dj -- --ignored
+  if [[ -n ${NB_QA_REFERENCIA_PY:-} ]]; then
+    "$NB_QA_REFERENCIA_PY" "$QA_BASE/datos/agregados/texto-dj" \
+      "$QA_BASE/informes/fase6-tokenizador.json"
+  fi
+}
+
+fase6() {
+  preparar_fase6
+  tokenizador_dj
+  iniciar_entorno
+  escenario_dj sesion
+  cerrar_app
+  arrancar_app
+  escenario_dj reabierta
+  escenario_dj aciegas
+  escenario_dj hora
+}
+
+preparar_fase8() {
+  preparar_fase6
+  insertar_fondo
+  # Que la medición tenga picos que poblar mientras suena el tono.
+  sqlite3 "$DB" "UPDATE sonoridad SET picos = NULL WHERE pista_id IN (
+    SELECT pista_id FROM sonoridad WHERE picos IS NOT NULL ORDER BY pista_id DESC LIMIT 150);"
+}
+
+escenario_fase8() {
+  env NB_QA_DB="$DB" NB_QA_APP_PID="$PID_APP" \
+    NB_QA_RAIZ="$RAIZ" \
+    NB_QA_ROOT="$QA_BASE" \
+    NB_QA_INFORMES="$QA_BASE/informes" \
+    NB_QA_CERT_PATH="$QA_BASE/datos/movil/sync_cert.pem" \
+    NB_QA_PISTA_FONDO="$(cat "$QA_BASE/fixtures/id-fondo")" \
+    DISPLAY="$LISTA_DISPLAY" \
+    nice -n 10 node "$RAIZ/scripts/qa/fase8-qa.mjs" "$@"
+}
+
+fase8() {
+  preparar_fase8
+  iniciar_entorno
+  escenario_fase8 forma
+  escenario_fase8 inteligentes
+  escenario_fase8 resumen
+  escenario_fase8 fiesta
+  cerrar_app
+  mkdir -p "$QA_BASE/fase8"
+  env NB_QA_DB="$DB" NB_QA_ROOT="$QA_BASE" NB_QA_SALIDA="$QA_BASE/fase8" \
+    cargo test --manifest-path "$RAIZ/src-tauri/Cargo.toml" --test qa_fase8 \
+      -- --ignored --nocapture --test-threads=1
 }
 
 todo() {
@@ -581,6 +681,29 @@ case ${1:-} in
     ;;
   fase4) fase4 ;;
   fase5) fase5 ;;
+  fase6) fase6 ;;
+  fase6-hora)
+    preparar_fase6
+    iniciar_entorno
+    escenario_dj hora
+    ;;
+  fase8) fase8 ;;
+  fase8-fiesta)
+    preparar_fase8
+    iniciar_entorno
+    escenario_fase8 fiesta
+    ;;
+  arranque-cargado)
+    preparar_arranque
+    iniciar_entorno
+    env NB_QA_DB="$DB" NB_QA_RAIZ="$RAIZ" NB_QA_INFORMES="$QA_BASE/informes" \
+      node "$RAIZ/scripts/qa/arranque-qa.mjs"
+    ;;
+  fase6-aciegas)
+    preparar_fase6
+    iniciar_entorno
+    escenario_dj aciegas
+    ;;
   fallo-apariencia)
     preparar_fallo_apariencia
     iniciar_entorno

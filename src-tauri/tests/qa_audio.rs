@@ -727,3 +727,175 @@ fn prepara_la_sonoridad_de_las_pistas_sinteticas() {
     }
     informar("preparacion_sonoridad", json!({ "pistas": resultado }));
 }
+
+/// Envolvente en tramos de 10 ms (RMS de todos los canales), que no depende de la
+/// tasa: la grabación sale a 48 kHz y la fuente puede estar a 44,1.
+fn envolvente(g: &Grabacion, desde_seg: f64, segundos: f64) -> Vec<f64> {
+    let paso = (f64::from(g.tasa) * 0.01) as usize;
+    let inicio = (desde_seg * f64::from(g.tasa)) as usize;
+    let n = (segundos / 0.01) as usize;
+    (0..n)
+        .map(|k| {
+            let a = (inicio + k * paso) * g.canales;
+            let b = (a + paso * g.canales).min(g.muestras.len());
+            if a >= b {
+                return 0.0;
+            }
+            let suma: f64 = g.muestras[a..b].iter().map(|m| f64::from(*m).powi(2)).sum();
+            (suma / (b - a) as f64).sqrt()
+        })
+        .collect()
+}
+
+fn correlacion(a: &[f64], b: &[f64]) -> f64 {
+    let n = a.len().min(b.len()) as f64;
+    let (ma, mb) = (a.iter().sum::<f64>() / n, b.iter().sum::<f64>() / n);
+    let (mut c, mut va, mut vb) = (0.0, 0.0, 0.0);
+    for (x, y) in a.iter().zip(b) {
+        c += (x - ma) * (y - mb);
+        va += (x - ma).powi(2);
+        vb += (y - mb).powi(2);
+    }
+    c / (va.sqrt() * vb.sqrt()).max(1e-12)
+}
+
+/// Dónde de la fuente encaja mejor lo grabado, en segundos, y con qué correlación.
+/// Se recorre la canción entera: una canción repite partes, así que comparar
+/// solo con dos o tres sitios no distingue bien.
+fn mejor_encaje(grabacion: &Grabacion, fuente: &Grabacion) -> (f64, f64) {
+    let tomado = envolvente(grabacion, 0.3, 3.0);
+    let toda = envolvente(fuente, 0.0, duracion(fuente));
+    let n = tomado.len();
+    (0..toda.len().saturating_sub(n))
+        .map(|k| (k as f64 * 0.01, correlacion(&tomado, &toda[k..k + n])))
+        .fold((0.0, f64::MIN), |m, x| if x.1 > m.1 { x } else { m })
+}
+
+#[test]
+#[ignore = "lo ejecuta scripts/qa/ui-qa.sh fase6 sobre la grabación de un fragmento"]
+fn el_fragmento_de_a_ciegas_empieza_en_el_treinta_por_ciento() {
+    let grabacion = cargar(&ruta_de("NB_QA_WAV"));
+    let fuente = cargar(&ruta_de("NB_QA_FUENTE"));
+    let desde: f64 = variable("NB_QA_DESDE").parse().expect("NB_QA_DESDE");
+    let (donde, correlacion) = mejor_encaje(&grabacion, &fuente);
+    // Lo que cuenta es dónde encaja mejor en toda la canción; la correlación no
+    // llega a 1 porque el fragmento entra con un fundido y pasa por el limitador.
+    // Lo grabado empieza 0,3 s dentro de la grabación, que a su vez arranca un
+    // poco después que el fragmento.
+    let retraso = donde - 0.3 - desde;
+    assert!(
+        correlacion > 0.5 && (-0.2..1.5).contains(&retraso),
+        "encaja en {donde:.2} s con {correlacion:.3}; el fragmento debía empezar en {desde:.2} s"
+    );
+    informar(
+        "fragmento_a_ciegas",
+        json!({ "desdeSeg": desde, "encajaEnSeg": donde, "retrasoSeg": retraso, "correlacion": correlacion }),
+    );
+}
+
+/// Sonoridad a corto plazo (ventanas de 3 s, EBU R128) cada 100 ms.
+fn sonoridad_corta(g: &Grabacion) -> Vec<f64> {
+    let mut medidor =
+        EbuR128::new(u32::try_from(g.canales).expect("canales"), g.tasa, Mode::S).expect("medidor");
+    let paso = (g.tasa / 10) as usize * g.canales;
+    g.muestras
+        .chunks(paso)
+        .map(|trozo| {
+            medidor.add_frames_f32(trozo).expect("tramo");
+            medidor.loudness_shortterm().unwrap_or(f64::NEG_INFINITY)
+        })
+        .collect()
+}
+
+fn mediana(mut v: Vec<f64>) -> f64 {
+    v.retain(|x| x.is_finite());
+    if v.is_empty() {
+        return f64::NEG_INFINITY;
+    }
+    v.sort_by(f64::total_cmp);
+    v[v.len() / 2]
+}
+
+#[test]
+#[ignore = "lo ejecuta scripts/qa/ui-qa.sh fase6 sobre la grabación de una sesión del DJ"]
+fn las_mezclas_del_dj_no_se_hunden_ni_saltan() {
+    let grabacion = cargar(&ruta_de("NB_QA_WAV"));
+    let mezclas: Vec<(f64, f64, String)> =
+        serde_json::from_str(&std::fs::read_to_string(ruta_de("NB_QA_MEZCLAS")).expect("mezclas"))
+            .expect("json de mezclas");
+    let corta = sonoridad_corta(&grabacion);
+    let en = |seg: f64| ((seg * 10.0).max(0.0) as usize).min(corta.len());
+    let huecos = silencios_interiores(&grabacion);
+    let clics = discontinuidades(&grabacion);
+    let mut informe = Vec::new();
+    let mut fallos = Vec::new();
+    for (inicio, fin, tecnica) in &mezclas {
+        // Sin las primeras 3 s de cada lado: la ventana de 3 s arrastra lo anterior.
+        let antes = mediana(corta[en(inicio - 13.0)..en(inicio - 3.0)].to_vec());
+        let despues = mediana(corta[en(fin + 3.0)..en(fin + 13.0)].to_vec());
+        let durante: Vec<f64> = corta[en(*inicio)..en(fin + 3.0)]
+            .iter()
+            .copied()
+            .filter(|x| x.is_finite())
+            .collect();
+        let minimo = durante.iter().copied().fold(f64::INFINITY, f64::min);
+        let maximo = durante.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+        let suelo = antes.min(despues);
+        let techo = antes.max(despues);
+        let hundimiento = suelo - minimo;
+        let subida = maximo - techo;
+        let huecos_aqui = huecos
+            .iter()
+            .filter(|h| h.inicio_seg + h.duracion_seg > inicio - 2.0 && h.inicio_seg < fin + 2.0)
+            .count();
+        let clics_aqui = clics
+            .iter()
+            .filter(|c| c.posicion_seg > inicio - 2.0 && c.posicion_seg < fin + 2.0)
+            .count();
+        if hundimiento > 8.0 || subida > 4.0 || huecos_aqui > 0 || clics_aqui > 0 {
+            fallos.push(format!(
+                "{tecnica} en {inicio:.1} s: hundimiento {hundimiento:.1} LU, subida {subida:.1} LU, \
+                 {huecos_aqui} huecos, {clics_aqui} clics"
+            ));
+        }
+        informe.push(json!({ "tecnica": tecnica, "inicioSeg": inicio, "finSeg": fin,
+            "antesLufs": antes, "despuesLufs": despues, "hundimientoLu": hundimiento, "subidaLu": subida }));
+    }
+    assert!(!mezclas.is_empty(), "no hubo mezclas");
+    assert!(fallos.is_empty(), "{fallos:#?}");
+    informar(
+        "mezclas_dj",
+        json!({ "duracionSeg": duracion(&grabacion), "mezclas": informe,
+                "discontinuidadesTotales": clics.len(), "huecosTotales": huecos.len() }),
+    );
+}
+
+#[test]
+#[ignore = "lo ejecuta scripts/qa/ui-qa.sh fase8 con la forma de onda de una pista"]
+fn la_forma_de_onda_sigue_al_audio() {
+    let fuente = cargar(&ruta_de("NB_QA_FUENTE"));
+    let picos: Vec<f64> = serde_json::from_str(&variable("NB_QA_PICOS")).expect("picos");
+    assert_eq!(
+        picos.len(),
+        1000,
+        "la forma de onda tiene {} tramos",
+        picos.len()
+    );
+    // Lo que la vista debería dibujar: el máximo de cada milésima de la canción.
+    let n = frames(&fuente);
+    let reales: Vec<f64> = (0..1000)
+        .map(|k| {
+            let (a, b) = (
+                k * n / 1000 * fuente.canales,
+                (k + 1) * n / 1000 * fuente.canales,
+            );
+            fuente.muestras[a..b.min(fuente.muestras.len())]
+                .iter()
+                .map(|m| f64::from(m.abs()))
+                .fold(0.0, f64::max)
+        })
+        .collect();
+    let c = correlacion(&picos, &reales);
+    assert!(c > 0.9, "la forma de onda se parece {c:.3} a la canción");
+    informar("forma_de_onda", json!({ "correlacion": c }));
+}
