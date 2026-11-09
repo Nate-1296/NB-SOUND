@@ -119,12 +119,18 @@ fn clave(servicio: Servicio, anfitrion: &str) -> Option<String> {
         .flatten()
 }
 
+/// La clave pública de pruebas de TheAudioDB (API v1).
+const CLAVE_PUBLICA_THEAUDIODB: &str = "123";
+
 fn claves_del_catalogo(
     mut leer: impl FnMut(Servicio, &str) -> Option<String>,
 ) -> (Option<String>, Option<String>) {
     (
         leer(Servicio::AcoustId, "api.acoustid.org"),
-        leer(Servicio::TheAudioDb, "www.theaudiodb.com"),
+        // TheAudioDB tiene una clave pública de pruebas, la misma para todos, con 30
+        // peticiones por minuto: sin una propia en el llavero se usa esa.
+        leer(Servicio::TheAudioDb, "www.theaudiodb.com")
+            .or_else(|| Some(CLAVE_PUBLICA_THEAUDIODB.to_owned())),
     )
 }
 
@@ -498,6 +504,10 @@ mod tests {
         });
         assert_eq!(acoustid.as_deref(), Some("acoustid"));
         assert_eq!(theaudiodb.as_deref(), Some("theaudiodb"));
+        // Sin claves en el llavero, AcoustID no tiene y TheAudioDB usa la pública.
+        let (acoustid, theaudiodb) = claves_del_catalogo(|_, _| None);
+        assert_eq!(acoustid, None);
+        assert_eq!(theaudiodb.as_deref(), Some("123"));
         assert_eq!(
             pedidas,
             [

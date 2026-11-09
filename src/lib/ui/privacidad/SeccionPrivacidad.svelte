@@ -41,7 +41,7 @@
             onchange={(e) => privacidad.servicio(servicio, e.currentTarget.checked)}
           />
         </label>
-        {#if servicio === 'acoustId' || servicio === 'theAudioDb'}
+        {#if servicio === 'acoustId'}
           <ClaveServicio {servicio} />
         {/if}
       </li>

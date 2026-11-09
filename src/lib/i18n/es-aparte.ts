@@ -311,9 +311,7 @@ export const esAparte = {
     noGuardado: 'No se pudo guardar. Vuelve a intentarlo.',
     claveServicio: {
       acoustId:
-        'Sin ella no se reconoce una canción por su sonido. Es gratuita: se pide en acoustid.org con una cuenta.',
-      theAudioDb:
-        'Opcional: más portadas e imágenes de artista. Sin ella se usan las demás fuentes.'
+        'Sin ella no se reconoce una canción por su sonido. Es gratuita: se pide en acoustid.org con una cuenta.'
     }
   },
   inteligentes: {

@@ -1,6 +1,6 @@
 <!--
   @component
-  La clave de un servicio del catálogo (AcoustID, TheAudioDB), debajo de su
+  La clave de un servicio del catálogo (hoy, AcoustID), debajo de su
   interruptor en Privacidad. Va al llavero del sistema y nunca vuelve a la
   interfaz: aquí solo se ve si hay una.
 -->
@@ -14,7 +14,7 @@
 
   let clave = $state('');
   const claves = $derived(privacidad.claves);
-  const guardada = $derived(servicio === 'acoustId' ? claves?.acoustId : claves?.theAudioDb);
+  const guardada = $derived(claves?.acoustId ?? false);
 
   async function guardar() {
     if (!clave.trim()) return;

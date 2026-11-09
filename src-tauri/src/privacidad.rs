@@ -200,8 +200,9 @@ pub fn borrar_clave_ia(db: &BaseDeDatos) -> NsResult<()> {
 
 // --- Claves de los servicios del catálogo ----------------------------------------
 
-/// Los servicios que piden una clave propia del usuario. Sin la de AcoustID no se
-/// reconoce por huella; sin la de TheAudioDB se usan las otras fuentes de imágenes.
+/// Los servicios que piden una clave propia del usuario: sin la de AcoustID no se
+/// reconoce por huella. TheAudioDB no está: tiene una clave pública, la misma
+/// para todos (`catalogo/importacion.rs`).
 /// Antes no había dónde ponerlas: la única forma era el importador de la versión
 /// anterior (Nathan, 2026-11-09).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -209,14 +210,12 @@ pub fn borrar_clave_ia(db: &BaseDeDatos) -> NsResult<()> {
 #[serde(rename_all = "camelCase")]
 pub enum ServicioConClave {
     AcoustId,
-    TheAudioDb,
 }
 
 impl ServicioConClave {
     fn cuenta(self) -> String {
         match self {
             Self::AcoustId => secrets::cuenta(Servicio::AcoustId, "api.acoustid.org"),
-            Self::TheAudioDb => secrets::cuenta(Servicio::TheAudioDb, "www.theaudiodb.com"),
         }
     }
 }
@@ -228,7 +227,6 @@ impl ServicioConClave {
 pub struct ClavesServicios {
     pub llavero: bool,
     pub acoust_id: bool,
-    pub the_audio_db: bool,
 }
 
 #[must_use]
@@ -237,7 +235,6 @@ pub fn claves_servicios() -> ClavesServicios {
     ClavesServicios {
         llavero: secrets::disponible(),
         acoust_id: hay(ServicioConClave::AcoustId),
-        the_audio_db: hay(ServicioConClave::TheAudioDb),
     }
 }
 
@@ -275,10 +272,6 @@ mod tests {
         assert_eq!(
             ServicioConClave::AcoustId.cuenta(),
             "acoustid@api.acoustid.org"
-        );
-        assert_eq!(
-            ServicioConClave::TheAudioDb.cuenta(),
-            "theaudiodb@www.theaudiodb.com"
         );
         assert_eq!(
             guardar_clave_servicio(ServicioConClave::AcoustId, "   "),

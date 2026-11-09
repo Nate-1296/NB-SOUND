@@ -3,4 +3,4 @@
 /**
  * Qué claves hay guardadas. Las claves nunca vuelven a la interfaz.
  */
-export type ClavesServicios = { llavero: boolean, acoustId: boolean, theAudioDb: boolean, };
+export type ClavesServicios = { llavero: boolean, acoustId: boolean, };
