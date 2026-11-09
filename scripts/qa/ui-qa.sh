@@ -26,7 +26,7 @@ fi
 
 uso() {
   printf '%s\n' \
-    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|movil|fase4|catalog-probe|catalog-red|fallo-apariencia|fallo-js|detener|todo'
+    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|movil|fase4|fase5|catalog-probe|catalog-red|fallo-apariencia|fallo-js|detener|todo'
 }
 
 limpiar() {
@@ -470,6 +470,65 @@ fase4() {
   escenario_catalogo verificar-copia
 }
 
+preparar_fase5() {
+  preparar
+  # Sin agregados ni instrumentales: la copia de la base trae las filas de stems
+  # de la biblioteca real, pero no sus archivos, y la cola del karaoke se pondría
+  # a rehacerlas antes que las pistas de la prueba.
+  rm -rf "$QA_BASE/datos/agregados" "$QA_BASE/datos/stems"
+  mkdir -p "$QA_BASE/datos/agregados" "$QA_BASE/datos/stems"
+  sqlite3 "$DB" <<'SQL'
+DELETE FROM stems;
+UPDATE preferencias SET valor = '{"general":true,"servicios":[]}'
+ WHERE clave = 'politica_de_red';
+SQL
+  # Lo que suena mientras se prepara: un tono continuo de media hora. Con
+  # canciones reales, el silencio con que acaba una y empieza la siguiente se
+  # contaba como hueco del reproductor.
+  local fondo="$QA_BASE/fixtures/fondo.flac"
+  if [[ ! -f $fondo ]]; then
+    ffmpeg -hide_banner -loglevel error -y -f lavfi \
+      -i 'sine=frequency=330:sample_rate=44100:duration=1800' -ac 2 "$fondo"
+  fi
+  ln -f "$fondo" "$QA_BASE/biblioteca/qa/senales/fondo.flac"
+  local album id
+  album=$(sqlite3 "$DB" "SELECT id FROM albumes WHERE clave = 'qa-fixture-senales'")
+  id=$(sqlite3 "$DB" "SELECT coalesce(max(id), 0) + 1 FROM pistas")
+  sqlite3 "$DB" "INSERT INTO pistas (id, album_id, artista_id, titulo, artista_nombre,
+      album_titulo, numero, disco, duracion_seg, ruta, tamano, estado, verificada)
+    SELECT $id, $album, artista_id, 'QA fondo', 'QA', 'QA señales', 9, 1, 1800.0,
+      'qa/senales/fondo.flac', $(stat -c %s "$fondo"), 'biblioteca', 1
+    FROM albumes WHERE id = $album;"
+  printf '%s\n' "$id" >"$QA_BASE/fixtures/id-fondo"
+}
+
+escenario_karaoke() {
+  env NB_QA_DB="$DB" NB_QA_APP_PID="$PID_APP" \
+    NB_QA_RAIZ="$RAIZ" \
+    NB_QA_ROOT="$QA_BASE" \
+    NB_QA_INFORMES="$QA_BASE/informes" \
+    NB_QA_PISTA_FONDO="$(cat "$QA_BASE/fixtures/id-fondo")" \
+    DISPLAY="$LISTA_DISPLAY" \
+    nice -n 10 node "$RAIZ/scripts/qa/karaoke-qa.mjs" "$@"
+}
+
+fase5() {
+  preparar_fase5
+  iniciar_entorno
+  escenario_karaoke sin-agregado
+  escenario_karaoke cortar
+  # Cerrar de golpe a mitad de la descarga es el corte: la conexión muere con
+  # el proceso y lo que se había bajado queda en el parcial.
+  kill -9 "$PID_APP" 2>/dev/null || true
+  wait "$PID_APP" 2>/dev/null || true
+  PID_APP=
+  arrancar_app
+  escenario_karaoke reanudar
+  escenario_karaoke con-carga
+  escenario_karaoke instrumental
+  escenario_karaoke cooler
+}
+
 todo() {
   preparar
   iniciar_entorno
@@ -521,6 +580,7 @@ case ${1:-} in
     escenario_catalogo sin-red
     ;;
   fase4) fase4 ;;
+  fase5) fase5 ;;
   fallo-apariencia)
     preparar_fallo_apariencia
     iniciar_entorno

@@ -131,13 +131,13 @@ compara lo que recibe con la base de la copia, el DOM y el reproductor.
 
 ## Fase 5
 
-- [ ] Instalar cada agregado de la Release `agregados-1`, cortar la red a mitad y reanudar; la suma coincide con el
-      catálogo (F5.1.2).
-- [ ] Separar con el modelo real (`karaoke::tests::con_el_modelo_real_separa_una_pista`) y en la aplicación: sin vacíos
-      de buffer con todos los núcleos ocupados y el pico de memoria por debajo de 3 GB (F5.2.1, P8).
-- [ ] Preparar una canción para karaoke desde la orden del puente: avance en el botón, lo que suena no se corta y al
-      terminar se pasa al instrumental sin hueco (F5.2.2); sin el agregado, se ofrece con su tamaño (F5.1.4).
-- [ ] "Cooler Than Me" (48 kHz) se prepara para karaoke y aparece su micrófono.
+- [x] Instalar cada agregado de la Release `agregados-1`, cortar la red a mitad y reanudar; la suma coincide con el
+      catálogo (F5.1.2). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase5`: cerrada la aplicación con 61,5 de 145,7 MB del karaoke; al reabrir, el parcial siguió y los tres agregados se instalaron con su suma en 18 s.)*
+- [x] Separar con el modelo real (`karaoke::tests::con_el_modelo_real_separa_una_pista_sin_pasar_de_3_gb`) y en la aplicación: sin vacíos
+      de buffer con todos los núcleos ocupados y el pico de memoria por debajo de 3 GB (F5.2.1, P8). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase5`: la prueba con una canción de 4:45 marcó 1,4 GB (antes 6,7 GB, ver P8); en la aplicación, con los 8 núcleos ocupados, 632 s de preparación sin huecos ni discontinuidades y 1,6 GB de pico del proceso.)*
+- [x] Preparar una canción para karaoke desde la orden del puente: avance en el botón, lo que suena no se corta y al
+      terminar se pasa al instrumental sin hueco (F5.2.2); sin el agregado, se ofrece con su tamaño (F5.1.4). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase5`: 29 avances distintos en la consola, el paso al instrumental grabado sin hueco, y sin el agregado la oferta dice «139 MB».)*
+- [x] "Cooler Than Me" (48 kHz) se prepara para karaoke y aparece su micrófono. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh fase5`: preparada en 435 s y el micrófono de la barra habilitado.)*
 
 ## Fase 6
 
