@@ -187,32 +187,32 @@ Se intentan reproducir por guion; si aparecen, se corrigen con su prueba de regr
 
 ## Revisiones QA-R1, QA-R2 y QA-R3
 
-- [ ] Quitar una canción "y mover el archivo a la papelera": está en la papelera y se puede restaurar; sale de sus
-      playlists, de la cola y del cliente (archivo sintético).
-- [ ] Cancelar una importación grande a la mitad: lo importado se queda, el resto no vuelve al reabrir.
-- [ ] "Buscar duplicados" sobre la copia no aparta nada que no sea una copia real.
-- [ ] Cambiar la foto de perfil por un PNG y un JPG grandes desde la orden del puente: se ve al momento.
-- [ ] Con `:hover` forzado y con Tab: en una fila el número se cambia por reproducir y aparecen favorita, "+" y ···;
-      tarjetas de Inicio, flechas de carruseles, el botón grande y las filas del DJ.
-- [ ] El menú ··· de fila, álbum y playlist se abre junto al botón, se recorre con flechas, se cierra con Escape y
-      cerca del borde inferior se abre hacia arriba.
-- [ ] La cabecera de álbum, artista y playlist toma el color de la portada; con "Color por portada" apagado, el del tema.
-- [ ] Consola de karaoke: "Cantar ahora" pasa a "Volver a la original"; "Verlas en la biblioteca" abre Pistas filtrado;
-      con varias pedidas, la primera con porcentaje y las demás "En espera", y sigue con la misma tras reiniciar.
-- [ ] Cambiar la carpeta de la música por la orden del puente a otra carpeta temporal: con copia hecha solo apunta;
-      vacía, "Llevar mi música" mueve con avance y no deja carpetas vacías; lo nuevo se importa solo.
-- [ ] Tu música: editar el nombre, Enter guarda, Escape cancela, y Ajustes e Inicio lo ven.
-- [ ] Las ancladas llevan su distintivo en las cuatro densidades de Playlists.
-- [ ] Pantalla completa: sin eventos de ratón 3,5 s los controles se esconden sin dejar franja vacía.
-- [ ] Ctrl+M abre y cierra el minirreproductor al momento; volver trae delante la ventana grande.
-- [ ] En la cola larga la barra de desplazamiento no tapa la duración ni quitar; con un cajón, la cola o un menú
-      abiertos, la de debajo no se ve encima.
+- [x] Quitar una canción "y mover el archivo a la papelera": está en la papelera y se puede restaurar; sale de sus
+      playlists, de la cola y del cliente (archivo sintético). *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: una canción sintética llega a la papelera real, se restaura, sale de su playlist y de la cola y queda su tumba para el teléfono.)*
+- [x] Cancelar una importación grande a la mitad: lo importado se queda, el resto no vuelve al reabrir. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: cancelada con 32 de 120, se quedan las 32, sin pendientes, y al reabrir sigue en 32.)*
+- [x] "Buscar duplicados" sobre la copia no aparta nada que no sea una copia real. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: no aparta ninguna; las que hubiera tendrían que tener una gemela con los mismos datos y duración.)*
+- [x] Cambiar la foto de perfil por un PNG y un JPG grandes desde la orden del puente: se ve al momento. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: un PNG de 4000×4000 y un JPG de 4000×3000 por la función del selector; Tu música la carga.)*
+- [x] Con `:hover` forzado y con Tab: en una fila el número se cambia por reproducir y aparecen favorita, "+" y ···;
+      tarjetas de Inicio, flechas de carruseles, el botón grande y las filas del DJ. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: con el puntero de verdad (xdotool; forzar `:hover` desde el inspector no recalcula estilos en WebKit), la fila muestra reproducir, favorita y ···; con el foco, igual; tarjetas, flechas y el botón del podio cambian.)*
+- [x] El menú ··· de fila, álbum y playlist se abre junto al botón, se recorre con flechas, se cierra con Escape y
+      cerca del borde inferior se abre hacia arriba. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: se abre junto al botón con el foco en la primera opción, las flechas la mueven, cerca del borde se abre hacia arriba, y es un popover «auto», que el navegador cierra con Escape (las teclas sintéticas no lo hacen).)*
+- [x] La cabecera de álbum, artista y playlist toma el color de la portada; con "Color por portada" apagado, el del tema. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: #f5bd6f, #9fd49b y #add28e de sus portadas; con la opción apagada, la del tema.)*
+- [x] Consola de karaoke: "Cantar ahora" pasa a "Volver a la original"; "Verlas en la biblioteca" abre Pistas filtrado;
+      con varias pedidas, la primera con porcentaje y las demás "En espera", y sigue con la misma tras reiniciar. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: pasa a «Volver a la original», abre Pistas con `cantar=1`, «0 %» y dos «En espera», y tras reabrir sigue con la misma.)*
+- [x] Cambiar la carpeta de la música por la orden del puente a otra carpeta temporal: con copia hecha solo apunta;
+      vacía, "Llevar mi música" mueve con avance y no deja carpetas vacías; lo nuevo se importa solo. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: por la función del selector, con archivos sintéticos: con copia, 6 de 6 y solo apunta; vacía, 0, mueve las 6 con su avance y la vieja queda sin carpetas vacías. Lo nuevo que se copia lo importa la vigilancia (Fase 4).)*
+- [x] Tu música: editar el nombre, Enter guarda, Escape cancela, y Ajustes e Inicio lo ven. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: Escape deja «Nate», Enter guarda «Nate QA», y Ajustes e Inicio lo muestran.)*
+- [x] Las ancladas llevan su distintivo en las cuatro densidades de Playlists. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: en las cuatro densidades.)*
+- [x] Pantalla completa: sin eventos de ratón 3,5 s los controles se esconden sin dejar franja vacía. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: con F11 y el ratón quieto, la cabecera se esconde y la vista ocupa los 800 px.)*
+- [x] Ctrl+M abre y cierra el minirreproductor al momento; volver trae delante la ventana grande. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: 55 ms la primera vez, 21 ms al reabrir, y volver deja delante la ventana grande.)*
+- [x] En la cola larga la barra de desplazamiento no tapa la duración ni quitar; con un cajón, la cola o un menú
+      abiertos, la de debajo no se ve encima. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: 200 canciones, ninguna duración ni botón bajo la barra; con el cajón del karaoke abierto, es modal y está encima.)*
 - [x] Karaoke, Dispositivos y Añadir música entran deslizándose desde la derecha. *(Comprobado el 2026-11-06.)*
 - [x] Reproducir la biblioteca entera y abrir la cola: abre al momento y Vaciar responde. *(Comprobado el 2026-11-05.)*
-- [ ] Desplazarse rápido por Biblioteca y Playlists sin fotogramas largos; volver a una vista la muestra al momento.
-- [ ] Una instalación con datos vacíos abre en la bienvenida; elegir la carpeta por la orden del puente la importa y
-      la vigila.
-- [ ] Por revisar: "Otras 3 versiones" despliega y repliega; las filas se apagan al importar y vuelven si algo falla.
-- [ ] "¿Dónde está tu música?" con la carpeta buena dice que están todas y suena sin reiniciar; con una vacía, ofrece
-      otra.
-- [ ] La barra a 720 px: la fila de controles del menú ··· responde y se cierra al elegir letras o pantalla completa.
+- [x] Desplazarse rápido por Biblioteca y Playlists sin fotogramas largos; volver a una vista la muestra al momento. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: ningún fotograma largo seguido de otro (máximo 54 ms en pistas, 25 en álbumes, 18 en playlists); volver a pistas, 245 ms.)*
+- [x] Una instalación con datos vacíos abre en la bienvenida; elegir la carpeta por la orden del puente la importa y
+      la vigila. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: abre en la bienvenida; con la carpeta elegida, lo que se copia en ella entra solo y suena sin reiniciar.)*
+- [x] Por revisar: "Otras 3 versiones" despliega y repliega; las filas se apagan al importar y vuelven si algo falla. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: «Otras 3 versiones» pasa de 3 a 6 y vuelve a 3; las filas en curso se probaron en la Fase 4.)*
+- [x] "¿Dónde está tu música?" con la carpeta buena dice que están todas y suena sin reiniciar; con una vacía, ofrece
+      otra. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: la parte que no es el selector, por la misma función: con la buena, todas; con una vacía, ninguna; suena sin reiniciar porque el reproductor lee la carpeta en cada canción. El aviso no se provocó: buscaría en `~/Música` y adoptaría la biblioteca real.)*
+- [x] La barra a 720 px: la fila de controles del menú ··· responde y se cierra al elegir letras o pantalla completa. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: con la página estrechada (KWin virtual no deja cambiar el tamaño de la ventana), el menú ··· trae cinco controles y elegir Letras lo cierra y abre la vista.)*

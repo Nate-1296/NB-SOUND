@@ -315,8 +315,8 @@ que llegó.
   no está disponible en tu equipo, o todavía no existe, no se muestra.
 * **Privacidad y servicios en línea**: un interruptor general y uno por servicio (AcoustID, MusicBrainz, Cover Art
   Archive, Shazam, iTunes, LRCLIB, lyrics.ovh, Deezer, Wikipedia, TheAudioDB, actualizaciones), cada uno diciendo
-  qué recibe. Debajo de AcoustID y de TheAudioDB, su clave: se guarda en el llavero del sistema y solo se ve si hay
-  una.
+  qué recibe. Debajo de AcoustID, su clave (gratuita, de acoustid.org): se guarda en el llavero del sistema y
+  solo se ve si hay una. TheAudioDB usa su clave pública, la misma para todos.
 * **Inteligencia artificial**: desempatar con IA cuando dos versiones empatan, con tu propia cuenta (Anthropic u
   OpenAI) y tu clave guardada en el llavero del sistema.
 * **Acerca de**: el logo, la versión, buscar actualizaciones e instalarlas, la licencia y los componentes de
