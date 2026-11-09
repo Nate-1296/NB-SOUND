@@ -268,14 +268,36 @@
   );
 </script>
 
-<section class="vista">
+<section class="vista" class:vacia={cargada && lista.length === 0}>
   <header class="cabecera">
-    <div>
+    <span class="cabecera-icono" aria-hidden="true"><Icon nombre="porRevisar" tamano={28} /></span>
+    <div class="cabecera-texto">
       <h1>{t.titulo}</h1>
+      <p class="sub">{t.subtitulo}</p>
       {#if enCurso}
         <p class="cuenta" role="status">{t.enCurso(enCurso.hechas, enCurso.total)}</p>
       {:else if lista.length > 0}
         <p class="cuenta">{t.cuenta(lista.length)}</p>
+      {/if}
+      {#if grupos.length > 1}
+        <nav class="resumen" aria-label={t.resumen}>
+          {#each grupos as g (g.id)}
+            <a
+              class="ficha"
+              href="#g-{g.id}"
+              onclick={(e) => {
+                // El lienzo es el que desplaza, no la página: el ancla sola no llega.
+                e.preventDefault();
+                document
+                  .getElementById(`g-${g.id}`)
+                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+            >
+              <Icon nombre={g.icono} tamano={14} />{t.grupos[g.id].titulo}
+              <span class="ficha-cuenta">{g.filas.length}</span>
+            </a>
+          {/each}
+        </nav>
       {/if}
     </div>
     {#if lista.length > 1 && !enCurso}
@@ -449,35 +471,113 @@
 </dialog>
 
 <style>
+  /* Centrada y con aire: antes todo quedaba pegado arriba a la izquierda, con el
+     resto del lienzo vacío (Nathan, 2026-11-09). */
   .vista {
     display: flex;
     flex-direction: column;
-    gap: var(--ns-espacio-6);
-    max-width: 64rem;
+    gap: var(--ns-espacio-5);
+    width: min(100%, 60rem);
+    margin-inline: auto;
+    padding-block: var(--ns-espacio-4) var(--ns-espacio-7);
+  }
+
+  .vista.vacia {
+    min-height: 70vh;
+    justify-content: center;
   }
 
   .cabecera {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    align-items: flex-start;
     gap: var(--ns-espacio-4);
+    padding: var(--ns-espacio-6);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-xl);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--m3c-primary-container) 55%, var(--m3c-surface-container-low)) 0%,
+      var(--m3c-surface-container-low) 70%
+    );
+  }
+
+  .cabecera-icono {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-primary);
+    color: var(--m3c-on-primary);
+  }
+
+  .cabecera-texto {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--ns-espacio-2);
+    min-width: 0;
   }
 
   h1 {
     margin: 0;
-    font-size: var(--ns-texto-xl);
+    font-size: var(--ns-texto-2xl);
+  }
+
+  .sub {
+    max-width: 40rem;
+    margin: 0;
+    color: var(--m3c-on-surface-variant);
+    font-size: var(--ns-texto-sm);
   }
 
   .cuenta {
-    margin: var(--ns-espacio-1) 0 0;
-    color: var(--m3c-on-surface-variant);
+    margin: 0;
     font-size: var(--ns-texto-sm);
+    font-weight: 600;
+  }
+
+  .resumen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ns-espacio-2);
+    margin-top: var(--ns-espacio-1);
+  }
+
+  .ficha {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ns-espacio-1);
+    padding: var(--ns-espacio-1) var(--ns-espacio-3);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-pleno);
+    background: var(--m3c-surface-container);
+    color: var(--m3c-on-surface);
+    font-size: var(--ns-texto-xs);
+    text-decoration: none;
+    transition: background var(--ns-duracion-corta) var(--ns-curva);
+  }
+
+  .ficha:hover,
+  .ficha:focus-visible {
+    background: var(--m3c-surface-container-high);
+  }
+
+  .ficha-cuenta {
+    color: var(--m3c-on-surface-variant);
+    font-weight: 600;
   }
 
   .grupo {
     display: flex;
     flex-direction: column;
-    gap: var(--ns-espacio-3);
+    gap: var(--ns-espacio-4);
+    padding: var(--ns-espacio-5);
+    border: 1px solid var(--m3c-outline-variant);
+    border-radius: var(--ns-radio-xl);
+    background: var(--m3c-surface-container-low);
+    scroll-margin-top: var(--ns-espacio-4);
   }
 
   .grupo-cabecera {

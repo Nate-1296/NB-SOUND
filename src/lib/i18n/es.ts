@@ -585,6 +585,9 @@ export const es = {
   },
   porRevisar: {
     titulo: 'Por revisar',
+    subtitulo:
+      'Canciones que NB Sound no pudo confirmar solo. Están agrupadas por lo que les pasa, con lo que suele convenir a la vista.',
+    resumen: 'Qué les pasa',
     vacioTitulo: 'Nada por revisar',
     vacio: 'Todo lo que importaste está en tu biblioteca.',
     cuenta: (n: number) =>
