@@ -164,6 +164,20 @@ compara lo que recibe con la base de la copia, el DOM y el reproductor.
 - [ ] Modo fiesta con un cliente HTTP: buscar, sugerir, aprobar, descartar, modo automático y rotar el QR deja sin
       efecto el enlace anterior (F8.5).
 
+## Defectos que Nathan vio y no se han reproducido (2026-11-09)
+
+Se intentan reproducir por guion; si aparecen, se corrigen con su prueba de regresión.
+
+- [ ] **Audio entrecortado en la primera apertura de la sesión.** Al encender el portátil y abrir NB Sound por
+      primera vez, la canción suena cortada; cerrar y abrir lo arregla. También pasó mientras otras pruebas
+      reproducían audio. Se prueba arrancando en frío (PipeWire recién iniciado, sin caché de disco: `echo 3 >
+      drop_caches` no es posible sin root, así que con un usuario de PipeWire nuevo y la copia de los datos
+      recién escrita), con otra aplicación sonando a la vez y con la CPU ocupada, grabando el sumidero.
+- [ ] **Recién instalada, lo importado no suena hasta reiniciar.** Instalación nueva, importar música sin
+      reiniciar y darle a reproducir: el botón cambia unos milisegundos y vuelve a pausa; tras reiniciar, todo
+      suena. Visto en Windows en dos portátiles. Se prueba con datos vacíos (bienvenida), importando por la orden
+      del puente y reproduciendo en la misma sesión.
+
 ## Revisiones QA-R1, QA-R2 y QA-R3
 
 - [ ] Quitar una canción "y mover el archivo a la papelera": está en la papelera y se puede restaurar; sale de sus

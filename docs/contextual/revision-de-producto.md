@@ -48,6 +48,7 @@ Ordenado por lo que aporta a quien la usa a diario. Cada fila dice qué app lo t
 | A6 | **Firma de código** en Windows y macOS | Cualquier aplicación distribuida | Sin firma, Windows enseña "SmartScreen" y macOS dice que la aplicación "está dañada". Hace falta un certificado (Windows) y una cuenta de desarrollador de Apple: es una decisión de Nathan con coste |
 | A7 | **Las pruebas finales**, solo las que hace una IA (sin máquina limpia desde el 2026-11-08) | — | La [Constitución](./constitution/README.md) (regla 1) y el [plan](../plan/README.md) lo exigen antes de dar la 2.0 por publicada. Hoy está publicada sin pasarla |
 | A8 | **La memoria del karaoke** (P8: llegó a 9 GB) | — | Hecha el 2026-11-09: 1,4 GB de pico sin optimizar el grafo de ONNX Runtime (P8) |
+| A9 | **Completar en segundo plano lo que le falta a la biblioteca** (letras, portadas, fotos de artista, etiquetas), como el karaoke: una importación puede fallar a medias sin que falte el dato en el servicio, y una biblioteca que llega de otra instalación entra sin nada | Plexamp, MusicBee (con complementos) | Pedido por Nathan el 2026-11-09 tras restaurar en otro portátil (P18). Las piezas existen: "Completar datos" por pista y la puerta de red con consentimiento; falta la cola de fondo con su prioridad baja y su avance |
 
 ### Prioridad media
 
