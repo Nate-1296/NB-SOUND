@@ -3,6 +3,35 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.14] — 2026-11-09
+
+Lo que encontraron las pruebas finales, hechas por IA sobre una copia de la biblioteca real.
+
+### Novedades
+
+- Lo que le falta a la biblioteca (portadas, letras, fotos de artista) se completa solo, sin prisa, cinco minutos
+  después de abrir y con los servicios en línea encendidos. Sirve para una importación que falló a medias y para una
+  biblioteca que llega de otro equipo.
+- La clave de AcoustID se pone en Ajustes > Privacidad y se guarda en el llavero del sistema. TheAudioDB usa su clave
+  pública.
+- Por revisar, centrada y más clara: una cabecera con lo que pasa, un resumen que lleva a cada grupo y cada grupo en
+  su tarjeta.
+
+### Correcciones
+
+- En una instalación nueva, lo importado no sonaba hasta reiniciar.
+- La primera canción del día podía entrecortarse mientras se hacía la copia automática: ahora espera dos minutos y
+  no compite con lo que suena.
+- El DJ tardaba más de un minuto en empezar a sonar; ahora, menos de dos segundos.
+- Las mezclas del DJ con filtros bajaban el volumen a mitad de la transición.
+- Descartar una sesión del DJ recién pedida movía la cola una canción adelante.
+- En A ciegas, una letra mal en un título corto no contaba como acierto.
+- El karaoke llegaba a 6,7 GB de memoria al preparar una canción; ahora no pasa de 1,5 GB.
+- Cerrar NB Sound a mitad de una importación dejaba falsos duplicados en Por revisar, y la carpeta vigilada tomaba
+  por nuevas canciones recién importadas.
+- "Completar datos" nunca identificaba una canción por su sonido.
+- La ventana ya no muestra un instante el tema de fábrica al abrir, y si algo falla al cargarla, aparece igual.
+
 ## [2.0.13] — 2026-11-06
 
 Lo que encontró la prueba de punta a punta de la 2.0.12.
