@@ -61,7 +61,9 @@ const INTERFAZ = [join(ROOT, 'src/routes'), join(ROOT, 'src/lib')];
  * que se queda. Mientras tanto no se apunta ninguno, para que la lista no se
  * convierta en el sitio donde se aparcan las decisiones que no se toman.
  */
-const SIN_USO_OK = new Map();
+const SIN_USO_OK = new Map([
+  ['qaImportarCarpeta', 'solo lo usa scripts/qa/catalog-qa.mjs sobre NB_SOUND_TEST_DIR']
+]);
 
 /** @param {string} dir @returns {string[]} */
 function recorrer(dir) {

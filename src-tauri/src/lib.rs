@@ -530,6 +530,7 @@ pub fn run() {
             comandos::importacion_progreso,
             comandos::importacion_cancelar,
             comandos::anadir_musica,
+            comandos::qa_importar_carpeta,
             comandos::por_revisar_listar,
             comandos::por_revisar_contar,
             comandos::por_revisar_importar,

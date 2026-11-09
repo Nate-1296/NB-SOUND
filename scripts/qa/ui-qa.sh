@@ -26,7 +26,7 @@ fi
 
 uso() {
   printf '%s\n' \
-    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|movil|fallo-apariencia|fallo-js|detener|todo'
+    'Uso: scripts/qa/ui-qa.sh preparar|iniciar|inicio|temas|biblioteca|movil|fase4|catalog-probe|catalog-red|fallo-apariencia|fallo-js|detener|todo'
 }
 
 limpiar() {
@@ -48,6 +48,8 @@ limpiar() {
   if [[ -n ${MODULO_RESTORE:-} ]]; then
     pactl load-module module-stream-restore >/dev/null 2>&1 || true
   fi
+  find "$HOME/.local/share/Trash/files" -maxdepth 1 -name 'nbqa-*' -delete 2>/dev/null || true
+  find "$HOME/.local/share/Trash/info" -maxdepth 1 -name 'nbqa-*.trashinfo' -delete 2>/dev/null || true
 }
 trap limpiar EXIT INT TERM
 
@@ -86,6 +88,121 @@ preparar_fallo_apariencia() {
   preparar
   # La versión de esquema queda al día, pero la lectura de preferencias falla.
   sqlite3 "$DB" 'DROP TABLE preferencias;'
+}
+
+preparar_fase4_red() {
+  preparar
+  local fuente="$QA_BASE/fase4/fuentes/red-real"
+  local original="$HOME/Música/biblioteca/john_lennon/albumes/walls_and_bridges/00_9_dream.mp3"
+  rm -rf "$fuente"
+  mkdir -p "$fuente"
+  ffmpeg -hide_banner -loglevel error -y -i "$original" -map 0:a -c copy \
+    -map_metadata -1 -id3v2_version 3 "$fuente/QA AcoustID.mp3"
+  sqlite3 "$DB" <<'SQL'
+UPDATE preferencias SET valor = '{"general":true,"servicios":["acoustId","musicBrainz","coverArtArchive","lrclib"]}'
+ WHERE clave = 'politica_de_red';
+UPDATE preferencias SET valor = 'true' WHERE clave = 'organizar_archivos';
+SQL
+}
+
+limpiar_restos_de_importacion() {
+  # La base se copia de nuevo en cada corrida, pero la carpeta de música no: lo
+  # que importaron corridas anteriores sigue ahí y el vigilante lo trataría como
+  # música nueva. Lo de la biblioteca real son enlaces duros (dos o más enlaces);
+  # lo que tiene uno solo lo creó una corrida y se puede borrar sin tocar nada real.
+  find "$QA_BASE/biblioteca" -type f -links 1 -delete
+  find "$QA_BASE/biblioteca" -mindepth 1 -type d -empty -delete
+  rm -rf "$QA_BASE/datos/por-revisar"
+  mkdir -p "$QA_BASE/datos/por-revisar"
+}
+
+preparar_fase4() {
+  preparar
+  limpiar_restos_de_importacion
+  local base="$QA_BASE/fase4"
+  local fuentes="$base/fuentes"
+  local original="$HOME/Música/biblioteca/john_lennon/albumes/walls_and_bridges/00_9_dream.mp3"
+  rm -rf "$base"
+  mkdir -p "$fuentes/red-real" "$fuentes/sin-red" "$fuentes/completar" \
+    "$fuentes/revisar" "$fuentes/lote"
+  ffmpeg -hide_banner -loglevel error -y -i "$original" -map 0:a -c copy \
+    -map_metadata -1 -id3v2_version 3 "$fuentes/red-real/QA AcoustID.mp3"
+  ffmpeg -hide_banner -loglevel error -y \
+    -f lavfi -i 'sine=frequency=523:sample_rate=48000:duration=16' \
+    -metadata title='QA Sin Red' -metadata artist='QA Fase 4' \
+    -metadata album='QA Sin Red' -id3v2_version 3 "$fuentes/sin-red/nbqa-sin-red.mp3"
+  ffmpeg -hide_banner -loglevel error -y \
+    -f lavfi -i 'color=c=0x336699:s=300x300' -frames:v 1 \
+    "$base/portada-qa.jpg"
+  ffmpeg -hide_banner -loglevel error -y -i "$original" -map 0:a -c copy \
+    -metadata title='QA Completar' -metadata artist='QA Artista' \
+    -metadata album='QA Completar Álbum' -id3v2_version 3 \
+    "$fuentes/completar/nbqa-completar.mp3"
+  rm -rf "$fuentes/lote"
+  preparar_lote_qa
+  ffmpeg -hide_banner -loglevel error -y \
+    -f lavfi -i 'sine=frequency=440:sample_rate=48000:duration=16' \
+    -metadata title='QA Tal Cual' -metadata artist='QA Fase 4' \
+    -id3v2_version 3 "$fuentes/revisar/nbqa-tal-cual.mp3"
+  ffmpeg -hide_banner -loglevel error -y \
+    -f lavfi -i 'sine=frequency=480:sample_rate=48000:duration=16' \
+    -metadata title='QA Reintentar' -id3v2_version 3 \
+    "$fuentes/revisar/nbqa-reintentar.mp3"
+  ffmpeg -hide_banner -loglevel error -y \
+    -f lavfi -i 'sine=frequency=520:sample_rate=48000:duration=16' \
+    -metadata title='QA Descartar' -id3v2_version 3 \
+    "$fuentes/revisar/nbqa-descartar.mp3"
+  cp "$fuentes/revisar/nbqa-tal-cual.mp3" "$fuentes/revisar/nbqa-sin-confirmar.mp3"
+  cp "$fuentes/revisar/nbqa-tal-cual.mp3" "$fuentes/revisar/nbqa-fallida.mp3"
+  cp "$fuentes/revisar/nbqa-tal-cual.mp3" "$fuentes/revisar/nbqa-danada.mp3"
+  cp "$fuentes/revisar/nbqa-tal-cual.mp3" "$fuentes/revisar/nbqa-duplicado.mp3"
+  sqlite3 "$DB" <<'SQL'
+UPDATE preferencias SET valor = '{"general":true,"servicios":["acoustId","musicBrainz","coverArtArchive","lrclib"]}'
+ WHERE clave = 'politica_de_red';
+SQL
+  rm -f "$QA_BASE/registros"/nb-sound.log.*
+}
+
+preparar_lote_qa() {
+  local lote="$QA_BASE/fase4/fuentes/lote"
+  local i titulo
+  rm -rf "$lote"
+  mkdir -p "$lote"
+  for i in $(seq 1 120); do
+    titulo=$(printf 'QA Lote %02d' "$i")
+    ffmpeg -hide_banner -loglevel error -y \
+      -f lavfi -i "sine=frequency=$((330 + i * 17)):sample_rate=48000:duration=16" \
+      -metadata title="$titulo" -metadata artist='QA Fase 4' \
+      -metadata album='QA Lote' -id3v2_version 3 \
+      "$lote/nbqa-lote-$i.mp3"
+  done
+}
+
+limpiar_lote_qa() {
+  rm -rf "$QA_BASE/biblioteca/qa_fase_4/albumes/qa_lote"
+  sqlite3 "$DB" <<'SQL'
+DELETE FROM pendientes_importacion
+ WHERE ruta LIKE '%/fase4/fuentes/lote/%'
+    OR ruta LIKE '%/qa_lote/%';
+UPDATE importaciones SET estado = 'cancelada',
+    terminada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+ WHERE estado = 'en_curso'
+   AND NOT EXISTS (
+     SELECT 1 FROM pendientes_importacion p WHERE p.importacion_id = importaciones.id
+   );
+DELETE FROM por_revisar
+ WHERE json_extract(metadatos, '$.nombre_original') LIKE '%qa_lote_%'
+    OR json_extract(metadatos, '$.nombre_original') LIKE 'nbqa-lote-%'
+    OR ruta LIKE '%/nbqa-lote-%';
+DELETE FROM pistas WHERE titulo LIKE 'QA Lote %';
+DELETE FROM albumes
+ WHERE titulo = 'QA Lote'
+   AND NOT EXISTS (SELECT 1 FROM pistas p WHERE p.album_id = albumes.id);
+DELETE FROM artistas
+ WHERE nombre = 'QA Fase 4'
+   AND NOT EXISTS (SELECT 1 FROM pistas p WHERE p.artista_id = artistas.id)
+   AND NOT EXISTS (SELECT 1 FROM albumes a WHERE a.artista_id = artistas.id);
+SQL
 }
 
 iniciar_sumidero() {
@@ -147,6 +264,19 @@ iniciar_kwin() {
   export LISTA_DISPLAY
 }
 
+preparar_papelera_qa() {
+  local papelera_qa="$QA_BASE/xdg-data/Trash"
+  if [[ -L $papelera_qa ]]; then
+    return 0
+  fi
+  if [[ -d $papelera_qa ]]; then
+    find "$papelera_qa/files" -maxdepth 1 -name 'nbqa-*' -delete 2>/dev/null || true
+    find "$papelera_qa/info" -maxdepth 1 -name 'nbqa-*.trashinfo' -delete 2>/dev/null || true
+    rmdir "$papelera_qa/files" "$papelera_qa/info" "$papelera_qa"
+  fi
+  ln -s "$HOME/.local/share/Trash" "$papelera_qa"
+}
+
 esperar_inspector() {
   local i
   for i in $(seq 1 120); do
@@ -167,13 +297,15 @@ lanzar_app() {
     DISPLAY="$LISTA_DISPLAY" \
     GDK_BACKEND=x11 \
     NB_SOUND_TEST_DIR="$QA_BASE" \
+    NB_QA_PERMITIR_IMPORTACION=1 \
     PULSE_SINK="$SUMIDERO" \
     PIPEWIRE_NODE="$NODO_SUMIDERO" \
     WEBKIT_INSPECTOR_HTTP_SERVER=127.0.0.1:9333 \
     XDG_DATA_HOME="$QA_BASE/xdg-data" \
     XDG_CACHE_HOME="$QA_BASE/xdg-cache" \
     XDG_CONFIG_HOME="$QA_BASE/xdg-config" \
-    RUST_LOG=warn \
+    RUST_LOG="${NB_QA_RUST_LOG:-warn}" \
+    NB_SOUND_LOG="${NB_QA_NB_SOUND_LOG:-info}" \
     "$BINARIO" >"$registro" 2>&1 &
   PID_APP=$!
   export PID_APP
@@ -187,6 +319,7 @@ arrancar_app() {
 iniciar_entorno() {
   iniciar_sumidero
   iniciar_kwin
+  preparar_papelera_qa
   arrancar_app
 }
 
@@ -278,6 +411,7 @@ escenario() {
   local nombre=$1
   env NB_QA_DB="$DB" NB_QA_APP_PID="$PID_APP" \
     NB_QA_RAIZ="$RAIZ" \
+    NB_QA_ROOT="$QA_BASE" \
     NB_QA_INFORMES="$QA_BASE/informes" \
     NB_QA_CERT_PATH="$QA_BASE/datos/movil/sync_cert.pem" \
     DISPLAY="$LISTA_DISPLAY" \
@@ -287,10 +421,53 @@ escenario() {
 escenario_movil() {
   env NB_QA_DB="$DB" NB_QA_APP_PID="$PID_APP" \
     NB_QA_RAIZ="$RAIZ" \
+    NB_QA_ROOT="$QA_BASE" \
     NB_QA_INFORMES="$QA_BASE/informes" \
     NB_QA_CERT_PATH="$QA_BASE/datos/movil/sync_cert.pem" \
     DISPLAY="$LISTA_DISPLAY" \
     nice -n 10 node "$RAIZ/scripts/qa/mobile-qa.mjs"
+}
+
+escenario_catalogo() {
+  env NB_QA_DB="$DB" NB_QA_APP_PID="$PID_APP" \
+    NB_QA_RAIZ="$RAIZ" \
+    NB_QA_ROOT="$QA_BASE" \
+    NB_QA_INFORMES="$QA_BASE/informes" \
+    NB_QA_REGISTROS="$QA_BASE/registros" \
+    NB_QA_FASE4_FUENTES="$QA_BASE/fase4/fuentes" \
+    NB_QA_CERT_PATH="$QA_BASE/datos/movil/sync_cert.pem" \
+    DISPLAY="$LISTA_DISPLAY" \
+    nice -n 10 node "$RAIZ/scripts/qa/catalog-qa.mjs" "$@"
+}
+
+fase4() {
+  preparar_fase4
+  export NB_QA_NB_SOUND_LOG='nb_sound_lib=info,nb_sound_lib::net=debug,warn'
+  iniciar_entorno
+  escenario_catalogo red
+  escenario_catalogo sin-red
+  escenario_catalogo importar-lote
+  kill -9 "$PID_APP" 2>/dev/null || true
+  wait "$PID_APP" 2>/dev/null || true
+  PID_APP=
+  arrancar_app
+  escenario_catalogo verificar-lote
+  escenario_catalogo revisar
+  escenario_catalogo privacidad-servicio
+  escenario_catalogo completar-editar
+  escenario_catalogo estado-copia
+  env NB_QA_DB="$DB" NB_QA_ROOT="$QA_BASE" \
+    NB_QA_BACKUP="$QA_BASE/fase4/copia.nbsound-backup" \
+    cargo test --manifest-path "$RAIZ/src-tauri/Cargo.toml" --test qa_fase4 \
+      crea_la_copia_desde_el_arnes -- --ignored --nocapture --test-threads=1
+  sqlite3 "$DB" "INSERT INTO playlists (nombre, tipo, visible) VALUES ('QA Cambio Antes De Restaurar', 'manual', 1);"
+  env NB_QA_DB="$DB" NB_QA_ROOT="$QA_BASE" \
+    NB_QA_BACKUP="$QA_BASE/fase4/copia.nbsound-backup" \
+    cargo test --manifest-path "$RAIZ/src-tauri/Cargo.toml" --test qa_fase4 \
+      prepara_la_restauracion_desde_el_arnes -- --ignored --nocapture --test-threads=1
+  cerrar_app
+  arrancar_app
+  escenario_catalogo verificar-copia
 }
 
 todo() {
@@ -324,6 +501,26 @@ case ${1:-} in
     iniciar_entorno
     escenario_movil
     ;;
+  catalog-probe)
+    preparar
+    iniciar_entorno
+    escenario_catalogo probe
+    ;;
+  catalog-red)
+    preparar_fase4_red
+    iniciar_entorno
+    escenario_catalogo red
+    ;;
+  catalog-probe-red)
+    preparar_fase4_red
+    iniciar_entorno
+    escenario_catalogo probe-red
+    ;;
+  catalog-sin-red)
+    iniciar_entorno
+    escenario_catalogo sin-red
+    ;;
+  fase4) fase4 ;;
   fallo-apariencia)
     preparar_fallo_apariencia
     iniciar_entorno

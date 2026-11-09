@@ -171,6 +171,7 @@ impl Red {
             );
             return Err(NsError::PathNotAllowed);
         }
+        tracing::debug!(?servicio, "petición de red autorizada");
         Ok(())
     }
 

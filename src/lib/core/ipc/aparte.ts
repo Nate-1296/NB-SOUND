@@ -88,6 +88,11 @@ export function copiaDispositivoEjecutar(
   return call<ResumenCopiaDispositivo | null>('copia_dispositivo_ejecutar', { opciones });
 }
 
+/** Entrada aislada del arnés; el runtime la rechaza fuera de NB_SOUND_TEST_DIR. */
+export function qaImportarCarpeta(ruta: string): Promise<number> {
+  return call<number>('qa_importar_carpeta', { ruta });
+}
+
 // --- Resumen local de escucha (F8.3) ---------------------------------------------
 
 export function resumenEscucha(periodo: string | null = null): Promise<ResumenEscucha> {

@@ -3,6 +3,8 @@
 //! Todos son `async` y devuelven [`NsResult`]: ni corren en el hilo de la ventana
 //! ni devuelven cadenas como error.
 
+use std::path::{Path, PathBuf};
+
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use ts_rs::TS;
@@ -1162,6 +1164,41 @@ pub async fn anadir_musica(app: AppHandle, carpeta: bool) -> NsResult<u32> {
     Ok(n)
 }
 
+fn carpeta_de_fuentes_qa(base: &Path, ruta: &Path) -> NsResult<PathBuf> {
+    let fuentes = base
+        .join("fase4/fuentes")
+        .canonicalize()
+        .map_err(|_| NsError::PathNotAllowed)?;
+    let carpeta = ruta.canonicalize().map_err(|_| NsError::PathNotAllowed)?;
+    if !carpeta.is_dir() || !carpeta.starts_with(&fuentes) {
+        return Err(NsError::PathNotAllowed);
+    }
+    Ok(carpeta)
+}
+
+/// Entrada del arnés de catalogación. No existe para el producto: exige el
+/// directorio de pruebas y una bandera de QA, y solo acepta fuentes dentro de él.
+#[tauri::command]
+pub async fn qa_importar_carpeta(estado: tauri::State<'_, Estado>, ruta: String) -> NsResult<u32> {
+    let Some(base) = std::env::var_os(crate::paths::TEST_DIR_ENV) else {
+        return Err(NsError::PathNotAllowed);
+    };
+    if std::env::var("NB_QA_PERMITIR_IMPORTACION").as_deref() != Ok("1") {
+        return Err(NsError::PathNotAllowed);
+    }
+    let base = PathBuf::from(base);
+    let pedida = Path::new(&ruta)
+        .canonicalize()
+        .map_err(|_| NsError::PathNotAllowed)?;
+    let carpeta = carpeta_de_fuentes_qa(&base, &pedida)?;
+    let archivos = crate::catalogo::importacion::expandir(std::slice::from_ref(&carpeta));
+    if archivos.is_empty() {
+        return Err(NsError::InvalidInput);
+    }
+    estado.importador.importar(vec![carpeta]);
+    Ok(archivos.len() as u32)
+}
+
 // --- Por revisar (F4.2.4) -----------------------------------------------------
 
 /// Cota: `catalogo::por_revisar::MAX_PENDIENTES`.
@@ -2105,4 +2142,24 @@ pub async fn aciegas_fragmento(
         segundos,
     });
     Ok(j.ronda())
+}
+
+#[cfg(test)]
+mod pruebas_qa {
+    use super::*;
+
+    #[test]
+    fn la_entrada_del_arnes_solo_acepta_fuentes_qa() {
+        let base = std::env::temp_dir().join(format!("nb-qa-import-{}", std::process::id()));
+        let fuentes = base.join("fase4/fuentes/lote");
+        let fuera = base.join("fuera");
+        std::fs::create_dir_all(&fuentes).unwrap();
+        std::fs::create_dir_all(&fuera).unwrap();
+        assert_eq!(carpeta_de_fuentes_qa(&base, &fuentes), Ok(fuentes));
+        assert_eq!(
+            carpeta_de_fuentes_qa(&base, &fuera),
+            Err(NsError::PathNotAllowed)
+        );
+        let _ = std::fs::remove_dir_all(&base);
+    }
 }
