@@ -474,7 +474,7 @@ async function sesionDeUnaHora() {
     'QA_DJ_CPU',
     JSON.stringify({ cpuNormal, cpuMezcla, segNormal: cpu.normal.seg, segMezcla: cpu.mezcla.seg })
   );
-  const audio = analizar('las_mezclas_del_dj_no_se_hunden_ni_saltan', {
+  const audio = analizar('las_mezclas_del_dj_no_tienen_huecos_ni_clics_ni_saltos', {
     NB_QA_WAV: wav,
     NB_QA_MEZCLAS: `${INFORMES}/fase6-mezclas.json`
   });

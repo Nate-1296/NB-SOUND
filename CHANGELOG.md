@@ -3,6 +3,22 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.0.15] — 2026-11-09
+
+El cierre de las pruebas finales.
+
+### Novedades
+
+- Agregado de aceleración para Linux con una tarjeta NVIDIA: el karaoke, el análisis y el DJ usan la GPU. Solo se
+  ofrece si hay una NVIDIA; pesa 2 GB. Sin probar en una NVIDIA real.
+- En Windows, el trabajo de fondo (karaoke, análisis, copia automática…) también corre con prioridad baja de
+  procesador y de disco.
+
+### Correcciones
+
+- El sonido gasta mucho menos: el ecualizador y las bandas del DJ solo trabajan cuando no están planos (el motor pasa
+  del 4,3 al 0,5 % de un núcleo).
+
 ## [2.0.14] — 2026-11-09
 
 Lo que encontraron las pruebas finales, hechas por IA sobre una copia de la biblioteca real.

@@ -354,9 +354,11 @@ que llegó.
   una vez más, porque la versión puede traer el arreglo.
 * **El trabajo de fondo no estorba.** Cada tarea tiene su hilo, lejos de la ventana y del audio. El karaoke usa un
   cuarto de los núcleos y el análisis un octavo. El karaoke, el análisis, la sonoridad, los vectores del DJ, la
-  auditoría, la copia automática y lo que se completa solo corren a la prioridad más baja en Linux y macOS (en Linux
-  también la del disco): solo usan lo que el equipo no está usando. La copia automática espera además dos minutos
+  auditoría, la copia automática y lo que se completa solo corren a la prioridad más baja en Linux, macOS y Windows
+  (en Linux y Windows también la del disco): solo usan lo que el equipo no está usando. La copia automática espera además dos minutos
   tras abrir, para no coincidir con la primera canción.
+* **El sonido gasta poco.** El ecualizador y las bandas del DJ solo trabajan mientras alguna banda no está plana; en
+  reproducción normal, el motor usa menos del 1 % de un núcleo.
 * **El DJ responde al momento.** Los vectores de texto de cada canción se calculan una vez, al abrir y en segundo
   plano, y se guardan junto al agregado: pedir una sesión tarda menos de dos segundos.
 

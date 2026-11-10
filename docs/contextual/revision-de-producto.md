@@ -45,8 +45,8 @@ Ordenado por lo que aporta a quien la usa a diario. Cada fila dice qué app lo t
 | A3 | **Elegir la salida de audio** (auriculares, altavoces, la tarjeta USB) sin ir al sistema                                                                                                                                                                                     | Spotify, MusicBee, foobar2000, Plexamp                                 | `cpal` enumera los dispositivos; un selector en el menú ··· (Dónde suena) y recordar la elección                                                                                                                                                                               |
 | A4 | **Selección múltiple** en las listas (Mayús y Ctrl): añadir a una playlist, a la cola, favoritas o quitar varias a la vez                                                                                                                                                | Todos                                                                  | Hoy todo se hace canción por canción. Es la carencia que más se nota al ordenar una biblioteca grande                                                                                                                                                                               |
 | A5 | **Temporizador de apagado** (al acabar esta canción, en 15, 30, 60 min)                                                                                                                                                                                                     | Spotify (móvil), Apple Music, Plexamp                                 | Pequeño: una orden al reproductor y una entrada en el menú ···                                                                                                                                                                                                                    |
-| A6 | **Firma de código** en Windows y macOS                                                                                                                                                                                                                                      | Cualquier aplicación distribuida                                      | Sin firma, Windows enseña "SmartScreen" y macOS dice que la aplicación "está dañada". Hace falta un certificado (Windows) y una cuenta de desarrollador de Apple: es una decisión de Nathan con coste                                                                             |
-| A7 | **Las pruebas finales**, solo las que hace una IA (sin máquina limpia desde el 2026-11-08)                                                                                                                                                                                  | —                                                                     | La [Constitución](./constitution/README.md) (regla 1) y el [plan](../plan/README.md) lo exigen antes de dar la 2.0 por publicada. Hoy está publicada sin pasarla                                                                                                                       |
+| A6 | **Firma de código** en Windows y macOS                                                                                                                                                                                                                                      | Cualquier aplicación distribuida                                      | Descartada el 2026-11-09: Nathan no pagará los certificados (P15) |
+| A7 | **Las pruebas finales**, solo las que hace una IA (sin máquina limpia desde el 2026-11-08)                                                                                                                                                                                  | —                                                                     | Hecha el 2026-11-09: todas por guion; quedan explicadas en [pruebas finales](../plan/pruebas-finales.md) |
 | A8 | **La memoria del karaoke** (P8: llegó a 9 GB)                                                                                                                                                                                                                               | —                                                                     | Hecha el 2026-11-09: 1,4 GB de pico sin optimizar el grafo de ONNX Runtime (P8)                                                                                                                                                                                                        |
 | A9 | **Completar en segundo plano lo que le falta a la biblioteca** (letras, portadas, fotos de artista, etiquetas), como el karaoke: una importación puede fallar a medias sin que falte el dato en el servicio, y una biblioteca que llega de otra instalación entra sin nada | Plexamp, MusicBee (con complementos)                                   | Hecha el 2026-11-09 (`catalogo/completar_fondo.rs`, V11): cinco minutos después de abrir, con prioridad baja y la conexión general encendida, cada pista sin portada, sin letra o con su artista sin imagen pasa por "Completar datos"; lo que no se encuentra se reintenta al mes |
 
@@ -58,7 +58,7 @@ Ordenado por lo que aporta a quien la usa a diario. Cada fila dice qué app lo t
 | M2 | **Registrar escuchas en ListenBrainz o Last.fm** (opcional)              | MusicBee, foobar2000, Plexamp, Symfonium | Una salida de red más, con su interruptor y consentimiento (regla 5) y su clave en el llavero                                                             |
 | M3 | **Importar y exportar playlists en M3U**                                 | MusicBee, foobar2000                     | Hoy solo la copia a USB escribe M3U. Importar es lo que pide quien viene de otro reproductor                                                               |
 | M4 | **Inglés**                                                              | Todos                                    | Toda la interfaz sale de un diccionario (`check-i18n`), así que es traducir `es.ts` y elegir por el idioma del sistema. Necesario para publicar fuera |
-| M5 | **Bajar la prioridad del trabajo de fondo en Windows**                   | —                                       | En Linux y macOS ya está; en Windows hace falta `windows-sys` (P16)                                                                                     |
+| M5 | **Bajar la prioridad del trabajo de fondo en Windows**                   | —                                       | Hecha el 2026-11-09 con `windows-sys` (P16) |
 | M6 | **Accesibilidad** revisada con lector de pantalla y solo teclado         | Apple Music, Spotify                     | Las bases están (roles, foco visible, temas de alto contraste); falta una pasada con Orca y NVDA                                                          |
 | M7 | **Instrumentales más pequeños** (P14: 40 MB por canción en WAV)       | —                                       | FLAC los deja en la mitad o menos; depende de P7 en el teléfono                                                                                           |
 
@@ -81,20 +81,16 @@ Ordenado por lo que aporta a quien la usa a diario. Cada fila dice qué app lo t
 
 ## Lo que queda por decidir o por cerrar
 
-* **Pruebas finales:** 71 comprobaciones a mano siguen abiertas en [pruebas finales](../plan/pruebas-finales.md);
-  esta sesión cerró por guion las que se pudieron sin ratón (lo dice cada una).
-* **Preguntas abiertas** nuevas: la firma de código (P15), la prioridad en Windows (P16) y el minirreproductor encima
-  de todo en Wayland (P17, decidido dejarlo como está).
+* **Pruebas finales:** hechas el 2026-11-09, todas por guion sobre una copia de los datos
+  ([pruebas finales](../plan/pruebas-finales.md)).
+* **Preguntas abiertas:** P3 (la licencia, pendiente de aclarar con Nathan), P7 (FLAC y M4A en el teléfono) y P14,
+  que depende de P7.
 * **Un defecto sin reproducir:** en la primera apertura de la 2.0.7 instalada, cerrar y abrir volvió a una sesión
-  anterior. No se repitió en cuatro ciclos más (2.0.7, 2.0.8 y 2.0.9). Si vuelve a pasar, lo que hubo justo antes de
-  cerrar es lo que hace falta para encontrarlo.
+  anterior. No se repitió en ningún ciclo posterior, tampoco en las pruebas finales.
 
 ## Lo que haría a continuación
 
-1. **A7 y A6**, porque deciden si la 2.0 está publicada de verdad: la máquina limpia y la firma (con la decisión de
-   Nathan sobre el coste).
-2. **A1, A2, A3 y A5** juntas: son la experiencia de escuchar, se apoyan en piezas que ya existen y es donde Spotify
+1. **A1, A2, A3 y A5** juntas: son la experiencia de escuchar, se apoyan en piezas que ya existen y es donde Spotify
    y Plexamp hoy se notan por delante.
-3. **A4**, la selección múltiple, antes de que la biblioteca crezca más.
-4. **A8** con P8, medida con el tope de memoria del criterio de F5.2.1.
-5. Después, **M1–M4** en ese orden.
+2. **A4**, la selección múltiple, antes de que la biblioteca crezca más.
+3. Después, **M1–M4** en ese orden.

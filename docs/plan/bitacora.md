@@ -257,3 +257,12 @@ hizo las Fases 2 a 4; Claude, el resto. Todo sobre la aplicación compilada y un
 | `f6755ac` | A9 | Completar en segundo plano lo que le falta a la biblioteca (V11) | Qué se vuelve a intentar |
 | `4e2e43f` | QA-IA | Las claves de AcoustID y TheAudioDB se ponen en Ajustes > Privacidad | Cuentas del llavero |
 | `d8d172d` | QA-IA | Arneses de las Fases 6 y 8 y del arranque cargado | — |
+| `59d535e` | QA-IA | TheAudioDB con su clave pública; en Ajustes solo la de AcoustID | Clave pública por defecto |
+| `2b3ab1d`, `3f97e3a` | QA-IA | Las 19 casillas de QA-R1 a QA-R3 por guion (puntero real con xdotool; lo del selector nativo, por su función) | — |
+| `f9b53a8` | QA-IA | Por revisar centrada, con cabecera, resumen por grupo y tarjetas | Diseño medido en la app |
+| `364f540` | — | La 2.0.14 publicada | CI y publicación |
+| — | P20 | El motor gastaba el 4,3 % de un núcleo por las 30 campanas de Kira siempre activas; un banco que se las salta en plano lo deja en el 0,5 % | Coste del motor en `--release` y banco plano bit a bit |
+| — | P16 | `windows-sys`: el trabajo de fondo con prioridad baja también en Windows | — |
+| — | P6 | Agregado de aceleración para Linux con NVIDIA (2 GB), publicado en `agregados-1` sin probar en una NVIDIA | — |
+| — | — | Decisiones de Nathan: P10, P15, P19 cerradas; F4.1.2 hecha; P3 y P7 pendientes de su respuesta | — |
+

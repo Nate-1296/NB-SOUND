@@ -65,3 +65,12 @@ Lo que el motor tiene que cubrir, sacado del código:
 - **Positivas:** desaparecen VLC, sus hilos huérfanos y el sondeo del karaoke; MPRIS deja de escribirse a mano.
 - **Negativas:** Kira está pensado para juegos; la cola sin cortes se programa con su reloj, no viene hecha.
 - **Riesgos:** si Kira no da la precisión necesaria, se sustituye detrás de `MotorAudio` sin tocar nada más.
+
+## Nota del 2026-11-09: el coste medido (P20)
+
+En las pruebas finales, la reproducción normal gastaba el 9 a 11 % de un núcleo en el hilo de salida. El motor solo
+(decodificar, mezclar, efectos) era el 4,3 %, casi todo en las 30 campanas de Kira (diez de la maestra y diez de
+cada plato), que calculan aunque estén a 0 dB. Desde la 2.0.15 van dentro de un banco que se las salta mientras
+están planas (`audio/banco.rs`): el motor queda en el 0,5 % y lo comprueba una prueba en `--release`. El hilo de
+salida sigue rondando el 4 %: es ALSA y PipeWire, fuera del motor, y no cambia con el tamaño del búfer.
+

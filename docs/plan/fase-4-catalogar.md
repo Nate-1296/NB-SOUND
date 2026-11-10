@@ -13,7 +13,7 @@
 | Iteración | Estado |
 |---|---|
 | F4.1.1 Lectura y escritura de etiquetas con `lofty` (ID3v2, Vorbis, MP4) | Hecha: `catalogo/etiquetas.rs`; en 400 MP3 del corpus real lee los siete campos igual que `mutagen` y la duración con menos de 0,1 s de diferencia. Escribe sobre una copia y la coloca al terminar |
-| F4.1.2 Normalización de texto y nombres (`core/normalizer.py`, `utils/text.py`, `utils/diccionarios.py`) | Parcial: `utils/text.py` portado (`catalogo/texto.rs`), idéntico a las doradas en las 5.531 frases del corpus real; `normalizer.py` portado en `catalogo/normalizacion.rs` (ver F4.1.6). `diccionarios.py` son los saludos de Inicio, ya portados en F2.2.2 |
+| F4.1.2 Normalización de texto y nombres (`core/normalizer.py`, `utils/text.py`, `utils/diccionarios.py`) | Hecha (marcada el 2026-11-09, decisión de Nathan): `utils/text.py` portado (`catalogo/texto.rs`), idéntico a las doradas en las 5.531 frases del corpus real; `normalizer.py` portado en `catalogo/normalizacion.rs` (ver F4.1.6). `diccionarios.py` son los saludos de Inicio, ya portados en F2.2.2 |
 | F4.1.3 Huella y AcoustID | Hecha: `catalogo/acoustid.rs`, con el `fpcalc` empaquetado y el umbral y los reintentos; la caché de consultas va con la canalización |
 | F4.1.4 MusicBrainz, discografía y Cover Art Archive | Hecha: el cliente de MusicBrainz con las seis estrategias (`catalogo/musicbrainz.rs`, API JSON); la organización por discografía (`catalogo/organizacion.rs`) da las mismas rutas que la biblioteca real en las 2.240 pistas de la biblioteca real; Cover Art Archive va con las portadas (F4.1.10) |
 | F4.1.5 Shazam (`shazamio-core`) e iTunes | Hecha: la firma portada de `songrec` e iTunes (`catalogo/etapas.rs`). La consulta real a Shazam va a las pruebas finales |
