@@ -410,3 +410,56 @@ fn buscar_al_final_de_un_mp3_lo_termina() {
     let mut v = Vec::new();
     assert_eq!(d.leer(&mut v, 4_096).unwrap(), 0);
 }
+
+/// P20 y ADR-003: el motor (decodificar, mezclar, efectos) cuesta menos del 2 % de
+/// un núcleo en reproducción normal, sin contar la salida del sistema. Con las 30
+/// campanas de Kira siempre activas era el 4,3 %; con el banco que se salta cuando
+/// está plano, el 0,5 %. Mide tiempo: solo tiene sentido en `--release`.
+#[test]
+#[ignore = "mide tiempo; se ejecuta con cargo test --release -- --ignored"]
+fn el_motor_cuesta_menos_del_2_por_ciento_de_un_nucleo() {
+    let dir = std::env::temp_dir().join(format!("ns-coste-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let ruta = dir.join("a.wav");
+    wav(&ruta, 44_100, 44_100 * 70, ruido(7));
+    let mut m = motor(48_000);
+    m.reproducir(
+        super::PistaEnCola {
+            ficha: 1,
+            ruta,
+            instrumental: None,
+            ganancia_db: 0.0,
+        },
+        0.0,
+    );
+    let _ = renderizar(&mut m, 48_000);
+    let mut dentro = Duration::ZERO;
+    let mut frames = 0usize;
+    while frames < 48_000 * 60 {
+        let pendiente = |c: &super::fuente::Compartido| {
+            let vigente = c.generacion.load(Ordering::Acquire);
+            (c.en_cola.load(Ordering::Acquire) == 0
+                || c.entregada.load(Ordering::Acquire) != vigente)
+                && !c.terminado.load(Ordering::Acquire)
+        };
+        let limite = Instant::now() + Duration::from_secs(2);
+        while m.compartidos().into_iter().any(pendiente) && Instant::now() < limite {
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        let backend = m.backend();
+        let n = backend.bloque;
+        let renderer = backend.renderer.as_mut().unwrap();
+        let mut buffer = vec![0.0f32; n * 2];
+        let t = Instant::now();
+        renderer.on_start_processing();
+        renderer.process(&mut buffer, 2);
+        dentro += t.elapsed();
+        frames += n;
+    }
+    let porcentaje = dentro.as_secs_f64() / 60.0 * 100.0;
+    println!(
+        "COSTE {porcentaje:.2} % de un núcleo (bloque {})",
+        m.backend().bloque
+    );
+    assert!(porcentaje < 2.0, "el motor cuesta {porcentaje:.2} %");
+}

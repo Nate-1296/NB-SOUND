@@ -21,6 +21,7 @@
 //! pista y, si se le dice cuál es la siguiente, la encadena sin hueco.
 
 mod alimentador;
+mod banco;
 pub(crate) mod decodificador;
 pub mod ecualizador;
 mod fuente;
@@ -36,7 +37,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use kira::backend::Backend;
-use kira::effect::eq_filter::{EqFilterBuilder, EqFilterHandle, EqFilterKind};
+use kira::effect::eq_filter::EqFilterHandle;
 use kira::effect::volume_control::{VolumeControlBuilder, VolumeControlHandle};
 use kira::track::{TrackBuilder, TrackHandle, TrackPlaybackState};
 use kira::{AudioManager, AudioManagerSettings, Decibels, Easing, Tween};
@@ -99,6 +100,7 @@ struct Plato {
     /// El último volumen pedido, lineal.
     volumen: f32,
     bandas: Vec<EqFilterHandle>,
+    banco: Arc<banco::Estado>,
     ordenes: Sender<Orden>,
     compartido: Arc<Compartido>,
     generacion: u64,
@@ -112,17 +114,8 @@ impl Plato {
         eventos: &Sender<EventoMotor>,
     ) -> NsResult<Self> {
         let mut constructor = TrackBuilder::new();
-        let bandas = ecualizador::BANDAS_HZ
-            .iter()
-            .map(|f| {
-                constructor.add_effect(EqFilterBuilder::new(
-                    EqFilterKind::Bell,
-                    *f,
-                    Decibels::IDENTITY,
-                    ecualizador::Q,
-                ))
-            })
-            .collect();
+        let (banco, banco_estado) = banco::banco(&ecualizador::BANDAS_HZ, ecualizador::Q);
+        let bandas = constructor.add_effect(banco);
         let mut pista = maestra
             .add_sub_track(constructor)
             .map_err(|_| NsError::Internal)?;
@@ -162,6 +155,7 @@ impl Plato {
             pista,
             volumen: 1.0,
             bandas,
+            banco: banco_estado,
             ordenes: tx_ordenes,
             compartido,
             generacion: 0,
@@ -227,16 +221,24 @@ impl Plato {
     }
 
     fn bandas(&mut self, bandas_db: &[f32; 10], tasa: f64, duracion: Duration) {
+        let plano = bandas_db.iter().all(|g| *g == 0.0);
+        if !plano {
+            self.banco.activar();
+        }
         let ganancias = ecualizador::ganancias_corregidas(bandas_db, tasa);
         for (banda, g) in self.bandas.iter_mut().zip(ganancias) {
             banda.set_gain(Decibels(g), tween(duracion));
         }
+        if plano {
+            self.banco.a_plano(duracion.as_secs_f64(), tasa as u32);
+        }
     }
 
-    fn sin_bandas(&mut self, duracion: Duration) {
+    fn sin_bandas(&mut self, duracion: Duration, tasa: u32) {
         for banda in &mut self.bandas {
             banda.set_gain(Decibels::IDENTITY, tween(duracion));
         }
+        self.banco.a_plano(duracion.as_secs_f64(), tasa);
     }
 }
 
@@ -254,6 +256,7 @@ pub struct Motor<B: Backend = kira::DefaultBackend> {
     /// El ecualizador del usuario, el limitador y el volumen general.
     maestra: TrackHandle,
     campanas: Vec<EqFilterHandle>,
+    estado_campanas: Arc<banco::Estado>,
     preamp: VolumeControlHandle,
     platos: [Plato; 2],
     /// El plato que suena como "la pista actual"; el otro solo entra en una mezcla.
@@ -270,6 +273,8 @@ impl Motor {
     ///
     /// [`NsError::ComponentUnavailable`] si no hay dispositivo de salida.
     pub fn nuevo() -> NsResult<Self> {
+        // El tamaño de búfer se deja al sistema: medido con 1.024 y 2.048 marcos, el
+        // hilo de salida gastaba lo mismo (P20); solo añadía latencia.
         Self::con(AudioManagerSettings::default())
     }
 }
@@ -286,17 +291,9 @@ impl<B: Backend> Motor<B> {
 
         let mut constructor = TrackBuilder::new();
         let preamp = constructor.add_effect(VolumeControlBuilder::new(Decibels::IDENTITY));
-        let campanas = ecualizador::BANDAS_HZ
-            .iter()
-            .map(|f| {
-                constructor.add_effect(EqFilterBuilder::new(
-                    EqFilterKind::Bell,
-                    *f,
-                    Decibels::IDENTITY,
-                    ecualizador::Q,
-                ))
-            })
-            .collect();
+        let (banco_maestra, estado_campanas) =
+            banco::banco(&ecualizador::BANDAS_HZ, ecualizador::Q);
+        let campanas = constructor.add_effect(banco_maestra);
         let tasa_salida = Arc::new(AtomicU32::new(44_100));
         constructor.add_effect(limitador::Limitador {
             tasa: Arc::clone(&tasa_salida),
@@ -316,6 +313,7 @@ impl<B: Backend> Motor<B> {
             gestor,
             maestra,
             campanas,
+            estado_campanas,
             preamp,
             platos,
             activo,
@@ -399,9 +397,17 @@ impl<B: Backend> Motor<B> {
         let preamp = ecualizador::preamp_con_margen(preamp_db, &bandas_db);
         let tasa = f64::from(self.tasa_salida.load(Ordering::Relaxed));
         let ganancias = ecualizador::ganancias_corregidas(&bandas_db, tasa);
+        let plano = ganancias.iter().all(|g| *g == 0.0);
+        if !plano {
+            self.estado_campanas.activar();
+        }
         self.preamp.set_volume(Decibels(preamp), tween(SUAVE));
         for (campana, g) in self.campanas.iter_mut().zip(ganancias) {
             campana.set_gain(Decibels(g), tween(SUAVE));
+        }
+        if plano {
+            self.estado_campanas
+                .a_plano(SUAVE.as_secs_f64(), tasa as u32);
         }
     }
 
@@ -411,6 +417,8 @@ impl<B: Backend> Motor<B> {
         for campana in &mut self.campanas {
             campana.set_gain(Decibels::IDENTITY, tween(SUAVE));
         }
+        let tasa = self.tasa_salida.load(Ordering::Relaxed);
+        self.estado_campanas.a_plano(SUAVE.as_secs_f64(), tasa);
     }
 
     /// Añade a la pista que suena el instrumental que se acaba de preparar. Lo
@@ -489,14 +497,15 @@ impl<B: Backend> Motor<B> {
     /// encadenado.
     pub fn terminar_mezcla(&mut self) {
         let i = self.indice_activo();
+        let tasa = self.tasa_salida.load(Ordering::Relaxed);
         let saliente = &mut self.platos[i];
         saliente.detener();
         saliente.compartido.terminado.store(true, Ordering::Release);
-        saliente.sin_bandas(Duration::ZERO);
+        saliente.sin_bandas(Duration::ZERO, tasa);
         saliente.volumen(0.0, Duration::ZERO);
         let entrante = &mut self.platos[1 - i];
         entrante.volumen(1.0, SUAVE);
-        entrante.sin_bandas(REPOSO_BANDAS);
+        entrante.sin_bandas(REPOSO_BANDAS, tasa);
         entrante.compartido.karaoke(false);
         let (ficha, _) = entrante.posicion();
         self.activo.store(1 - i, Ordering::Release);
@@ -509,16 +518,17 @@ impl<B: Backend> Motor<B> {
     /// sonar entera. Sin mezcla en curso no cambia nada que se oiga.
     pub fn cancelar_mezcla(&mut self) {
         let i = self.indice_activo();
+        let tasa = self.tasa_salida.load(Ordering::Relaxed);
         let libre = &mut self.platos[1 - i];
         if !libre.compartido.terminado.load(Ordering::Acquire) {
             libre.detener();
             libre.compartido.terminado.store(true, Ordering::Release);
         }
         libre.volumen(0.0, SUAVE);
-        libre.sin_bandas(SUAVE);
+        libre.sin_bandas(SUAVE, tasa);
         let activo = &mut self.platos[i];
         activo.volumen(1.0, SUAVE);
-        activo.sin_bandas(SUAVE);
+        activo.sin_bandas(SUAVE, tasa);
     }
 
     /// Los eventos pendientes, sin esperar.
