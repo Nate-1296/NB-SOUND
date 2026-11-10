@@ -82,8 +82,6 @@ impl Entrada {
     }
 }
 
-const MB: u64 = 1024 * 1024;
-
 /// El catálogo de agregados publicados en `agregados-1` (F5.1.1, ADR-006).
 pub const CATALOGO: [Entrada; 4] = [
     Entrada {
@@ -113,12 +111,23 @@ pub const CATALOGO: [Entrada; 4] = [
         bytes: 82_967_596,
         sha256: Some("25b67dee0b84cd54b702c89d227bf3c07f8b7990ba700db6094ea9cd1f2bf2b5"),
     },
+    // Solo Linux con NVIDIA (P6): ONNX Runtime con CUDA y las bibliotecas de CUDA 12
+    // y cuDNN 9 que necesita, 2 GB comprimidos y 3,1 instalados. Se arma con
+    // `scripts/agregados/aceleracion-linux.sh`. En Windows y macOS no se publica.
     Entrada {
         id: IdAgregado::Aceleracion,
         version: "1",
-        url: None,
-        bytes: 300 * MB,
-        sha256: None,
+        url: if cfg!(target_os = "linux") {
+            Some("https://github.com/Nate-1296/NB-SOUND/releases/download/agregados-1/aceleracion-linux-1.zip")
+        } else {
+            None
+        },
+        bytes: 2_012_822_013,
+        sha256: if cfg!(target_os = "linux") {
+            Some("61ae50b7eb39366d69223cee3011bf8e3f0a125d4f6fa5dff3df4a6d12e29eb9")
+        } else {
+            None
+        },
     },
 ];
 

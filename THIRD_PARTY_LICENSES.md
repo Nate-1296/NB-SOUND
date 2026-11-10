@@ -38,6 +38,9 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `htdemucs` (Meta), exportado a ONNX | MIT | https://github.com/facebookresearch/demucs | Karaoke |
 | MusiCNN y sus cabezas (MTG, Universitat Pompeu Fabra) | CC BY-NC 4.0, uso no comercial | https://essentia.upf.edu/models.html | Análisis musical |
 | `all-MiniLM-L6-v2` | Apache-2.0 | https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2 | Pedidos al DJ |
+| ONNX Runtime con CUDA (Microsoft) | MIT | https://github.com/microsoft/onnxruntime | Aceleración (Linux, NVIDIA) |
+| CUDA Runtime, cuBLAS, cuFFT y cuRAND (NVIDIA) | EULA de CUDA, bibliotecas redistribuibles | https://docs.nvidia.com/cuda/eula/ | Aceleración (Linux, NVIDIA) |
+| cuDNN (NVIDIA) | Acuerdo de licencia de cuDNN, redistribución permitida | https://docs.nvidia.com/deeplearning/cudnn/latest/reference/eula.html | Aceleración (Linux, NVIDIA) |
 
 ## Componentes de Rust (678)
 

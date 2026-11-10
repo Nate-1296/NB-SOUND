@@ -37,7 +37,13 @@
   // Lo que todavía no se publica no se enseña: un "Todavía no disponible" en
   // Ajustes promete algo que no se puede hacer. Si ya estaba instalado, se ve
   // para poder quitarlo.
-  const visibles = $derived(lista.filter((a) => a.publicado || a.instalado));
+  // La aceleración solo se ofrece a quien tiene la tarjeta que aprovecha: son 2 GB
+  // que en otro equipo no servirían de nada.
+  const visibles = $derived(
+    lista.filter(
+      (a) => a.instalado || (a.publicado && (a.id !== 'aceleracion' || gpu?.acelerador === 'cuda'))
+    )
+  );
 
   const megas = (bytes: number) => Math.round(bytes / 1_048_576);
 

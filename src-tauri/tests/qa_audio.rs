@@ -818,7 +818,7 @@ fn mediana(mut v: Vec<f64>) -> f64 {
 
 #[test]
 #[ignore = "lo ejecuta scripts/qa/ui-qa.sh fase6 sobre la grabación de una sesión del DJ"]
-fn las_mezclas_del_dj_no_se_hunden_ni_saltan() {
+fn las_mezclas_del_dj_no_tienen_huecos_ni_clics_ni_saltos() {
     let grabacion = cargar(&ruta_de("NB_QA_WAV"));
     let mezclas: Vec<(f64, f64, String)> =
         serde_json::from_str(&std::fs::read_to_string(ruta_de("NB_QA_MEZCLAS")).expect("mezclas"))
@@ -852,7 +852,9 @@ fn las_mezclas_del_dj_no_se_hunden_ni_saltan() {
             .iter()
             .filter(|c| c.posicion_seg > inicio - 2.0 && c.posicion_seg < fin + 2.0)
             .count();
-        if hundimiento > 8.0 || subida > 4.0 || huecos_aqui > 0 || clics_aqui > 0 {
+        // El hundimiento de las mezclas con filtros se acepta (P19, decisión de Nathan:
+        // compensarlo empujaría la suma contra el limitador). Se informa, no falla.
+        if subida > 4.0 || huecos_aqui > 0 || clics_aqui > 0 {
             fallos.push(format!(
                 "{tecnica} en {inicio:.1} s: hundimiento {hundimiento:.1} LU, subida {subida:.1} LU, \
                  {huecos_aqui} huecos, {clics_aqui} clics"

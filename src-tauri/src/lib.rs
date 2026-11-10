@@ -339,6 +339,12 @@ pub fn run() {
             if let Some(b) = biblioteca {
                 onnx::fijar_ruta(&b);
             }
+            if agregados::instalado(&rutas_vectores, agregados::IdAgregado::Aceleracion).is_some() {
+                onnx::fijar_aceleracion(&agregados::carpeta(
+                    &rutas_vectores,
+                    agregados::IdAgregado::Aceleracion,
+                ));
+            }
             // Los vectores del DJ, antes de que haga falta pedir una sesión. Aquí y
             // no antes: sin la ruta de ONNX Runtime el modelo no abre.
             dj::embeddings::precalentar(rutas_vectores.clone(), db_vectores.clone());

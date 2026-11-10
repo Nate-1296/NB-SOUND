@@ -144,7 +144,8 @@ export const esAparte = {
       analisis:
         'Reconoce el ánimo, la bailabilidad y el estilo de cada canción para las listas inteligentes y el DJ.',
       textoDj: 'Entiende lo que le pides al DJ con tus propias palabras.',
-      aceleracion: 'Hace el karaoke y el análisis varias veces más rápidos con la tarjeta gráfica.'
+      aceleracion:
+        'Hace el karaoke y el análisis varias veces más rápidos con la tarjeta gráfica NVIDIA. Se aplica al volver a abrir NB Sound.'
     },
     tamano: (megas: number) => `${megas} MB`,
     instalar: (megas: number) => `Instalar (${megas} MB)`,

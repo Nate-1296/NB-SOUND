@@ -483,6 +483,8 @@ impl Real {
         let tokenizador = Tokenizador::desde_json(&json)?;
         let sesion = ort::session::Session::builder(crate::onnx::entorno()?)
             .map_err(|_| NsError::ComponentUnavailable)?
+            .with_execution_providers(crate::onnx::proveedores(ort::ep::CPU::default().build()))
+            .map_err(|_| NsError::ComponentUnavailable)?
             .with_intra_threads(1)
             .map_err(|_| NsError::ComponentUnavailable)?
             .commit_from_file(dir.join("model.onnx"))

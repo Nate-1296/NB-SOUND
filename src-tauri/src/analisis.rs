@@ -385,6 +385,8 @@ impl EnOnnx {
         let abrir = |nombre: &str| -> NsResult<ort::session::Session> {
             ort::session::Session::builder(entorno)
                 .map_err(|_| NsError::ComponentUnavailable)?
+                .with_execution_providers(crate::onnx::proveedores(ort::ep::CPU::default().build()))
+                .map_err(|_| NsError::ComponentUnavailable)?
                 .with_intra_threads(hilos)
                 .map_err(|_| NsError::ComponentUnavailable)?
                 .with_intra_op_spinning(false)

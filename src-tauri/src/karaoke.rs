@@ -247,7 +247,9 @@ fn sesion(modelo: &Path) -> NsResult<ort::session::Session> {
     };
     ort::session::Session::builder(entorno)
         .map_err(|_| NsError::ComponentUnavailable)?
-        .with_execution_providers([ort::ep::CPU::default().with_arena_allocator(false).build()])
+        .with_execution_providers(crate::onnx::proveedores(
+            ort::ep::CPU::default().with_arena_allocator(false).build(),
+        ))
         .map_err(fallo)?
         .with_memory_pattern(false)
         .map_err(fallo)?
