@@ -266,3 +266,9 @@ hizo las Fases 2 a 4; Claude, el resto. Todo sobre la aplicación compilada y un
 | — | P6 | Agregado de aceleración para Linux con NVIDIA (2 GB), publicado en `agregados-1` sin probar en una NVIDIA | — |
 | — | — | Decisiones de Nathan: P10, P15, P19 cerradas; F4.1.2 hecha; P3 y P7 pendientes de su respuesta | — |
 
+## 2026-11-10: cierre de P7 en el teléfono real
+
+| Commit | Iteración | Qué se hizo | Pruebas nuevas |
+|---|---|---|---|
+| (este) | P7 / F3.1.6 | Comprobada por depuración inalámbrica (ADB) en el TCL 50 Pro NXTPAPER (`T803E`) con NB Sound Mobile 0.1.2 la sincronización, verificación de `x-nb-sound-hash` y reproducción continua de pistas FLAC (`audio/flac`, 48 kHz / 16 bits) y M4A (`audio/mp4`, AAC-LC 192 kbps) servidas por `GET /api/v1/track/{id}/audio` desde la copia aislada; limpiadas las pistas de prueba del teléfono mediante tumbas al terminar | — |
+

@@ -83,8 +83,7 @@ Ordenado por lo que aporta a quien la usa a diario. Cada fila dice qué app lo t
 
 * **Pruebas finales:** hechas el 2026-11-09, todas por guion sobre una copia de los datos
   ([pruebas finales](../plan/pruebas-finales.md)).
-* **Preguntas abiertas:** P3 (la licencia, pendiente de aclarar con Nathan), P7 (FLAC y M4A en el teléfono) y P14,
-  que depende de P7.
+* **Preguntas abiertas:** P3 (la licencia, pendiente de aclarar con Nathan) y P14 (instrumentales en FLAC, tras cerrar P7 en el teléfono el 2026-11-10).
 * **Un defecto sin reproducir:** en la primera apertura de la 2.0.7 instalada, cerrar y abrir volvió a una sesión
   anterior. No se repitió en ningún ciclo posterior, tampoco en las pruebas finales.
 
