@@ -220,3 +220,15 @@ Se intentan reproducir por guion; si aparecen, se corrigen con su prueba de regr
 - [x] "¿Dónde está tu música?" con la carpeta buena dice que están todas y suena sin reiniciar; con una vacía, ofrece
       otra. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: la parte que no es el selector, por la misma función: con la buena, todas; con una vacía, ninguna; suena sin reiniciar porque el reproductor lee la carpeta en cada canción. El aviso no se provocó: buscaría en `~/Música` y adoptaría la biblioteca real.)*
 - [x] La barra a 720 px: la fila de controles del menú ··· responde y se cierra al elegir letras o pantalla completa. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: con la página estrechada (KWin virtual no deja cambiar el tamaño de la ventana), el menú ··· trae cinco controles y elegir Letras lo cierra y abre la vista.)*
+
+## Cuestiones pendientes
+
+- [ ] **P3: Compatibilidad de licencias ante un modelo institucional (ADR-010).**
+      La alineación con el esquema de NB Books (código permisivo para uso general y distribución institucional independiente) presenta dos restricciones en la base actual:
+      1. El módulo de reconocimiento de audio incorpora lógica derivada de `songrec` (GPL-3.0), incompatible con una licencia Apache-2.0 salvo reescritura íntegra o sustitución por una implementación permisiva (MIT).
+      2. Los modelos de análisis musical del MTG (Essentia) restringen el uso a fines no comerciales (CC BY-NC), lo que impide su explotación comercial en entornos institucionales sin licenciamiento propietario previo del MTG o sustitución de la inferencia.
+      Queda por definir la vía de resolución: reescritura de los componentes GPL bajo Apache-2.0 separando la edición institucional, o conservación de GPL-3.0-or-later incorporando términos de uso específicos para el despliegue institucional.
+
+- [ ] **P7: Reproducción de formatos no MP3 (FLAC y M4A) en NB Sound Mobile sobre dispositivo real.**
+      Comprobar en hardware físico que el cliente móvil decodifica y reproduce en continuo pistas FLAC y M4A servidas por `track/{id}/audio` (F3.1.6). La prueba se realizará mediante depuración inalámbrica (ADB por Wi-Fi en red local, con herramientas portables sin dependencias persistentes en el sistema anfitrión).
+      Queda pendiente de ejecución tras habilitar la depuración inalámbrica en el terminal (emparejamiento TLS de seis dígitos y enlace al puerto de servicio en la subred local).
