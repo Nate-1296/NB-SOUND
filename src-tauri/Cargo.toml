@@ -1,6 +1,6 @@
 [package]
 name = "nb-sound"
-version = "2.0.14"
+version = "2.0.15"
 description = "Aplicación de escritorio para la música local"
 authors = ["The NB Sound Authors"]
 license = "GPL-3.0-or-later"
@@ -97,7 +97,9 @@ trash = "5.2.9"
 # La carpeta de música vigilada (F4.2.2; ADR-002).
 notify = "8.2.1"
 zip = { version = "9.1.3", default-features = false, features = ["deflate"] }
-ort = { version = "=2.0.0-rc.15", default-features = false, features = ["load-dynamic"] }
+# `cuda` solo expone el proveedor de CUDA en la API: no descarga ni enlaza nada.
+# Lo usa el agregado de aceleración en Linux con NVIDIA (F5.1.5).
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["load-dynamic", "cuda"] }
 
 # Controles del sistema (ADR-003, F2.1.5): MPRIS en Linux, con aleatorio y
 # repetición en los dos sentidos; SMTC en Windows y el centro de reproducción en
@@ -109,6 +111,12 @@ mpris-server = "0.11.0"
 # nunca compitan con la interfaz ni con el audio (enmienda de ADR-002, 2026-11-05).
 [target.'cfg(unix)'.dependencies]
 libc = "0.2.191"
+
+# En Windows, lo mismo con el modo de fondo de Win32, que baja a la vez la
+# prioridad del procesador y la del disco (P16, aprobada por Nathan el 2026-11-09).
+# Ya llegaba por Tauri en esta versión; aquí solo se pide su API de hilos.
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_System_Threading"] }
 
 [target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
 souvlaki = "0.9.3"

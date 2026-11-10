@@ -2871,7 +2871,7 @@ dependencies = [
 
 [[package]]
 name = "nb-sound"
-version = "2.0.14"
+version = "2.0.15"
 dependencies = [
  "axum",
  "ebur128",
@@ -2914,6 +2914,7 @@ dependencies = [
  "ts-rs",
  "unicode-normalization",
  "ureq",
+ "windows-sys 0.61.2",
  "zip",
 ]
 

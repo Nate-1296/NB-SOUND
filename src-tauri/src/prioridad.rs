@@ -1,4 +1,4 @@
-//! La prioridad de los hilos de fondo (enmienda de ADR-002, 2026-11-05).
+//! La prioridad de los hilos de fondo (enmiendas de ADR-002, 2026-11-05 y 2026-11-09).
 //!
 //! El karaoke, el análisis, la sonoridad, los vectores del DJ, la auditoría y la
 //! copia automática trabajan sin que nadie los espere: solo
@@ -42,6 +42,18 @@ pub fn bajar_hilo_actual() {
         };
         if disco != 0 {
             tracing::debug!("no se pudo bajar la prioridad de disco de un hilo de fondo");
+        }
+    }
+    #[cfg(target_os = "windows")]
+    {
+        use windows_sys::Win32::System::Threading::{
+            GetCurrentThread, SetThreadPriority, THREAD_MODE_BACKGROUND_BEGIN,
+        };
+        // SAFETY: `GetCurrentThread` devuelve un seudomanejador del hilo actual, que
+        // no hay que cerrar; `SetThreadPriority` solo lo usa para cambiar su modo.
+        let hecho = unsafe { SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_BEGIN) };
+        if hecho == 0 {
+            tracing::debug!("no se pudo bajar la prioridad de un hilo de fondo");
         }
     }
     #[cfg(target_os = "macos")]

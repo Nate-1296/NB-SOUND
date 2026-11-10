@@ -84,3 +84,11 @@ la interfaz. Con la aprobación de Nathan entra `libc` (MIT o Apache-2.0; ya est
 otras), solo en Unix, para bajar la prioridad de los hilos de fondo (`prioridad.rs`): en Linux, `setpriority` del
 hilo a 19; en macOS, la clase de calidad de servicio `UTILITY`. Los hilos de ONNX Runtime heredan la del hilo que
 crea la sesión. En Windows no se baja todavía: haría falta `windows-sys`, que no está aprobada.
+
+## Enmienda del 2026-11-09: prioridad en Windows y del disco
+
+Con la aprobación de Nathan (P16) entra `windows-sys` (MIT o Apache-2.0; ya llegaba por Tauri), solo en Windows y
+solo con `Win32_System_Threading`: el hilo de fondo pasa a `THREAD_MODE_BACKGROUND_BEGIN`, que baja a la vez la
+prioridad del procesador y la del disco. En Linux, los mismos hilos bajan también la del disco a la clase ociosa
+(`ioprio_set` por `libc`), y se suman a ellos la copia automática, la auditoría, los vectores del DJ y lo que se
+completa en segundo plano.
