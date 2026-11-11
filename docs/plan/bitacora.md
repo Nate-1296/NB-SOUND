@@ -288,3 +288,10 @@ La [CI de la versión](https://github.com/Nate-1296/NB-SOUND/actions/runs/427278
 terminaron correctamente. La Release contiene los instaladores de Linux, Windows y macOS, las firmas del
 actualizador y `latest.json`.
 
+La CI del cierre de P3 se atascó dos veces al instalar las dependencias de Linux: los runners de
+`ubuntu-latest` (Ubuntu 26.04) registraron fallos DNS hacia los repositorios de Ubuntu antes de ejecutar las
+comprobaciones. Se cancelaron ambos intentos y se fijó Ubuntu 22.04 en los trabajos `verify` y `runtime`,
+la misma base que usa el flujo de publicación, para mantener coherentes los entornos de validación y empaquetado.
+No cambia el código ni los instaladores publicados. La verificación local pasó: `pnpm verify`, formato,
+Clippy con todas las características y pruebas de Rust con todas las características.
+

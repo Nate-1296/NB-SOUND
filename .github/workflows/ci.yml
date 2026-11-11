@@ -45,7 +45,9 @@ jobs:
 
   verify:
     name: pnpm verify
-    runs-on: ubuntu-latest
+    # La misma base Linux que produce los instaladores; evita que `latest`
+    # cambie el entorno de verificación sin cambiar el de publicación.
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -72,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-22.04, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - name: Dependencias del sistema (Linux)
