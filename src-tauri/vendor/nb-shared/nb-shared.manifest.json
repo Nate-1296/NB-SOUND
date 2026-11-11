@@ -2,11 +2,11 @@
   "format": 1,
   "source": "nb-launcher-workspace",
   "license": "Apache-2.0",
-  "bundle_id": "8a5679f75b4ae030cddc171c9c127d5cf515a5366607a23d3906a97147313c71",
+  "bundle_id": "9083d8dfcc390afc07b3d9686dfedcd64d6b7b58434f7cc484a8488ce0a34364",
   "files": {
     ".gitattributes": "a79691a93b46e49ce460c26ef22afcc03d6eca1e63bf2edbc20e96159510f6c9",
     ".gitignore": "07d64eb09a56c853b7853a47276799b38d7d6d25a4314b0c1abc10432c214e17",
-    "Cargo.toml": "5294de8f2ff60d1a73794fd921738088d05623cbc7fc75fc23f55f12abb5b37a",
+    "Cargo.toml": "b2ab82c6df430f8cce716734b32b6eb721ac658fbb174dc3b72dc332d964da0a",
     "LICENSE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
     "README.md": "9ed10dbd625799be09fd9cd983279b907f77b93c8e23b03492796e3af9fe2f88",
     "crates/nb-capability/Cargo.toml": "10e5fbc2de158c4249a9674b7f83ed413f1b0930599f55218c116595159a7418",

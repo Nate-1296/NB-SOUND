@@ -10,7 +10,7 @@ publish = false
 license = "Apache-2.0"
 
 [workspace.dependencies]
-nb-protocol = { path = "crates/nb-protocol" }
+nb-protocol = { version = "=0.1.0", path = "crates/nb-protocol" }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"

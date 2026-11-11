@@ -1,6 +1,6 @@
 [package]
 name = "nb-sound"
-version = "2.1.0"
+version = "2.1.1"
 description = "Aplicación de escritorio para la música local"
 authors = ["The NB Sound Authors"]
 license = "GPL-3.0-or-later"
@@ -24,8 +24,8 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 # ADR-013: snapshot reproducible; el clon de Sound no necesita carpetas vecinas.
-nb-protocol = { path = "vendor/nb-shared/crates/nb-protocol" }
-nb-capability = { path = "vendor/nb-shared/crates/nb-capability", features = ["local"] }
+nb-protocol = { version = "=0.1.0", path = "vendor/nb-shared/crates/nb-protocol" }
+nb-capability = { version = "=0.1.0", path = "vendor/nb-shared/crates/nb-capability", features = ["local"] }
 tauri = { version = "2", features = ["tray-icon"] }
 # El selector de archivos nativo, para "Añadir música" y elegir la carpeta de la
 # música (ADR-001, enmienda del 2026-10-30). Se usa desde Rust: ninguna ruta

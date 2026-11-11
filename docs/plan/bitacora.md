@@ -317,3 +317,11 @@ datos temporales; también pasó restaurar un ZIP V11 y migrarlo.
 Nathan autorizó publicar la release correspondiente el 2026-11-11. Se prepara 2.1.0 por la nueva capacidad opcional y se registra su resultado al terminar. Pendientes: registro y encaminamiento general
 del hub, consentimiento de producto y ejecución nativa Windows/macOS. El estado está en
 [fase 9](./fase-9-integracion-suite.md).
+
+### Distribución 2.1.1
+
+El candidato 2.1.0 no se publicó: CI detectó dependencias locales sin versión explícita y
+metadatos incompatibles de zbus restaurados del cache (E0463). Se fijaron las versiones
+locales, sin relajar cargo-deny, y se renovó el prefijo de cache. La comprobación limpia
+de zbus 5/6 con Rust oficial 1.98 pasó; no se cambió el stack ni se parchearon dependencias.
+La release definitiva se prepara como 2.1.1 para conservar inmutables las etiquetas creadas.

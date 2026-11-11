@@ -3,7 +3,7 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
-## [2.1.0] — 2026-11-11
+## [2.1.1] — 2026-11-11
 
 ### Novedades
 
@@ -11,6 +11,12 @@ Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versione
   de NB Launcher. Sound conserva su validación, guardado y ejecución de copias.
 - El ajuste abierto recibe los cambios confirmados sin recarga. Las ediciones simultáneas
   detectan conflictos y una respuesta perdida se reconcilia sin repetir la escritura.
+
+### Distribución
+
+- Dependencias locales fijadas también por versión, conforme a la política de licencias.
+- Caché de compilación renovada en CI tras detectar metadatos incompatibles de dependencias.
+- El candidato 2.1.0 no se publicó; esta entrega incorpora sus funciones y correcciones.
 
 ### Compatibilidad
 
