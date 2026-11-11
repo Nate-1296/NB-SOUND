@@ -5,7 +5,7 @@ La aplicación conserva su dominio. Esta fase no cambia NB Sound Mobile ni publi
 
 | Iteración | Estado y criterio |
 |---|---|
-| F9.1.1 Frecuencia de copia compartida | Parcial: recorrido real Linux y verificación completa correctos. Propietario, V12, puente revisionado, observación bidireccional y reapertura comprobados. Registro y encaminamiento general del hub pendientes; falta ejecución Windows/macOS. |
+| F9.1.1 Frecuencia de copia compartida | Parcial: recorrido real Linux y verificación completa correctos. Propietario, V12, puente revisionado, observación bidireccional y reapertura comprobados. Registro, permisos por recurso y consentimiento ya implementados en la primera UI de Launcher y comprobados en Linux; falta ejecutar ese recorrido en Windows/macOS. |
 
 ## Propiedad y persistencia
 
@@ -30,8 +30,9 @@ UID/SID y PID antes de enviar la credencial; stdout sigue dedicado a registros.
 La credencial solo da acceso al recurso de frecuencia, no a otras operaciones de Sound.
 EOF del supervisor o 15 minutos cierran el enlace sin terminar la aplicación.
 
-Este puerto no es Mesh ni el catálogo general del host. No incluye consentimiento de
-producto ni permisos separados por operación. No se habilita por defecto.
+Este puerto no es Mesh ni el catálogo general del host. El consentimiento y los permisos
+por operación se aplican en Launcher: su primera UI ya registra este propietario y filtra
+las capacidades del consumidor. El enlace de Sound no se habilita por defecto.
 
 ## Exportación y comprobaciones
 
@@ -65,3 +66,17 @@ Recorrido reproducible desde Launcher: `nbctl sound-check <binario-de-Sound>`, c
 `--ui` para inspector WebKit de desarrollo. Usa exclusivamente datos temporales y arranca
 el binario real. No se usa este inspector en producto. Windows/macOS necesitan ejecución
 nativa antes de declarar soporte verificado de esta integración.
+
+## Distribución y cierre de esta entrega
+
+Publicada [NB Sound 2.1.1](https://github.com/Nate-1296/NB-SOUND/releases/tag/v2.1.1).
+La CI de aplicación y la generación de instaladores pasaron en Linux, Windows y macOS.
+El manifiesto y las firmas se comprobaron; el paquete Linux distribuido también pasó
+las pruebas de enlace, conflicto, entrada inválida, autonomía y persistencia con datos
+aislados. El flujo completo con la UI de Launcher continúa validado en Linux; esa
+validación no se extiende automáticamente a las otras plataformas.
+
+Las compilaciones, dependencias, datos y procesos temporales creados por estas pruebas
+se retiraron después de validar. Los directorios personales y la instalación existente
+no se sustituyeron. La release 2.1.1 corresponde al cambio de aplicación; esta anotación
+posterior solo actualiza su evidencia de distribución y el estado del proyecto.

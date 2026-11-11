@@ -325,3 +325,19 @@ metadatos incompatibles de zbus restaurados del cache (E0463). Se fijaron las ve
 locales, sin relajar cargo-deny, y se renovó el prefijo de cache. La comprobación limpia
 de zbus 5/6 con Rust oficial 1.98 pasó; no se cambió el stack ni se parchearon dependencias.
 La release definitiva se prepara como 2.1.1 para conservar inmutables las etiquetas creadas.
+
+### Publicación y validación final de 2.1.1
+
+Publicada [2.1.1](https://github.com/Nate-1296/NB-SOUND/releases/tag/v2.1.1), con CI de
+aplicación y generación de instaladores correctas en las tres plataformas. Se comprobaron
+los nueve destinos del manifiesto, la correspondencia de artefactos y las firmas. El tar.gz
+Linux se verificó con la clave pública de Sound y su ejecutable distribuido pasó el
+recorrido de frecuencia, conflicto, entrada inválida, persistencia y cierre del enlace.
+
+Launcher ya dispone de registro privado, permisos por recurso, consentimiento y una UI
+nativa que refleja cambios bidireccionales en Linux. Books sigue independiente y no se
+modificó. La ejecución de ese recorrido de Launcher en Windows/macOS sigue pendiente.
+
+Se cerraron los procesos y entornos de QA y se retiraron las compilaciones temporales de
+Sound creadas durante el trabajo. Sound y Books conservan sus datos e instalaciones.
+Esta actualización documental posterior a la publicación no cambia el ejecutable 2.1.1.
