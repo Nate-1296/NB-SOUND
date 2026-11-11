@@ -295,3 +295,25 @@ la misma base que usa el flujo de publicación, para mantener coherentes los ent
 No cambia el código ni los instaladores publicados. La verificación local pasó: `pnpm verify`, formato,
 Clippy con todas las características y pruebas de Rust con todas las características.
 
+
+## 2026-11-11: primer ajuste compartido con NB Launcher (F9.1.1)
+
+Nathan aprobó ADR-013 y la integración de frecuencia de respaldo. Se implementó el
+propietario transaccional, V12 y las notificaciones del ajuste abierto. La frecuencia y sus
+reglas siguen en Sound. Los comandos nativos y el enlace de desarrollo comparten autoridad;
+el reproductor, la ejecución de copias y el contrato móvil mantienen su responsabilidad.
+
+Las bibliotecas Apache se incorporaron como exportación sellada dentro del clon, con
+verificador integrado en guardianes y rustfmt propio. Se regeneraron bindings y avisos.
+No se depende de la carpeta de Launcher para compilar Sound. La migración conserva un
+respaldo V11; el binario anterior rechaza V12 y no hay downgrade directo.
+
+Verificación Linux: `pnpm verify`, fmt, Clippy de todos los targets/features y `cargo test`
+correctos (645 pruebas Rust, 24 omitidas; 38 frontend). El contrato móvil pasó. La prueba
+entre procesos y ventana en KWin virtual confirmó cambios bidireccionales, conflictos,
+respuesta perdida reconciliada, persistencia y autonomía al cerrar el enlace. Todo con
+datos temporales; también pasó restaurar un ZIP V11 y migrarlo.
+
+Nathan autorizó publicar la release correspondiente el 2026-11-11. Se prepara 2.1.0 por la nueva capacidad opcional y se registra su resultado al terminar. Pendientes: registro y encaminamiento general
+del hub, consentimiento de producto y ejecución nativa Windows/macOS. El estado está en
+[fase 9](./fase-9-integracion-suite.md).

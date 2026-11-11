@@ -1,0 +1,27 @@
+{
+  "format": 1,
+  "source": "nb-launcher-workspace",
+  "license": "Apache-2.0",
+  "bundle_id": "8a5679f75b4ae030cddc171c9c127d5cf515a5366607a23d3906a97147313c71",
+  "files": {
+    ".gitattributes": "a79691a93b46e49ce460c26ef22afcc03d6eca1e63bf2edbc20e96159510f6c9",
+    ".gitignore": "07d64eb09a56c853b7853a47276799b38d7d6d25a4314b0c1abc10432c214e17",
+    "Cargo.toml": "5294de8f2ff60d1a73794fd921738088d05623cbc7fc75fc23f55f12abb5b37a",
+    "LICENSE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+    "README.md": "9ed10dbd625799be09fd9cd983279b907f77b93c8e23b03492796e3af9fe2f88",
+    "crates/nb-capability/Cargo.toml": "10e5fbc2de158c4249a9674b7f83ed413f1b0930599f55218c116595159a7418",
+    "crates/nb-capability/src/lib.rs": "e27b047fd5d4a9b3e6db7ee44db774fdd06dda2d72ecc906354840f0bf8ddb30",
+    "crates/nb-capability/src/port.rs": "fb60108b1037ace3ba83f264d7f5aa72b68023dd72eca18bbb43feaf86dde8eb",
+    "crates/nb-protocol/Cargo.toml": "0af6272e7f0c38ae863d21d609f7f6914888454b6fa5bce575135c8f61794f15",
+    "crates/nb-protocol/src/capability.rs": "67e3a91c4e9a61fff9c945b9c38e2d21d55053f607278d1be007c7e814e2bda3",
+    "crates/nb-protocol/src/client.rs": "fbb3a860a69bac700105443f237419033414011ea5c8fcfa083c25dc30b56bdb",
+    "crates/nb-protocol/src/frame.rs": "525ab0f87b20fea02d528f3f5707b3e8cfae6bac9933194cde9e9362064bc1f5",
+    "crates/nb-protocol/src/host.rs": "db45ee140546e89b137e9556fa383da74af5ed526d237060681ce7c5f3028d55",
+    "crates/nb-protocol/src/lib.rs": "c58b5ebfdacdab6af1a6f56d49cbefc09f61ff04c6a6e6775fa1c0fb6720336f",
+    "crates/nb-protocol/src/local/mod.rs": "06c94eb8ffe18aa71aa24a33a063da86b86981d7e92ce3fd8de5eb6747de01cc",
+    "crates/nb-protocol/src/local/unix.rs": "4369c21a9c503909273595e8a44dc920c2bfbbfc99fea25ace74571d72cfa656",
+    "crates/nb-protocol/src/local/windows.rs": "7501d2ef35eba15178d87cbfc0d642fd98398547a6e5acde091393a49289345c",
+    "rustfmt.toml": "a72f230180ccfaf10db0b4e339b9d9066d2a678174b3da29cd9c905ee92f2cc3",
+    "verify.mjs": "790dc6f94378c5d38072b8c42a44976ebf133c13379b8c095c763e99bafc4c04"
+  }
+}

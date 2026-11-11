@@ -22,6 +22,7 @@
     deshabilitado?: boolean;
     icono?: NombreDeIcono;
     compacto?: boolean;
+    controlado?: boolean;
   }
 
   let {
@@ -32,7 +33,8 @@
     ariaLabel,
     deshabilitado = false,
     icono,
-    compacto = false
+    compacto = false,
+    controlado = false
   }: Props = $props();
 
   let abierto = $state(false);
@@ -54,7 +56,8 @@
   }
 
   function seleccionar(op: Opcion) {
-    valor = op.valor;
+    // Los ajustes remotos se muestran solo cuando su propietario los confirma.
+    if (!controlado) valor = op.valor;
     onchange?.(op.valor);
     popoverRef?.hidePopover();
     botonRef?.focus();

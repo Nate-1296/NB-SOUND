@@ -33,6 +33,7 @@ const hayComandosDeLista = hayListas();
 
 const GUARDIANES = [
   ['check-docs'],
+  ['check-shared'],
   ['check-sin-python'],
   ['generar-paletas', '--check'],
   ['check-ui'],

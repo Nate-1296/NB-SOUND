@@ -26,7 +26,8 @@ src-tauri/gen/
 # Binarios externos (ffmpeg, fpcalc, ONNX Runtime): se obtienen con hash fijado
 # con scripts/fetch-binarios.mjs y nunca se versionan (ADR-006).
 src-tauri/binarios/
-src-tauri/vendor/
+src-tauri/vendor/*
+!src-tauri/vendor/nb-shared/
 *.so
 *.so.*
 *.dylib

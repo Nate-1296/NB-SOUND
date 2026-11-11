@@ -381,3 +381,12 @@ que llegó.
 | Ctrl+K | Buscar |
 | F11 | Pantalla completa |
 | Escape | Salir de la pantalla completa, de la reproducción ampliada o de la búsqueda |
+
+## Frecuencia de copias compartida con la suite
+
+La frecuencia de copias puede controlarse mediante el enlace local explícito de desarrollo
+aprobado en ADR-013. Sound sigue validando y guardando el ajuste. La pantalla abierta
+escucha cambios confirmados y avisa si otro control modificó la misma revisión. Ante fallo
+consulta el estado real antes de permitir una nueva edición. No cambia la ejecución de
+copias, el audio ni la conexión móvil. Detalles y límites en la
+[fase 9](../plan/fase-9-integracion-suite.md).

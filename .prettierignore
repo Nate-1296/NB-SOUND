@@ -8,3 +8,6 @@ LICENSE
 
 # Generado por scripts/generar-paletas.mjs: su formato lo decide el generador.
 src/paletas.css
+
+# Dependencias selladas: verificar con su manifiesto.
+src-tauri/vendor

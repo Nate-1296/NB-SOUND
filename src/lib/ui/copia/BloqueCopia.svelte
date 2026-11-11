@@ -13,23 +13,89 @@
     copiaElegirCarpeta,
     copiaEstado,
     copiaFrecuencia,
+    copiaFrecuenciaEstado,
+    alCambiarLaFrecuencia,
+    type FrecuenciaCopia,
     copiaRestaurar,
     reiniciar
   } from '#lib/core/ipc/aparte.ts';
   import { textosAparte } from '#lib/i18n/aparte.ts';
   import MenuSelector from '#lib/ui/MenuSelector.svelte';
+  import { frecuenciaMasReciente } from './frecuencia';
 
   const t = textosAparte.copia;
   const FRECUENCIAS = [0, 1, 7, 30];
 
   let estado = $state<EstadoCopia | null>(null);
+  let frecuencia = $state<FrecuenciaCopia | null>(null);
+  let cambiandoFrecuencia = $state(false);
   let ocupado = $state(false);
   let mensaje = $state<string | null>(null);
+  let disponibilidad = 0;
   let confirmar: HTMLDialogElement | undefined = $state();
 
   $effect(() => {
-    void copiaEstado().then((e) => (estado = e));
+    let cerrada = false;
+    let dejarDeEscuchar: (() => void) | undefined;
+    void copiaEstado()
+      .then((e) => {
+        if (!cerrada) estado = e;
+      })
+      .catch((error) => {
+        if (!cerrada) mensaje = explicar(error);
+      });
+    // Escuchar antes de consultar evita perder un cambio mientras llega la instantánea.
+    void (async () => {
+      const parar = await alCambiarLaFrecuencia((e) => {
+        if (!cerrada) {
+          if (e === null) disponibilidad += 1;
+          frecuencia = frecuenciaMasReciente(frecuencia, e);
+        }
+      });
+      if (cerrada) {
+        parar();
+        return;
+      }
+      dejarDeEscuchar = parar;
+      const version = disponibilidad;
+      const actual = await copiaFrecuenciaEstado();
+      if (!cerrada && version === disponibilidad)
+        frecuencia = frecuenciaMasReciente(frecuencia, actual);
+    })().catch((error) => {
+      if (!cerrada) mensaje = explicar(error);
+    });
+    return () => {
+      cerrada = true;
+      dejarDeEscuchar?.();
+    };
   });
+
+  async function cambiarFrecuencia(dias: number) {
+    if (!frecuencia || cambiandoFrecuencia) return;
+    const revision = frecuencia.revision;
+    const version = disponibilidad;
+    cambiandoFrecuencia = true;
+    mensaje = null;
+    try {
+      const resultado = await copiaFrecuencia(dias, revision);
+      if (version === disponibilidad)
+        frecuencia = frecuenciaMasReciente(frecuencia, resultado.frecuencia);
+      if (resultado.resultado === 'conflicto') mensaje = t.conflicto;
+    } catch (error) {
+      mensaje = explicar(error);
+      // Un fallo de respuesta puede ocurrir después del commit: consultar, nunca reenviar.
+      try {
+        const reconciliacion = disponibilidad;
+        const actual = await copiaFrecuenciaEstado();
+        if (reconciliacion === disponibilidad)
+          frecuencia = frecuenciaMasReciente(frecuencia, actual);
+      } catch {
+        frecuencia = null;
+      }
+    } finally {
+      cambiandoFrecuencia = false;
+    }
+  }
 
   function explicar(error: unknown): string {
     const codigo = error instanceof NsError ? error.code : '';
@@ -119,16 +185,21 @@
       {t.automaticas}
       <small>{estado.ultima ? t.ultima(fecha(estado.ultima)) : t.ninguna}</small>
     </span>
-    <MenuSelector
-      opciones={FRECUENCIAS.map((dias) => ({
-        valor: dias,
-        etiqueta: t.frecuencias[dias] ?? String(dias)
-      }))}
-      valor={estado.cadaDias}
-      onchange={(v) => cambiar(() => copiaFrecuencia(v))}
-    />
+    {#if frecuencia}
+      <MenuSelector
+        opciones={FRECUENCIAS.map((dias) => ({
+          valor: dias,
+          etiqueta: t.frecuencias[dias] ?? String(dias)
+        }))}
+        valor={frecuencia.cadaDias}
+        ariaLabel={t.automaticas}
+        deshabilitado={cambiandoFrecuencia}
+        controlado
+        onchange={(v) => cambiarFrecuencia(v)}
+      />
+    {/if}
   </div>
-  {#if estado.cadaDias > 0}
+  {#if frecuencia && frecuencia.cadaDias > 0}
     <div class="ajuste">
       <span class="rotulo">
         {t.carpeta}

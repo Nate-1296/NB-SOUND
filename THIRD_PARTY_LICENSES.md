@@ -42,7 +42,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | CUDA Runtime, cuBLAS, cuFFT y cuRAND (NVIDIA) | EULA de CUDA, bibliotecas redistribuibles | https://docs.nvidia.com/cuda/eula/ | Aceleración (Linux, NVIDIA) |
 | cuDNN (NVIDIA) | Acuerdo de licencia de cuDNN, redistribución permitida | https://docs.nvidia.com/deeplearning/cudnn/latest/reference/eula.html | Aceleración (Linux, NVIDIA) |
 
-## Componentes de Rust (678)
+## Componentes de Rust (686)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -162,6 +162,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `displaydoc` | 0.2.7 | MIT OR Apache-2.0 | https://github.com/yaahc/displaydoc |
 | `dlopen2` | 0.8.2 | MIT | https://github.com/OpenByteDev/dlopen2 |
 | `dlopen2_derive` | 0.4.3 | MIT | https://github.com/OpenByteDev/dlopen2 |
+| `doctest-file` | 1.1.1 | 0BSD | https://codeberg.org/Goat7658/doctest-file |
 | `dom_query` | 0.28.0 | MIT | https://github.com/niklak/dom_query |
 | `dpi` | 0.1.2 | Apache-2.0 AND MIT | https://github.com/rust-windowing/winit |
 | `dtoa` | 1.0.11 | MIT OR Apache-2.0 | https://github.com/dtolnay/dtoa |
@@ -267,6 +268,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `inotify` | 0.11.5 | ISC | https://github.com/hannobraun/inotify-rs |
 | `inotify-sys` | 0.1.8 | ISC | https://github.com/hannobraun/inotify-sys |
 | `inout` | 0.2.5 | MIT OR Apache-2.0 | https://github.com/RustCrypto/utils |
+| `interprocess` | 2.4.8 | 0BSD OR Apache-2.0 | https://github.com/kotauskas/interprocess |
 | `ipnet` | 2.12.2 | MIT OR Apache-2.0 | https://github.com/krisprice/ipnet |
 | `itoa` | 1.0.18 | MIT OR Apache-2.0 | https://github.com/dtolnay/itoa |
 | `javascriptcore-rs` | 1.1.2 | MIT | https://github.com/tauri-apps/javascriptcore-rs |
@@ -326,6 +328,8 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `moxcms` | 0.8.1 | BSD-3-Clause OR Apache-2.0 | https://github.com/awxkee/moxcms.git |
 | `mpris-server` | 0.11.0 | MPL-2.0 | https://github.com/SeaDve/mpris-server |
 | `muda` | 0.20.0 | Apache-2.0 OR MIT | https://github.com/tauri-apps/muda |
+| `nb-capability` | 0.1.0 | Apache-2.0 |  |
+| `nb-protocol` | 0.1.0 | Apache-2.0 |  |
 | `ndarray` | 0.17.2 | MIT OR Apache-2.0 | https://github.com/rust-ndarray/ndarray |
 | `ndk` | 0.9.0 | MIT OR Apache-2.0 | https://github.com/rust-mobile/ndk |
 | `ndk-context` | 0.1.1 | MIT OR Apache-2.0 | https://github.com/rust-windowing/android-ndk-rs |
@@ -432,6 +436,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `rawpointer` | 0.2.1 | MIT/Apache-2.0 | https://github.com/bluss/rawpointer/ |
 | `rcgen` | 0.14.10 | MIT OR Apache-2.0 | https://github.com/rustls/rcgen |
 | `realfft` | 3.5.1 | MIT | https://github.com/HEnquist/realfft |
+| `recvmsg` | 1.0.0 | 0BSD |  |
 | `redox_syscall` | 0.5.18 | MIT | https://gitlab.redox-os.org/redox-os/syscall |
 | `redox_syscall` | 0.9.5 | MIT | https://gitlab.redox-os.org/redox-os/kernel |
 | `redox_users` | 0.5.3 | MIT | https://gitlab.redox-os.org/redox-os/users |
@@ -646,6 +651,8 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `webview2-com` | 0.39.1 | MIT | https://github.com/wravery/webview2-rs |
 | `webview2-com-macros` | 0.8.1 | MIT | https://github.com/wravery/webview2-rs |
 | `webview2-com-sys` | 0.39.1 | MIT | https://github.com/wravery/webview2-rs |
+| `widestring` | 1.2.1 | MIT OR Apache-2.0 | https://github.com/VoidStarKat/widestring-rs |
+| `win32-min` | 0.1.3 | MIT | https://github.com/icedracon/win32-min |
 | `winapi` | 0.3.9 | MIT/Apache-2.0 | https://github.com/retep998/winapi-rs |
 | `winapi-i686-pc-windows-gnu` | 0.4.0 | MIT/Apache-2.0 | https://github.com/retep998/winapi-rs |
 | `winapi-util` | 0.1.11 | Unlicense OR MIT | https://github.com/BurntSushi/winapi-util |
@@ -684,6 +691,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `windows-targets` | 0.42.2 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
 | `windows-targets` | 0.52.6 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
 | `windows-threading` | 0.2.1 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
+| `windows-token` | 0.2.1 | MIT | https://github.com/icedracon/windows-token |
 | `windows-version` | 0.1.7 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
 | `winnow` | 0.5.40 | MIT | https://github.com/winnow-rs/winnow |
 | `winnow` | 1.0.4 | MIT | https://github.com/winnow-rs/winnow |

@@ -18,6 +18,7 @@
 | 7.º | 6 | DJ Privado y A ciegas | [fase-6-dj.md](./fase-6-dj.md) |
 | 8.º | 7 | Publicación de la 2.0 | [fase-7-retiro.md](./fase-7-retiro.md) |
 | 9.º | 8 | Capacidades nuevas (**cerrada el 2026-10-31**) | [fase-8-nuevas.md](./fase-8-nuevas.md) |
+| 10.º | 9 | Integración con la suite: frecuencia de respaldo | [fase-9-integracion-suite.md](./fase-9-integracion-suite.md) |
 
 Lo que se hace en cada sesión, con sus commits y lo que quedó pendiente, se registra en la
 [bitácora](./bitacora.md).

@@ -94,8 +94,11 @@ fn sha256_de(ruta: &Path) -> NsResult<String> {
 }
 
 fn preferencia(db: &BaseDeDatos, clave: &str) -> NsResult<Option<Value>> {
-    let v: Option<String> = db
-        .conexion()?
+    preferencia_en(&*db.conexion()?, clave)
+}
+
+fn preferencia_en(conn: &rusqlite::Connection, clave: &str) -> NsResult<Option<Value>> {
+    let v: Option<String> = conn
         .query_row(
             "SELECT valor FROM preferencias WHERE clave = ?1",
             [clave],
@@ -109,14 +112,23 @@ fn preferencia(db: &BaseDeDatos, clave: &str) -> NsResult<Option<Value>> {
 fn guardar_preferencia(db: &BaseDeDatos, clave: &str, valor: &Value) -> NsResult<()> {
     let mut conn = db.conexion()?;
     let tx = db::transaccion_de_escritura(&mut conn)?;
+    guardar_preferencia_en(&tx, clave, valor)?;
+    tx.commit().map_err(|_| NsError::StorageFailure)
+}
+
+fn guardar_preferencia_en(
+    tx: &rusqlite::Transaction<'_>,
+    clave: &str,
+    valor: &Value,
+) -> NsResult<()> {
     tx.execute(
         "INSERT INTO preferencias (clave, valor) VALUES (?1, ?2)
          ON CONFLICT (clave) DO UPDATE SET valor = excluded.valor,
              actualizada_en = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
         rusqlite::params![clave, valor.to_string()],
     )
-    .map_err(|_| NsError::StorageFailure)?;
-    tx.commit().map_err(|_| NsError::StorageFailure)
+    .map(|_| ())
+    .map_err(|_| NsError::StorageFailure)
 }
 
 fn ahora_iso(db: &BaseDeDatos) -> NsResult<String> {
@@ -537,10 +549,7 @@ fn dias(v: &Value) -> Option<u32> {
 ///
 /// [`NsError::StorageFailure`] si la consulta falla.
 pub fn estado(db: &BaseDeDatos, rutas: &Rutas) -> NsResult<EstadoCopia> {
-    let cada_dias = preferencia(db, "copia_cada_dias")?
-        .as_ref()
-        .and_then(dias)
-        .unwrap_or(0);
+    let cada_dias = leer_frecuencia(&*db.conexion()?)?;
     let carpeta = preferencia(db, "copia_carpeta")?
         .and_then(|v| v.as_str().map(PathBuf::from))
         .and_then(|p| p.file_name().map(|n| n.to_string_lossy().into_owned()));
@@ -561,11 +570,32 @@ pub const FRECUENCIAS: [u32; 4] = [0, 1, 7, 30];
 ///
 /// - [`NsError::InvalidInput`] si la frecuencia no es una de las de Ajustes.
 /// - [`NsError::StorageFailure`] si no se puede guardar.
-pub fn fijar_frecuencia(db: &BaseDeDatos, cada_dias: u32) -> NsResult<()> {
+pub(crate) fn leer_frecuencia(conn: &rusqlite::Connection) -> NsResult<u32> {
+    Ok(preferencia_en(conn, "copia_cada_dias")?
+        .as_ref()
+        .and_then(dias)
+        .unwrap_or(0))
+}
+
+pub(crate) fn fijar_frecuencia_en(tx: &rusqlite::Transaction<'_>, cada_dias: u32) -> NsResult<()> {
     if !FRECUENCIAS.contains(&cada_dias) {
         return Err(NsError::InvalidInput);
     }
-    guardar_preferencia(db, "copia_cada_dias", &Value::from(cada_dias))
+    guardar_preferencia_en(tx, "copia_cada_dias", &Value::from(cada_dias))
+}
+
+// Las pruebas históricas ejercen el mismo propietario; la interfaz usa revisión explícita.
+#[cfg(test)]
+fn fijar_frecuencia(db: &BaseDeDatos, cada_dias: u32) -> NsResult<()> {
+    use nb_capability::StateOwner;
+    let mut owner = crate::frecuencia_compartida::Propietario::nuevo(db.clone());
+    let current = owner
+        .read()
+        .map_err(crate::frecuencia_compartida::error_propietario)?;
+    owner
+        .compare_and_set(current.sequence, cada_dias)
+        .map(|_| ())
+        .map_err(crate::frecuencia_compartida::error_propietario)
 }
 
 /// # Errors
@@ -734,6 +764,40 @@ mod tests {
             w.write_all(&datos).unwrap();
         }
         w.finish().unwrap();
+    }
+
+    #[test]
+    fn restaurar_un_zip_v11_migra_la_frecuencia_sin_recuperar_la_epoca_anterior() {
+        let (dir, rutas, db) = montaje("frecuencia-v11");
+        {
+            let mut conn = db.conexion().unwrap();
+            let tx = db::transaccion_de_escritura(&mut conn).unwrap();
+            tx.execute_batch("DROP TABLE revision_de_recursos; INSERT INTO preferencias(clave,valor) VALUES('copia_cada_dias','1.0'); PRAGMA user_version=11;").unwrap();
+            tx.commit().unwrap();
+        }
+        let zip_actual = dir.join("fuente.nbsound-backup");
+        crear(&db, &rutas, &zip_actual).unwrap();
+        let zip_v11 = dir.join("anterior.nbsound-backup");
+        reescribir_manifiesto(&zip_actual, &zip_v11, |m| m["esquema"] = Value::from(11));
+        drop(db);
+        let db = BaseDeDatos::abrir(&rutas.base_de_datos()).unwrap();
+        let recurso = crate::frecuencia_compartida::nuevo(&db).unwrap();
+        let antes = recurso.read().unwrap();
+        recurso.compare_and_set(&antes.revision, 7).unwrap();
+        drop(recurso);
+        drop(db);
+        preparar_restauracion(&rutas, &zip_v11).unwrap();
+        aplicar_restauracion_pendiente(&rutas);
+        let db = BaseDeDatos::abrir(&rutas.base_de_datos()).unwrap();
+        let restaurado = crate::frecuencia_compartida::nuevo(&db).unwrap();
+        let despues = restaurado.read().unwrap();
+        assert_eq!(despues.value, 1);
+        assert_eq!(despues.revision.sequence.get(), 0);
+        assert_ne!(despues.revision.epoch, antes.revision.epoch);
+        assert_eq!(despues.key, antes.key);
+        drop(restaurado);
+        drop(db);
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]

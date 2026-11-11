@@ -211,6 +211,8 @@ export const esAparte = {
     errorDanada: 'La copia está dañada o incompleta.',
     error: 'No se pudo completar. Vuelve a intentarlo.',
     automaticas: 'Copias automáticas',
+    conflicto:
+      'La frecuencia cambió desde otro control. Se muestra el valor guardado; vuelve a elegir si quieres cambiarlo.',
     frecuencias: { 0: 'Nunca', 1: 'Cada día', 7: 'Cada semana', 30: 'Cada mes' } as Record<
       number,
       string

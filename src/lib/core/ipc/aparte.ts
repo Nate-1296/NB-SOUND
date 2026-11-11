@@ -9,6 +9,7 @@ import type { UnlistenFn } from '@tauri-apps/api/event';
 import type {
   Actualizacion,
   AjustesIa,
+  CambioFrecuenciaCopia,
   ClavesServicios,
   DatosAlbum,
   DatosPista,
@@ -17,6 +18,7 @@ import type {
   EstadoCopia,
   EstadoFiesta,
   EstructuraCarpetas,
+  FrecuenciaCopia,
   Gpu,
   IdAgregado,
   OpcionesCopiaDispositivo,
@@ -31,6 +33,7 @@ import type {
   ResumenDuplicados,
   ResumenEscucha,
   RevisionCarpeta,
+  RevisionCopia,
   ServicioConClave,
   SugerenciaFiesta
 } from '#lib/bindings/index.ts';
@@ -40,6 +43,7 @@ import { call, escuchar } from './index';
 export type {
   EstadoFiesta,
   EstructuraCarpetas,
+  FrecuenciaCopia,
   OpcionesCopiaDispositivo,
   OrdenInteligente,
   OrigenCopia,
@@ -189,8 +193,21 @@ export function copiaRestaurar(): Promise<boolean> {
 }
 
 /** 0, 1, 7 o 30 días. */
-export function copiaFrecuencia(dias: number): Promise<EstadoCopia> {
-  return call<EstadoCopia>('copia_frecuencia', { dias });
+export function copiaFrecuencia(
+  dias: number,
+  revision: RevisionCopia
+): Promise<CambioFrecuenciaCopia> {
+  return call<CambioFrecuenciaCopia>('copia_frecuencia', { dias, revision });
+}
+
+export function copiaFrecuenciaEstado(): Promise<FrecuenciaCopia> {
+  return call<FrecuenciaCopia>('copia_frecuencia_estado');
+}
+
+export function alCambiarLaFrecuencia(
+  cada: (estado: FrecuenciaCopia | null) => void
+): Promise<UnlistenFn> {
+  return escuchar<FrecuenciaCopia | null>('copia:frecuencia', cada);
 }
 
 // --- La carpeta de tu música -----------------------------------------------------

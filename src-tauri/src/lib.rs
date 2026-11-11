@@ -25,6 +25,7 @@ pub mod dj;
 pub mod error;
 pub mod explorador;
 pub mod fiesta;
+pub mod frecuencia_compartida;
 pub mod gpu;
 pub mod identidad_movil;
 pub mod inicio;
@@ -57,6 +58,7 @@ use crate::paths::Rutas;
 
 /// Estado compartido del runtime.
 pub struct Estado {
+    pub frecuencia_copia: Option<frecuencia_compartida::RecursoFrecuencia>,
     pub rutas: Rutas,
     pub red: Arc<Red>,
     pub db: BaseDeDatos,
@@ -146,6 +148,19 @@ pub fn run() {
     // la base abierta (F4.2.6).
     copia_seguridad::aplicar_restauracion_pendiente(&rutas);
     let db = BaseDeDatos::abrir(&rutas.base_de_datos()).expect("no se pudo abrir la base de datos");
+    let frecuencia_copia = match frecuencia_compartida::nuevo(&db) {
+        Ok(recurso) => Some(recurso),
+        Err(error) => {
+            tracing::warn!(
+                codigo = error.code(),
+                "la frecuencia compartida no está disponible"
+            );
+            None
+        }
+    };
+    if let Some(recurso) = &frecuencia_copia {
+        frecuencia_compartida::iniciar_enlace_si_se_pidio(recurso.clone());
+    }
     // Si la música ya no está donde estaba (otro equipo, otro usuario, una copia
     // restaurada), se busca antes de vigilar e importar nada (`ubicacion.rs`).
     if let Err(error) = catalogo::ubicacion::recuperar_si_hace_falta(
@@ -291,7 +306,9 @@ pub fn run() {
             }
         },
     ));
+    let frecuencia_para_ventana = frecuencia_copia.clone();
     let estado = Estado {
+        frecuencia_copia,
         rutas: rutas.clone(),
         red: Arc::clone(&red),
         db: db.clone(),
@@ -318,6 +335,9 @@ pub fn run() {
         .setup(move |app| {
             use tauri::Manager;
             let _ = ventana.set(app.handle().clone());
+            if let Some(recurso) = frecuencia_para_ventana {
+                frecuencia_compartida::escuchar(app.handle().clone(), recurso);
+            }
             crate::ventana::programar_red_de_seguridad(app.handle().clone());
             // ONNX Runtime viaja entre los recursos. Solo en depuración se busca
             // también en `binarios/`, para no dejar en el binario publicado la ruta
@@ -577,6 +597,7 @@ pub fn run() {
             comandos::copia_crear,
             comandos::copia_restaurar,
             comandos::copia_frecuencia,
+            comandos::copia_frecuencia_estado,
             comandos::copia_elegir_carpeta,
             comandos::reiniciar,
             comandos::agregados_estado,

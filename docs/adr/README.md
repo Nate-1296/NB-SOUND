@@ -26,5 +26,6 @@ conservar **por qué** se tomó.
 | [009](./decisions/ADR-009-configuracion-y-red.md) | Configuración mínima, secretos en el llavero y una sola puerta de red | Aceptado |
 | [010](./decisions/ADR-010-licencia.md) | Licencia del código y de los modelos | Aceptado |
 | [012](./decisions/ADR-012-modo-fiesta.md) | Modelo de confianza y aislamiento del modo fiesta | Aceptado |
+| [013](./decisions/ADR-013-launcher-frecuencia.md) | Frecuencia de respaldo como capacidad compartida | Aceptado el 2026-11-11; integración en construcción |
 
 Plantilla: [ADR-000-template.md](./ADR-000-template.md).

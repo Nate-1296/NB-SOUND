@@ -1629,11 +1629,28 @@ pub async fn copia_restaurar(app: AppHandle) -> NsResult<bool> {
 pub async fn copia_frecuencia(
     estado: tauri::State<'_, Estado>,
     dias: u32,
-) -> NsResult<crate::copia_seguridad::EstadoCopia> {
-    let rutas = estado.rutas.clone();
-    en_segundo_plano(&estado, move |db| {
-        crate::copia_seguridad::fijar_frecuencia(db, dias)?;
-        crate::copia_seguridad::estado(db, &rutas)
+    revision: crate::frecuencia_compartida::RevisionCopia,
+) -> NsResult<crate::frecuencia_compartida::CambioFrecuenciaCopia> {
+    let recurso = estado
+        .frecuencia_copia
+        .clone()
+        .ok_or(NsError::ComponentUnavailable)?;
+    en_segundo_plano(&estado, move |_| {
+        crate::frecuencia_compartida::cambiar(&recurso, revision, dias)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn copia_frecuencia_estado(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::frecuencia_compartida::FrecuenciaCopia> {
+    let recurso = estado
+        .frecuencia_copia
+        .clone()
+        .ok_or(NsError::ComponentUnavailable)?;
+    en_segundo_plano(&estado, move |_| {
+        crate::frecuencia_compartida::consultar(&recurso)
     })
     .await
 }

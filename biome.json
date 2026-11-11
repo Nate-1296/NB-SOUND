@@ -11,6 +11,7 @@
       "!**/.svelte-kit",
       "!**/target",
       "!**/src-tauri/gen",
+      "!**/src-tauri/vendor",
       "!**/pnpm-lock.yaml",
       "!**/.claude/settings.local.json",
       "!**/src/lib/bindings",

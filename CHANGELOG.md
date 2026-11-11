@@ -3,6 +3,23 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.1.0] — 2026-11-11
+
+### Novedades
+
+- La frecuencia de copias puede consultarse y cambiarse desde un enlace local autorizado
+  de NB Launcher. Sound conserva su validación, guardado y ejecución de copias.
+- El ajuste abierto recibe los cambios confirmados sin recarga. Las ediciones simultáneas
+  detectan conflictos y una respuesta perdida se reconcilia sin repetir la escritura.
+
+### Compatibilidad
+
+- Migración V12 con respaldo previo. Los binarios anteriores rechazan una base V12;
+  para regresar hay que recuperar el respaldo anterior, sin downgrade automático.
+- El enlace es explícito y temporal; Sound sigue funcionando al perderlo. No cambia el
+  protocolo móvil ni el formato de copias. La ejecución nativa Windows/macOS del enlace
+  sigue pendiente; el resto de Sound conserva sus plataformas existentes.
+
 ## [2.0.15] — 2026-11-09
 
 El cierre de las pruebas finales.

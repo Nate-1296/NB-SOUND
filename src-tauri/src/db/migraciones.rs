@@ -80,6 +80,11 @@ const MIGRACIONES: &[Migracion] = &[
         nombre: "completar en segundo plano",
         sql: include_str!("../../migrations/V11__completar_fondo.sql"),
     },
+    Migracion {
+        version: 12,
+        nombre: "revisión de recursos compartidos",
+        sql: include_str!("../../migrations/V12__revision_de_recursos.sql"),
+    },
 ];
 
 /// Versión de esquema aplicada (`PRAGMA user_version`).
