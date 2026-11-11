@@ -221,13 +221,14 @@ Se intentan reproducir por guion; si aparecen, se corrigen con su prueba de regr
       otra. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: la parte que no es el selector, por la misma función: con la buena, todas; con una vacía, ninguna; suena sin reiniciar porque el reproductor lee la carpeta en cada canción. El aviso no se provocó: buscaría en `~/Música` y adoptaría la biblioteca real.)*
 - [x] La barra a 720 px: la fila de controles del menú ··· responde y se cierra al elegir letras o pantalla completa. *(Comprobado por guion el 2026-11-09, `scripts/qa/ui-qa.sh revisiones`: con la página estrechada (KWin virtual no deja cambiar el tamaño de la ventana), el menú ··· trae cinco controles y elegir Letras lo cierra y abre la vista.)*
 
-## Cuestiones pendientes
+## Cuestiones de cierre
 
-- [ ] **P3: Compatibilidad de licencias ante un modelo institucional (ADR-010).**
-      La alineación con el esquema de NB Books (código permisivo para uso general y distribución institucional independiente) presenta dos restricciones en la base actual:
-      1. El módulo de reconocimiento de audio incorpora lógica derivada de `songrec` (GPL-3.0), incompatible con una licencia Apache-2.0 salvo reescritura íntegra o sustitución por una implementación permisiva (MIT).
-      2. Los modelos de análisis musical del MTG (Essentia) restringen el uso a fines no comerciales (CC BY-NC), lo que impide su explotación comercial en entornos institucionales sin licenciamiento propietario previo del MTG o sustitución de la inferencia.
-      Queda por definir la vía de resolución: reescritura de los componentes GPL bajo Apache-2.0 separando la edición institucional, o conservación de GPL-3.0-or-later incorporando términos de uso específicos para el despliegue institucional.
+- [x] **P3: Compatibilidad de licencias ante un modelo institucional (ADR-010).**
+      *(Cerrada por decisión de Nathan el 2026-11-11: se mantienen GPL-3.0-or-later, el código portado de `songrec`
+      y los modelos actuales, sin crear una edición institucional ni añadir restricciones de uso a la GPL.
+      Una futura oferta comercial deberá respetar la GPL y obtener autorización del MTG para los modelos o
+      sustituirlos y validar sus resultados. Véase la enmienda de [ADR-010](../adr/decisions/ADR-010-licencia.md).
+      Es una decisión de alcance y licenciamiento, no una prueba de ejecución.)*
 
 - [x] **P7: Reproducción de formatos no MP3 (FLAC y M4A) en NB Sound Mobile sobre dispositivo real.**
       *(Comprobado el 2026-11-10 por depuración inalámbrica ADB sobre el TCL 50 Pro NXTPAPER, modelo `T803E`, con NB Sound Mobile 0.1.2 conectado a `192.168.18.119:8731` sobre la copia aislada: sincronización incremental de una pista FLAC de 48 kHz / 16 bits y una pista M4A AAC-LC de 192 kbps servidas por `GET /api/v1/track/{id}/audio` con `x-nb-sound-hash` verificado, descarga offline completada y reproducción continua en `MediaSession` con `state=PLAYING(3)`, `buffered position=15000` y `error=null` en ambos formatos; tumbas sincronizadas al finalizar para dejar limpio el catálogo del teléfono.)*

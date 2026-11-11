@@ -272,3 +272,19 @@ hizo las Fases 2 a 4; Claude, el resto. Todo sobre la aplicación compilada y un
 |---|---|---|---|
 | (este) | P7 / F3.1.6 | Comprobada por depuración inalámbrica (ADB) en el TCL 50 Pro NXTPAPER (`T803E`) con NB Sound Mobile 0.1.2 la sincronización, verificación de `x-nb-sound-hash` y reproducción continua de pistas FLAC (`audio/flac`, 48 kHz / 16 bits) y M4A (`audio/mp4`, AAC-LC 192 kbps) servidas por `GET /api/v1/track/{id}/audio` desde la copia aislada; limpiadas las pistas de prueba del teléfono mediante tumbas al terminar | — |
 
+## 2026-11-11: cierre de P3 y comprobación de la Release
+
+| Commit | Iteración | Qué se hizo | Pruebas nuevas |
+|---|---|---|---|
+| (este) | P3 / ADR-010 | Nathan decide mantener GPL-3.0-or-later, `songrec` y los modelos actuales, sin edición institucional en esta etapa. Enmendado ADR-010 y cerrado P3 en preguntas abiertas y pruebas finales; actualizada la revisión de producto | — (cambio documental) |
+
+La última Release publicada es [v2.0.15](https://github.com/Nate-1296/NB-SOUND/releases/tag/v2.0.15),
+desde `6be0346`: incluye el ahorro del motor (`2306f92`), la prioridad de fondo en Windows (`02eb339`) y
+la aceleración NVIDIA en Linux (`a2ac370`). Desde esa etiqueta solo hay cambios documentales, por lo que no
+se necesita otra versión de los instaladores para este cierre. La aceleración sigue sin probar en una NVIDIA real.
+
+La [CI de la versión](https://github.com/Nate-1296/NB-SOUND/actions/runs/42727857378) y la
+[publicación de sus instaladores](https://github.com/Nate-1296/NB-SOUND/actions/runs/42731625431)
+terminaron correctamente. La Release contiene los instaladores de Linux, Windows y macOS, las firmas del
+actualizador y `latest.json`.
+
