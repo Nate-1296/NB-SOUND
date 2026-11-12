@@ -3,6 +3,18 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.1.2] — 2026-11-12
+
+### Correcciones
+
+- Las copias Linux administradas por Launcher resuelven sus propios recursos y dejan la
+  actualización al gestor. Un bloqueo de uso impide sustituir o quitar sus binarios
+  mientras Sound está abierto. Las instalaciones independientes mantienen su actualizador.
+- El enlace local de Launcher puede renovarse desde su supervisor autorizado sin cerrar
+  Sound ni modificar los permisos. Sin renovación o al desconectar se cierra el enlace;
+  Sound conserva su funcionamiento independiente.
+- Se mantiene la negociación anterior. No cambian los datos, las copias ni el contrato móvil.
+
 ## [2.1.1] — 2026-11-11
 
 ### Novedades

@@ -186,6 +186,7 @@ export const esAparte = {
     noDisponible:
       'Esta instalación se actualiza con el gestor de paquetes del sistema o descargando la nueva versión.',
     firma: 'La descarga no lleva la firma de NB Sound, así que no se ha instalado.',
+    administrada: 'Esta instalación se actualiza desde NB Launcher.',
     error: 'No se pudo conectar. Vuelve a intentarlo más tarde.'
   },
   copia: {

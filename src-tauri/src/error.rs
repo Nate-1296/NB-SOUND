@@ -34,6 +34,9 @@ pub enum NsError {
     #[error("el componente solicitado no está disponible")]
     ComponentUnavailable,
 
+    #[error("esta instalación se actualiza desde NB Launcher")]
+    InstallationManaged,
+
     #[error("el modo sin red está activado")]
     NetworkDisabled,
 
@@ -80,6 +83,7 @@ impl NsError {
             Self::StorageFailure => "STORAGE_FAILURE",
             Self::SchemaMismatch => "SCHEMA_MISMATCH",
             Self::ComponentUnavailable => "COMPONENT_UNAVAILABLE",
+            Self::InstallationManaged => "INSTALLATION_MANAGED",
             Self::NetworkDisabled => "NETWORK_DISABLED",
             Self::ConsentRequired => "CONSENT_REQUIRED",
             Self::NetworkFailure => "NETWORK_FAILURE",
@@ -103,6 +107,7 @@ pub const TODAS: &[NsError] = &[
     NsError::StorageFailure,
     NsError::SchemaMismatch,
     NsError::ComponentUnavailable,
+    NsError::InstallationManaged,
     NsError::NetworkDisabled,
     NsError::ConsentRequired,
     NsError::NetworkFailure,
@@ -177,6 +182,7 @@ mod tests {
             NsError::StorageFailure => "STORAGE_FAILURE",
             NsError::SchemaMismatch => "SCHEMA_MISMATCH",
             NsError::ComponentUnavailable => "COMPONENT_UNAVAILABLE",
+            NsError::InstallationManaged => "INSTALLATION_MANAGED",
             NsError::NetworkDisabled => "NETWORK_DISABLED",
             NsError::ConsentRequired => "CONSENT_REQUIRED",
             NsError::NetworkFailure => "NETWORK_FAILURE",
@@ -191,7 +197,7 @@ mod tests {
 
     #[test]
     fn los_codigos_son_estables() {
-        assert_eq!(TODAS.len(), 16, "hay una variante fuera de la lista");
+        assert_eq!(TODAS.len(), 17, "hay una variante fuera de la lista");
         for variante in TODAS {
             assert_eq!(variante.code(), codigo_esperado(variante));
         }

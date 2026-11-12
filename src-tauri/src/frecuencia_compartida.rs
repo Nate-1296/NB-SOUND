@@ -249,6 +249,61 @@ pub fn iniciar_enlace_si_se_pidio(recurso: RecursoFrecuencia) {
 mod pruebas {
     use super::*;
 
+    #[tokio::test]
+    async fn renovar_el_enlace_no_escribe_y_desconectarlo_conserva_el_control_nativo() {
+        use nb_capability::port::{Bootstrap, Client, Control, Reply};
+        use nb_protocol::{frame::write_frame, local};
+        use std::time::Duration;
+        use tokio::time::{sleep, timeout};
+
+        let db = BaseDeDatos::en_memoria().unwrap();
+        let recurso = nuevo(&db).unwrap();
+        let antes = consultar(&recurso).unwrap();
+        let session = local::new_session().unwrap();
+        let credential = local::new_credential().unwrap();
+        let (mut parent, supervisor) = tokio::io::duplex(4096);
+        write_frame(
+            &mut parent,
+            &Bootstrap {
+                session: session.clone(),
+                credential: credential.clone(),
+            },
+        )
+        .await
+        .unwrap();
+        let task = tokio::spawn(nb_capability::port::serve(recurso.clone(), supervisor));
+        let (mut client, _, renewable) = timeout(Duration::from_secs(3), async {
+            loop {
+                if let Ok(connection) =
+                    Client::connect_with_renewal(&session, credential.clone(), std::process::id())
+                        .await
+                {
+                    break connection;
+                }
+                sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await
+        .unwrap();
+        assert!(renewable);
+        write_frame(&mut parent, &Control::Renew).await.unwrap();
+        assert!(
+            matches!(client.read().await.unwrap(), Reply::Snapshot(s) if s.revision == recurso.read().unwrap().revision)
+        );
+        let despues = consultar(&recurso).unwrap();
+        assert_eq!(despues.revision.epoch, antes.revision.epoch);
+        assert_eq!(despues.revision.sequence, antes.revision.sequence);
+        drop(parent);
+        timeout(Duration::from_secs(2), task)
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
+        assert!(client.read().await.is_err());
+        cambiar(&recurso, antes.revision, 7).unwrap();
+        assert_eq!(consultar(&recurso).unwrap().cada_dias, 7);
+    }
+
     #[test]
     fn dos_controles_no_sobrescriben_una_revision_antigua() {
         let db = BaseDeDatos::en_memoria().unwrap();

@@ -6,6 +6,8 @@ La aplicación conserva su dominio. Esta fase no cambia NB Sound Mobile ni publi
 | Iteración | Estado y criterio |
 |---|---|
 | F9.1.1 Frecuencia de copia compartida | Parcial: recorrido real Linux y verificación completa correctos. Propietario, V12, puente revisionado, observación bidireccional y reapertura comprobados. Registro, permisos por recurso y consentimiento ya implementados en la primera UI de Launcher y comprobados en Linux; falta ejecutar ese recorrido en Windows/macOS. |
+| F9.1.2 Renovación privada | Implementada y comprobada en Linux: enlace real de 961 segundos sin sondeo del frontend, lectura/escritura posterior y revocación. Compatible con negociación 1. Publicación y otras plataformas pendientes. Ver ADR-014. |
+| F9.1.3 Instalación administrada | Implementada bajo ADR-015; pruebas de exclusión/recursos/marca correctas. Paquete firmado y recorrido real del gestor pendientes. |
 
 ## Propiedad y persistencia
 
@@ -28,7 +30,9 @@ Sin `--nb-launcher`, Sound no inicia este enlace. Con el indicador, espera un bo
 framed en stdin privado durante cinco segundos. El supervisor conoce el endpoint y verifica
 UID/SID y PID antes de enviar la credencial; stdout sigue dedicado a registros.
 La credencial solo da acceso al recurso de frecuencia, no a otras operaciones de Sound.
-EOF del supervisor o 15 minutos cierran el enlace sin terminar la aplicación.
+EOF del supervisor o 15 minutos sin renovación cierran el enlace sin terminar la aplicación.
+El protocolo 2 acepta renovación framed exclusivamente por la tubería heredada, según
+[ADR-014](../adr/decisions/ADR-014-renovacion-launcher.md). El protocolo 1 sigue disponible.
 
 Este puerto no es Mesh ni el catálogo general del host. El consentimiento y los permisos
 por operación se aplican en Launcher: su primera UI ya registra este propietario y filtra
@@ -68,6 +72,10 @@ el binario real. No se usa este inspector en producto. Windows/macOS necesitan e
 nativa antes de declarar soporte verificado de esta integración.
 
 ## Distribución y cierre de esta entrega
+
+La continuación 2.1.2 y sus comprobaciones se registran en
+[validación de Launcher](../engineering/validacion-launcher-2.1.2.md). No se atribuye el
+contrato administrado nuevo a los artefactos de 2.1.1.
 
 Publicada [NB Sound 2.1.1](https://github.com/Nate-1296/NB-SOUND/releases/tag/v2.1.1).
 La CI de aplicación y la generación de instaladores pasaron en Linux, Windows y macOS.

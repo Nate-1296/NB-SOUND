@@ -15,7 +15,7 @@ use sha2::{Digest, Sha256};
 use std::time::Duration;
 use subtle::ConstantTimeEq;
 use tokio::{
-    io::{AsyncRead, AsyncReadExt},
+    io::AsyncRead,
     task::{JoinSet, spawn_blocking},
     time::timeout,
 };
@@ -27,6 +27,23 @@ const LIFETIME: Duration = Duration::from_secs(900);
 pub struct Bootstrap {
     pub session: Epoch,
     pub credential: Credential,
+}
+
+/// Solo viaja por la tubería privada heredada, nunca por el puerto de clientes.
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "method", rename_all = "snake_case", deny_unknown_fields)]
+pub enum Control {
+    Renew,
+}
+
+async fn supervise<R: AsyncRead + Unpin>(mut supervisor: R) -> Result<(), PortError> {
+    loop {
+        match timeout(LIFETIME, read_frame::<_, Control>(&mut supervisor)).await {
+            Ok(Ok(Some(Control::Renew))) => {}
+            Ok(Ok(None)) | Err(_) => return Ok(()),
+            Ok(Err(error)) => return Err(error.into()),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -197,7 +214,7 @@ where
                 if !negotiated {
                     match request.operation {
                         Operation::Hello {
-                            version: 1,
+                            version: 1 | 2,
                             credential,
                         } if bool::from(digest.as_slice().ct_eq(
                             Sha256::digest(credential.expose_secret().as_bytes()).as_ref(),
@@ -261,11 +278,9 @@ where
             }
         }
     };
-    let mut control = [0_u8; 1];
     tokio::select! {
         result = accept => result,
-        _ = supervisor.read(&mut control) => Ok(()),
-        _ = tokio::time::sleep(LIFETIME) => Ok(()),
+        result = supervise(supervisor) => result,
     }
 }
 
@@ -281,6 +296,31 @@ impl Client {
         credential: Credential,
         expected_pid: u32,
     ) -> Result<(Self, Snapshot<Value>), PortError> {
+        Self::connect_version(session, credential, expected_pid, 1).await
+    }
+
+    /// El `hello` 2 acredita soporte de renovación por el canal privado.
+    /// Propietarios anteriores rechazan esa negociación sin modificar el recurso.
+    pub async fn connect_with_renewal(
+        session: &Epoch,
+        credential: Credential,
+        expected_pid: u32,
+    ) -> Result<(Self, Snapshot<Value>, bool), PortError> {
+        if let Ok((client, snapshot)) =
+            Self::connect_version(session, credential.clone(), expected_pid, 2).await
+        {
+            return Ok((client, snapshot, true));
+        }
+        let (client, snapshot) = Self::connect(session, credential, expected_pid).await?;
+        Ok((client, snapshot, false))
+    }
+
+    async fn connect_version(
+        session: &Epoch,
+        credential: Credential,
+        expected_pid: u32,
+        version: u16,
+    ) -> Result<(Self, Snapshot<Value>), PortError> {
         let path = local::path_for(session)?;
         let stream = local::connect_endpoint(&path, expected_pid).await?;
         let mut client = Self {
@@ -290,7 +330,7 @@ impl Client {
         };
         let reply = client
             .call(Operation::Hello {
-                version: 1,
+                version,
                 credential,
             })
             .await?;
@@ -351,5 +391,51 @@ impl Client {
     }
     pub async fn close(&mut self) -> Result<Reply, PortError> {
         self.call(Operation::Close).await
+    }
+}
+
+#[cfg(test)]
+mod lease_tests {
+    use super::*;
+
+    #[tokio::test(start_paused = true)]
+    async fn solo_un_frame_completo_privado_extiende_el_plazo_y_eof_lo_cierra() {
+        let (mut parent, supervisor) = tokio::io::duplex(4096);
+        let task = tokio::spawn(supervise(supervisor));
+        tokio::task::yield_now().await;
+        tokio::time::advance(LIFETIME - Duration::from_secs(1)).await;
+        assert!(!task.is_finished());
+        write_frame(&mut parent, &Control::Renew).await.unwrap();
+        tokio::task::yield_now().await;
+        tokio::time::advance(LIFETIME - Duration::from_secs(1)).await;
+        assert!(!task.is_finished());
+        drop(parent);
+        task.await.unwrap().unwrap();
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn el_enlace_sin_renovacion_caduca_y_un_frame_parcial_no_lo_prolonga() {
+        use tokio::io::AsyncWriteExt;
+        for partial in [false, true] {
+            let (mut parent, supervisor) = tokio::io::duplex(4096);
+            let task = tokio::spawn(supervise(supervisor));
+            tokio::task::yield_now().await;
+            if partial {
+                let mut frame = Vec::new();
+                write_frame(&mut frame, &Control::Renew).await.unwrap();
+                parent.write_all(&frame[..frame.len() - 1]).await.unwrap();
+            }
+            tokio::time::advance(LIFETIME).await;
+            task.await.unwrap().unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn un_control_malformado_no_se_acepta_como_renovacion() {
+        let (mut parent, supervisor) = tokio::io::duplex(4096);
+        write_frame(&mut parent, &serde_json::json!({"method":"grant"}))
+            .await
+            .unwrap();
+        assert!(supervise(supervisor).await.is_err());
     }
 }

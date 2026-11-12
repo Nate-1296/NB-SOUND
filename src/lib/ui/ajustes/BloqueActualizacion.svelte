@@ -23,6 +23,7 @@
     const codigo = error instanceof NsError ? error.code : '';
     if (codigo === 'NETWORK_DISABLED') return t.sinConexion;
     if (codigo === 'COMPONENT_UNAVAILABLE') return t.noDisponible;
+    if (codigo === 'INSTALLATION_MANAGED') return t.administrada;
     if (codigo === 'INTEGRITY_MISMATCH') return t.firma;
     return t.error;
   }

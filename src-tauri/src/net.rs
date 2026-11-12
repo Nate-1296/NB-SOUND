@@ -377,6 +377,7 @@ async fn consultar<R: tauri::Runtime>(
     app: &tauri::AppHandle<R>,
     red: &Red,
 ) -> NsResult<Option<tauri_plugin_updater::Update>> {
+    crate::instalacion_administrada::comprobar_actualizador_propio()?;
     use tauri_plugin_updater::UpdaterExt as _;
     red.autorizar(Servicio::Actualizaciones, MANIFIESTO)?;
     let manifiesto = MANIFIESTO.parse().map_err(|_| NsError::Internal)?;

@@ -90,6 +90,9 @@ pub enum AdminOperation {
     Revoke {
         grant_id: u64,
     },
+    Renew {
+        grant_id: u64,
+    },
     RegisterOwner {
         key: ResourceKey,
         session: Epoch,
@@ -118,6 +121,9 @@ pub enum AdminOutcome {
         expires_in_seconds: u64,
     },
     Revoked,
+    Renewed {
+        expires_in_seconds: u64,
+    },
     Registered,
     Unregistered,
     ShuttingDown,

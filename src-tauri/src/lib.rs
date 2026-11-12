@@ -29,6 +29,7 @@ pub mod frecuencia_compartida;
 pub mod gpu;
 pub mod identidad_movil;
 pub mod inicio;
+pub mod instalacion_administrada;
 pub mod karaoke;
 pub mod letras;
 pub mod medicion;
@@ -140,6 +141,9 @@ impl reproductor::Oyente for OyenteTauri {
 /// datos no se puede abrir: sin ellos no hay biblioteca que mostrar, y seguir
 /// sería peor que detenerse con un mensaje.
 pub fn run() {
+    let instalacion = instalacion_administrada::abrir()
+        .expect("no se pudo adquirir el permiso de uso de la instalación");
+    let recursos_administrados = instalacion.as_ref().map(|i| i.recursos.clone());
     let rutas = Rutas::resolver().expect("el sistema no ofrece un directorio de datos utilizable");
     let _registro = telemetry::init(&rutas.registros);
     tracing::info!(version = env!("CARGO_PKG_VERSION"), "arranca NB Sound");
@@ -342,11 +346,10 @@ pub fn run() {
             // ONNX Runtime viaja entre los recursos. Solo en depuración se busca
             // también en `binarios/`, para no dejar en el binario publicado la ruta
             // de la máquina que lo compiló.
-            let biblioteca = app
-                .path()
-                .resource_dir()
+            let biblioteca = recursos_administrados
+                .clone()
+                .or_else(|| app.path().resource_dir().ok())
                 .map(|d| d.join(onnx::nombre_biblioteca()))
-                .ok()
                 .filter(|r| r.is_file());
             #[cfg(debug_assertions)]
             let biblioteca = biblioteca.or_else(|| {
