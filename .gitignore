@@ -82,3 +82,6 @@ Thumbs.db
 .directory
 
 .venv/
+
+# Staging editorial de CI; nunca incluye credenciales.
+/.launcher-publication/

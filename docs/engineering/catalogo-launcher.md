@@ -28,10 +28,19 @@ existente y verifica otra vez la firma antes de subir únicamente JSON y `.sig`.
 No modifica paquetes, `latest.json`, datos ni configuración de la aplicación.
 
 La clave privada aparece solo en el entorno del paso de firma. El staging vive en el
-directorio temporal del runner, fuera del cache de Cargo. El consumidor conserva su anclaje
+directorio de trabajo editorial del runner, fuera del cache de Cargo. El consumidor conserva su anclaje
 público; no confía en una clave proporcionada por estos archivos. La autoridad se limita
 a Sound y su repositorio. La caducidad normal es de 14 días.
 
 La primera ejecución del workflow y el consumo firmado real se registrarán aquí. El
 comando previsto para refrescar una release publicada, todavía sin ejecutar en esta
 iteración, es `gh workflow run catalogo-launcher.yml --field tag=v2.1.3` dentro del repo.
+
+## Validación de la definición CI
+
+La primera definición (`316d0a2`) no se ejecutó: `runner.temp` no está disponible en
+el entorno de un job. Actionlint 1.7.12 reprodujo exactamente esa restricción. El staging
+usa ahora una ruta editorial propia fuera del cache de Cargo. Windows detectó además
+un `mut` usado únicamente bajo Unix en el arnés; se corrigió sin tocar código de la app.
+Actionlint comprobó localmente todas las definiciones y se añade a CI con versión y
+SHA-256 fijados. La siguiente ejecución nativa comprobará ambas correcciones.

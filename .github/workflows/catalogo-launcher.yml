@@ -24,14 +24,16 @@ jobs:
     timeout-minutes: 30
     env:
       RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PUBLICATION_DIR: ${{ runner.temp }}/nb-sound-launcher-catalog
+      PUBLICATION_DIR: ./.launcher-publication
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: false
       - name: Validar release y recuperar su configuración
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           node --input-type=module <<'JS'
           import {execFileSync} from 'node:child_process';
@@ -63,6 +65,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm binarios
       - name: Descargar los artefactos publicados
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release download "$RELEASE_TAG" --dir "$PUBLICATION_DIR/assets"
       - name: Verificar paquetes y producir metadatos
         run: |
@@ -76,4 +80,6 @@ jobs:
       - name: Verificar firma antes de publicar
         run: cargo run --locked --manifest-path src-tauri/Cargo.toml --example publicar_catalogo -- verify "$PUBLICATION_DIR/launcher-catalog.json" "$PUBLICATION_DIR/launcher-catalog.json.sig" "$PUBLICATION_DIR/config.json"
       - name: Publicar únicamente los metadatos comprobados
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload "$RELEASE_TAG" "$PUBLICATION_DIR/launcher-catalog.json" "$PUBLICATION_DIR/launcher-catalog.json.sig" --clobber
