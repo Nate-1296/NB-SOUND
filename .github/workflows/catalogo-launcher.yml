@@ -1,13 +1,15 @@
 name: Catálogo de Launcher
 
 on:
+  schedule:
+    - cron: '0 6 * * 1'
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       tag:
-        description: Release estable publicada que recibirá el catálogo firmado
-        required: true
+        description: Release estable publicada; vacío selecciona la más reciente
+        required: false
         type: string
 
 permissions:
@@ -19,7 +21,7 @@ concurrency:
 
 jobs:
   catalogo:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'v')
+    if: github.event_name != 'release' || (startsWith(github.event.release.tag_name, 'v') && !github.event.release.prerelease)
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     env:
@@ -37,13 +39,15 @@ jobs:
         run: |
           node --input-type=module <<'JS'
           import {execFileSync} from 'node:child_process';
-          import {mkdirSync,writeFileSync} from 'node:fs';
-          const tag=process.env.RELEASE_TAG;
+          import {mkdirSync,writeFileSync,appendFileSync} from 'node:fs';
+          let tag=process.env.RELEASE_TAG;
+          if (!tag) tag=JSON.parse(execFileSync('gh',['release','view','--json','tagName'],{encoding:'utf8'})).tagName;
           if (!/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag)) throw Error('RELEASE_TAG_INVALID');
           const release=JSON.parse(execFileSync('gh',['release','view',tag,'--json','tagName,isDraft,isPrerelease'],{encoding:'utf8'}));
           if (release.isDraft || release.isPrerelease || release.tagName!==tag) throw Error('RELEASE_NOT_PUBLISHED');
           const config=execFileSync('git',['show',`${tag}:src-tauri/tauri.conf.json`]);
           if (`v${JSON.parse(config).version}`!==tag) throw Error('RELEASE_VERSION_MISMATCH');
+          appendFileSync(process.env.GITHUB_ENV,`RELEASE_TAG=${tag}\n`);
           const directory=process.env.PUBLICATION_DIR;
           mkdirSync(`${directory}/assets`,{recursive:true});
           writeFileSync(`${directory}/config.json`,config,{flag:'wx'});

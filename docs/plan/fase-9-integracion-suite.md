@@ -9,7 +9,7 @@ posteriormente las releases de esta integración desde el contrato de NB Launche
 | F9.1.1 Frecuencia de copia compartida | Parcial: recorrido real Linux y verificación completa correctos. Propietario, V12, puente revisionado, observación bidireccional y reapertura comprobados. Registro, permisos por recurso y consentimiento ya implementados en la primera UI de Launcher y comprobados en Linux; falta ejecutar ese recorrido en Windows/macOS. |
 | F9.1.2 Renovación privada | Implementada y comprobada en Linux: enlace real de 961 segundos sin sondeo del frontend, lectura/escritura posterior y revocación. Compatible con negociación 1. Publicada en 2.1.3; recorrido de UI en otras plataformas pendiente. Ver ADR-014. |
 | F9.1.3 Instalación administrada | Validada en Linux bajo ADR-015 con el tar firmado 2.1.3 publicado: apertura, recursos, exclusión por uso, actualizador delegado y ajuste conservado tras reinstalar. Otros formatos/plataformas pendientes. |
-| F9.1.4 Metadatos firmados | Productor de desarrollo y workflow bajo ADR-016; verificación y consumo real pendientes. No cambia el ejecutable ni el móvil. |
+| F9.1.4 Metadatos firmados | Productor/editorial bajo ADR-016, CI nativa y firma publicada de 2.1.3 comprobados; Launcher aceptó el catálogo real. Renovación programada y UI del consumidor en validación. No cambia el ejecutable ni el móvil. |
 
 ## Propiedad y persistencia
 
