@@ -73,8 +73,9 @@ nativa antes de declarar soporte verificado de esta integración.
 
 ## Distribución y cierre de esta entrega
 
-La continuación 2.1.2 y sus comprobaciones se registran en
-[validación de Launcher](../engineering/validacion-launcher-2.1.2.md). No se atribuye el
+La continuación 2.1.3 y sus comprobaciones se registran en
+[validación de Launcher](../engineering/validacion-launcher-2.1.3.md). El candidato 2.1.2
+no se publicó por un fallo de medición de rendimiento en CI. No se atribuye el
 contrato administrado nuevo a los artefactos de 2.1.1.
 
 Publicada [NB Sound 2.1.1](https://github.com/Nate-1296/NB-SOUND/releases/tag/v2.1.1).

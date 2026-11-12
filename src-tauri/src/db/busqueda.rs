@@ -198,6 +198,7 @@ mod tests {
     /// títulos y la mayoría en muy pocos. Se mide la peor de varias consultas,
     /// incluidas las de las palabras más frecuentes, que son las caras.
     #[test]
+    #[ignore = "Medición de rendimiento; pnpm test:rendimiento la ejecuta aislada con el mismo límite."]
     fn cien_mil_pistas_se_buscan_en_menos_de_30_ms() {
         let mut semilla = 0x2545_f491_4f6c_dd1d_u64;
         let mut palabra = move || {

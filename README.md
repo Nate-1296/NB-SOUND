@@ -23,6 +23,11 @@ pnpm verify         # todas las comprobaciones
 Requisitos: Node ≥ 22, pnpm ≥ 10 y Rust 1.98 o posterior. En Linux, las bibliotecas de desarrollo de WebKitGTK
 4.1 que pide Tauri.
 
+`pnpm verify` incluye el presupuesto de búsqueda sobre 100.000 pistas, ejecutado aislado
+de los ensayos de DSP. También puede ejecutarse con `pnpm test:rendimiento`; mantiene el
+límite de 30 ms. `cargo test` lo enumera como ignorado para no mezclar esa medición con
+trabajo intensivo; la CI lo ejecuta obligatoriamente en un paso separado.
+
 ## Licencia
 
 GPL-3.0-or-later. Ver [LICENSE](LICENSE) y [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

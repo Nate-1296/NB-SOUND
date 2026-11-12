@@ -2,7 +2,7 @@
   "format": 1,
   "source": "nb-launcher-workspace",
   "license": "Apache-2.0",
-  "bundle_id": "dacf15206e9a6497f88609b97457740ddab72e2b3431a8d030915c6d044f56ae",
+  "bundle_id": "1829f2ce6a7c72ed407e58ae142e75556eb5e9c9c0dacfdedf340e3b475caea5",
   "files": {
     ".gitattributes": "a79691a93b46e49ce460c26ef22afcc03d6eca1e63bf2edbc20e96159510f6c9",
     ".gitignore": "07d64eb09a56c853b7853a47276799b38d7d6d25a4314b0c1abc10432c214e17",
@@ -20,7 +20,7 @@
     "crates/nb-protocol/src/lib.rs": "c58b5ebfdacdab6af1a6f56d49cbefc09f61ff04c6a6e6775fa1c0fb6720336f",
     "crates/nb-protocol/src/local/mod.rs": "06c94eb8ffe18aa71aa24a33a063da86b86981d7e92ce3fd8de5eb6747de01cc",
     "crates/nb-protocol/src/local/unix.rs": "4369c21a9c503909273595e8a44dc920c2bfbbfc99fea25ace74571d72cfa656",
-    "crates/nb-protocol/src/local/windows.rs": "7501d2ef35eba15178d87cbfc0d642fd98398547a6e5acde091393a49289345c",
+    "crates/nb-protocol/src/local/windows.rs": "45dde8edbe6752be80337539eeb62ad954aa231bceedcb058bd89ae4deeee500",
     "rustfmt.toml": "a72f230180ccfaf10db0b4e339b9d9066d2a678174b3da29cd9c905ee92f2cc3",
     "verify.mjs": "790dc6f94378c5d38072b8c42a44976ebf133c13379b8c095c763e99bafc4c04"
   }

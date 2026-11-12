@@ -23,3 +23,7 @@
   F1.1.4 cumple el presupuesto de menos de 16 KB de análisis por pista.
 * **F1.3.1:** una búsqueda sobre 100.000 pistas simuladas responde en menos de 30 ms.
 
+La medición se ejecuta con `pnpm test:rendimiento`, incluida en `pnpm verify` y en un
+paso separado de CI. Se conserva el límite de 30 ms; no se comparte el proceso de prueba
+con los ensayos intensivos de DSP ni se reintenta una medición que falla.
+

@@ -3,7 +3,7 @@
 **Fecha:** 2026-11-12
 **Estado:** Decisión de implementación bajo la continuación y publicación autorizadas por
 Nathan desde NB Launcher; implementado y comprobado en Linux. Amplía ADR-013 sin modificar
-dominio ni móvil. Publicación y otras plataformas se registran en la validación de 2.1.2.
+dominio ni móvil. Publicación y otras plataformas se registran en la validación de 2.1.3.
 
 ## Contexto
 

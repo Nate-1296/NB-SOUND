@@ -1,6 +1,6 @@
 {
   "name": "nb-sound",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Aplicación de escritorio para la música local: reproducir, catalogar, karaoke y DJ",
   "license": "GPL-3.0-or-later",
   "type": "module",
@@ -30,7 +30,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prepare": "git config core.hooksPath .githooks",
-    "verify": "pnpm lint && pnpm check && pnpm test && pnpm guardianes",
+    "verify": "pnpm lint && pnpm check && pnpm test && pnpm guardianes && pnpm test:rendimiento",
+    "test:rendimiento": "node scripts/test-rendimiento.mjs",
     "guardianes": "node scripts/guardianes.mjs",
     "paletas": "node scripts/generar-paletas.mjs",
     "check:paletas": "node scripts/generar-paletas.mjs --check",

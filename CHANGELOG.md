@@ -3,7 +3,7 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
-## [2.1.2] — 2026-11-12
+## [2.1.3] — 2026-11-12
 
 ### Correcciones
 
@@ -14,6 +14,13 @@ Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versione
   Sound ni modificar los permisos. Sin renovación o al desconectar se cierra el enlace;
   Sound conserva su funcionamiento independiente.
 - Se mantiene la negociación anterior. No cambian los datos, las copias ni el contrato móvil.
+
+### Validación
+
+- El presupuesto FTS de 30 ms se ejecuta aislado de las pruebas intensivas de DSP, sin
+  ampliar el límite ni reintentar mediciones fallidas. Se incluye en `pnpm verify` y CI.
+- El candidato 2.1.2 no se publicó: Linux detectó una medición de 32,6 ms en la suite
+  paralela; el mismo problema ya había aparecido en la CI anterior con 35,4 ms.
 
 ## [2.1.1] — 2026-11-11
 

@@ -106,6 +106,8 @@ jobs:
       - name: Pruebas
         working-directory: src-tauri
         run: cargo test --all-features
+      - name: Presupuesto de búsqueda aislado
+        run: node scripts/test-rendimiento.mjs
 
   licencias:
     name: Dependencias y licencias

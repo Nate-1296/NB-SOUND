@@ -1,8 +1,8 @@
-# Validación de la integración Launcher en 2.1.2
+# Validación de la integración Launcher en 2.1.3
 
-Fecha: 2026-11-12. Estado: fuente verificada en Linux; paquete firmado y publicación pendientes.
+Fecha: 2026-11-12. Estado: 2.1.3 en validación; paquete firmado y publicación pendientes.
 
-## Comprobado localmente
+## Comprobado con la fuente del candidato 2.1.2
 
 - `pnpm verify`: formato, tipos sin errores/advertencias, 38 pruebas frontend y guardianes
   correctos, incluidos contrato móvil, red, privacidad, puente, binarios y empaquetado web.
@@ -31,3 +31,27 @@ CI y generación de artefactos firmados, verificación del tar de distribución 
 instalación administrada real: apertura, bloqueo por uso, recurso local y rechazo del
 actualizador independiente con `INSTALLATION_MANAGED`. Los resultados se registrarán aquí.
 La ejecución de la UI Windows/macOS sigue pendiente y no se deduce de compilar sus paquetes.
+
+## Corrección de la medición en 2.1.3
+
+La CI `43211718683` pasó frontend, dependencias/licencias, Windows y macOS. Linux falló
+solo en `cien_mil_pistas_se_buscan_en_menos_de_30_ms`: 32,620119 ms durante la suite paralela.
+La CI anterior `43122817755`, sin esta integración, ya había fallado en la misma prueba
+con 35,447493 ms. El flujo de instaladores se canceló y el borrador 2.1.2 se eliminó;
+no se publicó ese candidato ni se sustituyó una instalación personal.
+
+Se separó la medición sin modificar la búsqueda ni el límite. `cargo test` la declara
+ignorada; `scripts/test-rendimiento.mjs` comprueba que exista y la ejecuta sola, una vez,
+con `--ignored --exact --test-threads=1`. `pnpm verify` y cada runtime de CI la incluyen
+obligatoriamente. El caso aislado pasó localmente; la ejecución CI de 2.1.3 sigue pendiente.
+La nueva comprobación general y sus resultados se registrarán después de ejecutarlos.
+
+## Validación local de 2.1.3
+
+`pnpm verify`, formato, Clippy y la suite Rust pasaron con esta fuente. La suite general
+ejecutó 646 pruebas y omitió 25; la medición obligatoria aislada añadió una prueba
+correcta. Las otras 24 omisiones conservan sus requisitos de corpus o entorno QA.
+El bundle regenerado desde Launcher es
+`1829f2ce6a7c72ed407e58ae142e75556eb5e9c9c0dacfdedf340e3b475caea5`.
+Su único cambio adicional normaliza el SDDL de una prueba Windows para admitir los alias
+canónicos de SID sin cambiar el descriptor ni los permisos del transporte.

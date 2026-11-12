@@ -214,22 +214,30 @@ pub fn path_for(session: &crate::capability::Epoch) -> Result<PathBuf, ServiceEr
 mod tests {
     use super::*;
     use interprocess::os::windows::security_descriptor::AsSecurityDescriptorExt;
-    use windows_sys::Win32::Security::{DACL_SECURITY_INFORMATION, OWNER_SECURITY_INFORMATION};
+    use windows_sys::Win32::Security::{
+        DACL_SECURITY_INFORMATION, OWNER_SECURITY_INFORMATION, SE_DACL_PROTECTED,
+    };
 
     #[test]
     fn el_descriptor_es_protegido_y_solo_concede_acceso_al_sid_del_usuario() {
         let sid = current_sid().unwrap();
         let sd = descriptor(&sid).unwrap();
-        let text = sd
-            .serialize(
-                DACL_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION,
-                |s| s.to_string_lossy(),
-            )
-            .unwrap();
-        assert!(text.contains(&format!("O:{sid}")));
-        assert!(text.contains(&format!("D:P(A;;GA;;;{sid})")));
-        assert!(!text.contains(";;;WD"));
-        assert!(!text.contains(";;;AU"));
+        // Windows puede serializar un SID conocido mediante un alias SDDL. Comparar
+        // representaciones normalizadas conserva la comprobación exacta del propietario
+        // y de la única ACE permitida, incluso en cuentas de los runners de CI.
+        for (selector, expected) in [
+            (OWNER_SECURITY_INFORMATION, format!("O:{sid}")),
+            (DACL_SECURITY_INFORMATION, format!("D:P(A;;GA;;;{sid})")),
+        ] {
+            let expected =
+                SecurityDescriptor::deserialize(&U16CString::from_str(expected).unwrap()).unwrap();
+            let actual = sd.serialize(selector, |s| s.to_string_lossy()).unwrap();
+            let expected = expected
+                .serialize(selector, |s| s.to_string_lossy())
+                .unwrap();
+            assert_eq!(actual, expected);
+        }
+        assert_ne!(sd.control_and_revision().unwrap().0 & SE_DACL_PROTECTED, 0);
     }
 
     #[test]
