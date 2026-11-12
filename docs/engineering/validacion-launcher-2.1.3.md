@@ -1,6 +1,6 @@
 # Validación de la integración Launcher en 2.1.3
 
-Fecha: 2026-11-12. Estado: 2.1.3 en validación; paquete firmado y publicación pendientes.
+Fecha: 2026-11-12. Estado: 2.1.3 publicada; tar Linux y recorrido administrado comprobados.
 
 ## Comprobado con la fuente del candidato 2.1.2
 
@@ -25,12 +25,11 @@ No se modificó una biblioteca personal ni NB Sound Mobile. Los escenarios omiti
 sin ejecutarse; esta iteración no los presenta como aprobados. La muestra de propagación
 de 17 ms entre los dos DOM corresponde a desarrollo y no es un presupuesto de producción.
 
-## Pendiente antes de publicar
+## Distribución
 
-CI y generación de artefactos firmados, verificación del tar de distribución y prueba de
-instalación administrada real: apertura, bloqueo por uso, recurso local y rechazo del
-actualizador independiente con `INSTALLATION_MANAGED`. Los resultados se registrarán aquí.
-La ejecución de la UI Windows/macOS sigue pendiente y no se deduce de compilar sus paquetes.
+La CI, las firmas y el tar Linux se comprobaron antes de publicar, según la evidencia final
+registrada abajo. La ejecución de la UI Windows/macOS sigue pendiente y no se deduce de
+compilar sus paquetes ni de pasar sus suites.
 
 ## Corrección de la medición en 2.1.3
 
@@ -43,8 +42,8 @@ no se publicó ese candidato ni se sustituyó una instalación personal.
 Se separó la medición sin modificar la búsqueda ni el límite. `cargo test` la declara
 ignorada; `scripts/test-rendimiento.mjs` comprueba que exista y la ejecuta sola, una vez,
 con `--ignored --exact --test-threads=1`. `pnpm verify` y cada runtime de CI la incluyen
-obligatoriamente. El caso aislado pasó localmente; la ejecución CI de 2.1.3 sigue pendiente.
-La nueva comprobación general y sus resultados se registrarán después de ejecutarlos.
+obligatoriamente. El caso aislado pasó localmente y en cada runtime de la CI 2.1.3.
+La nueva comprobación general se registra en los apartados siguientes.
 
 ## Validación local de 2.1.3
 
@@ -55,3 +54,21 @@ El bundle regenerado desde Launcher es
 `1829f2ce6a7c72ed407e58ae142e75556eb5e9c9c0dacfdedf340e3b475caea5`.
 Su único cambio adicional normaliza el SDDL de una prueba Windows para admitir los alias
 canónicos de SID sin cambiar el descriptor ni los permisos del transporte.
+
+## Paquete y publicación comprobados
+
+La CI `43217181437` pasó íntegra, incluidas las mediciones aisladas en Linux, Windows
+y macOS. `43217183421` generó los instaladores. Launcher verificó las siete firmas
+con la clave pública existente. El tar Linux tiene SHA-256
+`ca6c47f41719e7d89019e0e8713d0fc5c481eee1e61026ecae402d45a72ed715`
+y 30.639.817 bytes. La release se publicó a las 20:53:51 UTC del 2026-11-12:
+https://github.com/Nate-1296/NB-SOUND/releases/tag/v2.1.3.
+
+El paquete Linux real se instaló/abrió desde Launcher con datos temporales. Su recurso
+confirmó lectura y cambio; los bloqueos impidieron sustituir o retirar binarios en uso.
+El puente devolvió `INSTALLATION_MANAGED` al consultar el actualizador propio; se restauró
+la política de red temporal. Desconectar conservó Sound. Retirar y reinstalar conservaron
+la frecuencia del propietario, comprobada por consulta y sin acceder a su base.
+`fpcalc` 1.6.2 ejecutó y ONNX Runtime 1.31.1 cargó desde el árbol administrado.
+No se atribuye ejecución de modelos opcionales ni UI Windows/macOS a estas comprobaciones.
+La descarga pública por Launcher pausó con 1.060.871 bytes y reanudó hasta verificación final.

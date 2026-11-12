@@ -28,6 +28,6 @@ conservar **por qué** se tomó.
 | [012](./decisions/ADR-012-modo-fiesta.md) | Modelo de confianza y aislamiento del modo fiesta | Aceptado |
 | [013](./decisions/ADR-013-launcher-frecuencia.md) | Frecuencia de respaldo como capacidad compartida | Aceptado el 2026-11-11; integración en construcción |
 | [014](./decisions/ADR-014-renovacion-launcher.md) | Renovación privada del enlace de Launcher | Implementado y comprobado en Linux bajo la continuación autorizada |
-| [015](./decisions/ADR-015-instalacion-launcher.md) | Instalación administrada por NB Launcher | En validación bajo la continuación autorizada |
+| [015](./decisions/ADR-015-instalacion-launcher.md) | Instalación administrada por NB Launcher | Tar Linux 2.1.3 publicado y validado; otros formatos/plataformas pendientes |
 
 Plantilla: [ADR-000-template.md](./ADR-000-template.md).
