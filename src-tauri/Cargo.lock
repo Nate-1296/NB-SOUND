@@ -2926,6 +2926,7 @@ name = "nb-sound"
 version = "2.1.3"
 dependencies = [
  "axum",
+ "base64 0.22.1",
  "ebur128",
  "futures-util",
  "image",

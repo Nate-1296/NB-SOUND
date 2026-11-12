@@ -1,0 +1,79 @@
+name: Catálogo de Launcher
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release estable publicada que recibirá el catálogo firmado
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalogo-launcher-sound
+  cancel-in-progress: false
+
+jobs:
+  catalogo:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PUBLICATION_DIR: ${{ runner.temp }}/nb-sound-launcher-catalog
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Validar release y recuperar su configuración
+        run: |
+          node --input-type=module <<'JS'
+          import {execFileSync} from 'node:child_process';
+          import {mkdirSync,writeFileSync} from 'node:fs';
+          const tag=process.env.RELEASE_TAG;
+          if (!/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag)) throw Error('RELEASE_TAG_INVALID');
+          const release=JSON.parse(execFileSync('gh',['release','view',tag,'--json','tagName,isDraft,isPrerelease'],{encoding:'utf8'}));
+          if (release.isDraft || release.isPrerelease || release.tagName!==tag) throw Error('RELEASE_NOT_PUBLISHED');
+          const config=execFileSync('git',['show',`${tag}:src-tauri/tauri.conf.json`]);
+          if (`v${JSON.parse(config).version}`!==tag) throw Error('RELEASE_VERSION_MISMATCH');
+          const directory=process.env.PUBLICATION_DIR;
+          mkdirSync(`${directory}/assets`,{recursive:true});
+          writeFileSync(`${directory}/config.json`,config,{flag:'wx'});
+          JS
+      - name: Dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libasound2-dev
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@1.98.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: v1-shared-resources
+          workspaces: src-tauri
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm binarios
+      - name: Descargar los artefactos publicados
+        run: gh release download "$RELEASE_TAG" --dir "$PUBLICATION_DIR/assets"
+      - name: Verificar paquetes y producir metadatos
+        run: |
+          issued_at=$(node -p 'Math.floor(Date.now()/1000)')
+          cargo run --locked --manifest-path src-tauri/Cargo.toml --example publicar_catalogo -- build "$PUBLICATION_DIR/assets" "$PUBLICATION_DIR/config.json" "$issued_at" "$PUBLICATION_DIR/launcher-catalog.json"
+      - name: Firmar el catálogo
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: pnpm tauri signer sign "$PUBLICATION_DIR/launcher-catalog.json"
+      - name: Verificar firma antes de publicar
+        run: cargo run --locked --manifest-path src-tauri/Cargo.toml --example publicar_catalogo -- verify "$PUBLICATION_DIR/launcher-catalog.json" "$PUBLICATION_DIR/launcher-catalog.json.sig" "$PUBLICATION_DIR/config.json"
+      - name: Publicar únicamente los metadatos comprobados
+        run: gh release upload "$RELEASE_TAG" "$PUBLICATION_DIR/launcher-catalog.json" "$PUBLICATION_DIR/launcher-catalog.json.sig" --clobber

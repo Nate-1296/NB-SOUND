@@ -125,6 +125,8 @@ windows-sys = { version = "0.61.2", features = ["Win32_System_Threading"] }
 souvlaki = "0.9.3"
 
 [dev-dependencies]
+# ADR-016: base64 ya resuelto por la pila; solo el productor editorial. MIT/Apache-2.0.
+base64 = "=0.22.1"
 # Solo en las pruebas: las doradas se comparan bit a bit, y el lector por
 # defecto puede errar en la última cifra de un `f64`.
 serde_json = { version = "1", features = ["float_roundtrip"] }
@@ -147,3 +149,9 @@ split-debuginfo = "unpacked"
 # decodificadores sin optimizar no llegan a tiempo real.
 [profile.dev.package."*"]
 opt-level = 2
+
+# ADR-016: herramienta editorial; no añade un binario al instalador ni al puente.
+[[example]]
+name = "publicar_catalogo"
+path = "tools/publicar_catalogo.rs"
+test = true
