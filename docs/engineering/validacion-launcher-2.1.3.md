@@ -93,4 +93,6 @@ y `cargo test --locked --all-features`: 640 pruebas de biblioteca correctas, sie
 más suites de integración/editorial y documentación. Las omisiones de corpus/QA conservan
 sus requisitos. La medición de búsqueda había fallado durante compilaciones simultáneas
 del trabajo anterior (70,45 ms); ejecutada con el equipo libre pasó sin ampliar los 30 ms.
-La CI nativa de la corrección del ensayo se registra aparte al terminar.
+La corrección `6262a6c` pasó todos los jobs de la CI
+[`43350919429`](https://github.com/Nate-1296/NB-SOUND/actions/runs/43350919429),
+incluidos los runtimes y sus mediciones aisladas en Linux, Windows y macOS.
