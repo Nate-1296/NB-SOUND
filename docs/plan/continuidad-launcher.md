@@ -46,7 +46,7 @@ NB Sound Mobile no se modifica.
 Nathan eligió que la autorización futura se recuerde entre sesiones y se pueda revocar
 persistentemente desde Sound. Launcher dejó un núcleo experimental de identidad y desafíos,
 con sus pruebas locales, en el checkpoint `21a926f`; no se incorporó a este proyecto.
-El [punto de continuidad de Launcher](../../../NB%20Launcher/docs/continuidad.md) describe
+El [punto de continuidad de Launcher](https://github.com/Nate-1296/NB-LAUNCHER/blob/main/docs/continuidad.md) describe
 esa decisión y los pendientes exactos.
 
 Al reanudar, definir primero el contrato y ADR propios de Sound para el canal de adhesión,
