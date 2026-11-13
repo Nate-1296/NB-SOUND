@@ -1,7 +1,7 @@
 # Autorización persistente de Launcher
 
-Fecha: 2026-11-13. Estado: implementada y comprobada con ambas ventanas en Linux;
-validación local completa, distribución del candidato 2.1.4 en curso. No forma parte de la release 2.1.3 publicada.
+Fecha: 2026-11-13. Estado: publicada en 2.1.4 e instalada en Linux; recorrido real y
+verificación local/CI completos. [Informe final](validacion-launcher-2.1.4.md).
 [Decisión ADR-017](../adr/decisions/ADR-017-autorizacion-persistente-launcher.md).
 
 ## Flujo y autoridad
@@ -85,3 +85,12 @@ limita el bloqueo nuevo de instancia a Linux, donde existe activación: las otra
 plataformas conservan el arranque anterior. Dos pruebas nativas de regresión
 comprueban esas condiciones fuera de Linux. La ejecución de esas pruebas y la
 CI corregida siguen pendientes. No se etiquetó ni publicó ese checkpoint inicial.
+
+## Cierre publicado
+
+La corrección `fbaede2` pasó la CI `43518196348` en los tres sistemas. La etiqueta
+`v2.1.4` corresponde a ese código. Publicación `43518959506` y catálogo editorial
+`43523206333` terminaron correctamente. Se verificaron siete firmas y el recorrido
+de los paquetes Linux antes de publicar e instalar; los archivos instalados coinciden
+con el tar firmado. El estado anterior en este documento es el registro histórico de
+la validación. [Resultados, limpieza y límites](validacion-launcher-2.1.4.md).

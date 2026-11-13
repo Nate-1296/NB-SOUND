@@ -3,7 +3,7 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
-## [2.1.4] — candidato 2026-11-13
+## [2.1.4] — 2026-11-13
 
 ### Novedades
 
@@ -30,8 +30,9 @@ Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versione
   frontend y todos los guardianes. Búsqueda de 100.000 pistas dentro de 30 ms.
 - Recorrido completo de ambas ventanas: rechazo, permiso recordado, cambios en ambos
   sentidos, reinicios, revocación, permiso nuevo, cancelación, activación y arranque.
-- El candidato requiere todavía CI nativa, paquetes firmados y comprobación del paquete
-  distribuido antes de su publicación e instalación.
+- CI nativa y generación de instaladores correctas en Linux, Windows y macOS. Siete
+  firmas comprobadas, recorrido de los paquetes Linux e instalación final verificados.
+  [Evidencia y límites](docs/engineering/validacion-launcher-2.1.4.md).
 
 ## [2.1.3] — 2026-11-12
 

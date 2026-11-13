@@ -381,3 +381,19 @@ de macOS/Windows. Se corrige con condiciones de plataforma, sin silenciar warnin
 El bloqueo nuevo de instancia se limita también a Linux para no introducir una
 segunda apertura sin activación en otras plataformas. Se añaden dos regresiones
 para CI nativa. El frontend público pasó; no se creó etiqueta ni release fallida.
+
+
+### 2026-11-13: publicación, instalación y cierre de 2.1.4
+
+`fbaede2` pasó la CI `43518196348` completa con Rust 1.98; la etiqueta `v2.1.4`
+generó instaladores nativos correctos en `43518959506`. Se comprobaron siete firmas
+y el recorrido completo con los paquetes Linux antes de publicar. Catálogo editorial
+`43523206333` verificado por el `nbctl` instalado, con oferta 2.1.4 persistida.
+La renovación de adhesión también pasó más de 960 segundos sin sondeo web.
+Los archivos instalados son idénticos al tar firmado; ambas apps quedaron abiertas.
+
+Se retiraron cinco identidades QA propias y los perfiles/procesos temporales. El
+checkout quedó en unos 67 MB tras retirar generados sin uso, conservando código e
+historial. Datos personales intactos. El cierre y los límites están en
+[validación 2.1.4](../engineering/validacion-launcher-2.1.4.md). La distribución firmada
+de Launcher continúa pendiente por el bloqueo de Actions de su repositorio privado.

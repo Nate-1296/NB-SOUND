@@ -1,24 +1,22 @@
 # Continuidad del trabajo de integración con Launcher
 
-Fecha: 2026-11-13. Estado: reanudado por Nathan; consentimiento persistente implementado
-y recorrido nativo Linux completo. Publicación e instalación nuevas pendientes.
+Fecha: 2026-11-13. Estado: Sound 2.1.4 publicada e instalada; cierre Linux comprobado.
 
-## Continuación actual
+## Cierre actual
 
-[ADR-017](../adr/decisions/ADR-017-autorizacion-persistente-launcher.md) y el
-[contrato propietario](../engineering/autorizacion-launcher.md) ya integran
-consentimiento, revocación persistente, bloqueo de instancia y activación Linux.
-El permiso vive fuera del respaldo y una primera decisión persistente retira
-el bootstrap heredado. La exportación sellada proviene de Launcher `a16c3be`.
+[Informe completo](../engineering/validacion-launcher-2.1.4.md): CI y paquetes de tres
+sistemas, siete firmas y catálogo editorial verificados, recorrido real de ambas ventanas,
+revocación persistente, renovación sin sondeo superior a 16 minutos y comprobación de la
+instalación. El código publicado es `fbaede2`; la documentación posterior no cambia los
+binarios de la etiqueta `v2.1.4`.
 
-Pasaron 667 pruebas Rust, Clippy y 38 pruebas frontend con un trabajador. El
-recorrido completo de ambas ventanas comprobó rechazo, permiso, cambios bidireccionales,
-reconexión, reinicios, revocación, permiso nuevo, cancelación, segunda apertura y
-arranque desde Launcher. La verificación local completa terminó correctamente. La CI nativa, los paquetes,
-la release del candidato 2.1.4 y su instalación siguen pendientes. Se conservaron los resultados que se siguen usando.
+Se retiraron perfiles, procesos, claves QA propias y resultados regenerables sin uso.
+El checkout quedó en unos 67 MB; fuentes, lockfiles, vendor e historial están conservados.
+Los datos personales y la instalación actual permanecen. Las apps instaladas quedaron
+abiertas. El Launcher conserva sus bibliotecas cargadas por el editor y los paquetes
+comprobados; su firma/publicación continúa bloqueada en Actions privado.
 
-La limpieza descrita a continuación es el registro histórico de la pausa. Sus
-afirmaciones de ausencia de implementación no describen la continuación actual.
+Los apartados siguientes conservan el registro de la pausa anterior, no el estado actual.
 
 ## Código guardado
 
