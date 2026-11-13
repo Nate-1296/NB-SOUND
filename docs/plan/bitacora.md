@@ -350,3 +350,12 @@ fuera de línea que falló en macOS; se mantienen historial y transiciones visib
 `pnpm verify`, formato, Clippy y la suite Rust pasaron localmente. La corrección solo toca
 pruebas y documentación; los paquetes publicados 2.1.3 permanecen inmutables.
 Evidencia y límites en [validación](../engineering/validacion-launcher-2.1.3.md).
+
+### 2026-11-13: pausa y limpieza del checkout de integración
+
+Nathan pidió guardar el estado y retirar los resultados generados. El código ya estaba
+limpio y subido. Se eliminaron compilaciones Rust, dependencias frontend, salidas Svelte/Tauri
+y binarios descargados reproducibles: el checkout pasó de unos 13 GB a 66 MiB.
+Fuentes, lockfiles, vendor sellado e historial permanecen. No se modificaron datos ni
+instalaciones personales. Documentación, sello compartido y formato Rust comprobaron
+correctamente después de limpiar. [Continuidad y próximos pasos](./continuidad-launcher.md).
