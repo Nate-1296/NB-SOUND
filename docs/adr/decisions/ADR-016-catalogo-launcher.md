@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-11-12
 **Estado:** Decisión de implementación bajo la continuación autorizada de Launcher;
-productor y publicación de metadatos todavía en validación.
+productor, firma editorial y consumo en Launcher comprobados en Linux; renovación programada pendiente de ejecución.
 
 ## Contexto
 

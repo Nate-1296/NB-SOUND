@@ -102,6 +102,22 @@ fn una_cola_suena_entera_y_cada_pista_queda_en_el_historial() {
         desde: 0,
     });
     assert_eq!(s.instantanea().estado, "reproduciendo");
+    // El renderizado fuera de línea adelanta segundos de audio en milisegundos.
+    // Esperar cada transición evita terminar otra pista antes de que el vigía
+    // (asíncrono, cada 15 ms) entregue la anterior al servicio y a su oyente.
+    for id in [2, 3] {
+        let ficha = s.prevista.as_ref().expect("siguiente preparada").ficha;
+        let limite = Instant::now() + Duration::from_secs(5);
+        while s.motor().posicion().ficha != ficha && Instant::now() < limite {
+            let _ = renderizar(s.motor(), 2_048);
+        }
+        assert_eq!(s.motor().posicion().ficha, ficha, "empieza {id}");
+        while s.instantanea().pista_id != Some(id) && Instant::now() < limite {
+            s.atender_motor();
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(s.instantanea().pista_id, Some(id), "se publica {id}");
+    }
     correr(&mut s, |s| s.instantanea().estado == "finalizada");
     let i = s.instantanea();
     assert_eq!(i.estado, "finalizada");

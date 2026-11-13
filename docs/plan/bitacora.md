@@ -341,3 +341,12 @@ modificó. La ejecución de ese recorrido de Launcher en Windows/macOS sigue pen
 Se cerraron los procesos y entornos de QA y se retiraron las compilaciones temporales de
 Sound creadas durante el trabajo. Sound y Books conservan sus datos e instalaciones.
 Esta actualización documental posterior a la publicación no cambia el ejecutable 2.1.1.
+
+### 2026-11-12: continuación del catálogo y estabilización del ensayo de cola
+
+Catálogo editorial de Sound 2.1.3 consumido desde Launcher en Linux, con consulta explícita,
+persistencia y reinicio comprobados. Se corrige la sincronización del ensayo de cola
+fuera de línea que falló en macOS; se mantienen historial y transiciones visibles.
+`pnpm verify`, formato, Clippy y la suite Rust pasaron localmente. La corrección solo toca
+pruebas y documentación; los paquetes publicados 2.1.3 permanecen inmutables.
+Evidencia y límites en [validación](../engineering/validacion-launcher-2.1.3.md).

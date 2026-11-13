@@ -72,3 +72,25 @@ la frecuencia del propietario, comprobada por consulta y sin acceder a su base.
 `fpcalc` 1.6.2 ejecutó y ONNX Runtime 1.31.1 cargó desde el árbol administrado.
 No se atribuye ejecución de modelos opcionales ni UI Windows/macOS a estas comprobaciones.
 La descarga pública por Launcher pausó con 1.060.871 bytes y reanudó hasta verificación final.
+
+## Catálogo editorial y corrección del ensayo de cola
+
+El workflow editorial `43315321548` publicó el catálogo firmado de 2.1.3. Launcher
+verificó sus siete artefactos por HTTPS y desde su ventana nativa, con consentimiento,
+persistencia tras reiniciar y carga local sin una nueva consulta automática. El productor
+renueva por 14 días; la renovación semanal está definida, aún sin acreditar su primera
+activación programada. La firma de Sound solo autoriza sus propios paquetes.
+
+La CI `43321218754` pasó Linux y Windows, pero macOS falló en el ensayo de cola:
+el renderizado fuera de línea avanzaba hasta la tercera pista antes de que el vigía
+asíncrono entregara la transición de la segunda. El ensayo espera ahora cada cambio
+de ficha y su publicación antes de seguir renderizando. Conserva las aserciones sobre
+las tres pistas visibles y el historial; no modifica el motor ni el binario distribuido.
+
+En la continuación del 2026-11-12 pasaron `pnpm verify` (38 pruebas frontend,
+guardianes y presupuesto de búsqueda aislado), formato, Clippy con todos los targets/features
+y `cargo test --locked --all-features`: 640 pruebas de biblioteca correctas, siete omitidas,
+más suites de integración/editorial y documentación. Las omisiones de corpus/QA conservan
+sus requisitos. La medición de búsqueda había fallado durante compilaciones simultáneas
+del trabajo anterior (70,45 ms); ejecutada con el equipo libre pasó sin ampliar los 30 ms.
+La CI nativa de la corrección del ensayo se registra aparte al terminar.
