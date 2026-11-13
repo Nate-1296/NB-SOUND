@@ -4,6 +4,9 @@ use crate::{capability::Epoch, host::Credential};
 use std::time::Duration;
 use thiserror::Error;
 
+#[cfg(target_os = "linux")]
+pub mod rendezvous;
+
 #[cfg(unix)]
 mod unix;
 #[cfg(unix)]

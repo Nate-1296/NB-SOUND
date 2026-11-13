@@ -42,7 +42,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | CUDA Runtime, cuBLAS, cuFFT y cuRAND (NVIDIA) | EULA de CUDA, bibliotecas redistribuibles | https://docs.nvidia.com/cuda/eula/ | Aceleración (Linux, NVIDIA) |
 | cuDNN (NVIDIA) | Acuerdo de licencia de cuDNN, redistribución permitida | https://docs.nvidia.com/deeplearning/cudnn/latest/reference/eula.html | Aceleración (Linux, NVIDIA) |
 
-## Componentes de Rust (686)
+## Componentes de Rust (698)
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|
@@ -79,6 +79,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `base64` | 0.21.7 | MIT OR Apache-2.0 | https://github.com/marshallpierce/rust-base64 |
 | `base64` | 0.22.1 | MIT OR Apache-2.0 | https://github.com/marshallpierce/rust-base64 |
 | `base64` | 0.23.1 | MIT OR Apache-2.0 | https://github.com/marshallpierce/rust-base64 |
+| `base64ct` | 1.8.3 | Apache-2.0 OR MIT | https://github.com/RustCrypto/formats |
 | `bit-set` | 0.8.0 | Apache-2.0 OR MIT | https://github.com/contain-rs/bit-set |
 | `bit-vec` | 0.8.0 | Apache-2.0 OR MIT | https://github.com/contain-rs/bit-vec |
 | `bit-vec` | 0.9.1 | Apache-2.0 OR MIT | https://github.com/contain-rs/bit-vec |
@@ -117,6 +118,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `cmov` | 0.5.4 | Apache-2.0 OR MIT | https://github.com/RustCrypto/utils |
 | `combine` | 4.6.9 | MIT | https://github.com/Marwes/combine |
 | `concurrent-queue` | 2.5.0 | Apache-2.0 OR MIT | https://github.com/smol-rs/concurrent-queue |
+| `const-oid` | 0.9.6 | Apache-2.0 OR MIT | https://github.com/RustCrypto/formats/tree/master/const-oid |
 | `const-oid` | 0.10.2 | Apache-2.0 OR MIT | https://github.com/RustCrypto/formats |
 | `cookie` | 0.18.2 | MIT OR Apache-2.0 | https://github.com/SergioBenitez/cookie-rs |
 | `core-foundation` | 0.9.4 | MIT OR Apache-2.0 | https://github.com/servo/core-foundation-rs |
@@ -138,6 +140,8 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `cssparser-macros` | 0.7.1 | MPL-2.0 | https://github.com/servo/rust-cssparser |
 | `ctor` | 1.0.13 | Apache-2.0 OR MIT | https://github.com/mmastrac/linktime |
 | `ctutils` | 0.4.7 | Apache-2.0 OR MIT | https://github.com/RustCrypto/utils |
+| `curve25519-dalek` | 4.1.3 | BSD-3-Clause | https://github.com/dalek-cryptography/curve25519-dalek/tree/main/curve25519-dalek |
+| `curve25519-dalek-derive` | 0.1.1 | MIT/Apache-2.0 | https://github.com/dalek-cryptography/curve25519-dalek |
 | `darling` | 0.24.1 | MIT | https://github.com/TedDriggs/darling |
 | `darling_core` | 0.24.1 | MIT | https://github.com/TedDriggs/darling |
 | `darling_macro` | 0.24.1 | MIT | https://github.com/TedDriggs/darling |
@@ -149,6 +153,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `defmt` | 1.2.0 | MIT OR Apache-2.0 | https://github.com/knurling-rs/defmt |
 | `defmt-macros` | 1.2.0 | MIT OR Apache-2.0 | https://github.com/knurling-rs/defmt |
 | `defmt-parser` | 1.1.0 | MIT OR Apache-2.0 | https://github.com/knurling-rs/defmt |
+| `der` | 0.7.10 | Apache-2.0 OR MIT | https://github.com/RustCrypto/formats/tree/master/der |
 | `der-parser` | 10.0.0 | MIT OR Apache-2.0 | https://github.com/rusticata/der-parser.git |
 | `deranged` | 0.5.9 | MIT OR Apache-2.0 | https://github.com/jhpratt/deranged |
 | `derive_more` | 2.1.1 | MIT | https://github.com/JelteF/derive_more |
@@ -170,6 +175,8 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `dunce` | 1.0.5 | CC0-1.0 OR MIT-0 OR Apache-2.0 | https://gitlab.com/kornelski/dunce |
 | `dyn-clone` | 1.0.20 | MIT OR Apache-2.0 | https://github.com/dtolnay/dyn-clone |
 | `ebur128` | 0.1.11 | MIT | https://github.com/sdroege/ebur128 |
+| `ed25519` | 2.2.3 | Apache-2.0 OR MIT | https://github.com/RustCrypto/signatures/tree/master/ed25519 |
+| `ed25519-dalek` | 2.2.0 | BSD-3-Clause | https://github.com/dalek-cryptography/curve25519-dalek/tree/main/ed25519-dalek |
 | `embed_plist` | 1.2.2 | MIT OR Apache-2.0 | https://github.com/nvzqz/embed-plist-rs |
 | `embed-resource` | 3.0.12 | MIT | https://github.com/nabijaczleweli/rust-embed-resource |
 | `endi` | 1.1.1 | MIT | https://github.com/zeenix/endi |
@@ -185,6 +192,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `fallible-streaming-iterator` | 0.1.9 | MIT/Apache-2.0 | https://github.com/sfackler/fallible-streaming-iterator |
 | `fastrand` | 2.5.0 | Apache-2.0 OR MIT | https://github.com/smol-rs/fastrand |
 | `fdeflate` | 0.3.7 | MIT OR Apache-2.0 | https://github.com/image-rs/fdeflate |
+| `fiat-crypto` | 0.2.9 | MIT OR Apache-2.0 OR BSD-1-Clause | https://github.com/mit-plv/fiat-crypto |
 | `field-offset` | 0.3.6 | MIT OR Apache-2.0 | https://github.com/Diggsey/rust-field-offset |
 | `filetime` | 0.2.29 | MIT/Apache-2.0 | https://github.com/alexcrichton/filetime |
 | `find-msvc-tools` | 0.1.15 | MIT OR Apache-2.0 | https://github.com/rust-lang/cc-rs |
@@ -402,6 +410,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `phf_shared` | 0.13.1 | MIT | https://github.com/rust-phf/rust-phf |
 | `pin-project-lite` | 0.2.17 | Apache-2.0 OR MIT | https://github.com/taiki-e/pin-project-lite |
 | `piper` | 0.2.5 | MIT OR Apache-2.0 | https://github.com/smol-rs/piper |
+| `pkcs8` | 0.10.2 | Apache-2.0 OR MIT | https://github.com/RustCrypto/formats/tree/master/pkcs8 |
 | `pkg-config` | 0.3.34 | MIT OR Apache-2.0 | https://github.com/rust-lang/pkg-config-rs |
 | `plist` | 1.10.3 | MIT | https://github.com/ebarnard/rust-plist/ |
 | `png` | 0.18.1 | MIT OR Apache-2.0 | https://github.com/image-rs/image-png |
@@ -430,6 +439,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `rand` | 0.9.5 | MIT OR Apache-2.0 | https://github.com/rust-random/rand |
 | `rand` | 0.10.3 | MIT OR Apache-2.0 | https://github.com/rust-random/rand |
 | `rand_chacha` | 0.9.0 | MIT OR Apache-2.0 | https://github.com/rust-random/rand |
+| `rand_core` | 0.6.4 | MIT OR Apache-2.0 | https://github.com/rust-random/rand |
 | `rand_core` | 0.9.5 | MIT OR Apache-2.0 | https://github.com/rust-random/rand |
 | `rand_core` | 0.10.1 | MIT OR Apache-2.0 | https://github.com/rust-random/rand_core |
 | `raw-window-handle` | 0.6.2 | MIT OR Apache-2.0 OR Zlib | https://github.com/rust-windowing/raw-window-handle |
@@ -499,6 +509,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `sharded-slab` | 0.1.7 | MIT | https://github.com/hawkw/sharded-slab |
 | `shlex` | 2.0.1 | MIT OR Apache-2.0 | https://github.com/comex/rust-shlex |
 | `signal-hook-registry` | 1.4.8 | MIT OR Apache-2.0 | https://github.com/vorner/signal-hook |
+| `signature` | 2.2.0 | Apache-2.0 OR MIT | https://github.com/RustCrypto/traits/tree/master/signature |
 | `simd_cesu8` | 1.2.0 | Apache-2.0 OR MIT | https://github.com/seancroach/simd_cesu8 |
 | `simd-adler32` | 0.3.10 | MIT | https://github.com/mcountryman/simd-adler32 |
 | `simdutf8` | 0.1.5 | MIT OR Apache-2.0 | https://github.com/rusticstuff/simdutf8 |
@@ -512,6 +523,7 @@ No viajan en el instalador: se descargan aparte desde Ajustes > Agregados, cada 
 | `soup3-sys` | 0.5.0 | MIT | https://gitlab.gnome.org/World/Rust/soup3-rs |
 | `souvlaki` | 0.9.3 | MIT | https://github.com/Sinono3/souvlaki |
 | `spin` | 0.9.9 | MIT | https://github.com/mvdnes/spin-rs.git |
+| `spki` | 0.7.3 | Apache-2.0 OR MIT | https://github.com/RustCrypto/formats/tree/master/spki |
 | `sqlite-wasm-rs` | 0.5.5 | MIT | https://github.com/Spxg/sqlite-wasm-rs |
 | `stable_deref_trait` | 1.2.1 | MIT OR Apache-2.0 | https://github.com/storyyeller/stable_deref_trait |
 | `static_vcruntime` | 3.0.0 | MIT OR Apache-2.0 OR Zlib | https://github.com/ChrisDenton/static_vcruntime |

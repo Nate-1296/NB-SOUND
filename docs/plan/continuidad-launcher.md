@@ -1,6 +1,24 @@
-# Pausa y limpieza del trabajo de integración con Launcher
+# Continuidad del trabajo de integración con Launcher
 
-Fecha: 2026-11-13. Estado: pausa solicitada por Nathan, sin cambios nuevos de runtime.
+Fecha: 2026-11-13. Estado: reanudado por Nathan; consentimiento persistente implementado
+y recorrido nativo Linux completo. Publicación e instalación nuevas pendientes.
+
+## Continuación actual
+
+[ADR-017](../adr/decisions/ADR-017-autorizacion-persistente-launcher.md) y el
+[contrato propietario](../engineering/autorizacion-launcher.md) ya integran
+consentimiento, revocación persistente, bloqueo de instancia y activación Linux.
+El permiso vive fuera del respaldo y una primera decisión persistente retira
+el bootstrap heredado. La exportación sellada proviene de Launcher `a16c3be`.
+
+Pasaron 667 pruebas Rust, Clippy y 38 pruebas frontend con un trabajador. El
+recorrido completo de ambas ventanas comprobó rechazo, permiso, cambios bidireccionales,
+reconexión, reinicios, revocación, permiso nuevo, cancelación, segunda apertura y
+arranque desde Launcher. La verificación local completa terminó correctamente. La CI nativa, los paquetes,
+la release del candidato 2.1.4 y su instalación siguen pendientes. Se conservaron los resultados que se siguen usando.
+
+La limpieza descrita a continuación es el registro histórico de la pausa. Sus
+afirmaciones de ausencia de implementación no describen la continuación actual.
 
 ## Código guardado
 
@@ -36,7 +54,7 @@ Después de retirar los resultados pasaron `node scripts/check-docs.mjs`,
 No se reconstruyó ni se repitió la suite de runtime porque no cambió código y el objetivo
 era retirar las compilaciones. Los resultados completos anteriores conservan sus límites.
 
-## Dónde retomar
+## Dónde retomar en aquel checkpoint
 
 La integración vigente sigue usando `--nb-launcher` y el bootstrap privado de arranque.
 No hay adhesión a una instancia independiente ni autorización persistente implementadas
@@ -59,4 +77,4 @@ La nueva implementación requerirá sus verificaciones y release correspondiente
 Para volver a compilar este checkout será necesario reinstalar dependencias con
 `pnpm install --frozen-lockfile`, recuperar los binarios mediante `pnpm binarios` y
 seguir la verificación documentada. Esos comandos reconstruyen lo retirado; no se han
-ejecutado de nuevo durante esta limpieza. La pausa sigue vigente.
+ejecutado de nuevo durante esta limpieza. La pausa terminó por la instrucción posterior de Nathan de continuar hasta el cierre.

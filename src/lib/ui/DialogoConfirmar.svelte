@@ -14,6 +14,7 @@
     mensaje: string;
     textoConfirmar?: string;
     destructivo?: boolean;
+    ocupado?: boolean;
     onconfirmar: () => void;
     oncerrar: () => void;
   }
@@ -24,6 +25,7 @@
     mensaje,
     textoConfirmar,
     destructivo = false,
+    ocupado = false,
     onconfirmar,
     oncerrar
   }: Props = $props();
@@ -44,7 +46,7 @@
   });
 
   function alPulsarFondo(e: MouseEvent) {
-    if (e.target === dialogo) {
+    if (e.target === dialogo && !ocupado) {
       oncerrar();
     }
   }
@@ -54,9 +56,11 @@
 <dialog
   bind:this={dialogo}
   class="dialogo"
+  aria-label={titulo}
+  aria-busy={ocupado}
   oncancel={(e) => {
     e.preventDefault();
-    oncerrar();
+    if (!ocupado) oncerrar();
   }}
   onclick={alPulsarFondo}
 >
@@ -71,13 +75,20 @@
     <p class="mensaje">{mensaje}</p>
 
     <div class="acciones">
-      <button type="button" bind:this={botonCancelar} class="boton cancelar" onclick={oncerrar}>
+      <button
+        type="button"
+        bind:this={botonCancelar}
+        class="boton cancelar"
+        disabled={ocupado}
+        onclick={oncerrar}
+      >
         {textos.playlists.cancelar}
       </button>
       <button
         type="button"
         class="boton confirmar"
         class:destructivo
+        disabled={ocupado}
         onclick={() => {
           onconfirmar();
           oncerrar();

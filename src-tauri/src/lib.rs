@@ -9,6 +9,7 @@ pub mod a_ciegas;
 pub mod agregados;
 pub mod analisis;
 pub mod audio;
+pub mod autorizacion_launcher;
 pub mod autorreparacion;
 pub mod bandeja;
 pub mod biblioteca;
@@ -22,6 +23,7 @@ pub mod cortafuegos;
 pub mod db;
 pub mod descubrir;
 pub mod dj;
+pub mod enlace_launcher;
 pub mod error;
 pub mod explorador;
 pub mod fiesta;
@@ -59,6 +61,7 @@ use crate::paths::Rutas;
 
 /// Estado compartido del runtime.
 pub struct Estado {
+    pub enlace_launcher: Arc<enlace_launcher::Servicio>,
     pub frecuencia_copia: Option<frecuencia_compartida::RecursoFrecuencia>,
     pub rutas: Rutas,
     pub red: Arc<Red>,
@@ -145,6 +148,12 @@ pub fn run() {
         .expect("no se pudo adquirir el permiso de uso de la instalación");
     let recursos_administrados = instalacion.as_ref().map(|i| i.recursos.clone());
     let rutas = Rutas::resolver().expect("el sistema no ofrece un directorio de datos utilizable");
+    let Some(_instancia) = enlace_launcher::adquirir_instancia(&rutas)
+        .expect("no se pudo proteger la instancia de Sound")
+    else {
+        enlace_launcher::activar_instancia(&rutas);
+        return;
+    };
     let _registro = telemetry::init(&rutas.registros);
     tracing::info!(version = env!("CARGO_PKG_VERSION"), "arranca NB Sound");
 
@@ -162,8 +171,20 @@ pub fn run() {
             None
         }
     };
+    let servicio_launcher = enlace_launcher::Servicio::nuevo();
     if let Some(recurso) = &frecuencia_copia {
-        frecuencia_compartida::iniciar_enlace_si_se_pidio(recurso.clone());
+        match servicio_launcher
+            .preparar(&rutas, recurso)
+            .and_then(|_| servicio_launcher.bloqueo_heredado())
+        {
+            Ok(bloqueo) => {
+                frecuencia_compartida::iniciar_enlace_si_se_pidio(recurso.clone(), bloqueo)
+            }
+            Err(error) => tracing::warn!(
+                codigo = error.code(),
+                "la política local impide el enlace heredado"
+            ),
+        }
     }
     // Si la música ya no está donde estaba (otro equipo, otro usuario, una copia
     // restaurada), se busca antes de vigilar e importar nada (`ubicacion.rs`).
@@ -311,7 +332,10 @@ pub fn run() {
         },
     ));
     let frecuencia_para_ventana = frecuencia_copia.clone();
+    let launcher_setup = Arc::clone(&servicio_launcher);
+    let rutas_launcher = rutas.clone();
     let estado = Estado {
+        enlace_launcher: Arc::clone(&servicio_launcher),
         frecuencia_copia,
         rutas: rutas.clone(),
         red: Arc::clone(&red),
@@ -340,6 +364,7 @@ pub fn run() {
             use tauri::Manager;
             let _ = ventana.set(app.handle().clone());
             if let Some(recurso) = frecuencia_para_ventana {
+                launcher_setup.iniciar(app.handle().clone(), rutas_launcher, recurso.clone());
                 frecuencia_compartida::escuchar(app.handle().clone(), recurso);
             }
             crate::ventana::programar_red_de_seguridad(app.handle().clone());
@@ -505,6 +530,10 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            comandos::launcher_estado,
+            comandos::launcher_responder,
+            comandos::launcher_revocar,
+            comandos::launcher_permitir_solicitudes,
             comandos::salud,
             comandos::reproductor_estado,
             comandos::reproductor_orden,
@@ -641,9 +670,11 @@ pub fn run() {
             }
             // Los teléfonos dejan de ver el equipo en el acto, no al caducar mDNS.
             if let Some(e) = app.try_state::<Estado>() {
+                e.enlace_launcher.detener();
                 e.movil.apagar();
                 let _ = e.fiesta.apagar();
             }
         }
     });
+    servicio_launcher.unir();
 }

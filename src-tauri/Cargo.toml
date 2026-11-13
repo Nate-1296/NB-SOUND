@@ -1,6 +1,6 @@
 [package]
 name = "nb-sound"
-version = "2.1.3"
+version = "2.1.4"
 description = "Aplicación de escritorio para la música local"
 authors = ["The NB Sound Authors"]
 license = "GPL-3.0-or-later"
@@ -25,7 +25,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 # ADR-013: snapshot reproducible; el clon de Sound no necesita carpetas vecinas.
 nb-protocol = { version = "=0.1.0", path = "vendor/nb-shared/crates/nb-protocol" }
-nb-capability = { version = "=0.1.0", path = "vendor/nb-shared/crates/nb-capability", features = ["local"] }
+nb-capability = { version = "=0.1.0", path = "vendor/nb-shared/crates/nb-capability", features = ["attachment"] }
 tauri = { version = "2", features = ["tray-icon"] }
 # El selector de archivos nativo, para "Añadir música" y elegir la carpeta de la
 # música (ADR-001, enmienda del 2026-10-30). Se usa desde Rust: ninguna ruta
@@ -119,12 +119,14 @@ libc = "0.2.191"
 # prioridad del procesador y la del disco (P16, aprobada por Nathan el 2026-11-09).
 # Ya llegaba por Tauri en esta versión; aquí solo se pide su API de hilos.
 [target.'cfg(target_os = "windows")'.dependencies]
-windows-sys = { version = "0.61.2", features = ["Win32_System_Threading"] }
+windows-sys = { version = "0.61.2", features = ["Win32_System_Threading", "Win32_Storage_FileSystem"] }
 
 [target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
 souvlaki = "0.9.3"
 
 [dev-dependencies]
+# ADR-017: contrato SecretStore en fixtures; ya resuelto por el llavero. MIT/Apache-2.0.
+zeroize = "=1.9.1"
 # ADR-016: base64 ya resuelto por la pila; solo el productor editorial. MIT/Apache-2.0.
 base64 = "=0.22.1"
 # Solo en las pruebas: las doradas se comparan bit a bit, y el lector por

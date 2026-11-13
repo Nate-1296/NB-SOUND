@@ -3,6 +3,36 @@
 Formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones según
 [SemVer](https://semver.org/lang/es/).
 
+## [2.1.4] — candidato 2026-11-13
+
+### Novedades
+
+- En Linux, Launcher puede conectarse a Sound abierto por separado. Sound pide permiso
+  y lo recuerda entre sesiones; se revoca desde Ajustes → Privacidad y servicios en línea.
+- La revocación cierra sesiones y persiste tras reiniciar. Permitir solicitudes de nuevo
+  exige confirmación nueva. Restaurar la biblioteca no recupera permisos revocados.
+- Una segunda apertura activa la instancia propietaria sin abrir otra biblioteca.
+  Wayland puede limitar el foco solicitado.
+
+### Seguridad y compatibilidad
+
+- La prueba de identidad y el puerto se ligan al proceso, recurso y operaciones. Sound
+  confirma la concesión persistida antes de informar éxito. Cancelar no guarda permisos.
+- Tras la primera decisión persistente del perfil se bloquea el enlace heredado para
+  impedir recuperar acceso revocado; los clientes antiguos necesitan actualizarse.
+- La biblioteca conserva V12, el ZIP excluye el registro de autorizaciones y el contrato
+  móvil no cambia. Windows/macOS conservan el enlace anterior; esta adhesión es Linux.
+- El diálogo se carga cuando hace falta, conservando el presupuesto inicial de 250 KB.
+
+### Validación
+
+- Linux: 667 pruebas Rust correctas, 25 omitidas, Clippy sin advertencias, 38 pruebas
+  frontend y todos los guardianes. Búsqueda de 100.000 pistas dentro de 30 ms.
+- Recorrido completo de ambas ventanas: rechazo, permiso recordado, cambios en ambos
+  sentidos, reinicios, revocación, permiso nuevo, cancelación, activación y arranque.
+- El candidato requiere todavía CI nativa, paquetes firmados y comprobación del paquete
+  distribuido antes de su publicación e instalación.
+
 ## [2.1.3] — 2026-11-12
 
 ### Correcciones

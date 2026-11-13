@@ -8,6 +8,7 @@ license.workspace = true
 
 [features]
 local = ["nb-protocol/local", "dep:sha2", "dep:subtle", "dep:serde", "dep:serde_json", "dep:thiserror"]
+attachment = ["local", "dep:ed25519-dalek", "dep:zeroize"]
 
 [dependencies]
 nb-protocol.workspace = true
@@ -18,6 +19,8 @@ subtle = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 thiserror = { workspace = true, optional = true }
+ed25519-dalek = { workspace = true, optional = true }
+zeroize = { workspace = true, optional = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }

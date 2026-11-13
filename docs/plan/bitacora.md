@@ -359,3 +359,19 @@ y binarios descargados reproducibles: el checkout pasó de unos 13 GB a 66 MiB.
 Fuentes, lockfiles, vendor sellado e historial permanecen. No se modificaron datos ni
 instalaciones personales. Documentación, sello compartido y formato Rust comprobaron
 correctamente después de limpiar. [Continuidad y próximos pasos](./continuidad-launcher.md).
+
+
+### 2026-11-13: autorización persistente y candidato 2.1.4
+
+Se reanuda por instrucción de Nathan. ADR-017 añade el registro independiente de
+biblioteca, concesiones transaccionales, generación de revocación, instancia única
+y descubrimiento Linux. El primer permiso persistente bloquea el enlace heredado.
+Launcher conserva su identidad en el llavero; Sound conserva dominio y consentimiento.
+
+Pasaron `pnpm verify` con un worker (38 pruebas, guardianes y búsqueda aislada),
+formato, Clippy completo y 667 pruebas Rust (25 omitidas). Arranque: 249,8 KB de 250.
+El recorrido real de las dos ventanas pasó rechazo, permiso recordado, cambios en
+ambos sentidos, reinicios, revocación persistente, permiso nuevo, cancelación, segunda
+apertura y arranque desde Launcher. Las claves QA propias se retiraron del llavero.
+Se prepara 2.1.4; CI, artefactos firmados, publicación e instalación siguen pendientes.
+No se atribuye el nuevo protocolo a la release 2.1.3 ni a Windows/macOS.

@@ -30,5 +30,6 @@ conservar **por qué** se tomó.
 | [014](./decisions/ADR-014-renovacion-launcher.md) | Renovación privada del enlace de Launcher | Implementado y comprobado en Linux bajo la continuación autorizada |
 | [015](./decisions/ADR-015-instalacion-launcher.md) | Instalación administrada por NB Launcher | Tar Linux 2.1.3 publicado y validado; otros formatos/plataformas pendientes |
 | [016](./decisions/ADR-016-catalogo-launcher.md) | Catálogo firmado para Launcher | Catálogo firmado publicado y consumido por Launcher en Linux; sin cambios del runtime |
+| [017](./decisions/ADR-017-autorizacion-persistente-launcher.md) | Autorización persistente local de Launcher | En implementación bajo la elección de Nathan; recorrido real pendiente |
 
 Plantilla: [ADR-000-template.md](./ADR-000-template.md).

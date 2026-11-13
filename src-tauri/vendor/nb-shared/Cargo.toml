@@ -19,6 +19,7 @@ getrandom = "0.3.4"
 sha2 = "0.10.9"
 subtle = "2.6.1"
 zeroize = { version = "1.9.0", features = ["serde"] }
+ed25519-dalek = { version = "2.2", features = ["zeroize"] }
 rustix = { version = "1.1.6", features = ["process"] }
 interprocess = { version = "2.4.8", features = ["tokio"] }
 windows-token = "0.2.1"

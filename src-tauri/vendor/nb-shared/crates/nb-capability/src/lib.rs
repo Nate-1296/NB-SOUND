@@ -3,6 +3,9 @@
 #[cfg(all(feature = "local", any(unix, windows)))]
 pub mod port;
 
+#[cfg(all(feature = "attachment", any(unix, windows)))]
+pub mod attachment;
+
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use nb_protocol::capability::{

@@ -18,7 +18,7 @@ zeroize.workspace = true
 getrandom = { workspace = true, optional = true }
 
 [target.'cfg(unix)'.dependencies]
-rustix = { workspace = true, optional = true }
+rustix = { workspace = true, optional = true, features = ["fs"] }
 
 [target.'cfg(windows)'.dependencies]
 interprocess = { workspace = true, optional = true }

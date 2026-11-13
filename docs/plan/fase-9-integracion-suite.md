@@ -10,6 +10,7 @@ posteriormente las releases de esta integración desde el contrato de NB Launche
 | F9.1.2 Renovación privada | Implementada y comprobada en Linux: enlace real de 961 segundos sin sondeo del frontend, lectura/escritura posterior y revocación. Compatible con negociación 1. Publicada en 2.1.3; recorrido de UI en otras plataformas pendiente. Ver ADR-014. |
 | F9.1.3 Instalación administrada | Validada en Linux bajo ADR-015 con el tar firmado 2.1.3 publicado: apertura, recursos, exclusión por uso, actualizador delegado y ajuste conservado tras reinstalar. Otros formatos/plataformas pendientes. |
 | F9.1.4 Metadatos firmados | Productor/editorial bajo ADR-016, CI nativa y firma publicada de 2.1.3 comprobados; Launcher aceptó el catálogo real. Renovación semanal definida y consumo desde la ventana de Launcher, incluido reinicio sin consulta automática, comprobado en Linux. Primera ejecución programada pendiente. No cambia el ejecutable ni el móvil. |
+| F9.1.5 Autorización persistente | En curso: ADR-017 implementado con registro separado, consentimiento, revisión/generación, revocación y bloqueo de instancia; adhesión/activación en Linux. Once pruebas de registro, una de cierre heredado y una de respaldo/restauración correctas. Recorrido completo de ambas ventanas comprobado en Linux; 667 pruebas Rust y Clippy correctos. Verificación local completa correcta, arranque 249,8 KB de 250. Candidato 2.1.4 preparado; CI, paquetes, publicación e instalación pendientes. No incluido en 2.1.3. |
 
 ## Propiedad y persistencia
 
@@ -28,7 +29,10 @@ El formato ZIP, el planificador de copias y el contrato móvil siguen siendo de 
 
 ## Enlace de desarrollo
 
-Sin `--nb-launcher`, Sound no inicia este enlace. Con el indicador, espera un bootstrap
+Este apartado describe el enlace heredado de arranque. La adhesión persistente Linux
+se publica de forma independiente, según [ADR-017](../adr/decisions/ADR-017-autorizacion-persistente-launcher.md).
+El enlace heredado se bloquea tras la primera decisión persistente del perfil.
+Sin `--nb-launcher`, Sound no inicia el puerto heredado. Con el indicador, espera un bootstrap
 framed en stdin privado durante cinco segundos. El supervisor conoce el endpoint y verifica
 UID/SID y PID antes de enviar la credencial; stdout sigue dedicado a registros.
 La credencial solo da acceso al recurso de frecuencia, no a otras operaciones de Sound.

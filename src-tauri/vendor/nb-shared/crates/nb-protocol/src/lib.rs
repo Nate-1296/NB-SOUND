@@ -1,5 +1,6 @@
 //! Contrato local de desarrollo. No autentica aplicaciones instaladas ni implementa Mesh.
 
+pub mod attachment;
 pub mod capability;
 pub mod client;
 pub mod frame;

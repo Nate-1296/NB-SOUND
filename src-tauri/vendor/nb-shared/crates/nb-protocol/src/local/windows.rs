@@ -181,6 +181,16 @@ pub fn validate_peer(stream: &Stream) -> Result<(), ServiceError> {
     Ok(())
 }
 
+/// PID del cliente del named pipe, comprobado contra el SID de esta sesión.
+pub fn client_process_id(stream: &Stream) -> Result<u32, ServiceError> {
+    validate_peer(stream)?;
+    let pid = stream.0.client_process_id().map_err(ServiceError::HostIo)?;
+    if pid == 0 {
+        return Err(ServiceError::AccessDenied);
+    }
+    Ok(pid)
+}
+
 pub fn endpoint_is_closed(path: &Path) -> Result<bool, ServiceError> {
     validate_endpoint(path)?;
     match open(path) {

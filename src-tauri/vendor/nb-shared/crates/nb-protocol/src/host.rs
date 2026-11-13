@@ -83,6 +83,19 @@ pub struct AdminRequest {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "method", content = "params", rename_all = "snake_case")]
 pub enum AdminOperation {
+    ConfigureIdentity {
+        directory: crate::attachment::PrivatePath,
+    },
+    BeginAttachment {
+        spec: crate::attachment::AttachmentSpec,
+        consent: bool,
+    },
+    AttachmentStatus {
+        id: Epoch,
+    },
+    CancelAttachment {
+        id: Epoch,
+    },
     Grant {
         principal: String,
         permissions: Vec<Permission>,
@@ -115,6 +128,12 @@ pub struct AdminResponse {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "status", content = "data", rename_all = "snake_case")]
 pub enum AdminOutcome {
+    IdentityConfigured,
+    AttachmentStarted {
+        id: Epoch,
+    },
+    AttachmentReport(crate::attachment::AttachmentReport),
+    AttachmentCancelled,
     Granted {
         grant_id: u64,
         credential: Credential,
@@ -135,6 +154,8 @@ pub enum AdminOutcome {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AdminError {
+    AttachmentNotConfigured,
+    AttachmentNotFound,
     InvalidRequestId,
     InvalidPrincipal,
     InvalidPermissions,

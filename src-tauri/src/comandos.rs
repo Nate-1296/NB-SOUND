@@ -31,6 +31,48 @@ pub async fn salud() -> NsResult<InformeDeSalud> {
     })
 }
 
+#[tauri::command]
+pub async fn launcher_estado(
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<crate::enlace_launcher::EstadoEnlaceLauncher> {
+    let service = std::sync::Arc::clone(&estado.enlace_launcher);
+    tauri::async_runtime::spawn_blocking(move || service.estado())
+        .await
+        .map_err(|_| NsError::Internal)?
+}
+#[tauri::command]
+pub async fn launcher_responder(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+    id: String,
+    permitir: bool,
+) -> NsResult<()> {
+    estado.enlace_launcher.responder(&id, permitir).await?;
+    crate::enlace_launcher::notificar(&app);
+    Ok(())
+}
+#[tauri::command]
+pub async fn launcher_revocar(app: AppHandle, estado: tauri::State<'_, Estado>) -> NsResult<()> {
+    let service = std::sync::Arc::clone(&estado.enlace_launcher);
+    tauri::async_runtime::spawn_blocking(move || service.revocar())
+        .await
+        .map_err(|_| NsError::Internal)??;
+    crate::enlace_launcher::notificar(&app);
+    Ok(())
+}
+#[tauri::command]
+pub async fn launcher_permitir_solicitudes(
+    app: AppHandle,
+    estado: tauri::State<'_, Estado>,
+) -> NsResult<()> {
+    let service = std::sync::Arc::clone(&estado.enlace_launcher);
+    tauri::async_runtime::spawn_blocking(move || service.permitir_solicitudes())
+        .await
+        .map_err(|_| NsError::Internal)??;
+    crate::enlace_launcher::notificar(&app);
+    Ok(())
+}
+
 // --- Reproductor ---------------------------------------------------------------
 
 /// Una orden al reproductor, tal como la manda la interfaz.

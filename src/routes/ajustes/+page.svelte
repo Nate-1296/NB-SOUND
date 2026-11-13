@@ -131,6 +131,9 @@
       {#await import('#lib/ui/privacidad/SeccionesPrivacidad.svelte') then m}
         <m.default seccion="privacidad" />
       {/await}
+      {#await import('#lib/ui/launcher/AccesoLauncher.svelte') then m}
+        <m.default />
+      {/await}
     {:else if seccionActiva === 'ia'}
       {#await import('#lib/ui/privacidad/SeccionesPrivacidad.svelte') then m}
         <m.default seccion="ia" />

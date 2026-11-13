@@ -105,6 +105,18 @@ pub fn validate_peer(stream: &Stream) -> Result<(), ServiceError> {
     Ok(())
 }
 
+/// Solo para un stream aceptado por el propietario; no acepta PID declarado por el cliente.
+pub fn client_process_id(stream: &Stream) -> Result<u32, ServiceError> {
+    validate_peer(stream)?;
+    stream
+        .peer_cred()
+        .map_err(ServiceError::HostIo)?
+        .pid()
+        .and_then(|pid| u32::try_from(pid).ok())
+        .filter(|pid| *pid != 0)
+        .ok_or(ServiceError::AccessDenied)
+}
+
 pub async fn connect_endpoint(path: &Path, expected_pid: u32) -> Result<Stream, ServiceError> {
     validate_endpoint(path)?;
     let stream = timeout(HANDSHAKE_TIMEOUT, UnixStream::connect(path))

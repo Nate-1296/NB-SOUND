@@ -222,7 +222,10 @@ pub fn escuchar(app: tauri::AppHandle, recurso: RecursoFrecuencia) {
 }
 
 /// Se activa solo por el supervisor de desarrollo; stdout conserva sus registros normales.
-pub fn iniciar_enlace_si_se_pidio(recurso: RecursoFrecuencia) {
+pub fn iniciar_enlace_si_se_pidio(
+    recurso: RecursoFrecuencia,
+    bloqueo: Option<tokio::sync::watch::Receiver<bool>>,
+) {
     if !std::env::args_os().any(|arg| arg == "--nb-launcher") {
         return;
     }
@@ -236,7 +239,7 @@ pub fn iniciar_enlace_si_se_pidio(recurso: RecursoFrecuencia) {
                 return;
             };
             if runtime
-                .block_on(nb_capability::port::serve(recurso, tokio::io::stdin()))
+                .block_on(servir_heredado(recurso, tokio::io::stdin(), bloqueo))
                 .is_err()
             {
                 tracing::warn!("el enlace local del Launcher terminó sin completarse");
@@ -245,9 +248,73 @@ pub fn iniciar_enlace_si_se_pidio(recurso: RecursoFrecuencia) {
         });
 }
 
+async fn servir_heredado<R: tokio::io::AsyncRead + Unpin>(
+    recurso: RecursoFrecuencia,
+    supervisor: R,
+    bloqueo: Option<tokio::sync::watch::Receiver<bool>>,
+) -> Result<(), nb_capability::port::PortError> {
+    if let Some(bloqueo) = bloqueo {
+        if *bloqueo.borrow() {
+            return Ok(());
+        }
+        nb_capability::port::serve_revocable(recurso, supervisor, bloqueo).await
+    } else {
+        nb_capability::port::serve(recurso, supervisor).await
+    }
+}
+
 #[cfg(test)]
 mod pruebas {
     use super::*;
+
+    #[tokio::test]
+    async fn activar_permisos_persistentes_retira_el_puerto_heredado_y_sus_clientes() {
+        use nb_capability::port::{Bootstrap, Client};
+        use nb_protocol::{frame::write_frame, local};
+        use std::time::Duration;
+        use tokio::time::{sleep, timeout};
+        let db = BaseDeDatos::en_memoria().unwrap();
+        let resource = nuevo(&db).unwrap();
+        let before = resource.read().unwrap();
+        let session = local::new_session().unwrap();
+        let credential = local::new_credential().unwrap();
+        let (mut parent, supervisor) = tokio::io::duplex(4096);
+        write_frame(
+            &mut parent,
+            &Bootstrap {
+                session: session.clone(),
+                credential: credential.clone(),
+            },
+        )
+        .await
+        .unwrap();
+        let (block, blocked) = tokio::sync::watch::channel(false);
+        let task = tokio::spawn(servir_heredado(resource.clone(), supervisor, Some(blocked)));
+        let (mut client, _) = timeout(Duration::from_secs(3), async {
+            loop {
+                if let Ok(client) =
+                    Client::connect(&session, credential.clone(), std::process::id()).await
+                {
+                    break client;
+                }
+                sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await
+        .unwrap();
+        block.send_replace(true);
+        timeout(Duration::from_secs(2), task)
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
+        assert!(client.read().await.is_err());
+        assert!(Client::connect(&session, credential, std::process::id())
+            .await
+            .is_err());
+        assert_eq!(resource.read().unwrap().value, before.value);
+        assert_eq!(resource.read().unwrap().revision, before.revision);
+    }
 
     #[tokio::test]
     async fn renovar_el_enlace_no_escribe_y_desconectarlo_conserva_el_control_nativo() {

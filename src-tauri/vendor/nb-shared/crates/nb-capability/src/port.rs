@@ -16,12 +16,141 @@ use std::time::Duration;
 use subtle::ConstantTimeEq;
 use tokio::{
     io::AsyncRead,
+    sync::watch,
     task::{JoinSet, spawn_blocking},
     time::timeout,
 };
 
 const IO_TIMEOUT: Duration = Duration::from_secs(5);
 const LIFETIME: Duration = Duration::from_secs(900);
+
+#[derive(Clone)]
+struct Policy {
+    client_pid: Option<u32>,
+    access: [bool; 3],
+    revoked: Option<watch::Receiver<bool>>,
+}
+impl Policy {
+    fn private_supervisor() -> Self {
+        Self {
+            client_pid: None,
+            access: [true; 3],
+            revoked: None,
+        }
+    }
+    fn current(&self) -> bool {
+        self.revoked
+            .as_ref()
+            .is_none_or(|revoked| !*revoked.borrow() && revoked.has_changed().is_ok())
+    }
+    fn allows(&self, operation: &Operation) -> bool {
+        self.current()
+            && match operation {
+                Operation::Hello { .. } | Operation::Read => self.access[0],
+                Operation::Change { .. } => self.access[1],
+                Operation::Observe { .. } => self.access[2],
+                Operation::Close => true,
+            }
+    }
+    async fn wait_revoked(mut self) {
+        let Some(ref mut revoked) = self.revoked else {
+            return std::future::pending().await;
+        };
+        while !*revoked.borrow_and_update() {
+            if revoked.changed().await.is_err() {
+                return;
+            }
+        }
+    }
+}
+
+/// Puerto ya enlazado. Permite anunciarlo por el canal de adhesión antes de
+/// empezar a aceptar solicitudes, sin una carrera de creación del endpoint.
+pub struct Session<O: StateOwner> {
+    endpoint: local::Endpoint,
+    resource: OwnedResource<O>,
+    digest: [u8; 32],
+    policy: Policy,
+}
+impl<O: StateOwner> Session<O>
+where
+    O::Value: Serialize,
+    O::Command: DeserializeOwned + Send + 'static,
+{
+    fn bind(
+        resource: OwnedResource<O>,
+        bootstrap: Bootstrap,
+        policy: Policy,
+    ) -> Result<Self, PortError> {
+        let digest = Sha256::digest(bootstrap.credential.expose_secret().as_bytes()).into();
+        let endpoint = local::Endpoint::bind_named(&bootstrap.session)?;
+        Ok(Self {
+            endpoint,
+            resource,
+            digest,
+            policy,
+        })
+    }
+
+    /// La app propietaria debe comprobar su concesión persistente antes de llamar.
+    /// Revocar o perder el emisor cierra este puerto y todas sus conexiones.
+    #[cfg(feature = "attachment")]
+    pub fn bind_authorized(
+        resource: OwnedResource<O>,
+        bootstrap: Bootstrap,
+        client: &crate::attachment::VerifiedClient,
+        revoked: watch::Receiver<bool>,
+    ) -> Result<Self, PortError> {
+        client.ensure_current().map_err(|_| PortError::Protocol)?;
+        // Hello 1/2 siempre devuelve una instantánea: no admitir ámbitos sin lectura.
+        if !client.access().allows_read()
+            || &resource
+                .lock()
+                .map_err(|_| PortError::Protocol)?
+                .current
+                .key
+                != client.resource()
+        {
+            return Err(PortError::Protocol);
+        }
+        let policy = Policy {
+            client_pid: Some(client.participants().client_pid()),
+            access: [
+                client.access().allows_read(),
+                client.access().allows_change(),
+                client.access().allows_observe(),
+            ],
+            revoked: Some(revoked),
+        };
+        if !policy.current() {
+            return Err(PortError::Protocol);
+        }
+        Self::bind(resource, bootstrap, policy)
+    }
+
+    pub async fn serve<R: AsyncRead + Unpin>(self, supervisor: R) -> Result<(), PortError> {
+        let accept = async {
+            let mut sessions = JoinSet::new();
+            loop {
+                tokio::select! {
+                    accepted = self.endpoint.accept(), if sessions.len() < local::MAX_SESSIONS => {
+                        let stream = accepted?;
+                        let resource = self.resource.clone();
+                        let digest = self.digest;
+                        let policy = self.policy.clone();
+                        sessions.spawn(async move { let _ = connection(stream, resource, digest, policy).await; });
+                    },
+                    Some(_) = sessions.join_next(), if !sessions.is_empty() => {},
+                }
+            }
+        };
+        tokio::select! {
+            result = accept => result,
+            result = supervise(supervisor) => result,
+            () = self.policy.clone().wait_revoked() => Ok(()),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Bootstrap {
@@ -182,6 +311,7 @@ async fn connection<O>(
     mut stream: local::Stream,
     resource: OwnedResource<O>,
     digest: [u8; 32],
+    policy: Policy,
 ) -> Result<(), PortError>
 where
     O: StateOwner,
@@ -189,6 +319,11 @@ where
     O::Command: DeserializeOwned + Send + 'static,
 {
     local::validate_peer(&stream)?;
+    if let Some(expected) = policy.client_pid
+        && local::client_process_id(&stream)? != expected
+    {
+        return Err(PortError::Protocol);
+    }
     let result = async {
         let mut negotiated = false;
         let mut last_id = 0;
@@ -211,7 +346,9 @@ where
             }
             last_id = request.id;
             let reply =
-                if !negotiated {
+                if !policy.allows(&request.operation) {
+                    Reply::Denied
+                } else if !negotiated {
                     match request.operation {
                         Operation::Hello {
                             version: 1 | 2,
@@ -251,7 +388,39 @@ where
     result
 }
 
-pub async fn serve<O, R>(resource: OwnedResource<O>, mut supervisor: R) -> Result<(), PortError>
+pub async fn serve<O, R>(resource: OwnedResource<O>, supervisor: R) -> Result<(), PortError>
+where
+    O: StateOwner,
+    O::Value: Serialize,
+    O::Command: DeserializeOwned + Send + 'static,
+    R: AsyncRead + Unpin,
+{
+    serve_with_policy(resource, supervisor, Policy::private_supervisor()).await
+}
+
+/// El propietario puede retirar también un bootstrap heredado. La señal se
+/// comprueba antes de cada operación, además de cerrar puerto y conexiones.
+pub async fn serve_revocable<O, R>(
+    resource: OwnedResource<O>,
+    supervisor: R,
+    revoked: watch::Receiver<bool>,
+) -> Result<(), PortError>
+where
+    O: StateOwner,
+    O::Value: Serialize,
+    O::Command: DeserializeOwned + Send + 'static,
+    R: AsyncRead + Unpin,
+{
+    let mut policy = Policy::private_supervisor();
+    policy.revoked = Some(revoked);
+    serve_with_policy(resource, supervisor, policy).await
+}
+
+async fn serve_with_policy<O, R>(
+    resource: OwnedResource<O>,
+    mut supervisor: R,
+    policy: Policy,
+) -> Result<(), PortError>
 where
     O: StateOwner,
     O::Value: Serialize,
@@ -262,26 +431,12 @@ where
         .await
         .map_err(|_| PortError::Timeout)??
         .ok_or(PortError::Protocol)?;
-    let digest: [u8; 32] = Sha256::digest(bootstrap.credential.expose_secret().as_bytes()).into();
-    let endpoint = local::Endpoint::bind_named(&bootstrap.session)?;
-    drop(bootstrap);
-    let accept = async {
-        let mut sessions = JoinSet::new();
-        loop {
-            tokio::select! {
-                accepted = endpoint.accept(), if sessions.len() < local::MAX_SESSIONS => {
-                    let stream = match accepted { Ok(stream) => stream, Err(error) => return Err(PortError::from(error)) };
-                    let resource = resource.clone();
-                    sessions.spawn(async move { let _ = connection(stream, resource, digest).await; });
-                },
-                Some(_) = sessions.join_next(), if !sessions.is_empty() => {},
-            }
-        }
-    };
-    tokio::select! {
-        result = accept => result,
-        result = supervise(supervisor) => result,
+    if !policy.current() {
+        return Err(PortError::Protocol);
     }
+    Session::bind(resource, bootstrap, policy)?
+        .serve(supervisor)
+        .await
 }
 
 pub struct Client {

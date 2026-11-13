@@ -11,6 +11,10 @@ Hecha con Tauri 2, Svelte 5 y Rust. Lo que hace, pantalla por pantalla, está en
 Todo lo que gobierna el proyecto está en [`docs/`](docs/README.md): la Constitución, las decisiones de
 arquitectura y el plan. El contrato de trabajo está en [CLAUDE.md](CLAUDE.md).
 
+La integración local con Launcher conserva los permisos en Sound y permite revocarlos
+en Privacidad. El [estado y los límites](docs/engineering/autorizacion-launcher.md)
+distinguen el código validado de la release publicada y las plataformas pendientes.
+
 ## Desarrollo
 
 ```bash

@@ -210,7 +210,7 @@
     <m.default />
   {/await}
 {/if}
-{#await import('./Avisos.svelte') then m}
+{#await import('./CapaGlobal.svelte') then m}
   <m.default />
 {/await}
 {#if ubicacion}
