@@ -1,6 +1,6 @@
 //! ADR-017: consentimiento y ciclo de vida del enlace, propiedad de Sound.
 use crate::{
-    autorizacion_launcher::{self, Almacen},
+    autorizacion_launcher::Almacen,
     error::{NsError, NsResult},
     frecuencia_compartida::RecursoFrecuencia,
     paths::Rutas,
@@ -224,7 +224,7 @@ pub struct Instancia {
 }
 #[cfg(target_os = "linux")]
 pub fn adquirir_instancia(rutas: &Rutas) -> NsResult<Option<Instancia>> {
-    let lock = autorizacion_launcher::private_file(&rutas.datos.join("instance.lock"))?;
+    let lock = crate::autorizacion_launcher::private_file(&rutas.datos.join("instance.lock"))?;
     match lock.try_lock() {
         Ok(()) => Ok(Some(Instancia { _lock: lock })),
         Err(std::fs::TryLockError::WouldBlock) => Ok(None),
