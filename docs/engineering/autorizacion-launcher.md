@@ -74,3 +74,14 @@ comprobaron el código de la iteración: 667 pruebas Rust y 25 omitidas. El arra
 carga 249,8 KB de 250; 38 importaciones diferidas, 625 KB totales. La versión 2.1.4
 identifica el candidato siguiente; la CI y los paquetes no se dan por comprobados
 por las validaciones locales de esta misma implementación.
+
+## Ajuste de plataforma antes de publicar
+
+La CI inicial `43516498573` del commit `f7fb051` pasó frontend, dependencias y
+licencias. Clippy de macOS y Windows rechazó un campo de confirmación usado solo
+por la adhesión Linux. Se acota esa resolución y su receptor a Linux; las otras
+plataformas devuelven indisponibilidad sin simular consentimiento. También se
+limita el bloqueo nuevo de instancia a Linux, donde existe activación: las otras
+plataformas conservan el arranque anterior. Dos pruebas nativas de regresión
+comprueban esas condiciones fuera de Linux. La ejecución de esas pruebas y la
+CI corregida siguen pendientes. No se etiquetó ni publicó ese checkpoint inicial.

@@ -6,8 +6,9 @@ use crate::{
     paths::Rutas,
 };
 use serde::Serialize;
+#[cfg(target_os = "linux")]
+use std::fs::File;
 use std::{
-    fs::File,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex, OnceLock,
@@ -38,7 +39,9 @@ pub struct EstadoEnlaceLauncher {
     pub revocadas: Option<u32>,
 }
 enum Resolution {
+    #[cfg(target_os = "linux")]
     Allow(oneshot::Sender<NsResult<()>>),
+    #[cfg(target_os = "linux")]
     Reject,
     Revoked,
 }
@@ -152,6 +155,7 @@ impl Servicio {
             revocadas: counts.map(|(_, revocadas)| revocadas),
         })
     }
+    #[cfg(target_os = "linux")]
     pub async fn responder(&self, id: &str, accept: bool) -> NsResult<()> {
         let pending = {
             let mut slot = self.pending.lock().map_err(|_| NsError::Internal)?;
@@ -175,6 +179,10 @@ impl Servicio {
             .await
             .map_err(|_| NsError::Cancelled)?
             .map_err(|_| NsError::Cancelled)?
+    }
+    #[cfg(not(target_os = "linux"))]
+    pub async fn responder(&self, _: &str, _: bool) -> NsResult<()> {
+        Err(NsError::ComponentUnavailable)
     }
     pub fn revocar(&self) -> NsResult<()> {
         self.store
@@ -208,10 +216,13 @@ pub fn notificar(app: &tauri::AppHandle) {
     let _ = app.emit("launcher:cambio", ());
 }
 
-/// Se adquiere antes de restaurar/abrir la biblioteca. No depende del anuncio público.
+/// En Linux se adquiere antes de abrir la biblioteca y no depende del anuncio.
+/// Otras plataformas conservan el arranque anterior hasta tener activación nativa.
 pub struct Instancia {
+    #[cfg(target_os = "linux")]
     _lock: File,
 }
+#[cfg(target_os = "linux")]
 pub fn adquirir_instancia(rutas: &Rutas) -> NsResult<Option<Instancia>> {
     let lock = autorizacion_launcher::private_file(&rutas.datos.join("instance.lock"))?;
     match lock.try_lock() {
@@ -220,9 +231,43 @@ pub fn adquirir_instancia(rutas: &Rutas) -> NsResult<Option<Instancia>> {
         Err(_) => Err(NsError::StorageFailure),
     }
 }
+#[cfg(not(target_os = "linux"))]
+pub fn adquirir_instancia(_: &Rutas) -> NsResult<Option<Instancia>> {
+    Ok(Some(Instancia {}))
+}
 pub fn activar_instancia(rutas: &Rutas) {
     #[cfg(target_os = "linux")]
     native::activate(rutas);
     #[cfg(not(target_os = "linux"))]
     let _ = rutas;
+}
+
+#[cfg(all(test, not(target_os = "linux")))]
+mod pruebas_arranque {
+    use super::*;
+
+    #[test]
+    fn plataformas_sin_activacion_conservan_el_arranque_anterior() {
+        let base = std::env::temp_dir().join(format!(
+            "ns-no-instance-{}",
+            String::from(nb_protocol::local::new_session().unwrap())
+        ));
+        let rutas = Rutas {
+            datos: base.join("datos"),
+            cache: base.join("cache"),
+            registros: base.join("registros"),
+        };
+        let _primera = adquirir_instancia(&rutas).unwrap().unwrap();
+        let _segunda = adquirir_instancia(&rutas).unwrap().unwrap();
+        assert!(!base.exists());
+    }
+
+    #[tokio::test]
+    async fn plataformas_sin_adhesion_no_aceptan_respuestas_de_consentimiento() {
+        let servicio = Servicio::nuevo();
+        assert!(matches!(
+            servicio.responder("sin-solicitud", true).await,
+            Err(NsError::ComponentUnavailable)
+        ));
+    }
 }

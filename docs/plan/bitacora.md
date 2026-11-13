@@ -375,3 +375,9 @@ ambos sentidos, reinicios, revocación persistente, permiso nuevo, cancelación,
 apertura y arranque desde Launcher. Las claves QA propias se retiraron del llavero.
 Se prepara 2.1.4; CI, artefactos firmados, publicación e instalación siguen pendientes.
 No se atribuye el nuevo protocolo a la release 2.1.3 ni a Windows/macOS.
+
+La CI inicial de 2.1.4 detectó código exclusivo de Linux no delimitado en Clippy
+de macOS/Windows. Se corrige con condiciones de plataforma, sin silenciar warnings.
+El bloqueo nuevo de instancia se limita también a Linux para no introducir una
+segunda apertura sin activación en otras plataformas. Se añaden dos regresiones
+para CI nativa. El frontend público pasó; no se creó etiqueta ni release fallida.
